@@ -104,6 +104,30 @@ def test_meridian_app_opt_into_observatory_shell():
     assert 'mix-blend-mode: screen' in css
 
 
+def test_observatory_shell_transparency_shows_app_backdrop():
+    css = _read("static/css/meridian/observatory.css")
+    assert ".obs-shell [data-meridian-shell]" in css
+    assert "background: transparent" in css
+
+
+def test_login_observatory_treatment_preserves_auth_controls():
+    login = _read("templates/login.html")
+    assert '<body class="obs-shell">' in login
+    assert "Meridian - Login" in login
+    assert "static/css/meridian/observatory.css" in login
+    # The Observatory restyle must not remove the existing authentication
+    # controls or their server routes.
+    assert 'id="passkeyLoginSection"' in login
+    assert 'id="passkeyLoginBtn"' in login
+    assert 'id="showPasswordLoginBtn"' in login
+    assert 'id="passwordLoginForm"' in login
+    assert 'id="loginForm"' in login
+    assert "/api/auth/passkeys/available" in login
+    assert "/api/auth/login" in login
+    assert "/api/auth/webauthn/authenticate/options" in login
+    assert "/api/auth/webauthn/authenticate/verify" in login
+
+
 def test_asset_manifest_lists_observatory_assets():
     manifest = _read("static/img/meridian/observatory/ASSET_MANIFEST.md")
     assert "dial-ornament.svg" in manifest

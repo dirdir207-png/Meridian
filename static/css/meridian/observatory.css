@@ -374,6 +374,11 @@ body.obs-shell {
   --m-focus-ring: 0 0 0 2px var(--obs-bg), 0 0 0 4px var(--obs-lilac);
 }
 
+.obs-shell [data-meridian-shell] {
+  background: transparent;
+}
+
+
 .obs-shell .m-primary-button {
   background: var(--obs-apricot);
   color: #2c1d0d;
