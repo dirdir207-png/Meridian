@@ -93,6 +93,17 @@ def test_preview_page_is_served_from_static():
     assert "synthetic fixtures only" in html
 
 
+def test_meridian_app_opt_into_observatory_shell():
+    index = _read("templates/meridian/index.html")
+    settings = _read("templates/meridian/settings.html")
+    css = _read("static/css/meridian/observatory.css")
+    assert '<body class="obs-shell">' in index
+    assert '<body class="obs-shell">' in settings
+    assert 'static/css/meridian/observatory.css' in settings
+    assert '.obs-shell .m-nav-item[aria-current="page"]::before' in css
+    assert 'mix-blend-mode: screen' in css
+
+
 def test_asset_manifest_lists_observatory_assets():
     manifest = _read("static/img/meridian/observatory/ASSET_MANIFEST.md")
     assert "dial-ornament.svg" in manifest

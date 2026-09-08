@@ -329,6 +329,147 @@ body.obs-shell {
   user-select: none;
 }
 
+/* Observatory shell integration.
+   When the Meridian app opts into the Observatory direction by putting
+   `.obs-shell` on <body>, remap the existing editorial tokens to the indigo /
+   parchment / lilac / mint / apricot system. This keeps existing JS, data
+   hooks, and workspace partials working while giving every surface the
+   Observatory character. */
+.obs-shell {
+  --m-canvas: var(--obs-bg);
+  --m-surface: var(--obs-surface);
+  --m-surface-muted: var(--obs-surface-raised);
+  --m-border: rgba(238, 228, 207, 0.13);
+  --m-border-strong: rgba(238, 228, 207, 0.26);
+
+  --m-ink: var(--obs-ink);
+  --m-ink-muted: var(--obs-muted);
+  --m-ink-faint: #9298ad;
+
+  --m-healthy: var(--obs-mint);
+  --m-healthy-wash: rgba(165, 212, 191, 0.14);
+  --m-caution: var(--obs-apricot);
+  --m-caution-wash: rgba(243, 178, 114, 0.14);
+  --m-risk: var(--obs-danger);
+  --m-risk-wash: rgba(241, 162, 154, 0.12);
+  --m-information: var(--obs-lilac);
+  --m-information-wash: rgba(193, 169, 226, 0.14);
+
+  --m-aurora: radial-gradient(
+    120% 90% at 20% 0%,
+    rgba(193, 169, 226, 0.16),
+    transparent 60%
+  );
+
+  --m-forest: #101a28;
+  --m-forest-deep: #0c1420;
+  --m-forest-ink: var(--obs-ink);
+  --m-forest-muted: var(--obs-muted);
+  --m-forest-wash: rgba(193, 169, 226, 0.08);
+
+  --m-elevation-1: 0 1px 2px rgba(5, 9, 17, 0.35), 0 8px 24px rgba(5, 9, 17, 0.28);
+  --m-elevation-2: 0 2px 4px rgba(5, 9, 17, 0.4), 0 4px 12px rgba(5, 9, 17, 0.3);
+  --m-elevation-3: 0 8px 28px rgba(5, 9, 17, 0.5);
+
+  --m-focus-ring: 0 0 0 2px var(--obs-bg), 0 0 0 4px var(--obs-lilac);
+}
+
+.obs-shell .m-primary-button {
+  background: var(--obs-apricot);
+  color: #2c1d0d;
+}
+
+.obs-shell .m-secondary-button {
+  background: var(--obs-surface-raised);
+  color: var(--obs-ink);
+  border: 1px solid rgba(238, 228, 207, 0.2);
+}
+
+.obs-shell .m-surface,
+.obs-shell .m-ledger-card,
+.obs-shell .m-selected-summary {
+  background: linear-gradient(180deg, rgba(32, 43, 64, 0.94), rgba(32, 43, 64, 0.82));
+}
+
+.obs-shell .m-workspace-kicker {
+  color: var(--obs-lilac);
+}
+
+.obs-shell .m-section-label {
+  color: var(--obs-lilac);
+}
+
+.obs-shell .m-editorial-headline {
+  color: var(--obs-paper);
+}
+
+.obs-shell .m-editorial-subline {
+  color: var(--obs-muted);
+}
+
+.obs-shell .m-nav {
+  background:
+    radial-gradient(120% 60% at 18% 4%, rgba(193, 169, 226, 0.14), transparent 60%),
+    linear-gradient(180deg, #101a28 0%, #0c1420 100%);
+}
+
+.obs-shell .m-nav-item[aria-current="page"]::before {
+  background: var(--obs-lilac);
+}
+
+.obs-shell .m-brand {
+  color: var(--obs-paper);
+}
+
+.obs-shell .m-theme-toggle[aria-pressed="true"] .m-theme-toggle-track {
+  background: var(--obs-lilac);
+}
+
+.obs-shell .m-chip[data-state="fresh"] {
+  background: var(--obs-mint);
+  color: #0d2a20;
+}
+
+.obs-shell .m-chip[data-state="stale"] {
+  background: var(--obs-apricot);
+  color: #38240f;
+}
+
+.obs-shell .m-chip[data-state="unavailable"] {
+  background: rgba(238, 228, 207, 0.12);
+  color: var(--obs-muted);
+}
+
+.obs-shell .m-inline-error {
+  color: var(--obs-danger);
+}
+
+/* Ornament in Plan: constellation map behind a real allocation summary. */
+.obs-shell .m-plan-support {
+  position: relative;
+}
+
+.obs-shell .m-plan-support::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: url("/static/img/meridian/observatory/map-ornament.svg") center / contain no-repeat;
+  opacity: 0.28;
+  mix-blend-mode: screen;
+}
+
+.obs-shell .m-plan-support > * {
+  position: relative;
+}
+
+/* Keep Activity and Accounts quieter than Today: remove glow-heavy gradient
+   and rely on borders plus modest surface tint. */
+.obs-shell .m-activity .m-surface,
+.obs-shell .m-accounts .m-surface {
+  background: rgba(32, 43, 64, 0.78);
+}
+
 /* Keyboard/pointer focus plus reduced-motion. */
 @media (prefers-reduced-motion: reduce) {
   .obs-shell,
