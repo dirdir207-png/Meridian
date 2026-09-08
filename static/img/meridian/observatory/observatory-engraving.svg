@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360" role="presentation" focusable="false" aria-hidden="true">
+  <g fill="none" stroke="#ead8b5" stroke-opacity="0.16" stroke-width="1.4">
+    <!-- low hills -->
+    <path d="M0 285 Q150 210 290 275 T600 270"/>
+    <path d="M0 305 Q180 250 330 300 T600 300"/>
+    <!-- observatory tower/dome silhouette -->
+    <path d="M300 250 L300 150 M300 150 Q300 96 236 98 M300 150 Q300 96 364 98 M236 98 L236 118 M364 98 L364 118"/>
+    <!-- small telescope line -->
+    <path d="M330 122 L392 82 M392 82 L404 74 M350 114 L356 108 M378 92 L388 82"/>
+    <!-- stars -->
+    <g fill="#ead8b5" fill-opacity="0.30">
+      <circle cx="120" cy="64" r="2.4"/>
+      <circle cx="230" cy="36" r="1.8"/>
+      <circle cx="440" cy="54" r="2.2"/>
+      <circle cx="520" cy="132" r="2"/>
+      <circle cx="80" cy="150" r="1.8"/>
+      <circle cx="180" cy="104" r="1.4"/>
+      <circle cx="392" cy="170" r="1.6"/>
+      <circle cx="512" cy="210" r="1.4"/>
+    </g>
+    <!-- crescent moon -->
+    <path d="M500 58 A34 34 0 1 0 536 90 A40 40 0 1 1 500 58"/>
+  </g>
+</svg>

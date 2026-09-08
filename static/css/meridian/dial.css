@@ -1,0 +1,414 @@
+/* Meridian Observatory dial.
+   Open 240-degree horizon from -120 to +120 degrees, gap at the bottom.
+   The dial is an instrument: code-owned SVG geometry and pointer, decorative
+   art underneath. All date/event labels are HTML outside the SVG. */
+
+.obs-dial {
+  display: grid;
+  gap: var(--obs-space-5);
+}
+
+.obs-dial-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 340px);
+  gap: var(--obs-space-5);
+  align-items: start;
+}
+
+.obs-dial-instrument {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+.obs-dial-svg-wrap {
+  position: relative;
+  width: min(100%, 520px);
+  margin: 0 auto;
+}
+
+.obs-dial-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.obs-dial-art {
+  position: absolute;
+  inset: 8%;
+  background: url("/static/img/meridian/observatory/dial-ornament.svg") center / contain no-repeat;
+  opacity: 0.5;
+}
+
+.obs-dial-arc {
+  fill: none;
+  stroke: rgba(238, 228, 207, 0.16);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.obs-dial-arc--active {
+  stroke: var(--obs-brass);
+  stroke-width: 3;
+  stroke-dasharray: 2 6;
+  stroke-linecap: round;
+}
+
+.obs-dial-tick {
+  stroke: rgba(238, 228, 207, 0.34);
+  stroke-width: 1.5;
+}
+
+.obs-dial-tick--major {
+  stroke: rgba(238, 228, 207, 0.7);
+  stroke-width: 2.5;
+}
+
+.obs-dial-track-hit {
+  fill: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+
+.obs-dial-track-hit:active {
+  cursor: grabbing;
+}
+
+.obs-dial-marker {
+  cursor: pointer;
+  fill: var(--obs-surface);
+  stroke: var(--obs-lilac);
+  stroke-width: 2;
+  filter: drop-shadow(0 2px 5px rgba(7, 12, 21, 0.45));
+  transition: transform var(--obs-motion-fast) var(--obs-ease-out);
+}
+
+.obs-dial-marker:hover,
+.obs-dial-marker[data-selected="true"] {
+  stroke: var(--obs-apricot);
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(1.18);
+}
+
+.obs-dial-marker[data-kind="income"] {
+  stroke: var(--obs-mint);
+}
+
+.obs-dial-marker[data-kind="goal"] {
+  stroke: var(--obs-brass);
+}
+
+.obs-dial-marker[data-kind="transfer"] {
+  stroke: var(--obs-muted);
+}
+
+.obs-dial-pointer {
+  stroke: var(--obs-paper);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transition: transform 180ms var(--obs-ease-out);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.obs-dial-pointer-line {
+  stroke: var(--obs-paper);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.obs-dial-pointer-tip {
+  fill: var(--obs-paper);
+}
+
+.obs-dial-sunburst {
+  fill: none;
+  stroke: rgba(238, 228, 207, 0.1);
+  stroke-width: 1;
+}
+
+.obs-dial-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--obs-space-2);
+  margin-top: var(--obs-space-3);
+}
+
+.obs-control {
+  min-height: 44px;
+  padding: var(--obs-space-2) var(--obs-space-3);
+  border: 1px solid rgba(238, 228, 207, 0.22);
+  border-radius: var(--obs-radius-sm);
+  background: transparent;
+  color: var(--obs-ink);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.obs-control:hover {
+  border-color: var(--obs-lilac);
+  color: var(--obs-lilac);
+}
+
+.obs-dial-range-wrap {
+  flex: 1 1 220px;
+  display: grid;
+  gap: var(--obs-space-1);
+  min-width: 0;
+}
+
+.obs-dial-range {
+  width: 100%;
+  accent-color: var(--obs-apricot);
+  min-height: 28px;
+  cursor: pointer;
+}
+
+.obs-dial-range-label {
+  font-size: 13px;
+  color: var(--obs-muted);
+}
+
+.obs-dial-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--obs-space-3);
+  margin: var(--obs-space-3) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--obs-muted);
+  font-size: 13px;
+}
+
+.obs-dial-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--obs-space-1);
+}
+
+.obs-dial-legend .obs-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.obs-dial-events {
+  min-width: 0;
+}
+
+.obs-dial-date-heading {
+  margin: 0 0 var(--obs-space-3);
+  font-family: var(--obs-font-serif);
+  font-size: 1.7rem;
+  font-weight: 500;
+}
+
+.obs-dial-projections {
+  margin: var(--obs-space-3) 0 var(--obs-space-4);
+  color: var(--obs-muted);
+  font-size: 14px;
+}
+
+.obs-event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--obs-space-2);
+}
+
+.obs-event-list--compact {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.obs-event-item {
+  display: flex;
+  align-items: center;
+  gap: var(--obs-space-3);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--obs-space-2) var(--obs-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--obs-radius-md);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--obs-ink);
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.obs-event-item:hover,
+.obs-event-item[data-selected="true"] {
+  border-color: rgba(193, 169, 226, 0.45);
+  background: rgba(193, 169, 226, 0.08);
+}
+
+.obs-event-kind {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(238, 228, 207, 0.08);
+  color: var(--obs-lilac);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.obs-event-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.obs-event-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.obs-event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--obs-space-2);
+  color: var(--obs-muted);
+  font-size: 13px;
+}
+
+.obs-event-amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.obs-event-amount[data-direction="incoming"] {
+  color: var(--obs-mint);
+}
+
+.obs-event-amount[data-direction="outgoing"] {
+  color: var(--obs-apricot);
+}
+
+.obs-evidence-ticket {
+  display: grid;
+  gap: var(--obs-space-4);
+}
+
+.obs-ticket-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--obs-space-4);
+}
+
+.obs-ticket-title {
+  margin: 0;
+  font-family: var(--obs-font-serif);
+  font-size: 1.8rem;
+  line-height: 1.1;
+  font-weight: 500;
+}
+
+.obs-ticket-detail {
+  margin: 0;
+  color: rgba(32, 38, 59, 0.78);
+  line-height: 1.55;
+  font-size: 15px;
+}
+
+.obs-ticket-rows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--obs-space-3);
+}
+
+.obs-ticket-row {
+  display: grid;
+  gap: 2px;
+}
+
+.obs-ticket-row-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(32, 38, 59, 0.58);
+}
+
+.obs-ticket-row-value {
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.obs-shortfall {
+  padding: var(--obs-space-3) var(--obs-space-4);
+  border-left: 3px solid var(--obs-danger);
+  background: rgba(241, 162, 154, 0.12);
+  border-radius: 0 var(--obs-radius-sm) var(--obs-radius-sm) 0;
+  color: var(--obs-paper-ink);
+}
+
+.obs-shortfall strong {
+  font-weight: 800;
+}
+
+.obs-ticket-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--obs-space-2);
+}
+
+.obs-source-stamp {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--obs-space-2);
+  font-size: 13px;
+  color: rgba(32, 38, 59, 0.62);
+}
+
+.obs-source-stamp::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--obs-brass);
+}
+
+@media (max-width: 900px) {
+  .obs-dial-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .obs-dial-svg-wrap {
+    width: 100%;
+  }
+
+  .obs-event-list:not(.obs-event-list--always-column) {
+    grid-template-columns: 1fr;
+  }
+
+  .obs-ticket-rows {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .obs-dial-pointer,
+  .obs-dial-marker,
+  .obs-event-item,
+  .obs-evidence-ticket {
+    transition: none !important;
+  }
+}

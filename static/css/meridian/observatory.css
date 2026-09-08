@@ -1,0 +1,366 @@
+/* Meridian Observatory — visual layer.
+   The Observatory direction: midnight indigo, parchment, engraved instruments,
+   lilac, sea-glass and apricot. This file is intentionally additive and uses
+   `.obs-*` primitives so it can be introduced alongside the current Meridian
+   shell without breaking existing selectors.
+
+   Keep text real HTML, keep financial diagrams SVG/code-owned, and never make
+   decorative imagery carry meaning. */
+
+:root {
+  --obs-bg: #172334;
+  --obs-surface: #202b40;
+  --obs-surface-raised: #26334a;
+  --obs-ink: #eee4cf;
+  --obs-muted: #b7b8cb;
+  --obs-lilac: #c1a9e2;
+  --obs-mint: #a5d4bf;
+  --obs-apricot: #f3b272;
+  --obs-brass: #c6aa71;
+  --obs-paper: #ead8b5;
+  --obs-paper-ink: #20263b;
+  --obs-danger: #f1a29a;
+  --obs-space-1: 4px;
+  --obs-space-2: 8px;
+  --obs-space-3: 12px;
+  --obs-space-4: 16px;
+  --obs-space-5: 24px;
+  --obs-space-6: 32px;
+  --obs-radius-sm: 8px;
+  --obs-radius-md: 14px;
+  --obs-radius-lg: 22px;
+  --obs-radius-pill: 999px;
+  --obs-font-serif: "Iowan Old Style", Baskerville, Georgia, "Times New Roman", serif;
+  --obs-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --obs-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --obs-motion-fast: 120ms;
+  --obs-motion-base: 200ms;
+}
+
+.obs-shell {
+  min-height: 100dvh;
+  margin: 0;
+  background:
+    radial-gradient(140% 90% at 20% -10%, rgba(193, 169, 226, 0.10), transparent 45%),
+    radial-gradient(120% 80% at 95% 10%, rgba(165, 212, 191, 0.06), transparent 45%),
+    var(--obs-bg);
+  color: var(--obs-ink);
+  font-family: var(--obs-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.obs-shell *,
+.obs-shell *::before,
+.obs-shell *::after {
+  box-sizing: border-box;
+}
+
+body.obs-shell {
+  margin: 0;
+}
+
+.obs-header {
+  display: flex;
+  align-items: center;
+  gap: var(--obs-space-4);
+  padding:
+    calc(var(--obs-space-4) + env(safe-area-inset-top))
+    max(var(--obs-space-5), env(safe-area-inset-right))
+    var(--obs-space-4)
+    max(var(--obs-space-5), env(safe-area-inset-left));
+  border-bottom: 1px solid rgba(238, 228, 207, 0.12);
+  background: rgba(23, 35, 52, 0.86);
+  backdrop-filter: blur(8px);
+}
+
+.obs-wordmark {
+  font-family: var(--obs-font-serif);
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--obs-paper);
+}
+
+.obs-settings-link {
+  margin-left: auto;
+  color: var(--obs-muted);
+  font-size: 15px;
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.obs-settings-link:hover {
+  color: var(--obs-ink);
+}
+
+.obs-layout {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) minmax(280px, 420px);
+  gap: var(--obs-space-5);
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--obs-space-5);
+}
+
+.obs-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--obs-space-2);
+  position: sticky;
+  top: var(--obs-space-5);
+  align-self: start;
+}
+
+.obs-nav a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--obs-space-2);
+  padding: var(--obs-space-2) var(--obs-space-3);
+  border-radius: var(--obs-radius-sm);
+  color: var(--obs-muted);
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.obs-nav a:hover {
+  color: var(--obs-ink);
+  background: rgba(193, 169, 226, 0.08);
+}
+
+.obs-nav a[aria-current="page"] {
+  color: var(--obs-lilac);
+  background: rgba(193, 169, 226, 0.10);
+}
+
+.obs-main {
+  min-width: 0;
+}
+
+.obs-kicker {
+  margin: 0 0 var(--obs-space-1);
+  color: var(--obs-lilac);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.obs-page-title {
+  margin: 0;
+  font-family: var(--obs-font-serif);
+  font-size: clamp(2rem, 3.4vw, 2.6rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.obs-subline {
+  max-width: 60ch;
+  margin: var(--obs-space-2) 0 0;
+  color: var(--obs-muted);
+  line-height: 1.55;
+}
+
+.obs-grid {
+  display: grid;
+  gap: var(--obs-space-4);
+}
+
+.obs-panel {
+  padding: var(--obs-space-5);
+  border: 1px solid rgba(238, 228, 207, 0.13);
+  border-radius: var(--obs-radius-lg);
+  background: linear-gradient(180deg, rgba(32, 43, 64, 0.94), rgba(32, 43, 64, 0.82));
+  box-shadow: 0 18px 48px rgba(7, 12, 21, 0.25);
+}
+
+.obs-panel--paper {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 20%),
+    linear-gradient(180deg, var(--obs-paper), #ddc69f);
+  color: var(--obs-paper-ink);
+  border-color: rgba(32, 38, 59, 0.12);
+}
+
+.obs-panel--paper .obs-muted,
+.obs-panel--paper .obs-source,
+.obs-panel--paper .obs-label {
+  color: rgba(32, 38, 59, 0.66);
+}
+
+.obs-section-label {
+  margin: 0 0 var(--obs-space-2);
+  color: var(--obs-mint);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.obs-panel--paper .obs-section-label {
+  color: rgba(32, 38, 59, 0.72);
+}
+
+.obs-amount {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--obs-font-sans);
+  letter-spacing: -0.02em;
+}
+
+.obs-amount--hero {
+  font-size: clamp(2.75rem, 6vw, 3.5rem);
+  font-family: var(--obs-font-serif);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.obs-muted {
+  color: var(--obs-muted);
+}
+
+.obs-source {
+  color: var(--obs-muted);
+  font-size: 13px;
+}
+
+.obs-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--obs-space-2);
+  padding: var(--obs-space-1) var(--obs-space-3);
+  border-radius: var(--obs-radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(193, 169, 226, 0.14);
+  color: var(--obs-lilac);
+}
+
+.obs-tag::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.obs-tag[data-state="fresh"] {
+  background: rgba(165, 212, 191, 0.14);
+  color: var(--obs-mint);
+}
+
+.obs-tag[data-state="stale"],
+.obs-tag[data-state="partial"] {
+  background: rgba(243, 178, 114, 0.16);
+  color: var(--obs-apricot);
+}
+
+.obs-tag[data-state="unavailable"] {
+  background: rgba(241, 162, 154, 0.12);
+  color: var(--obs-danger);
+}
+
+.obs-button {
+  min-height: 44px;
+  padding: var(--obs-space-3) var(--obs-space-4);
+  border: 0;
+  border-radius: var(--obs-radius-md);
+  background: var(--obs-apricot);
+  color: #2c1d0d;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.obs-button:hover {
+  filter: brightness(1.06);
+}
+
+.obs-button:focus-visible,
+.obs-control:focus-visible,
+.obs-nav a:focus-visible,
+.obs-link:focus-visible {
+  outline: 2px solid var(--obs-lilac);
+  outline-offset: 2px;
+}
+
+.obs-button--ghost {
+  background: transparent;
+  color: var(--obs-ink);
+  border: 1px solid rgba(238, 228, 207, 0.25);
+}
+
+.obs-button--danger {
+  background: transparent;
+  color: var(--obs-danger);
+  border: 1px solid rgba(241, 162, 154, 0.35);
+}
+
+.obs-link {
+  color: var(--obs-lilac);
+  text-underline-offset: 2px;
+}
+
+.obs-empty {
+  padding: var(--obs-space-4);
+  border: 1px dashed rgba(238, 228, 207, 0.22);
+  border-radius: var(--obs-radius-md);
+  color: var(--obs-muted);
+  font-size: 15px;
+}
+
+.obs-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Decorative imagery never receives pointer events. */
+.obs-art {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Keyboard/pointer focus plus reduced-motion. */
+@media (prefers-reduced-motion: reduce) {
+  .obs-shell,
+  .obs-shell * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .obs-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .obs-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 600px) {
+  .obs-layout {
+    padding: var(--obs-space-4);
+  }
+
+  .obs-panel {
+    padding: var(--obs-space-4);
+  }
+
+  .obs-wordmark {
+    font-size: 24px;
+  }
+}
