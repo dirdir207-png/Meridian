@@ -127,28 +127,49 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
 
 ### Observatory implementation — 2026-09-08 (ongoing small slices)
 
-- Branch: `feat/meridian-implementation`; ahead of origin by 3 commits after this session.
+- Branch: `feat/meridian-implementation`; ahead of origin by 9 commits after this session.
 - Slice 1 (already on branch): Observatory visual tokens/layer, decorative SVG placeholder
   asset set, and a fixture-driven accessible dial (`static/css/meridian/observatory.css`,
   `static/css/meridian/dial.css`, `static/js/meridian/dial.js`,
   `static/meridian-observatory-preview.html`).
-- Slice 2 (new commits `fc83417`, `c825358`): read-only data-driven dial API and view model
+- Slice 2 (commits `fc83417`, `c825358`): read-only data-driven dial API and view model
   (`meridian/services/dial.py`, `GET /api/meridian/dial`), Today partial wiring, evidence
   ticket, currency/minor-unit safety, and Observatory shell remapping for the Meridian
   main and Settings templates.
+- Slice 3 (commit `27db882`): Observatory login/application-shell slice.
+  - `templates/login.html` now uses the Meridian wordmark, indigo/paper palette, and the
+    decorative engraving while preserving passkey/password controls, API calls, and error
+    handling.
+  - `static/css/meridian/observatory.css` adds `[data-meridian-shell] { background: transparent; }`
+    so the body’s indigo radial atmosphere shows through the app shell.
+- Slice 4 (commit `865c3dc`): read-only Plan scenario preview.
+  - New authenticated `POST /api/meridian/plan/scenario` calls the existing pure
+    `meridian.scenarios.run_scenario` service. It returns `read_only: true`, validates
+    numeric inputs, and does not update the repository.
+  - Plan UI adds an Observatory-styled “Scenario preview” card with before/after projection
+    rows and an explicit “Preview — no changes applied” note. No apply/approval control is
+    wired yet.
+- Slice 5 (commit `d258aa4`): Accounts connection freshness.
+  - The Accounts connection rail now consumes the backend’s computed `data_freshness` instead
+    of inferring freshness only from per-connection health, adding an explicit partial state.
+- Slice 6 (commit `397d835`): Settings Payday & Funding workspace.
+  - The existing payday partial and proposal-only controller are now reachable from Settings.
+  - Added readable Meridian/Observatory styling for the payday summary, editor, and preview.
+  - The only payday write path remains the existing funding-rule proposal endpoint.
 - Verified in this session:
-  - `tests/meridian` — 468 passed (includes new dial service, API, JS geometry, and shell
-    opt-in tests).
+  - `tests/meridian` — 480 passed (includes dial, scenario API, accounts freshness, and
+    settings-presence tests).
   - `ruff check app.py crew meridian tests` — clean.
-  - Full non-browser suite — 665 passed, 1 skipped, 1 pre-existing isolated failure in
+  - Full non-browser suite — 651 passed, 1 skipped, 1 pre-existing isolated failure in
     `tests/test_app_evidence_integration.py::test_evidence_content_resolves` (unrelated to
-    Observatory; the test's `app` fixture is not authenticated/configured in this run).
-- Safety: no live financial mutation was executed or added in these slices. The dial
-  endpoint is read-only, and exploration/scenario controls have not been connected to
-  mutation paths.
-- Next action: continue Observatory workspaces with Plan scenario preview, Activity detail
-  sheet, Accounts constellation/detail, Settings remaining sections, and the login/Virgil
-  passes, then run browser visual checks against `design/observatory-drafts-2026-09-08/`.
+    Observatory; the test’s `app` fixture is not authenticated/configured in this run).
+- Safety: no live financial mutation was executed or added in these slices. The dial and
+  plan-scenario endpoints are read-only, scenario apply is intentionally not wired, and the
+  payday editor only creates approval-gated proposals.
+- Next action: continue Observatory workspaces with Activity detail/Review/Patterns polish,
+  Accounts constellation/account detail, Settings security & data sections, Virgil/action
+  history, accessible overlays/safe areas/keyboard/reduced-motion checks, then run browser
+  visual checks against `design/observatory-drafts-2026-09-08/`.
 
 ## Current blockers
 
