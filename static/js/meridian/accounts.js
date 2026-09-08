@@ -205,11 +205,12 @@ function renderReimbursements(items) {
 
 /* ---------- Connection-health rail ---------- */
 
-function renderConnections(items) {
+function renderConnections(items, dataFreshness) {
   const list = root.querySelector("[data-connections-list]");
   const status = root.querySelector("[data-connection-status]");
   const freshness = root.querySelector("[data-accounts-freshness]");
   list.replaceChildren();
+  const computedState = (dataFreshness && dataFreshness.status) || "unavailable";
   if (!items.length) {
     list.append(textNode("p", "m-empty-note", "No provider connections are configured."));
     if (status) status.textContent = "No connected sources";
@@ -234,11 +235,24 @@ function renderConnections(items) {
     row.append(provider, detail);
     list.append(row);
   }
-  const healthy = items.every((item) => item.status === "healthy");
-  if (status) status.textContent = healthy ? "All sources current" : "Sources need attention";
+  if (status) {
+    const labels = {
+      fresh: "All sources current",
+      stale: "Some sources are stale",
+      partial: "Some sources need attention",
+      unavailable: "Sources need attention",
+    };
+    status.textContent = labels[computedState] || "Sources need attention";
+  }
   if (freshness) {
-    freshness.dataset.state = healthy ? "fresh" : "stale";
-    freshness.textContent = healthy ? "Current" : "Stale";
+    const chipLabels = {
+      fresh: "Current",
+      stale: "Stale",
+      partial: "Partial",
+      unavailable: "Unavailable",
+    };
+    freshness.dataset.state = computedState;
+    freshness.textContent = chipLabels[computedState] || "Unavailable";
   }
 }
 
@@ -255,7 +269,7 @@ async function loadAccounts() {
     renderGroups(groups);
     renderSummary(summarize(groups));
     renderReimbursements(payload.reimbursements || []);
-    renderConnections(payload.connections || []);
+    renderConnections(payload.connections || [], payload.data_freshness);
   } catch (failure) {
     error.textContent = `${failure.message} ${failure.recoveryAction || ""}`.trim();
     error.hidden = false;
