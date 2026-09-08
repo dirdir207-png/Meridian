@@ -113,6 +113,50 @@
     </section>
   </div>
 
+  {# Observatory Plan scenario preview — read-only, no mutation. The form drives
+     a deterministic before/after projection through the existing scenario
+     service. Apply/approval is intentionally not wired in this slice. #}
+  <section class="m-surface obs-plan-scenario" aria-labelledby="scenario-heading" data-plan-scenario>
+    <div class="m-section-heading-row">
+      <div>
+        <h2 id="scenario-heading" class="m-section-label">Scenario preview</h2>
+        <p class="m-section-copy">Preview — no changes applied. Update the numbers to compare a hypothetical plan.</p>
+      </div>
+      <button type="button" class="m-button m-button--quiet" data-plan-scenario-reset>Discard</button>
+    </div>
+    <form class="obs-plan-scenario-form" data-plan-scenario-form>
+      <div class="obs-plan-scenario-fields">
+        <label class="m-field">
+          <span class="m-field-label">Extra income</span>
+          <input class="m-input" type="number" min="0" step="0.01" inputmode="decimal" data-scenario-input="income" placeholder="0">
+        </label>
+        <label class="m-field">
+          <span class="m-field-label">Hold as reserve</span>
+          <input class="m-input" type="number" min="0" step="0.01" inputmode="decimal" data-scenario-input="reserve" placeholder="0">
+        </label>
+        <label class="m-field">
+          <span class="m-field-label">Contribution</span>
+          <input class="m-input" type="number" min="0" step="0.01" inputmode="decimal" data-scenario-input="contribution" placeholder="0">
+        </label>
+        <label class="m-field">
+          <span class="m-field-label">Daily expense change</span>
+          <input class="m-input" type="number" step="0.01" inputmode="decimal" data-scenario-input="expense_change" placeholder="0">
+        </label>
+        <label class="m-field">
+          <span class="m-field-label">Due date shift (days)</span>
+          <input class="m-input" type="number" step="1" inputmode="numeric" data-scenario-input="due_date_days" placeholder="0">
+        </label>
+      </div>
+      <div class="obs-plan-scenario-results" data-scenario-results aria-live="polite" aria-atomic="true">
+        <p class="obs-scenario-readonly-note">No live values change while you preview.</p>
+        <p class="m-empty-note" data-scenario-empty hidden>Projection unavailable.</p>
+        <dl class="obs-scenario-compare" data-scenario-compare></dl>
+        <p class="obs-scenario-assumptions" data-scenario-assumptions></p>
+      </div>
+    </form>
+  </section>
+
+
   {# Document discrepancies (review-only list; hidden when the backend has none). #}
   <section class="m-plan-commitments" aria-label="Document discrepancies" data-document-discrepancies hidden>
     <h2 class="m-section-label">Document review</h2>

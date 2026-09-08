@@ -144,6 +144,53 @@ def test_dial_read_api_returns_observatory_model(api_client):
     assert payload["projections"] == []
 
 
+def test_plan_scenario_preview_requires_login_and_is_read_only(api_client):
+    client, repository = api_client
+    _complete_connection(repository)
+
+    unauth = simplecrew.app.test_client().post(
+        "/api/meridian/plan/scenario", json={"income": 100}
+    )
+    assert unauth.status_code == 302
+
+    before = [
+        (account.external_id, account.balance)
+        for account in repository.list_accounts()
+    ]
+    response = client.post(
+        "/api/meridian/plan/scenario",
+        json={"income": 100, "expense_change": -1},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["read_only"] is True
+    assert payload["available"] is True
+    assert payload["base"]["starting_cash"] + 100 == payload["scenario"]["starting_cash"]
+    assert payload["comparison"]["starting_cash"] == 100.0
+    assert any("income changes by $100.00" in assumption for assumption in payload["assumptions"])
+    assert any("daily expenses change by $-1.00" in assumption for assumption in payload["assumptions"])
+    after = [
+        (account.external_id, account.balance)
+        for account in repository.list_accounts()
+    ]
+    assert before == after
+
+
+def test_plan_scenario_preview_validates_numeric_input(api_client):
+    client, repository = api_client
+    _complete_connection(repository)
+
+    response = client.post(
+        "/api/meridian/plan/scenario",
+        json={"income": "not-a-number"},
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"]["code"] == "invalid_request"
+
+
+
 def test_connection_api_requires_login_and_never_serializes_secrets(
     api_client, monkeypatch
 ):

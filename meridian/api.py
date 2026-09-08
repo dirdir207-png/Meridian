@@ -219,6 +219,218 @@ def plan():
     return jsonify(build_plan(graph, commitments, rules, as_of=as_of, last_paid_by_id=_last_paid_by_id(graph, commitments), paycheck=_paycheck_config(graph), evidence_repository=EvidenceRepository(graph.db_path)))
 
 
+def _scenario_changes_from_payload(payload):
+    """Validate the read-only scenario inputs.
+
+    Only deterministic numeric knobs are accepted. Context assumptions are
+    intentionally omitted from this slice: the UI does not yet supply them and
+    they must come from an audited source before being treated as a scenario.
+    """
+    allowed = ("income", "reserve", "contribution", "expense_change", "due_date_days")
+    changes = {}
+    for key in allowed:
+        value = payload.get(key)
+        if value is None or value == "":
+            continue
+        try:
+            if key == "due_date_days":
+                changes[key] = int(value)
+            else:
+                changes[key] = float(value)
+        except (TypeError, ValueError):
+            raise ValueError(f"{key} must be a number") from None
+    return changes
+
+
+def _forecast_view(scenario_or_base):
+    """Compact serializable projection view used by the scenario preview."""
+    return {
+        "starting_cash": round(float(scenario_or_base.starting_cash), 2),
+        "daily_expense": round(float(scenario_or_base.daily_expense), 2),
+        "runway_days": scenario_or_base.runway_days,
+        "low_point": (
+            round(float(scenario_or_base.low_point), 2)
+            if scenario_or_base.low_point is not None
+            else None
+        ),
+        "low_point_date": (
+            scenario_or_base.low_point_date.isoformat()
+            if scenario_or_base.low_point_date is not None
+            else None
+        ),
+    }
+
+
+@meridian_api.post("/plan/scenario")
+@login_required
+@_safe_read
+def plan_scenario_preview():
+    """Read-only hypothetical Plan preview.
+
+    This endpoint never writes. It runs the same pure scenario comparison used
+    by tests against the current Plan forecast and returns a before/after view
+    plus the assumptions it made. Apply/approval is intentionally not wired yet.
+    """
+    from datetime import datetime
+
+    from meridian.scenarios import run_scenario
+
+    graph, commitments, rules = _plan_repositories()
+    as_of_value = request.args.get("as_of")
+    try:
+        as_of = date.fromisoformat(as_of_value) if as_of_value else date.today()
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "as_of must be an ISO date (YYYY-MM-DD).",
+            "Use today's date or omit as_of.",
+            400,
+        )
+
+    payload = request.get_json(silent=True) or {}
+    try:
+        changes = _scenario_changes_from_payload(payload)
+    except ValueError as error:
+        return _error(
+            "invalid_request",
+            str(error),
+            "Enter numeric values only for the preview fields.",
+            400,
+        )
+
+    plan = build_plan(
+        graph,
+        commitments,
+        rules,
+        as_of=as_of,
+        last_paid_by_id=_last_paid_by_id(graph, commitments),
+        paycheck=_paycheck_config(graph),
+        evidence_repository=EvidenceRepository(graph.db_path),
+    )
+    forecast = plan.get("forecast") or {}
+    available = bool(forecast.get("available"))
+    if not available:
+        return jsonify(
+            {
+                "read_only": True,
+                "available": False,
+                "reason": forecast.get("reason") or "Forecast unavailable.",
+                "assumptions": [],
+                "comparison": {},
+                "base": None,
+                "scenario": None,
+                "data_freshness": plan.get("data_freshness"),
+            }
+        )
+
+    # Rehydrate the forecast dataclass from the serialized plan payload. This
+    # keeps comparison logic in one tested pure module rather than duplicating
+    # it in the browser.
+    try:
+        from meridian.beacon import Forecast, ForecastFactor, ForecastShortfall
+
+        def _date_or_none(value):
+            if isinstance(value, date):
+                return value
+            if isinstance(value, datetime):
+                return value.date()
+            if isinstance(value, str) and value:
+                try:
+                    return date.fromisoformat(value)
+                except ValueError:
+                    return None
+            return None
+
+        shortfall_data = forecast.get("first_shortfall") or {}
+        first_shortfall = None
+        if shortfall_data:
+            # The serialized plan can carry a dict or no shortfall.
+            try:
+                first_shortfall = ForecastShortfall(
+                    _date_or_none(shortfall_data.get("date")),
+                    float(shortfall_data.get("amount") or 0),
+                    str(shortfall_data.get("cause") or ""),
+                )
+            except (TypeError, ValueError):
+                first_shortfall = None
+
+        factors = [
+            ForecastFactor(
+                kind=str(factor.get("kind", "")),
+                amount=float(factor.get("amount", 0) or 0),
+                date=_date_or_none(factor.get("date")),
+                explanation=str(factor.get("explanation", "")),
+                evidence_ids=tuple(
+                    int(item) for item in (factor.get("evidence_ids") or ())
+                ),
+            )
+            for factor in (forecast.get("factors") or ())
+            if isinstance(factor, dict)
+        ]
+
+        base = Forecast(
+            available=True,
+            reason=None,
+            as_of=_date_or_none(forecast.get("as_of")) or as_of,
+            starting_cash=float(forecast.get("starting_cash") or 0),
+            daily_expense=float(forecast.get("daily_expense") or 0),
+            daily_expense_range=tuple(
+                float(value) for value in (forecast.get("daily_expense_range") or (0, 0))
+            ),
+            runway_days=forecast.get("runway_days"),
+            low_point=(
+                float(forecast.get("low_point"))
+                if forecast.get("low_point") is not None
+                else None
+            ),
+            low_point_date=_date_or_none(forecast.get("low_point_date")),
+            first_shortfall=first_shortfall,
+            coverage_horizons={
+                str(key): float(value)
+                for key, value in (forecast.get("coverage_horizons") or {}).items()
+            },
+            factors=tuple(factors),
+            confidence=float(forecast.get("confidence") or 0),
+            freshness=str(forecast.get("freshness") or "unavailable"),
+            next_paycheck=_date_or_none(forecast.get("next_paycheck")),
+            paycheck_covers=bool(forecast.get("paycheck_covers")),
+            paycheck_range=(
+                tuple(float(value) for value in forecast.get("paycheck_range") or ())
+                if forecast.get("paycheck_range")
+                else None
+            ),
+        )
+    except (TypeError, ValueError):
+        return _error(
+            "unavailable",
+            "The current forecast could not be used for a preview.",
+            "Refresh Plan and try again.",
+            503,
+        )
+
+    result = run_scenario(base, changes)
+    return jsonify(
+        {
+            "read_only": True,
+            "available": True,
+            "assumptions": list(result.assumptions),
+            "comparison": {
+                "starting_cash": round(float(result.comparison["starting_cash"] or 0), 2),
+                "daily_expense": round(float(result.comparison["daily_expense"] or 0), 2),
+                "runway_days": result.comparison["runway_days"],
+                "low_point": (
+                    round(float(result.comparison["low_point"]), 2)
+                    if result.comparison["low_point"] is not None
+                    else None
+                ),
+            },
+            "base": _forecast_view(base),
+            "scenario": _forecast_view(result.scenario),
+            "data_freshness": plan.get("data_freshness"),
+        }
+    )
+
+
 def _paycheck_config(graph):
     """Load the owner's paycheck config, OR learn it from real income.
 

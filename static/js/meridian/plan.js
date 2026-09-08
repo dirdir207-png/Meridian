@@ -231,6 +231,177 @@ function renderTimeline(root, plan) {
   }
 }
 
+/* ---------- Read-only Plan scenario preview ---------- */
+
+let scenarioTimer = null;
+
+function scenarioPayload(root) {
+  const payload = {};
+  root.querySelectorAll("[data-scenario-input]").forEach((input) => {
+    const value = input.value.trim();
+    if (value === "") {
+      return;
+    }
+    const raw = input.dataset.scenarioInput === "due_date_days"
+      ? Number.parseInt(value, 10)
+      : Number(value);
+    if (Number.isFinite(raw)) {
+      payload[input.dataset.scenarioInput] = raw;
+    }
+  });
+  return payload;
+}
+
+function scenarioDelta(value) {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+  if (value > 0) {
+    return `+${money(value)}`;
+  }
+  return money(value);
+}
+
+function scenarioDeltaDays(value) {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+  if (value > 0) {
+    return `+${value}`;
+  }
+  return String(value);
+}
+
+function addScenarioCompareRow(compare, label, baseValue, scenarioValue, delta) {
+  const dt = document.createElement("dt");
+  dt.textContent = label;
+  const dd = document.createElement("dd");
+  dd.textContent = `${money(baseValue)} → ${money(scenarioValue)} (${scenarioDelta(delta)})`;
+  compare.append(dt, dd);
+}
+
+function runScenarioPreview(root) {
+  const results = root.querySelector("[data-scenario-results]");
+  const compare = root.querySelector("[data-scenario-compare]");
+  const empty = root.querySelector("[data-scenario-empty]");
+  const assumptions = root.querySelector("[data-scenario-assumptions]");
+  if (!results || !compare) {
+    return;
+  }
+  results.setAttribute("aria-busy", "true");
+  (async () => {
+    try {
+      const response = await fetch("/api/meridian/plan/scenario", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify(scenarioPayload(root)),
+      });
+      if (!response.ok) {
+        throw new MeridianApiError({
+          code: "preview_rejected",
+          message: "The scenario preview could not be loaded.",
+          recoveryAction: "Try again or refresh Plan.",
+          status: response.status,
+        });
+      }
+      const data = await response.json();
+      if (!data.available) {
+        empty.hidden = false;
+        empty.textContent = data.reason || "Projection unavailable.";
+        compare.replaceChildren();
+        assumptions.textContent = "";
+        return;
+      }
+      empty.hidden = true;
+      compare.replaceChildren();
+      if (data.base && data.scenario) {
+        addScenarioCompareRow(
+          compare,
+          "Starting cash",
+          data.base.starting_cash,
+          data.scenario.starting_cash,
+          data.comparison.starting_cash
+        );
+        addScenarioCompareRow(
+          compare,
+          "Daily expense",
+          data.base.daily_expense,
+          data.scenario.daily_expense,
+          data.comparison.daily_expense
+        );
+      }
+      // Runway needs a day-specific delta helper; low point is optional.
+      const runwayBase = data.base?.runway_days;
+      const runwayScenario = data.scenario?.runway_days;
+      if (runwayBase !== null && runwayBase !== undefined && runwayScenario !== null && runwayScenario !== undefined) {
+        const delta = runwayScenario - runwayBase;
+        const dt = document.createElement("dt");
+        dt.textContent = "Runway";
+        const dd = document.createElement("dd");
+        dd.textContent = `${runwayBase} → ${runwayScenario} days (${scenarioDeltaDays(delta)})`;
+        compare.append(dt, dd);
+      }
+      if (data.base?.low_point !== null && data.base?.low_point !== undefined && data.scenario?.low_point !== null && data.scenario?.low_point !== undefined) {
+        addScenarioCompareRow(
+          compare,
+          "Low point",
+          data.base.low_point,
+          data.scenario.low_point,
+          data.comparison.low_point
+        );
+      }
+      assumptions.textContent = (data.assumptions || []).length
+        ? data.assumptions.join("\n")
+        : "Base plan; no changes entered.";
+    } catch (error) {
+      empty.hidden = false;
+      empty.textContent = error instanceof MeridianApiError
+        ? `${error.message} ${error.recoveryAction}`
+        : "Scenario preview unavailable.";
+      compare.replaceChildren();
+      assumptions.textContent = "";
+    } finally {
+      results.removeAttribute("aria-busy");
+    }
+  })();
+}
+
+function scheduleScenarioPreview(root) {
+  if (scenarioTimer) {
+    window.clearTimeout(scenarioTimer);
+  }
+  scenarioTimer = window.setTimeout(() => runScenarioPreview(root), 260);
+}
+
+function setupScenarioPreview(root) {
+  const panel = root.querySelector("[data-plan-scenario]");
+  if (!panel) {
+    return;
+  }
+  if (!panel.__scenarioWired) {
+    panel.__scenarioWired = true;
+    const form = panel.querySelector("[data-plan-scenario-form]");
+    const reset = panel.querySelector("[data-plan-scenario-reset]");
+    form.addEventListener("input", () => scheduleScenarioPreview(panel));
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (scenarioTimer) {
+        window.clearTimeout(scenarioTimer);
+      }
+      runScenarioPreview(panel);
+    });
+    reset.addEventListener("click", () => {
+      form.reset();
+      if (scenarioTimer) {
+        window.clearTimeout(scenarioTimer);
+      }
+      runScenarioPreview(panel);
+    });
+  }
+  runScenarioPreview(panel);
+}
+
+
 /* ---------- Commitment table ---------- */
 
 function nextDateForCommitment(plan, commitment) {
@@ -1230,6 +1401,7 @@ async function loadPlan() {
     renderDocumentDiscrepancies(root, plan);
     loadCaptureStatus(root);
     setupPlanSegs(root);
+    setupScenarioPreview(root);
     renderRules(root);
     const ruleForm = root.querySelector("[data-ca-delete-rule]");
     if (ruleForm) {

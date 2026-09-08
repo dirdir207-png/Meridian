@@ -468,6 +468,99 @@ body.obs-shell {
   position: relative;
 }
 
+/* Plan scenario preview: a quiet read-only instrument. The ornament stays on
+   the map; this card avoids adding more decorative elements. */
+.obs-shell .obs-plan-scenario {
+  margin-top: var(--obs-space-4);
+  padding: var(--obs-space-5);
+  border: 1px solid rgba(238, 228, 207, 0.13);
+  border-radius: var(--obs-radius-lg);
+  background:
+    radial-gradient(120% 70% at 85% 0%, rgba(193, 169, 226, 0.08), transparent 55%),
+    linear-gradient(180deg, rgba(32, 43, 64, 0.92), rgba(32, 43, 64, 0.78));
+}
+
+.obs-shell .obs-plan-scenario .m-section-copy {
+  margin: 0;
+  color: var(--obs-muted);
+  font-size: 14px;
+}
+
+.obs-shell .obs-plan-scenario .obs-plan-scenario-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+  gap: var(--obs-space-5);
+  margin-top: var(--obs-space-4);
+}
+
+.obs-shell .obs-plan-scenario .obs-plan-scenario-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--obs-space-3);
+  align-content: start;
+}
+
+.obs-shell .obs-plan-scenario .obs-plan-scenario-results {
+  padding: var(--obs-space-4);
+  border: 1px solid rgba(238, 228, 207, 0.12);
+  border-radius: var(--obs-radius-md);
+  background: rgba(23, 35, 52, 0.48);
+}
+
+.obs-shell .obs-scenario-readonly-note {
+  margin: 0 0 var(--obs-space-2);
+  color: var(--obs-mint);
+  font-size: 14px;
+}
+
+.obs-shell .obs-scenario-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--obs-space-2) var(--obs-space-4);
+  margin: 0;
+  font-size: 14px;
+}
+
+.obs-shell .obs-scenario-compare dt {
+  color: var(--obs-muted);
+  font-size: 13px;
+}
+
+.obs-shell .obs-scenario-compare dd {
+  margin: 0;
+  color: var(--obs-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.obs-shell .obs-scenario-assumptions {
+  margin: var(--obs-space-3) 0 0;
+  color: var(--obs-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+@media (max-width: 760px) {
+  .obs-shell .obs-plan-scenario .obs-plan-scenario-form {
+    grid-template-columns: 1fr;
+  }
+
+  .obs-shell .obs-plan-scenario .obs-plan-scenario-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .obs-shell .obs-plan-scenario .obs-plan-scenario-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .obs-shell .obs-scenario-compare {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 /* Keep Activity and Accounts quieter than Today: remove glow-heavy gradient
    and rely on borders plus modest surface tint. */
 .obs-shell .m-activity .m-surface,
