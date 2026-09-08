@@ -180,17 +180,28 @@ export function normalizeModel(model) {
   };
 }
 
+const ZERO_DECIMAL_CURRENCIES = new Set(["JPY", "KRW", "VND", "CLP", "ISK"]);
+
+function minorToMajor(amount) {
+  const currency = (amount && amount.currency) || "USD";
+  const digits = ZERO_DECIMAL_CURRENCIES.has(currency.toUpperCase()) ? 0 : 2;
+  return (amount ? amount.minor : 0) / (10 ** digits);
+}
+
 function minorToDisplay(amount) {
   if (!amount || amount.minor == null) return null;
   const currency = amount.currency || "USD";
+  const digits = ZERO_DECIMAL_CURRENCIES.has(currency.toUpperCase()) ? 0 : 2;
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency,
       currencyDisplay: "narrowSymbol",
-    }).format(amount.minor / 100);
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    }).format(minorToMajor(amount));
   } catch (_) {
-    return `${currency} ${(amount.minor / 100).toFixed(2)}`;
+    return `${currency} ${minorToMajor(amount).toFixed(digits)}`;
   }
 }
 
@@ -242,8 +253,9 @@ function renderDialSVG(state) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", `0 0 ${VIEWBOX.w} ${VIEWBOX.h}`);
   svg.setAttribute("class", "obs-dial-svg");
-  svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", "Horizon dial showing upcoming money events");
+  // Semantic date controls live in HTML (range, buttons, event list). The
+  // decorative/diagram layer is hidden from assistive technology.
+  svg.setAttribute("aria-hidden", "true");
   svg.setAttribute("focusable", "false");
 
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
@@ -401,6 +413,17 @@ function eventsForDate(state, date) {
   return state.model.events.filter((event) => event.date === date);
 }
 
+function describeSelectedDay(state) {
+  const events = eventsForDate(state, state.selectedDate);
+  const dateText = formatLongDate(state.selectedDate);
+  if (!events.length) return `${dateText}, no scheduled money moments`;
+  const parts = events.map((event) => {
+    const amount = minorToDisplay(event.amount);
+    return `${event.title}, ${amount || "amount unavailable"}, ${fundingLabel(event.fundingStatus)}`;
+  });
+  return `${dateText}, ${parts.join("; ")}`;
+}
+
 function renderEventList(state) {
   const wrap = document.createElement("div");
   wrap.className = "obs-dial-events";
@@ -523,11 +546,11 @@ function renderEvidenceTicket(state, event) {
   if (event.fundingStatus === "unfunded" || event.fundingStatus === "partial") {
     const shortfall = document.createElement("p");
     shortfall.className = "obs-shortfall";
-    const amountValue = event.amount.minor / 100;
-    const reservedValue = event.reserved && event.reserved.minor != null ? event.reserved.minor / 100 : 0;
-    const remaining = Math.max(0, amountValue - reservedValue);
+    const amountMinor = event.amount.minor || 0;
+    const reservedMinor = event.reserved && event.reserved.minor != null ? event.reserved.minor : 0;
+    const remainingMinor = Math.max(0, amountMinor - reservedMinor);
     const strong = document.createElement("strong");
-    strong.textContent = minorToDisplay({ minor: Math.round(remaining * 100), currency: event.amount.currency }) || "—";
+    strong.textContent = minorToDisplay({ minor: remainingMinor, currency: event.amount.currency }) || "—";
     shortfall.append("Exact shortfall: ", strong, " remains unfunded.");
     body.push(shortfall);
   }
@@ -632,7 +655,7 @@ function renderControls(state, onChange) {
   range.max = String(state.model.totalDays);
   range.step = "1";
   range.value = String(dayIndexForDate(state.selectedDate, state.model.today));
-  range.setAttribute("aria-valuetext", formatLongDate(state.selectedDate));
+  range.setAttribute("aria-valuetext", describeSelectedDay(state));
   range.addEventListener("input", () => {
     const day = Number(range.value);
     state.selectedDate = addDays(state.model.today, day);
@@ -698,7 +721,7 @@ function update(state, container, rangeValue) {
   if (range) {
     const day = dayIndexForDate(state.selectedDate, state.model.today);
     range.value = String(day);
-    range.setAttribute("aria-valuetext", formatLongDate(state.selectedDate));
+    range.setAttribute("aria-valuetext", describeSelectedDay(state));
   }
 
   const oldInstrumentEvents = instrument.querySelector(".obs-dial-controls");
@@ -858,21 +881,29 @@ export function renderDial(container, inputModel) {
    - `window.MeridianObservatoryDialModel` for inline/synthetic previews
    - `data-model-url` for a read-only JSON endpoint in a future live workspace
 */
+function showUnableToLoad(container) {
+  const fallback = window.MeridianObservatoryDialModel;
+  if (fallback) {
+    renderDial(container, fallback);
+  } else {
+    container.textContent = "The observatory dial could not be loaded. Nothing was changed.";
+  }
+}
+
 function autoStart() {
   const container = document.querySelector("[data-observatory-dial]");
   if (!container) return;
   const modelUrl = container.getAttribute("data-model-url");
   if (modelUrl) {
     fetch(modelUrl, { headers: { Accept: "application/json" } })
-      .then((response) => response.json())
-      .then((model) => renderDial(container, model))
-      .catch(() => {
-        const fallback = window.MeridianObservatoryDialModel;
-        if (fallback) renderDial(container, fallback);
-        else {
-          container.textContent = "The observatory dial could not be loaded.";
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Dial request failed with status ${response.status}`);
         }
-      });
+        return response.json();
+      })
+      .then((model) => renderDial(container, model))
+      .catch(() => showUnableToLoad(container));
     return;
   }
   if (window.MeridianObservatoryDialModel) {

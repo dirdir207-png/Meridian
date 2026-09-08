@@ -105,6 +105,7 @@ def _partial_connection_without_records(repository, *, provider="simplefin"):
     "path",
     [
         "/api/meridian/today",
+        "/api/meridian/dial",
         "/api/meridian/activity",
         "/api/meridian/transactions/1",
         "/api/meridian/accounts",
@@ -126,6 +127,21 @@ def test_evidence_content_rejects_invalid_identifier(api_client):
 
     assert response.status_code == 400
     assert response.get_json()["error"]["code"] == "invalid_request"
+
+
+def test_dial_read_api_returns_observatory_model(api_client):
+    client, repository = api_client
+    _complete_connection(repository)
+
+    response = client.get("/api/meridian/dial")
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["today"] == payload["horizonEnd"] or payload["today"] < payload["horizonEnd"]
+    assert "events" in payload
+    assert "availableToSpend" in payload
+    assert "freshness" in payload
+    assert payload["projections"] == []
 
 
 def test_connection_api_requires_login_and_never_serializes_secrets(

@@ -504,3 +504,30 @@
 @media (max-width: 640px) {
   .m-today-breakdown-row { grid-template-columns: 1fr; }
 }
+
+/* Observatory dial embedded in Today (read-only). */
+.m-observatory-dial-wrap {
+  margin-top: var(--m-space-6);
+  scroll-margin-top: var(--m-space-5);
+}
+
+.m-observatory-dial-caption {
+  max-width: 60ch;
+  margin: 0 0 var(--m-space-4);
+  color: var(--m-ink-muted);
+  line-height: 1.55;
+}
+
+[data-observatory-dial] .obs-dial-panel {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+}
+
+@media (max-width: 900px) {
+  .m-observatory-dial-wrap {
+    margin-top: var(--m-space-5);
+  }
+
+  [data-observatory-dial] .obs-dial-panel {
+    grid-template-columns: 1fr;
+  }
+}

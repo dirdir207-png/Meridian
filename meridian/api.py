@@ -21,6 +21,7 @@ from meridian.services.activity import (
     get_transaction,
 )
 from meridian.services.connections import build_connections, get_connection_detail
+from meridian.services.dial import build_dial
 from meridian.services.plan import build_plan
 from meridian.services.today import build_today, data_freshness
 
@@ -536,6 +537,37 @@ def funding_rules():
 def today():
     graph, commitments, rules = _plan_repositories()
     return jsonify(build_today(graph, commitments, rules, paycheck=_paycheck_config(graph)))
+
+
+@meridian_api.get("/dial")
+@login_required
+@_safe_read
+def dial():
+    """Read-only Observatory dial horizon.
+
+    Returns a DialModel with integer minor-unit amounts and no projections until
+    the shared occurrence/reserve model is able to produce trustworthy per-day
+    projected balances. This endpoint never mutates anything.
+    """
+    graph, commitments, _rules = _plan_repositories()
+    as_of_value = request.args.get("as_of")
+    try:
+        as_of = date.fromisoformat(as_of_value) if as_of_value else date.today()
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "as_of must be an ISO date (YYYY-MM-DD).",
+            "Use today's date or omit as_of.",
+            400,
+        )
+    return jsonify(
+        build_dial(
+            graph,
+            commitments.list_active(),
+            as_of=as_of,
+            paycheck=_paycheck_config(graph),
+        )
+    )
 
 
 @meridian_api.get("/sync")
