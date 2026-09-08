@@ -317,3 +317,109 @@
   opacity: 0.6;
   cursor: default;
 }
+
+/* ---------- Payday & Funding settings ---------- */
+
+.m-payday-settings {
+  display: grid;
+  gap: var(--m-space-6);
+}
+
+.m-payday-status {
+  margin: 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+}
+
+.m-payday-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--m-space-4);
+}
+
+.m-payday-summary article {
+  padding: var(--m-space-4);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-md);
+  background: var(--m-surface);
+}
+
+.m-payday-summary strong,
+.m-payday-summary span {
+  display: block;
+}
+
+.m-payday-summary strong {
+  margin-top: var(--m-space-2);
+  font: 500 var(--m-text-lg)/1.2 var(--m-font-serif);
+  color: var(--m-ink);
+}
+
+.m-payday-summary span {
+  margin-top: var(--m-space-1);
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+}
+
+.m-payday-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr);
+  gap: var(--m-space-5);
+}
+
+.m-payday-editor,
+.m-payday-preview {
+  padding: var(--m-space-5);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+}
+
+.m-payday-editor h2,
+.m-payday-preview h2 {
+  margin: 0 0 var(--m-space-2);
+  font: 500 var(--m-text-xl)/1.2 var(--m-font-serif);
+}
+
+.m-payday-editor > p,
+.m-payday-preview > p {
+  color: var(--m-ink-muted);
+  line-height: 1.55;
+}
+
+.m-payday-field {
+  display: grid;
+  gap: var(--m-space-2);
+  margin: var(--m-space-4) 0;
+}
+
+.m-payday-field > span {
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+}
+
+.m-payday-contribution {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--m-space-3);
+  padding: var(--m-space-3) 0;
+  border-bottom: 1px solid var(--m-border);
+}
+
+.m-payday-safe-note {
+  margin: var(--m-space-4) 0 0 !important;
+  color: var(--m-healthy) !important;
+  font-size: var(--m-text-sm);
+}
+
+@media (max-width: 760px) {
+  .m-payday-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .m-payday-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
