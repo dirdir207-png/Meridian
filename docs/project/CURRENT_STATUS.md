@@ -124,6 +124,32 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
      lives in WorkAssistant (`operations/*.graphql`, owner-gated), **not** ORSC;
      benign to accounts/transactions/commitments.
 
+
+### Observatory implementation — 2026-09-08 (ongoing small slices)
+
+- Branch: `feat/meridian-implementation`; ahead of origin by 3 commits after this session.
+- Slice 1 (already on branch): Observatory visual tokens/layer, decorative SVG placeholder
+  asset set, and a fixture-driven accessible dial (`static/css/meridian/observatory.css`,
+  `static/css/meridian/dial.css`, `static/js/meridian/dial.js`,
+  `static/meridian-observatory-preview.html`).
+- Slice 2 (new commits `fc83417`, `c825358`): read-only data-driven dial API and view model
+  (`meridian/services/dial.py`, `GET /api/meridian/dial`), Today partial wiring, evidence
+  ticket, currency/minor-unit safety, and Observatory shell remapping for the Meridian
+  main and Settings templates.
+- Verified in this session:
+  - `tests/meridian` — 468 passed (includes new dial service, API, JS geometry, and shell
+    opt-in tests).
+  - `ruff check app.py crew meridian tests` — clean.
+  - Full non-browser suite — 665 passed, 1 skipped, 1 pre-existing isolated failure in
+    `tests/test_app_evidence_integration.py::test_evidence_content_resolves` (unrelated to
+    Observatory; the test's `app` fixture is not authenticated/configured in this run).
+- Safety: no live financial mutation was executed or added in these slices. The dial
+  endpoint is read-only, and exploration/scenario controls have not been connected to
+  mutation paths.
+- Next action: continue Observatory workspaces with Plan scenario preview, Activity detail
+  sheet, Accounts constellation/detail, Settings remaining sections, and the login/Virgil
+  passes, then run browser visual checks against `design/observatory-drafts-2026-09-08/`.
+
 ## Current blockers
 
 - **Daily instance from source, not the tested digest:** the running preview on
