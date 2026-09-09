@@ -493,4 +493,48 @@
   font-size: var(--m-text-xs);
 }
 
+/* ---------- Security & Data ---------- */
+
+.m-security {
+  display: grid;
+  gap: var(--m-space-6);
+}
+
+.m-security-section {
+  display: grid;
+  gap: var(--m-space-3);
+  padding: var(--m-space-5);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+}
+
+.m-passkey-row {
+  display: grid;
+  gap: var(--m-space-1);
+  padding: var(--m-space-4) 0;
+  border-bottom: 1px solid var(--m-border);
+}
+
+.m-passkey-row:last-child {
+  border-bottom: 0;
+}
+
+.m-passkey-row strong {
+  font: 500 var(--m-text-md)/1.3 var(--m-font-sans);
+  color: var(--m-ink);
+}
+
+.m-passkey-row span {
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+}
+
+.m-security-note {
+  margin: 0;
+  color: var(--m-ink-faint);
+  font-size: var(--m-text-sm);
+}
+
+
 

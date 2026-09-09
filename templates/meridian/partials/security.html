@@ -1,0 +1,32 @@
+{# Observatory Settings: read-only Security & Data.
+   Credential material never belongs in browser markup or source; this pane
+   shows only nicknames and metadata. #}
+<section class="m-security" data-security-root>
+  <header class="m-settings-command">
+    <div>
+      <p class="m-workspace-kicker">Settings · Security &amp; Data</p>
+      <h1>Your access,<br>kept local.</h1>
+      <p>Review passkey metadata and the safeguards Meridian already applies. This pane is read-only.</p>
+    </div>
+  </header>
+
+  <p class="m-inline-error" data-security-error role="alert" hidden></p>
+
+  <section class="m-security-section" aria-labelledby="passkeys-heading">
+    <h2 id="passkeys-heading" class="m-section-label">Passkeys</h2>
+    <div data-passkey-list></div>
+    <p class="m-empty-note" data-passkeys-empty hidden>No passkeys are registered.</p>
+  </section>
+
+  <section class="m-security-section" aria-labelledby="security-safeguards-heading">
+    <h2 id="security-safeguards-heading" class="m-section-label">Your safeguards</h2>
+    <ul class="m-safeguard-list">
+      <li>Crew credentials stay server-side or in approved local secure storage.</li>
+      <li>Connections are read-only by design and individually revocable.</li>
+      <li>Financial changes require explicit approval.</li>
+      <li>Meridian never retries an uncertain financial write.</li>
+    </ul>
+  </section>
+
+  <p class="m-security-note">Credential IDs and token material are intentionally not rendered here.</p>
+</section>

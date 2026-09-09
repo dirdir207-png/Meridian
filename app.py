@@ -2943,7 +2943,7 @@ def meridian():
 def meridian_settings():
     """Meridian utility settings; financial workspaces remain unchanged."""
     section = request.args.get('section', 'connections')
-    if section not in {'connections', 'payday', 'actions'}:
+    if section not in {'connections', 'payday', 'actions', 'security'}:
         return redirect(url_for('meridian_settings', section='connections'))
     return render_template(
         'meridian/settings.html',
