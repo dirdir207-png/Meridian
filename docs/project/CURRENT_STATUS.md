@@ -127,7 +127,7 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
 
 ### Observatory implementation — 2026-09-08 (ongoing small slices)
 
-- Branch: `feat/meridian-implementation`; ahead of origin by 19 commits after this session.
+- Branch: `feat/meridian-implementation`; ahead of origin by 28 commits after this session.
 - Slice 1 (already on branch): Observatory visual tokens/layer, decorative SVG placeholder
   asset set, and a fixture-driven accessible dial (`static/css/meridian/observatory.css`,
   `static/css/meridian/dial.css`, `static/js/meridian/dial.js`,
@@ -185,9 +185,17 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
 - Slice 15 (commit `ad06c50`): Transaction source stamp.
   - The transaction detail sheet now shows a quiet “Source observation” line using the
     existing freshness timestamp, keeping dated source and balance distinct.
+- Dial concept-focus pass (commits `c81d776` … `bfb048c`):
+  - Solid parchment instrument face, engraved rim/rivets, dark sky disk, starfield,
+    observatory engraving, golden star-centered pointer, and compact real-data center.
+  - Day labels around the instrument, upcoming-money event orbit cards with kind icons,
+    “Days to payday →”, “Turn to explore your week”, and “Explore my plan” CTA.
+  - Fixed dial selection so clicking an event or marker updates the center and evidence ticket.
+  - Added engraved ticket corners to the selected-event evidence ticket.
 - Verified in this session:
-  - `tests/meridian` — 495 passed (includes dial, scenario API, accounts freshness, settings,
-    patterns, action history, security, overlay, and source-stamp tests).
+  - `tests/meridian` — 500 passed (includes dial concept-fidelity and interaction tests,
+    scenario API, accounts freshness, settings, patterns, action history, security,
+    overlay, and source-stamp tests).
   - `ruff check app.py crew meridian tests` — clean.
   - Full non-browser suite — 651 passed, 1 skipped, 1 pre-existing isolated failure in
     `tests/test_app_evidence_integration.py::test_evidence_content_resolves` (unrelated to
