@@ -1074,11 +1074,15 @@ export function renderDial(container, inputModel) {
   if (!container) return null;
   const model = normalizeModel(inputModel);
   const todayEvents = eventsForDate({ model }, model.today);
+  const initialEvent =
+    todayEvents[0] ||
+    model.events.find((event) => event.date >= model.today && event.date <= model.horizonEnd) ||
+    null;
   const state = {
     model,
-    selectedDate: model.today,
-    selectedEventId: todayEvents.length ? todayEvents[0].id : null,
-    mode: "today",
+    selectedDate: initialEvent ? initialEvent.date : model.today,
+    selectedEventId: initialEvent ? initialEvent.id : null,
+    mode: initialEvent ? "explore" : "today",
     drag: null,
   };
 

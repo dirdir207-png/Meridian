@@ -196,3 +196,10 @@ def test_dial_markers_have_orbit_leader_lines():
     css = _read("static/css/meridian/dial.css")
     assert "obs-dial-leader" in js
     assert "stroke-dasharray: 3 4" in css
+
+
+def test_dial_selects_first_upcoming_event_by_default():
+    js = _read("static/js/meridian/dial.js")
+    assert "const initialEvent" in js
+    assert "selectedEventId: initialEvent" in js
+    assert 'mode: initialEvent ? "explore" : "today"' in js
