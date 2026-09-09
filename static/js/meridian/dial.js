@@ -441,7 +441,7 @@ function renderDialSVG(state, container) {
   const disk = document.createElementNS("http://www.w3.org/2000/svg", "circle");
   disk.setAttribute("cx", String(VIEWBOX.cx));
   disk.setAttribute("cy", String(VIEWBOX.cy));
-  disk.setAttribute("r", String(VIEWBOX.r - 96));
+  disk.setAttribute("r", String(VIEWBOX.r - 55));
   disk.setAttribute("class", "obs-dial-disk");
   svg.appendChild(disk);
 
