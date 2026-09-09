@@ -216,6 +216,13 @@
   cursor: grabbing;
 }
 
+
+.obs-dial-leader {
+  stroke: rgba(32, 38, 59, 0.5);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
 .obs-dial-marker {
   cursor: pointer;
   color: var(--obs-lilac);

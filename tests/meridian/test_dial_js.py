@@ -189,3 +189,10 @@ def test_dial_interaction_handlers_receive_container():
     assert "function renderDialSVG(state, container)" in js
     assert "function renderEventList(state, container)" in js
     assert "update(state, container);" in js
+
+
+def test_dial_markers_have_orbit_leader_lines():
+    js = _read("static/js/meridian/dial.js")
+    css = _read("static/css/meridian/dial.css")
+    assert "obs-dial-leader" in js
+    assert "stroke-dasharray: 3 4" in css

@@ -529,6 +529,15 @@ function renderDialSVG(state, container) {
     const day = dayIndexForDate(eventDate, today);
     const angle = dayToAngle(day, totalDays);
     const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 34, angle);
+    const leaderStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 48, angle);
+    const leaderEnd = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r + 14, angle);
+    const leader = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    leader.setAttribute("class", "obs-dial-leader");
+    leader.setAttribute("x1", String(leaderStart.x.toFixed(2)));
+    leader.setAttribute("y1", String(leaderStart.y.toFixed(2)));
+    leader.setAttribute("x2", String(leaderEnd.x.toFixed(2)));
+    leader.setAttribute("y2", String(leaderEnd.y.toFixed(2)));
+    markerGroup.appendChild(leader);
     const marker = document.createElementNS("http://www.w3.org/2000/svg", "g");
     marker.setAttribute("class", "obs-dial-marker");
     marker.setAttribute("data-date", eventDate);
