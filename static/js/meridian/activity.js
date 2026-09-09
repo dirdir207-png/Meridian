@@ -367,7 +367,25 @@ async function loadActivity(options = {}) {
   }
 }
 
-window.MeridianActivity = { loadActivity };
+function openAccount(accountId) {
+  state.accountId = Number(accountId) || null;
+  state.mode = "timeline";
+  document.querySelectorAll("[data-activity-mode]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.activityMode === "timeline"));
+  });
+  const select = document.querySelector("[data-account-filter]");
+  if (select) {
+    select.value = state.accountId ? String(state.accountId) : "";
+  }
+  if (window.MeridianShell && window.MeridianShell.getWorkspace() === "activity") {
+    loadActivity({ accountId: state.accountId, cursor: null });
+  } else if (window.MeridianShell) {
+    window.MeridianShell.setWorkspace("activity", { focus: true });
+  }
+}
+
+
+window.MeridianActivity = { loadActivity, openAccount };
 
 document.addEventListener("click", (event) => {
   const modeButton = event.target.closest("[data-activity-mode]");

@@ -105,7 +105,24 @@ function accountRow(account, role) {
   );
   source.dataset.accountSource = "";
   identity.append(name, source);
-  row.append(icon, identity, textNode("strong", "m-account-balance", formatCurrency(account.balance, account.currency)));
+  const activity = document.createElement("button");
+  activity.type = "button";
+  activity.className = "m-account-activity";
+  activity.dataset.accountActivity = String(account.id);
+  activity.setAttribute("aria-label", `View ${account.name} activity`);
+  activity.textContent = "Activity";
+  activity.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (window.MeridianActivity && window.MeridianActivity.openAccount) {
+      window.MeridianActivity.openAccount(account.id);
+    }
+  });
+  row.append(
+    icon,
+    identity,
+    textNode("strong", "m-account-balance", formatCurrency(account.balance, account.currency)),
+    activity
+  );
   return row;
 }
 

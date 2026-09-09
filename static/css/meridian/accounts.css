@@ -196,6 +196,33 @@
   color: var(--m-ink);
 }
 
+.m-account-activity {
+  flex: none;
+  min-height: 36px;
+  padding: var(--m-space-1) var(--m-space-3);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-pill);
+  background: var(--m-surface-muted);
+  color: var(--m-ink-muted);
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-sm);
+  cursor: pointer;
+}
+
+.m-account-activity:hover,
+.m-account-activity:focus-visible {
+  border-color: var(--m-border-strong);
+  color: var(--m-ink);
+}
+
+@media (max-width: 600px) {
+  .m-account-activity {
+    min-height: 44px;
+    padding: var(--m-space-2) var(--m-space-3);
+  }
+}
+
+
 /* ---------- Connection-health rail ---------- */
 
 .m-connection-health {
