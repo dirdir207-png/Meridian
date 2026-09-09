@@ -127,7 +127,7 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
 
 ### Observatory implementation — 2026-09-08 (ongoing small slices)
 
-- Branch: `feat/meridian-implementation`; ahead of origin by 15 commits after this session.
+- Branch: `feat/meridian-implementation`; ahead of origin by 19 commits after this session.
 - Slice 1 (already on branch): Observatory visual tokens/layer, decorative SVG placeholder
   asset set, and a fixture-driven accessible dial (`static/css/meridian/observatory.css`,
   `static/css/meridian/dial.css`, `static/js/meridian/dial.js`,
@@ -173,9 +173,21 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
 - Slice 11 (commit `c1d627f`): Today compact safe-to-spend strip.
   - The safe-to-spend label/figure now appears as a quiet strip above the dial, matching the
     reference hierarchy rather than a large forecast card leading the page.
+- Slice 12 (commit `a6a9eea`): Settings Security & Data.
+  - Added a read-only Security & Data section listing passkey metadata and explicit
+    safeguards. It never renders credential IDs, tokens, or secret material.
+- Slice 13 (commit `6b63abd`): Accounts decorative constellation.
+  - Added the same restrained map ornament to the Accounts command header without encoding
+    account relationships or amounts.
+- Slice 14 (commit `e1e0606`): Accessible Add Connection overlay.
+  - The connection chooser now traps Tab/Shift+Tab focus in addition to Escape and focus
+    restoration.
+- Slice 15 (commit `ad06c50`): Transaction source stamp.
+  - The transaction detail sheet now shows a quiet “Source observation” line using the
+    existing freshness timestamp, keeping dated source and balance distinct.
 - Verified in this session:
-  - `tests/meridian` — 489 passed (includes dial, scenario API, accounts freshness, settings,
-    patterns, action history, and Today hierarchy tests).
+  - `tests/meridian` — 495 passed (includes dial, scenario API, accounts freshness, settings,
+    patterns, action history, security, overlay, and source-stamp tests).
   - `ruff check app.py crew meridian tests` — clean.
   - Full non-browser suite — 651 passed, 1 skipped, 1 pre-existing isolated failure in
     `tests/test_app_evidence_integration.py::test_evidence_content_resolves` (unrelated to
