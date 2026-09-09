@@ -96,7 +96,7 @@
   transform: translate(-50%, -50%);
   display: grid;
   gap: 2px;
-  width: 46%;
+  width: 40%;
   text-align: center;
   color: var(--obs-ink);
 }

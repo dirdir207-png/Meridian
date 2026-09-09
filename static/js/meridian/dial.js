@@ -222,6 +222,19 @@ function formatShortDay(key) {
   return new Intl.DateTimeFormat(undefined, { month: "long", day: "numeric" }).format(parsed);
 }
 
+function formatCenterDate(key) {
+  const parsed = parseDateKey(key);
+  if (!parsed) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  })
+    .format(parsed)
+    .toUpperCase();
+}
+
+
 function formatObservedAt(value) {
   if (!value) {
     return "Observation time unavailable";
@@ -263,7 +276,7 @@ function renderInstrumentOverlay(state) {
   const status = document.createElement("p");
   status.className = "obs-dial-center-status";
   if (selected) {
-    kicker.textContent = formatLongDate(selected.date);
+    kicker.textContent = formatCenterDate(selected.date);
     title.textContent = selected.title;
     amount.textContent = minorToDisplay(selected.amount) || "—";
     status.textContent = fundingLabel(selected.fundingStatus);
