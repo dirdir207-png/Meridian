@@ -128,6 +128,15 @@ def test_login_observatory_treatment_preserves_auth_controls():
     assert "/api/auth/webauthn/authenticate/verify" in login
 
 
+def test_today_observatory_dial_is_primary_before_forecast_hero():
+    today = _read("templates/meridian/partials/today.html")
+    assert today.count("data-observatory-dial") >= 1
+    assert today.index("data-observatory-dial-wrap") < today.index("data-today-hero")
+    # The dial should be rendered once, inside the primary Today column.
+    assert today.index("data-observatory-dial-wrap") < today.index("data-today-brief")
+
+
+
 def test_asset_manifest_lists_observatory_assets():
     manifest = _read("static/img/meridian/observatory/ASSET_MANIFEST.md")
     assert "dial-ornament.svg" in manifest
