@@ -337,7 +337,7 @@ function renderInstrumentOverlay(state) {
   // Quiet directional copy from the concept.
   const topCaption = document.createElement("p");
   topCaption.className = "obs-dial-caption obs-dial-caption--top";
-  topCaption.textContent = "Days to payday";
+  topCaption.textContent = "Days to payday →";
   overlay.appendChild(topCaption);
   const bottomCaption = document.createElement("p");
   bottomCaption.className = "obs-dial-caption obs-dial-caption--bottom";
