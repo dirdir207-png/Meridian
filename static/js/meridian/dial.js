@@ -541,7 +541,7 @@ function renderDialSVG(state, container) {
     circle.setAttribute("cx", String(point.x.toFixed(2)));
     circle.setAttribute("cy", String(point.y.toFixed(2)));
     circle.setAttribute("r", dayEvents.length > 1 ? "15" : "7");
-    circle.setAttribute("fill", "rgba(32,43,64,0.94)");
+    circle.setAttribute("fill", "currentColor");
     marker.appendChild(circle);
     if (dayEvents.length > 1) {
       const text = document.createElementNS("http://www.w3.org/2000/svg", "text");

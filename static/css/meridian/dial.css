@@ -218,9 +218,10 @@
 
 .obs-dial-marker {
   cursor: pointer;
-  fill: var(--obs-surface);
-  stroke: var(--obs-lilac);
-  stroke-width: 2;
+  color: var(--obs-lilac);
+  fill: currentColor;
+  stroke: rgba(32, 38, 59, 0.72);
+  stroke-width: 1.5;
   filter: drop-shadow(0 2px 5px rgba(7, 12, 21, 0.45));
   transition: transform var(--obs-motion-fast) var(--obs-ease-out);
 }
@@ -234,16 +235,17 @@
 }
 
 .obs-dial-marker[data-kind="income"] {
-  stroke: var(--obs-mint);
+  color: var(--obs-mint);
 }
 
 .obs-dial-marker[data-kind="goal"] {
-  stroke: var(--obs-brass);
+  color: var(--obs-brass);
 }
 
 .obs-dial-marker[data-kind="transfer"] {
-  stroke: var(--obs-muted);
+  color: var(--obs-muted);
 }
+
 
 .obs-dial-pointer {
   stroke: var(--obs-paper);
