@@ -239,6 +239,102 @@ function formatObservedAt(value) {
   }).format(parsed);
 }
 
+function selectedEventForState(state) {
+  const events = eventsForDate(state, state.selectedDate);
+  return events.find((event) => event.id === state.selectedEventId) || events[0] || null;
+}
+
+function renderInstrumentOverlay(state) {
+  const overlay = document.createElement("div");
+  overlay.className = "obs-dial-overlay";
+  overlay.setAttribute("aria-hidden", "true");
+
+  // Center: visible event or the available-to-spend figure, matching the
+  // concept art's dark sky with real data in the middle.
+  const center = document.createElement("div");
+  center.className = "obs-dial-center";
+  const selected = selectedEventForState(state);
+  const kicker = document.createElement("p");
+  kicker.className = "obs-dial-center-kicker";
+  const title = document.createElement("p");
+  title.className = "obs-dial-center-title";
+  const amount = document.createElement("p");
+  amount.className = "obs-dial-center-amount";
+  const status = document.createElement("p");
+  status.className = "obs-dial-center-status";
+  if (selected) {
+    kicker.textContent = formatLongDate(selected.date);
+    title.textContent = selected.title;
+    amount.textContent = minorToDisplay(selected.amount) || "—";
+    status.textContent = fundingLabel(selected.fundingStatus);
+  } else if (state.model.availableToSpend && state.model.availableToSpend.minor != null) {
+    kicker.textContent = "Available to spend";
+    title.textContent = "";
+    amount.textContent = minorToDisplay(state.model.availableToSpend) || "—";
+    status.textContent = "Horizon preview";
+  } else {
+    kicker.textContent = formatLongDate(state.selectedDate);
+    title.textContent = "No event selected";
+    amount.textContent = "—";
+    status.textContent = "Choose a day to explore";
+  }
+  center.append(kicker, title, amount, status);
+  overlay.appendChild(center);
+
+  // Engraved observatory/lunar art in the lower-left of the instrument, matching
+  // the concept's decorative scene without carrying financial meaning.
+  const observatory = document.createElement("div");
+  observatory.className = "obs-dial-observatory obs-art";
+  overlay.appendChild(observatory);
+
+
+  // Labels for today, selected day, events, and horizon end, positioned around
+  // the instrument so they read as the engraved calendar in the concept art.
+  const specialDates = new Set([state.model.today, state.model.horizonEnd, state.selectedDate]);
+  for (const event of state.model.events) {
+    if (event.date >= state.model.today && event.date <= state.model.horizonEnd) {
+      specialDates.add(event.date);
+    }
+  }
+  const labels = document.createElement("div");
+  labels.className = "obs-dial-day-labels";
+  for (let day = 0; day <= state.model.totalDays; day += 1) {
+    const date = addDays(state.model.today, day);
+    if (!date || !specialDates.has(date)) {
+      continue;
+    }
+    const angle = dayToAngle(day, state.model.totalDays);
+    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 44, angle);
+    const span = document.createElement("span");
+    span.className = "obs-dial-day-label";
+    if (date === state.model.today) span.classList.add("is-today");
+    if (date === state.selectedDate) span.classList.add("is-selected");
+    const parsed = parseDateKey(date);
+    const dayNumber = parsed ? String(parsed.getDate()) : "";
+    const weekday = parsed
+      ? new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(parsed).replace(".", "")
+      : "";
+    span.textContent = `${dayNumber} ${weekday}`;
+    span.style.left = `${((point.x / VIEWBOX.w) * 100).toFixed(2)}%`;
+    span.style.top = `${((point.y / VIEWBOX.h) * 100).toFixed(2)}%`;
+    labels.appendChild(span);
+  }
+  overlay.appendChild(labels);
+
+  // Quiet directional copy from the concept.
+  const topCaption = document.createElement("p");
+  topCaption.className = "obs-dial-caption obs-dial-caption--top";
+  topCaption.textContent = "Days to payday";
+  overlay.appendChild(topCaption);
+  const bottomCaption = document.createElement("p");
+  bottomCaption.className = "obs-dial-caption obs-dial-caption--bottom";
+  bottomCaption.textContent = "Turn to explore your week";
+  overlay.appendChild(bottomCaption);
+
+  return overlay;
+}
+
+
 
 function fundingLabel(status) {
   const labels = {
@@ -297,6 +393,62 @@ function renderDialSVG(state) {
   glow.setAttribute("r", String(VIEWBOX.r + 14));
   glow.setAttribute("fill", "url(#obsDialGlow)");
   svg.appendChild(glow);
+
+  // Parchment instrument face: a full circle behind the active horizon arc so
+  // the dial reads as the engraved observatory instrument in the concept art.
+  const face = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  face.setAttribute("cx", String(VIEWBOX.cx));
+  face.setAttribute("cy", String(VIEWBOX.cy));
+  face.setAttribute("r", String(VIEWBOX.r - 4));
+  face.setAttribute("class", "obs-dial-face");
+  svg.appendChild(face);
+
+  const rim = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  rim.setAttribute("cx", String(VIEWBOX.cx));
+  rim.setAttribute("cy", String(VIEWBOX.cy));
+  rim.setAttribute("r", String(VIEWBOX.r - 28));
+  rim.setAttribute("class", "obs-dial-rim");
+  svg.appendChild(rim);
+
+  const disk = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  disk.setAttribute("cx", String(VIEWBOX.cx));
+  disk.setAttribute("cy", String(VIEWBOX.cy));
+  disk.setAttribute("r", String(VIEWBOX.r - 96));
+  disk.setAttribute("class", "obs-dial-disk");
+  svg.appendChild(disk);
+
+  // Starfield inside the dark sky, fixed deterministic positions (decorative).
+  const stars = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  stars.setAttribute("class", "obs-dial-stars");
+  const starPositions = [
+    [300, 190], [348, 175], [260, 180], [390, 230], [230, 240],
+    [370, 290], [255, 300], [420, 320], [200, 330], [340, 360],
+    [270, 370], [300, 250],
+  ];
+  for (const [sx, sy] of starPositions) {
+    const star = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    star.setAttribute("cx", String(sx));
+    star.setAttribute("cy", String(sy));
+    star.setAttribute("r", "1.2");
+    stars.appendChild(star);
+  }
+  svg.appendChild(stars);
+
+
+  // Brass rivets around the parchment ring, purely decorative.
+  const rivets = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  rivets.setAttribute("class", "obs-dial-rivets");
+  for (let i = 0; i < 8; i += 1) {
+    const angle = -180 + i * 45;
+    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 14, angle);
+    const rivet = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    rivet.setAttribute("cx", String(point.x.toFixed(2)));
+    rivet.setAttribute("cy", String(point.y.toFixed(2)));
+    rivet.setAttribute("r", "4");
+    rivets.appendChild(rivet);
+  }
+  svg.appendChild(rivets);
+
 
   const arc = document.createElementNS("http://www.w3.org/2000/svg", "path");
   arc.setAttribute("d", arcPath(VIEWBOX.r));
@@ -400,8 +552,21 @@ function renderDialSVG(state) {
   tip.setAttribute("class", "obs-dial-pointer-tip");
   tip.setAttribute("cx", String(pointerPoint.x.toFixed(2)));
   tip.setAttribute("cy", String(pointerPoint.y.toFixed(2)));
-  tip.setAttribute("r", "5");
-  pointerGroup.append(line, tip);
+  tip.setAttribute("r", "6");
+  const centerStarPoints = [];
+  for (let i = 0; i < 10; i += 1) {
+    const starAngle = ((-90 + i * 36) * Math.PI) / 180;
+    const starRadius = i % 2 === 0 ? 13 : 5.5;
+    centerStarPoints.push(
+      `${(VIEWBOX.cx + starRadius * Math.cos(starAngle)).toFixed(2)},${
+        (VIEWBOX.cy + starRadius * Math.sin(starAngle)).toFixed(2)
+      }`
+    );
+  }
+  const centerStar = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  centerStar.setAttribute("class", "obs-dial-pointer-star");
+  centerStar.setAttribute("points", centerStarPoints.join(" "));
+  pointerGroup.append(centerStar, line, tip);
   svg.appendChild(pointerGroup);
 
   return svg;
@@ -454,33 +619,45 @@ function renderEventList(state) {
     : formatLongDate(state.selectedDate);
   wrap.appendChild(heading);
 
-  const events = eventsForDate(state, state.selectedDate);
-  if (!events.length) {
+  // Show the full upcoming horizon, not only the selected day. The concept uses
+  // the side rail as an orbit of all visible money moments.
+  const upcoming = state.model.events.filter(
+    (event) => event.date >= state.model.today && event.date <= state.model.horizonEnd
+  );
+  if (!upcoming.length) {
     const empty = document.createElement("p");
     empty.className = "obs-empty";
-    empty.textContent = "No scheduled money moments on this day.";
+    empty.textContent = "No scheduled money moments in this horizon.";
     wrap.appendChild(empty);
   } else {
+    const subheading = document.createElement("p");
+    subheading.className = "obs-dial-subheading";
+    subheading.textContent = "Upcoming money moments";
+    wrap.appendChild(subheading);
     const list = document.createElement("ul");
     list.className = "obs-event-list";
-    for (const event of events) {
+    for (const event of upcoming) {
       const item = document.createElement("li");
       const button = document.createElement("button");
       button.type = "button";
       button.className = "obs-event-item";
+      button.dataset.kind = event.kind;
       if (event.id === state.selectedEventId) button.setAttribute("data-selected", "true");
       const kind = document.createElement("span");
       kind.className = "obs-event-kind";
       kind.textContent = kindCode(event.kind);
       const body = document.createElement("span");
       body.className = "obs-event-body";
+      const date = document.createElement("span");
+      date.className = "obs-event-date";
+      date.textContent = formatShortDay(event.date);
       const title = document.createElement("span");
       title.className = "obs-event-title";
       title.textContent = event.title;
       const meta = document.createElement("span");
       meta.className = "obs-event-meta";
       meta.textContent = `${fundingLabel(event.fundingStatus)} · ${event.source}`;
-      body.append(title, meta);
+      body.append(date, title, meta);
       const amount = document.createElement("strong");
       amount.className = "obs-event-amount";
       amount.dataset.direction = event.kind === "income" ? "incoming" : "outgoing";
@@ -501,7 +678,7 @@ function renderEventList(state) {
   }
 
   // Selected evidence ticket.
-  const selectedEvent = events.find((event) => event.id === state.selectedEventId) || events[0];
+  const selectedEvent = upcoming.find((event) => event.id === state.selectedEventId) || null;
   wrap.appendChild(renderEvidenceTicket(state, selectedEvent || null));
   return wrap;
 }
@@ -731,6 +908,10 @@ function update(state, container, rangeValue) {
   const svg = panel.querySelector(".obs-dial-svg");
   if (svg) paintSVGSelection(svg, state);
 
+  const oldOverlay = instrument.querySelector(".obs-dial-overlay");
+  const newOverlay = renderInstrumentOverlay(state);
+  if (oldOverlay) oldOverlay.replaceWith(newOverlay);
+
   const oldEvents = panel.querySelector(".obs-dial-events");
   const newEvents = renderEventList(state);
   if (oldEvents) oldEvents.replaceWith(newEvents);
@@ -877,6 +1058,8 @@ export function renderDial(container, inputModel) {
   art.className = "obs-dial-art obs-art";
   const svg = renderDialSVG(state);
   svgWrap.append(art, svg);
+  const overlay = renderInstrumentOverlay(state);
+  svgWrap.appendChild(overlay);
   const controls = renderControls(state, () => update(state, container));
   svgWrap.appendChild(controls);
   instrument.append(svgWrap, renderLegend());

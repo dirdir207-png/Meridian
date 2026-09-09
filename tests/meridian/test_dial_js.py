@@ -153,3 +153,24 @@ def test_asset_manifest_lists_observatory_assets():
     manifest = _read("static/img/meridian/observatory/ASSET_MANIFEST.md")
     assert "dial-ornament.svg" in manifest
     assert "observatory-engraving.svg" in manifest
+
+
+def test_dial_instrument_matches_concept_layers():
+    js = _read("static/js/meridian/dial.js")
+    css = _read("static/css/meridian/dial.css")
+    assert "renderInstrumentOverlay" in js
+    assert "obs-dial-face" in js
+    assert "obs-dial-disk" in js
+    assert "obs-dial-center" in js
+    assert "obs-dial-day-labels" in js
+    assert ".obs-dial-face" in css
+    assert ".obs-dial-center" in css
+    assert ".obs-dial-day-label" in css
+
+
+def test_dial_event_rail_lists_all_upcoming_events():
+    js = _read("static/js/meridian/dial.js")
+    css = _read("static/css/meridian/dial.css")
+    assert "Upcoming money moments" in js
+    assert "event.date >= state.model.today" in js
+    assert ".obs-event-date" in css
