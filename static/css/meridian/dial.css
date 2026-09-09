@@ -514,6 +514,11 @@
   gap: var(--obs-space-4);
 }
 
+  border: 16px solid transparent;
+  border-image: url("/static/img/meridian/observatory/ticket-corners.svg") 40 / 24px round;
+  border-radius: 0;
+
+
 .obs-ticket-header {
   display: flex;
   align-items: flex-start;
