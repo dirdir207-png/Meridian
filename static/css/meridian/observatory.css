@@ -589,6 +589,27 @@ body.obs-shell {
   background: rgba(32, 43, 64, 0.78);
 }
 
+
+/* Today becomes a single Observatory stage on wide screens: the instrument
+   and event rail get the room they have in the concept instead of being
+   compressed beside the Virgil note. */
+@media (min-width: 1101px) {
+  .obs-shell .m-today-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .obs-shell .m-today-primary {
+    width: 100%;
+  }
+
+  .obs-shell .m-today-brief {
+    position: static;
+    justify-self: center;
+    width: min(100%, 760px);
+    margin-top: var(--obs-space-2);
+  }
+}
+
 /* Keyboard/pointer focus plus reduced-motion. */
 @media (prefers-reduced-motion: reduce) {
   .obs-shell,

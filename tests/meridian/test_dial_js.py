@@ -203,3 +203,10 @@ def test_dial_selects_first_upcoming_event_by_default():
     assert "const initialEvent" in js
     assert "selectedEventId: initialEvent" in js
     assert 'mode: initialEvent ? "explore" : "today"' in js
+
+
+def test_observatory_today_stage_gets_full_width_on_desktop():
+    css = _read("static/css/meridian/observatory.css")
+    assert "@media (min-width: 1101px)" in css
+    assert ".obs-shell .m-today-layout" in css
+    assert "grid-template-columns: minmax(0, 1fr)" in css
