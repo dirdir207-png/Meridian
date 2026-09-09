@@ -3,7 +3,7 @@
    keeps the selection in the URL without disturbing Activity filters, and
    restores focus to the originating row on close. */
 
-import { MeridianApiError, freshnessText, meridianFetch } from "./api.js";
+import { MeridianApiError, formatTimestamp, freshnessText, meridianFetch } from "./api.js";
 import { formatCurrency } from "./format.js";
 
 const state = { openId: null, opener: null, accounts: null };
@@ -145,6 +145,13 @@ function render(transaction, freshness, evidence = []) {
   const view = freshnessText(freshness);
   chip.dataset.state = view.state;
   chip.textContent = view.label;
+  setText(
+    "[data-inspector-observed]",
+    freshness && freshness.last_updated_at
+      ? `Observed ${formatTimestamp(freshness.last_updated_at)}`
+      : "Observation time unavailable"
+  );
+
 
   void accountName(transaction.account_id).then((name) => {
     if (state.openId === transaction.id) {

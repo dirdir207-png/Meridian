@@ -62,6 +62,20 @@
   text-transform: capitalize;
 }
 
+.m-inspector-source-stamp {
+  display: flex;
+  align-items: baseline;
+  gap: var(--m-space-2);
+  margin: calc(-1 * var(--m-space-3)) 0 var(--m-space-5);
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+}
+
+.m-inspector-source-stamp .m-section-label {
+  margin: 0;
+}
+
+
 .m-facts {
   margin: 0 0 var(--m-space-5);
   display: grid;
