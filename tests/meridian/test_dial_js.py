@@ -219,3 +219,11 @@ def test_today_safe_to_spend_shows_real_observation_stamp():
     assert "data-sts-observed" in html
     assert "Crew · observed" in js
     assert "m-observatory-safe-observed" in css
+
+
+def test_today_command_copy_matches_observatory_direction():
+    html = _read("templates/meridian/partials/today.html")
+    css = _read("static/css/meridian/observatory.css")
+    assert 'class="m-editorial-headline obs-today-title">Today</h2>' in html
+    assert 'class="obs-today-orbit" data-editorial-headline' in html
+    assert ".obs-shell .obs-today-orbit::after" in css
