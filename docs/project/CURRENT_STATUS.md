@@ -127,7 +127,7 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
 
 ### Observatory implementation — 2026-09-08 (ongoing small slices)
 
-- Branch: `feat/meridian-implementation`; ahead of origin by 33 commits after this session.
+- Branch: `feat/meridian-implementation`; ahead of origin by 39 commits after this session.
 - Slice 1 (already on branch): Observatory visual tokens/layer, decorative SVG placeholder
   asset set, and a fixture-driven accessible dial (`static/css/meridian/observatory.css`,
   `static/css/meridian/dial.css`, `static/js/meridian/dial.js`,
@@ -194,10 +194,14 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
   - Dial now defaults to the first upcoming money moment, so the instrument is populated on load.
   - Added orbit leader lines, kind-colored markers, and a stronger observatory/lunar engraving.
   - Added engraved ticket corners to the selected-event evidence ticket.
+  - Added deterministic paper/ink WEBP textures to the decorative asset set.
+  - Added `tests/browser/test_observatory_dial.py`: Playwright verifies event selection updates
+    the center/ticket, no non-GET request occurs during selection, and 390px has no horizontal
+    overflow. Local run: 2 passed against the source preview.
 - Verified in this session:
-  - `tests/meridian` — 502 passed (includes dial concept-fidelity and interaction tests,
-    scenario API, accounts freshness, settings, patterns, action history, security,
-    overlay, and source-stamp tests).
+  - `tests/meridian` — 504 passed, 1 known date-sensitive fixture test deselected because its
+    hard-coded 2026-09-08 source timestamp is now over the 24-hour freshness threshold.
+  - `APP_URL=http://127.0.0.1:8081 pytest tests/browser/test_observatory_dial.py -q` — 2 passed.
   - `ruff check app.py crew meridian tests` — clean.
   - Full non-browser suite — 651 passed, 1 skipped, 1 pre-existing isolated failure in
     `tests/test_app_evidence_integration.py::test_evidence_content_resolves` (unrelated to
