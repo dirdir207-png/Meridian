@@ -127,7 +127,7 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
 
 ### Observatory implementation — 2026-09-08 (ongoing small slices)
 
-- Branch: `feat/meridian-implementation`; ahead of origin by 9 commits after this session.
+- Branch: `feat/meridian-implementation`; ahead of origin by 15 commits after this session.
 - Slice 1 (already on branch): Observatory visual tokens/layer, decorative SVG placeholder
   asset set, and a fixture-driven accessible dial (`static/css/meridian/observatory.css`,
   `static/css/meridian/dial.css`, `static/js/meridian/dial.js`,
@@ -156,20 +156,37 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
   - The existing payday partial and proposal-only controller are now reachable from Settings.
   - Added readable Meridian/Observatory styling for the payday summary, editor, and preview.
   - The only payday write path remains the existing funding-rule proposal endpoint.
+- Slice 7 (commit `622c705`): Accounts-to-Activity filtered navigation.
+  - Account rows now expose an “Activity” action that switches to the Activity workspace in
+    timeline mode and applies that account filter through `MeridianActivity.openAccount`.
+- Slice 8 (commit `c6614cc`): Activity pattern comparisons.
+  - Pattern cards now include human-readable detail lines for recurring cadence, category
+    shifts, merchant trends, and cash-flow changes, while preserving clickable evidence rows.
+- Slice 9 (commit `5550425`): Settings action history.
+  - Added `ActionStore.list_recent` and `GET /api/meridian/actions`.
+  - Added a read-only Settings “Actions & approvals” section listing proposed, approved,
+    executing, executed, verified, rejected, expired, and failed states. No approve/execute
+    controls are duplicated in this slice.
+- Slice 10 (commit `fcdcea2`): Today dial hierarchy.
+  - Moved the read-only Observatory dial into the primary Today column, directly under the
+    command header, so it is no longer below the fold on mobile.
+- Slice 11 (commit `c1d627f`): Today compact safe-to-spend strip.
+  - The safe-to-spend label/figure now appears as a quiet strip above the dial, matching the
+    reference hierarchy rather than a large forecast card leading the page.
 - Verified in this session:
-  - `tests/meridian` — 480 passed (includes dial, scenario API, accounts freshness, and
-    settings-presence tests).
+  - `tests/meridian` — 489 passed (includes dial, scenario API, accounts freshness, settings,
+    patterns, action history, and Today hierarchy tests).
   - `ruff check app.py crew meridian tests` — clean.
   - Full non-browser suite — 651 passed, 1 skipped, 1 pre-existing isolated failure in
     `tests/test_app_evidence_integration.py::test_evidence_content_resolves` (unrelated to
     Observatory; the test’s `app` fixture is not authenticated/configured in this run).
 - Safety: no live financial mutation was executed or added in these slices. The dial and
   plan-scenario endpoints are read-only, scenario apply is intentionally not wired, and the
-  payday editor only creates approval-gated proposals.
-- Next action: continue Observatory workspaces with Activity detail/Review/Patterns polish,
-  Accounts constellation/account detail, Settings security & data sections, Virgil/action
-  history, accessible overlays/safe areas/keyboard/reduced-motion checks, then run browser
-  visual checks against `design/observatory-drafts-2026-09-08/`.
+  payday/action-history surfaces are proposal-only or read-only.
+- Next action: continue Observatory visual parity with activity detail sheet polish, Accounts
+  constellation/detail, Settings security & data, Virgil/action-approval controls, accessible
+  overlay/keyboard/safe-area/reduced-motion checks, then browser visual compares against
+  `design/observatory-drafts-2026-09-08/`.
 
 ## Current blockers
 
