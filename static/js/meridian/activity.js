@@ -258,6 +258,15 @@ function renderPage(root, payload, { append }) {
       const heading = document.createElement("h2");
       heading.className = "m-day-heading";
       heading.textContent = pattern.title;
+        const detail = document.createElement("p");
+        detail.className = "m-pattern-detail";
+        detail.textContent = pattern.detail || "";
+        if (detail.textContent) {
+          card.append(heading, detail);
+        } else {
+          card.append(heading);
+        }
+
       const evidence = document.createElement("div");
       evidence.className = "m-pattern-evidence";
       const evidenceHeader = document.createElement("p");
@@ -281,7 +290,7 @@ function renderPage(root, payload, { append }) {
         });
         evidence.appendChild(link);
       }
-      card.append(heading, evidence);
+      card.append(evidence);
       ledger.appendChild(card);
     }
   }

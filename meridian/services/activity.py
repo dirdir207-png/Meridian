@@ -95,28 +95,40 @@ def get_patterns(repository: FinancialRepository) -> list[dict[str, object]]:
             dates = [datetime.fromisoformat(item.occurred_at.replace("Z", "+00:00")) for item in ordered]
             intervals = [(later - earlier).days for earlier, later in zip(dates, dates[1:])]
             if len(intervals) >= 2 and all(25 <= interval <= 35 for interval in intervals[-2:]):
+                average_interval = round(sum(intervals[-2:]) / 2)
                 patterns.append(
                     {
                         "kind": "recurrence",
                         "title": f"Monthly pattern: {ordered[-1].merchant or ordered[-1].description}",
+                        "detail": f"Repeats about every {average_interval} days.",
                         "evidence": _evidence(ordered),
                     }
                 )
             categories = {item.classification_category for item in ordered if item.classification_category}
             if len(categories) > 1:
+                latest = ordered[-1].classification_category or "Uncategorized"
+                earlier = sorted(categories - {latest})
+                category_label = ", ".join(earlier) if earlier else "another category"
                 patterns.append(
                     {
                         "kind": "category_shift",
                         "title": f"Category changed for {merchant}",
+                        "detail": f"Recently categorized as {latest}; earlier: {category_label}.",
                         "evidence": _evidence(ordered),
                     }
                 )
             previous_average = sum(abs(item.amount) for item in ordered[:-1]) / (len(ordered) - 1)
             if previous_average and abs(ordered[-1].amount) > previous_average * 1.2:
+                latest_amount = abs(ordered[-1].amount)
+                increase_percent = round((latest_amount / previous_average - 1) * 100)
                 patterns.append(
                     {
                         "kind": "merchant_trend",
                         "title": f"Spending increased at {merchant}",
+                        "detail": (
+                            f"Latest ${latest_amount:,.2f} vs prior average "
+                            f"${previous_average:,.2f} (+{increase_percent}%)."
+                        ),
                         "evidence": _evidence(ordered),
                     }
                 )
@@ -130,6 +142,7 @@ def get_patterns(repository: FinancialRepository) -> list[dict[str, object]]:
                 {
                     "kind": "cash_flow_change",
                     "title": "Recent cash flow changed",
+                    "detail": f"Earlier half ${older:,.2f} vs recent half ${newer:,.2f}.",
                     "evidence": _evidence(ordered),
                 }
             )

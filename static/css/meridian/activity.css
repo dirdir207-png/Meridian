@@ -183,6 +183,14 @@
   color: var(--m-ink-faint);
 }
 
+.m-pattern-detail {
+  margin: 0 0 var(--m-space-2);
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+  line-height: 1.5;
+}
+
+
 .m-pattern-evidence-link {
   display: block;
   width: 100%;

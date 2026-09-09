@@ -496,6 +496,7 @@ def test_review_and_patterns_activity_modes(api_client):
     assert patterns.status_code == 200
     assert patterns.get_json()["patterns"][0]["kind"] == "recurrence"
     assert patterns.get_json()["patterns"][0]["evidence"]
+    assert patterns.get_json()["patterns"][0]["detail"]
 
 
 def test_contextual_advisor_endpoint_passes_workspace_context(api_client, monkeypatch):
