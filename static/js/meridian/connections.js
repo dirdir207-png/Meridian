@@ -221,6 +221,27 @@ function openAddConnection() {
     if (event.key === "Escape") {
       event.stopPropagation();
       closeSheet();
+      return;
+    }
+    if (event.key !== "Tab") {
+      return;
+    }
+    const focusable = [
+      ...sheet.querySelectorAll(
+        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      ),
+    ].filter((node) => !node.hidden && node.offsetParent !== null);
+    if (!focusable.length) {
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === sheet)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
     }
   }
 
