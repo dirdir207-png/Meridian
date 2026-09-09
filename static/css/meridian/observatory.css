@@ -468,6 +468,27 @@ body.obs-shell {
   position: relative;
 }
 
+/* Accounts: a quiet constellation behind the command header. It is decorative
+   and never encodes account amounts or connection ownership. */
+.obs-shell .m-accounts-command {
+  position: relative;
+}
+
+.obs-shell .m-accounts-command::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: url("/static/img/meridian/observatory/map-ornament.svg") right center / contain no-repeat;
+  opacity: 0.22;
+  mix-blend-mode: screen;
+}
+
+.obs-shell .m-accounts-command > * {
+  position: relative;
+}
+
+
 /* Plan scenario preview: a quiet read-only instrument. The ornament stays on
    the map; this card avoids adding more decorative elements. */
 .obs-shell .obs-plan-scenario {

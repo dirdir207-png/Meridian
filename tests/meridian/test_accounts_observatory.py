@@ -28,3 +28,10 @@ def test_accounts_freshness_chip_can_render_partial_state():
     # A partial sync is not silently labelled Current or Stale.
     assert "partial: \"Partial\"" in js
     assert "freshness.dataset.state = computedState" in js
+
+
+def test_accounts_command_uses_decorative_constellation():
+    css = _read("static/css/meridian/observatory.css")
+    assert ".obs-shell .m-accounts-command::before" in css
+    assert "map-ornament.svg" in css
+    assert "pointer-events: none" in css
