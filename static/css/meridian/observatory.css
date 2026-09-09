@@ -41,6 +41,7 @@
   min-height: 100dvh;
   margin: 0;
   background:
+    url("/static/img/meridian/observatory/ink-texture.webp") center / 256px 256px repeat,
     radial-gradient(140% 90% at 20% -10%, rgba(193, 169, 226, 0.10), transparent 45%),
     radial-gradient(120% 80% at 95% 10%, rgba(165, 212, 191, 0.06), transparent 45%),
     var(--obs-bg);
@@ -179,6 +180,7 @@ body.obs-shell {
 
 .obs-panel--paper {
   background:
+    url("/static/img/meridian/observatory/paper-texture.webp") center / 256px 256px repeat,
     linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 20%),
     linear-gradient(180deg, var(--obs-paper), #ddc69f);
   color: var(--obs-paper-ink);

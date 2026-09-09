@@ -151,8 +151,13 @@ def test_today_observatory_dial_is_primary_before_forecast_hero():
 
 def test_asset_manifest_lists_observatory_assets():
     manifest = _read("static/img/meridian/observatory/ASSET_MANIFEST.md")
+    css = _read("static/css/meridian/observatory.css")
     assert "dial-ornament.svg" in manifest
     assert "observatory-engraving.svg" in manifest
+    assert "paper-texture.webp" in manifest
+    assert "ink-texture.webp" in manifest
+    assert "paper-texture.webp" in css
+    assert "ink-texture.webp" in css
 
 
 def test_dial_instrument_matches_concept_layers():
