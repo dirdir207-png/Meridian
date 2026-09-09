@@ -222,6 +222,24 @@ function formatShortDay(key) {
   return new Intl.DateTimeFormat(undefined, { month: "long", day: "numeric" }).format(parsed);
 }
 
+function formatObservedAt(value) {
+  if (!value) {
+    return "Observation time unavailable";
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return String(value);
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(parsed);
+}
+
+
 function fundingLabel(status) {
   const labels = {
     reserved: "Reserved",
@@ -511,7 +529,7 @@ function renderEvidenceTicket(state, event) {
   const sourceStamp = document.createElement("span");
   sourceStamp.className = "obs-source-stamp";
   const observed = event.observedAt || state.model.observedAt || "Observation time unavailable";
-  sourceStamp.textContent = `${event.source} · ${observed}`;
+  sourceStamp.textContent = `${event.source} · ${formatObservedAt(observed)}`;
   headerText.append(title, sourceStamp);
   const amount = document.createElement("strong");
   amount.className = "obs-amount obs-amount--hero";

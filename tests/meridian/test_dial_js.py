@@ -85,6 +85,15 @@ def test_dial_js_keeps_drag_and_range_accessibility_contract():
     assert "aria-valuetext" in js
 
 
+def test_dial_formats_observed_timestamps_human_readably():
+    js = _read("static/js/meridian/dial.js")
+    assert "function formatObservedAt" in js
+    assert "Intl.DateTimeFormat" in js
+    # The ticket must use the human formatter, not the raw ISO string.
+    assert "formatObservedAt(observed)" in js
+
+
+
 def test_preview_page_is_served_from_static():
     html = _read("static/meridian-observatory-preview.html")
     assert 'css/meridian/observatory.css' in html
