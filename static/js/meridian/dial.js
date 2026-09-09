@@ -347,8 +347,8 @@ function fundingLabel(status) {
 }
 
 function kindCode(kind) {
-  const codes = { bill: "B", income: "I", goal: "G", transfer: "T" };
-  return codes[kind] || "E";
+  const codes = { bill: "⚡", income: "✦", goal: "◎", transfer: "⇄" };
+  return codes[kind] || "•";
 }
 
 function arcPath(r) {
@@ -385,6 +385,21 @@ function renderDialSVG(state) {
   stop2.setAttribute("stop-opacity", "0");
   radial.append(stop1, stop2);
   defs.appendChild(radial);
+
+  const paper = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
+  paper.setAttribute("id", "obsDialPaper");
+  const paperStop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+  paperStop1.setAttribute("offset", "0%");
+  paperStop1.setAttribute("stop-color", "#ead8b5");
+  const paperStop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+  paperStop2.setAttribute("offset", "78%");
+  paperStop2.setAttribute("stop-color", "#dfc69c");
+  const paperStop3 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+  paperStop3.setAttribute("offset", "100%");
+  paperStop3.setAttribute("stop-color", "#c9a97a");
+  paper.append(paperStop1, paperStop2, paperStop3);
+  defs.appendChild(paper);
+
   svg.appendChild(defs);
 
   const glow = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -505,24 +520,27 @@ function renderDialSVG(state) {
     marker.setAttribute("class", "obs-dial-marker");
     marker.setAttribute("data-date", eventDate);
     marker.setAttribute("data-count", String(dayEvents.length));
+    marker.setAttribute("data-kind", dayEvents[0].kind);
     if (eventDate === state.selectedDate && dayEvents.some((event) => event.id === state.selectedEventId)) {
       marker.setAttribute("data-selected", "true");
     }
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     circle.setAttribute("cx", String(point.x.toFixed(2)));
     circle.setAttribute("cy", String(point.y.toFixed(2)));
-    circle.setAttribute("r", dayEvents.length > 1 ? "15" : "8");
-    circle.setAttribute("fill", "rgba(32,43,64,0.9)");
+    circle.setAttribute("r", dayEvents.length > 1 ? "15" : "7");
+    circle.setAttribute("fill", "rgba(32,43,64,0.94)");
     marker.appendChild(circle);
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    text.setAttribute("x", String(point.x.toFixed(2)));
-    text.setAttribute("y", String(point.y.toFixed(2) + 5));
-    text.setAttribute("text-anchor", "middle");
-    text.setAttribute("font-size", dayEvents.length > 1 ? "13" : "11");
-    text.setAttribute("fill", "#eee4cf");
-    text.setAttribute("font-weight", "700");
-    text.textContent = dayEvents.length > 1 ? String(dayEvents.length) : kindCode(dayEvents[0].kind);
-    marker.appendChild(text);
+    if (dayEvents.length > 1) {
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", String(point.x.toFixed(2)));
+      text.setAttribute("y", String(point.y.toFixed(2) + 5));
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("font-size", "13");
+      text.setAttribute("fill", "#eee4cf");
+      text.setAttribute("font-weight", "700");
+      text.textContent = String(dayEvents.length);
+      marker.appendChild(text);
+    }
     marker.addEventListener("click", () => {
       const firstId = dayEvents[0].id;
       state.selectedDate = eventDate;

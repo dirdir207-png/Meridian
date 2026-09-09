@@ -174,3 +174,11 @@ def test_dial_event_rail_lists_all_upcoming_events():
     assert "Upcoming money moments" in js
     assert "event.date >= state.model.today" in js
     assert ".obs-event-date" in css
+
+
+def test_today_explore_plan_cta_follows_dial():
+    html = _read("templates/meridian/partials/today.html")
+    css = _read("static/css/meridian/dial.css")
+    assert "Explore my plan" in html
+    assert "obs-explore-plan" in css
+    assert "href=\"/meridian?workspace=plan\"" in html

@@ -44,8 +44,8 @@
 
 /* Parchment instrument surface, engraved rings, and the dark sky center. */
 .obs-dial-face {
-  fill: rgba(234, 216, 181, 0.28);
-  stroke: rgba(234, 216, 181, 0.52);
+  fill: url(#obsDialPaper);
+  stroke: rgba(32, 38, 59, 0.28);
   stroke-width: 2;
 }
 
@@ -197,12 +197,12 @@
 }
 
 .obs-dial-tick {
-  stroke: rgba(238, 228, 207, 0.34);
+  stroke: rgba(32, 38, 59, 0.42);
   stroke-width: 1.5;
 }
 
 .obs-dial-tick--major {
-  stroke: rgba(238, 228, 207, 0.7);
+  stroke: rgba(32, 38, 59, 0.72);
   stroke-width: 2.5;
 }
 
@@ -276,6 +276,17 @@
   stroke: rgba(238, 228, 207, 0.1);
   stroke-width: 1;
 }
+
+.obs-explore-plan {
+  width: 100%;
+  margin: var(--obs-space-4) 0 var(--obs-space-6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--obs-space-2);
+  text-decoration: none;
+}
+
 
 .obs-dial-controls {
   display: flex;
