@@ -214,6 +214,32 @@
   margin-top: var(--m-space-4);
 }
 
+/* Observatory safe-to-spend strip: compact, not a full card, so the dial
+   remains the main object on Today. */
+.m-observatory-safe {
+  margin: 0 0 var(--m-space-4);
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.m-observatory-safe .m-sts-figure-block {
+  margin: var(--m-space-1) 0 0;
+}
+
+.m-observatory-safe .m-sts-figure {
+  font-size: clamp(2rem, 7vw, 2.8rem);
+}
+
+.m-observatory-safe .m-sts-chip-row {
+  margin-top: var(--m-space-2);
+}
+
+.m-observatory-safe .m-sts-chip-row .m-chip {
+  min-height: 32px;
+}
+
+
 /* ---------- Supporting metrics ---------- */
 
 .m-metric {

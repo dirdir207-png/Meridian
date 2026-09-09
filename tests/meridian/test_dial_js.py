@@ -131,6 +131,9 @@ def test_login_observatory_treatment_preserves_auth_controls():
 def test_today_observatory_dial_is_primary_before_forecast_hero():
     today = _read("templates/meridian/partials/today.html")
     assert today.count("data-observatory-dial") >= 1
+    # The compact safe-to-spend strip sits above the dial, matching the
+    # Observatory information hierarchy.
+    assert today.index("data-today-safe") < today.index("data-observatory-dial-wrap")
     assert today.index("data-observatory-dial-wrap") < today.index("data-today-hero")
     # The dial should be rendered once, inside the primary Today column.
     assert today.index("data-observatory-dial-wrap") < today.index("data-today-brief")

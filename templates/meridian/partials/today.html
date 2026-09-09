@@ -10,6 +10,19 @@
         <p class="m-editorial-subline">Meridian reconciles what is available, what is already spoken for, and what changed.</p>
       </header>
 
+      <dl class="m-observatory-safe m-sts" data-today-safe>
+        <dt class="m-sts-label" data-sts-label>Safe to spend until next payday</dt>
+        <dd class="m-sts-figure-block">
+          <span class="m-sts-figure" data-sts-figure aria-live="polite">—</span>
+          <span class="m-sts-change" data-sts-change hidden></span>
+          <span class="m-sts-note" data-sts-note hidden></span>
+        </dd>
+        <dd class="m-sts-chip-row">
+          <span class="m-chip" data-freshness data-state="unavailable"></span>
+        </dd>
+      </dl>
+
+
       <section class="m-observatory-dial-wrap" aria-labelledby="observatory-dial-heading" data-observatory-dial-wrap>
         <h2 class="m-section-label" id="observatory-dial-heading">Observatory</h2>
         <p class="m-observatory-dial-caption">Explore upcoming money moments. This is read-only; no action here changes any data.</p>
@@ -18,32 +31,6 @@
 
 
       <div class="m-today-hero" data-today-hero>
-        <dl class="m-surface m-sts">
-          <dt class="m-sts-label" data-sts-label>Safe to spend until next payday</dt>
-          <dd class="m-sts-figure-block">
-            <span class="m-sts-figure" data-sts-figure aria-live="polite">—</span>
-            <span class="m-sts-change" data-sts-change hidden></span>
-            <span class="m-sts-note" data-sts-note hidden></span>
-          </dd>
-          <dd class="m-forecast-wrap">
-            <svg class="m-forecast" data-forecast viewBox="0 0 500 120" role="img" aria-label="Projected balance unavailable">
-              <line class="m-forecast-floor" data-forecast-floor x1="0" y1="92" x2="500" y2="92"></line>
-              <path class="m-forecast-shade" data-forecast-shade d=""></path>
-              <polyline class="m-forecast-line" data-forecast-line points=""></polyline>
-            </svg>
-            <div class="m-forecast-labels" data-forecast-labels aria-hidden="true">
-              <span class="m-forecast-label" style="left:0%" data-forecast-label>Today</span>
-              <span class="m-forecast-label" style="left:25%" data-forecast-label>Payday</span>
-              <span class="m-forecast-label" style="left:50%" data-forecast-label>Rent</span>
-              <span class="m-forecast-label" style="left:75%" data-forecast-label>Insurance</span>
-              <span class="m-forecast-label" style="left:100%" data-forecast-label>Next payday</span>
-            </div>
-          </dd>
-          <dd class="m-sts-chip-row">
-            <span class="m-chip" data-freshness data-state="unavailable"></span>
-          </dd>
-        </dl>
-
         <section class="m-surface m-beacon-card" aria-labelledby="beacon-heading">
           <p class="m-section-label">Beacon</p>
           <h3 id="beacon-heading" data-beacon-title>Your plan is steady</h3>
