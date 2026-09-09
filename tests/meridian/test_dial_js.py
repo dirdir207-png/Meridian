@@ -182,3 +182,10 @@ def test_today_explore_plan_cta_follows_dial():
     assert "Explore my plan" in html
     assert "obs-explore-plan" in css
     assert "href=\"/meridian?workspace=plan\"" in html
+
+
+def test_dial_interaction_handlers_receive_container():
+    js = _read("static/js/meridian/dial.js")
+    assert "function renderDialSVG(state, container)" in js
+    assert "function renderEventList(state, container)" in js
+    assert "update(state, container);" in js

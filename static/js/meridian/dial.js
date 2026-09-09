@@ -362,7 +362,7 @@ function arcPath(r) {
   return parts.join(" ");
 }
 
-function renderDialSVG(state) {
+function renderDialSVG(state, container) {
   const { today, horizonEnd, totalDays, events } = state.model;
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", `0 0 ${VIEWBOX.w} ${VIEWBOX.h}`);
@@ -548,7 +548,7 @@ function renderDialSVG(state) {
         ? state.selectedEventId
         : firstId;
       state.mode = "explore";
-      update(state);
+      update(state, container);
     });
     markerGroup.appendChild(marker);
   }
@@ -625,7 +625,7 @@ function describeSelectedDay(state) {
   return `${dateText}, ${parts.join("; ")}`;
 }
 
-function renderEventList(state) {
+function renderEventList(state, container) {
   const wrap = document.createElement("div");
   wrap.className = "obs-dial-events";
 
@@ -686,7 +686,7 @@ function renderEventList(state) {
         state.selectedEventId = event.id;
         state.selectedDate = event.date;
         state.mode = "explore";
-        update(state);
+        update(state, container);
         announce(`Selected ${event.title} on ${formatShortDay(event.date)}.`);
       });
       item.appendChild(button);
@@ -931,7 +931,7 @@ function update(state, container, rangeValue) {
   if (oldOverlay) oldOverlay.replaceWith(newOverlay);
 
   const oldEvents = panel.querySelector(".obs-dial-events");
-  const newEvents = renderEventList(state);
+  const newEvents = renderEventList(state, container);
   if (oldEvents) oldEvents.replaceWith(newEvents);
 
   const range = panel.querySelector(".obs-dial-range");
@@ -1074,7 +1074,7 @@ export function renderDial(container, inputModel) {
   svgWrap.className = "obs-dial-svg-wrap";
   const art = document.createElement("div");
   art.className = "obs-dial-art obs-art";
-  const svg = renderDialSVG(state);
+  const svg = renderDialSVG(state, container);
   svgWrap.append(art, svg);
   const overlay = renderInstrumentOverlay(state);
   svgWrap.appendChild(overlay);
@@ -1085,7 +1085,7 @@ export function renderDial(container, inputModel) {
 
   const eventsColumn = document.createElement("aside");
   eventsColumn.className = "obs-dial-events";
-  const eventsContent = renderEventList(state);
+  const eventsContent = renderEventList(state, container);
   eventsColumn.appendChild(eventsContent);
 
   panel.append(instrument, eventsColumn);
