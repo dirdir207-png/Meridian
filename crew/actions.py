@@ -172,6 +172,16 @@ class ActionStore:
             ).fetchall()
         return [self._row_to_dict(row) for row in rows]
 
+    def list_recent(self, limit: int = 50) -> list:
+        """Read-only recent action history across all states."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                f"SELECT {_SELECT_COLUMNS} FROM action_requests "
+                "ORDER BY created_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [self._row_to_dict(row) for row in rows]
+
 
     def approve(self, request_id: str, decided_by: str) -> Dict[str, Any]:
         return self._transition(request_id, ActionState.APPROVED, decided_by=decided_by)

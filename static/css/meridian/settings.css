@@ -423,3 +423,74 @@
   }
 }
 
+/* ---------- Action history ---------- */
+
+.m-actions {
+  display: grid;
+  gap: var(--m-space-5);
+}
+
+.m-action-history {
+  display: grid;
+  gap: var(--m-space-3);
+}
+
+.m-action-card {
+  display: grid;
+  gap: var(--m-space-2);
+  padding: var(--m-space-4);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-md);
+  background: var(--m-surface);
+}
+
+.m-action-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--m-space-3);
+}
+
+.m-action-type {
+  font: 500 var(--m-text-md)/1.3 var(--m-font-sans);
+  color: var(--m-ink);
+}
+
+.m-action-state {
+  flex: none;
+  font-size: var(--m-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--m-ink-muted);
+}
+
+.m-action-state[data-state="verified"] {
+  color: var(--m-healthy);
+}
+
+.m-action-state[data-state="rejected"],
+.m-action-state[data-state="expired"],
+.m-action-state[data-state="failed"] {
+  color: var(--m-risk);
+}
+
+.m-action-state[data-state="proposed"] {
+  color: var(--m-caution);
+}
+
+.m-action-rationale {
+  margin: 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.m-action-meta {
+  margin: 0;
+  color: var(--m-ink-faint);
+  font-size: var(--m-text-xs);
+}
+
+

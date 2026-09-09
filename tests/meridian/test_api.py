@@ -177,6 +177,32 @@ def test_plan_scenario_preview_requires_login_and_is_read_only(api_client):
     assert before == after
 
 
+def test_meridian_action_history_is_read_only(api_client):
+    client, _repository = api_client
+
+    proposed = client.post(
+        "/api/actions/propose",
+        json={
+            "type": "create_commitment",
+            "params": {"type": "goal", "name": "History check", "amount": 10},
+            "rationale": "Read-only action history test.",
+        },
+    )
+    assert proposed.status_code == 200
+
+    response = client.get("/api/meridian/actions")
+
+    assert response.status_code == 200
+    actions = response.get_json()["actions"]
+    assert any(
+        action["type"] == "create_commitment"
+        and action["state"] == "proposed"
+        and action["rationale"] == "Read-only action history test."
+        for action in actions
+    )
+
+
+
 def test_plan_scenario_preview_validates_numeric_input(api_client):
     client, repository = api_client
     _complete_connection(repository)

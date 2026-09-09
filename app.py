@@ -2943,7 +2943,7 @@ def meridian():
 def meridian_settings():
     """Meridian utility settings; financial workspaces remain unchanged."""
     section = request.args.get('section', 'connections')
-    if section not in {'connections', 'payday'}:
+    if section not in {'connections', 'payday', 'actions'}:
         return redirect(url_for('meridian_settings', section='connections'))
     return render_template(
         'meridian/settings.html',
@@ -3875,6 +3875,13 @@ def api_crew_reconnect_status(session_id):
 def api_actions_pending():
     expire_stale_approvals(action_store, ttl_seconds=APPROVAL_TTL_SECONDS)
     return jsonify({"actions": action_store.list_pending()})
+
+@app.route('/api/meridian/actions')
+@login_required
+def api_meridian_action_history():
+    """Read-only recent action history for the Observatory Settings surface."""
+    return jsonify({"actions": action_store.list_recent(50)})
+
 
 @app.route('/api/actions/propose/local', methods=['POST'])
 def api_actions_propose_local():

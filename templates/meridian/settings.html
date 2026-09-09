@@ -31,6 +31,8 @@
         {% include 'meridian/partials/connections.html' %}
       {% elif active_settings_section == 'payday' %}
         {% include 'meridian/partials/payday-funding.html' %}
+      {% elif active_settings_section == 'actions' %}
+        {% include 'meridian/partials/actions.html' %}
       {% else %}
         <p class="m-empty-note">Payday &amp; Funding is the next implementation slice.</p>
       {% endif %}
@@ -61,5 +63,6 @@
   </div>
   <script type="module" src="/static/js/meridian/connections.js"></script>
   <script type="module" src="/static/js/meridian/payday.js"></script>
+  <script type="module" src="/static/js/meridian/actions.js"></script>
 </body>
 </html>

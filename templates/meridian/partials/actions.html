@@ -1,0 +1,18 @@
+{# Observatory Settings: read-only action history.
+   Approval/execute controls intentionally stay in the existing established
+   pipeline rather than being duplicated inside this visual layer. #}
+<section class="m-actions" data-actions-root>
+  <header class="m-settings-command">
+    <div>
+      <p class="m-workspace-kicker">Settings · Actions</p>
+      <h1>Every proposal,<br>kept honest.</h1>
+      <p>Review proposals, executions, and verified outcomes without guessing. This pane is read-only; approvals happen in the established action pipeline.</p>
+    </div>
+    <button class="m-button" type="button" data-actions-refresh>Refresh</button>
+  </header>
+
+  <p class="m-inline-error" data-actions-error role="alert" hidden></p>
+  <div class="m-action-history" data-action-history aria-live="polite">
+    <p class="m-empty-note" data-actions-empty hidden>No action history yet.</p>
+  </div>
+</section>
