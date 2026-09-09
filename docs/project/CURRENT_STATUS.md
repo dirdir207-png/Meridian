@@ -127,7 +127,7 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
 
 ### Observatory implementation — 2026-09-08 (ongoing small slices)
 
-- Branch: `feat/meridian-implementation`; ahead of origin by 28 commits after this session.
+- Branch: `feat/meridian-implementation`; ahead of origin by 33 commits after this session.
 - Slice 1 (already on branch): Observatory visual tokens/layer, decorative SVG placeholder
   asset set, and a fixture-driven accessible dial (`static/css/meridian/observatory.css`,
   `static/css/meridian/dial.css`, `static/js/meridian/dial.js`,
@@ -191,9 +191,11 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
   - Day labels around the instrument, upcoming-money event orbit cards with kind icons,
     “Days to payday →”, “Turn to explore your week”, and “Explore my plan” CTA.
   - Fixed dial selection so clicking an event or marker updates the center and evidence ticket.
+  - Dial now defaults to the first upcoming money moment, so the instrument is populated on load.
+  - Added orbit leader lines, kind-colored markers, and a stronger observatory/lunar engraving.
   - Added engraved ticket corners to the selected-event evidence ticket.
 - Verified in this session:
-  - `tests/meridian` — 500 passed (includes dial concept-fidelity and interaction tests,
+  - `tests/meridian` — 502 passed (includes dial concept-fidelity and interaction tests,
     scenario API, accounts freshness, settings, patterns, action history, security,
     overlay, and source-stamp tests).
   - `ruff check app.py crew meridian tests` — clean.
