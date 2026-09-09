@@ -2,7 +2,7 @@
    The forecast chart is drawn from the data — never a hardcoded path — so its
    scales are truthful and its labels are direct. */
 
-import { MeridianApiError, freshnessText, meridianFetch } from "./api.js";
+import { MeridianApiError, formatTimestamp, freshnessText, meridianFetch } from "./api.js";
 import { formatCurrency, parseLocalDate } from "./format.js";
 
 let controller = null;
@@ -486,6 +486,14 @@ function render(root, payload) {
   renderEvidenceLinks(root.querySelector("[data-brief-evidence]"), brief.evidence);
 
   renderFreshness(root.querySelector("[data-freshness]"), payload.data_freshness);
+  const observed = root.querySelector("[data-sts-observed]");
+  const observedAt = payload.data_freshness && payload.data_freshness.last_updated_at;
+  if (observed) {
+    observed.textContent = observedAt
+      ? `Crew · observed ${formatTimestamp(observedAt)}`
+      : "Observation time unavailable";
+  }
+
 }
 
 async function loadToday() {

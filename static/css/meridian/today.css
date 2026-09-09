@@ -231,6 +231,14 @@
   font-size: clamp(2rem, 7vw, 2.8rem);
 }
 
+.m-observatory-safe-observed {
+  display: block;
+  margin-top: var(--m-space-1);
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+}
+
+
 .m-observatory-safe .m-sts-chip-row {
   margin-top: var(--m-space-2);
 }

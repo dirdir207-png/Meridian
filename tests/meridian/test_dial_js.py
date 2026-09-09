@@ -210,3 +210,12 @@ def test_observatory_today_stage_gets_full_width_on_desktop():
     assert "@media (min-width: 1101px)" in css
     assert ".obs-shell .m-today-layout" in css
     assert "grid-template-columns: minmax(0, 1fr)" in css
+
+
+def test_today_safe_to_spend_shows_real_observation_stamp():
+    html = _read("templates/meridian/partials/today.html")
+    js = _read("static/js/meridian/today.js")
+    css = _read("static/css/meridian/today.css")
+    assert "data-sts-observed" in html
+    assert "Crew · observed" in js
+    assert "m-observatory-safe-observed" in css
