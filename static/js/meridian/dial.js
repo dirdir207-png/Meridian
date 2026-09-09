@@ -317,7 +317,7 @@ function renderInstrumentOverlay(state) {
       continue;
     }
     const angle = dayToAngle(day, state.model.totalDays);
-    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 44, angle);
+    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 22, angle);
     const span = document.createElement("span");
     span.className = "obs-dial-day-label";
     if (date === state.model.today) span.classList.add("is-today");
