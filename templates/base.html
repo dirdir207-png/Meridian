@@ -17,6 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/meridian/action-review.css">
     <link rel="stylesheet" href="/static/css/navigation.css">
     <link rel="stylesheet" href="/static/css/components.css">
     <link rel="stylesheet" href="/static/css/polish.css">
@@ -34,6 +35,9 @@
 
 <!-- UI layer (dialogs must load before API layer for appConfirm) -->
 <script src="/static/js/ui/dialogs.js"></script>
+
+<!-- Shared action review details must load before legacy account approvals. -->
+<script type="module" src="/static/js/meridian/action-review.js"></script>
 
 <!-- API layer -->
 <script src="/static/js/api/cards.js"></script>

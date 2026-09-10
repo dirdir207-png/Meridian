@@ -7,6 +7,7 @@
 // /api/actions endpoints.
 
 import { describeActionOutcome } from "./action-outcome.js";
+import { renderActionReviewDetails } from "./action-review.js";
 
 (function () {
     'use strict';
@@ -203,6 +204,7 @@ import { describeActionOutcome } from "./action-outcome.js";
                 const label = document.createElement('span');
                 label.textContent = `${action.type}: ${action.rationale || action.id}`;
                 row.appendChild(label);
+                row.appendChild(renderActionReviewDetails(action));
                 const approve = document.createElement('button');
                 approve.textContent = 'Approve';
                 approve.setAttribute('data-testid', 'approve-proposal');

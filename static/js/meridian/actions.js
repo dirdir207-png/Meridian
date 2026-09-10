@@ -1,6 +1,7 @@
 /* Read-only Settings action history for the Observatory surface. */
 
 import { MeridianApiError, meridianFetch } from "./api.js";
+import { renderActionReviewDetails } from "./action-review.js";
 
 const root = document.querySelector("[data-actions-root]");
 
@@ -75,7 +76,7 @@ function render(actions) {
     const decided = action.decided_at ? ` · decided ${formatTimestamp(action.decided_at)}` : "";
     meta.textContent = `${requested} · ${created}${decided}`;
 
-    card.append(head, rationale, meta);
+    card.append(head, rationale, meta, renderActionReviewDetails(action));
     history.appendChild(card);
   }
 }

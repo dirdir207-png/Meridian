@@ -210,6 +210,14 @@ async function reconnectCrew() {
     }, 2000);
 }
 
+let actionReviewModule = null;
+
+async function loadActionReviewModule() {
+    if (window.MeridianActionReview) return window.MeridianActionReview;
+    actionReviewModule ||= import('/static/js/meridian/action-review.js');
+    return actionReviewModule;
+}
+
 /**
  * Action pipeline: list pending proposals; approve/reject.
  * Execution always requires an explicit approval first.
@@ -221,6 +229,7 @@ async function loadPendingActions() {
     try {
         const response = await fetch('/api/actions/pending', { credentials: 'same-origin' });
         const data = await response.json();
+        const review = await loadActionReviewModule();
         const actions = data.actions || [];
         empty.style.display = actions.length ? 'none' : 'block';
         empty.textContent = actions.length ? '' : 'No pending action proposals.';
@@ -230,7 +239,14 @@ async function loadPendingActions() {
             const row = document.createElement('div');
             row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border:1px solid var(--border-color);border-radius:8px;margin-bottom:8px;font-size:13px;';
             const label = document.createElement('div');
-            label.innerHTML = `<strong>${action.type}</strong> — ${action.rationale || 'no rationale'}<br><span style="color:var(--text-muted);font-size:12px;">by ${action.requested_by} · ${action.created_at}</span>`;
+            const title = document.createElement('strong');
+            title.textContent = action.type || 'Action';
+            const rationale = document.createTextNode(` — ${action.rationale || 'no rationale'}`);
+            const meta = document.createElement('span');
+            meta.style.cssText = 'display:block;color:var(--text-muted);font-size:12px;';
+            meta.textContent = `by ${action.requested_by || 'owner'} · ${action.created_at || 'time not recorded'}`;
+            label.append(title, rationale, meta);
+            label.appendChild(review.renderActionReviewDetails(action));
             const buttons = document.createElement('div');
             buttons.style.cssText = 'display:flex;gap:6px;flex-shrink:0;';
             const approveBtn = document.createElement('button');
