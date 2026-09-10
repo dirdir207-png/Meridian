@@ -365,3 +365,12 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - `services/plan.py` keeps its separate full-target `_commitment_target` (it subtracts `funded_amount` itself) and is intentionally unchanged.
 - Verification: RED->GREEN — three new tests in `tests/meridian/test_funding.py` fail against the previous behaviour and pass with the fix; `tests/meridian` 566 passed; Ruff and `git diff --check` clean.
 - Commit: `44bf73b`.
+
+## Honest Plan action-outcome rendering — 2026-09-10
+
+- Closed A07 from the consolidated handoff. Plan previously treated every successful HTTP response as successful execution, hard-coded `data-state="ok"`, and could display `Executed (failed).` or `Deleted (failed).`.
+- Added pure `static/js/meridian/action-outcome.js`; all four Plan mutation call sites now interpret the returned durable action state. `verified` is the only successful terminal outcome; `executed` / `executing` stay visibly pending verification; `failed`, `rejected`, `expired`, unknown, and uncertain outcomes fail closed with recovery guidance and no blind-resend copy.
+- Destructive views refresh only after `verified`, never merely because the route was direct or HTTP returned 200. Uncertain failures preserve server detail and instruct the owner to read Crew state before trying again.
+- Added the existing caution-token tone for pending action notes; no new visual component or design authority was introduced. No preview was running on port 8081, so this slice makes no browser-capture claim.
+- Verification: RED->GREEN — three new tests failed before the helper/integration/style existed; Node exercises every durable state and source guards reject the old false-success copy; `tests/meridian` 569 passed; Node syntax, Ruff, and `git diff --check` clean.
+- Commit: `57ba383`.

@@ -116,6 +116,30 @@
         "commit": "44bf73b",
         "verification": "tests/meridian/test_funding.py (21 passed, 3 new), tests/meridian 566 passed, Ruff clean, git diff --check clean"
       }
+    },
+    {
+      "id": "OS-007",
+      "title": "Plan renders durable action outcomes instead of HTTP success",
+      "phase": "action-truth",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-001"
+      ],
+      "authority_impact": "none; presentation only, no routing or mutation change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Verified is the only direct outcome rendered as successful",
+        "Executed and executing remain visibly pending verification",
+        "Failed, rejected, expired, unknown, and uncertain outcomes never receive success styling",
+        "Uncertain outcomes tell the owner to verify Crew state before retrying",
+        "Plan refreshes after a mutation only when the durable state is verified",
+        "All Plan mutation call sites share one pure state interpreter"
+      ],
+      "evidence": {
+        "commit": "57ba383",
+        "verification": "RED->GREEN tests/meridian/test_action_outcome_js.py (3); Node exercises all durable states; tests/meridian 569 passed; Node syntax, Ruff, git diff --check clean"
+      }
     }
   ]
 }
