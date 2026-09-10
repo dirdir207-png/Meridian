@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "project": "ORSC Meridian",
+  "source_of_truth": "docs/project/MERIDIAN_OS_ARCHITECTURE.md",
+  "tasks": [
+    {
+      "id": "OS-001",
+      "title": "Reconcile current implementation and select first vertical slice",
+      "phase": "audit",
+      "status": "ready",
+      "priority": "critical",
+      "dependencies": [],
+      "authority_impact": "none",
+      "owner_decision_required": false,
+      "acceptance_criteria": ["Current governing documents and implementation are reconciled", "Exactly one safe first slice is selected"]
+    },
+    {
+      "id": "OS-002",
+      "title": "Immutable financial observation foundation",
+      "phase": "digital-twin",
+      "status": "planned",
+      "priority": "high",
+      "dependencies": ["OS-001"],
+      "authority_impact": "none",
+      "owner_decision_required": false,
+      "acceptance_criteria": ["Observations preserve provenance and timestamps", "Actual and simulated values cannot mix"]
+    },
+    {
+      "id": "OS-003",
+      "title": "Constitution policy evaluator",
+      "phase": "safety",
+      "status": "planned",
+      "priority": "high",
+      "dependencies": ["OS-002"],
+      "authority_impact": "policy model only; activation owner-gated",
+      "owner_decision_required": true,
+      "acceptance_criteria": ["Policy decisions identify rules, evidence, assumptions, and recovery"]
+    }
+  ]
+}
