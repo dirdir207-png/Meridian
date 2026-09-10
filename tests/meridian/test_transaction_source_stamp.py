@@ -25,3 +25,13 @@ def test_transaction_inspector_has_observation_record_kicker():
     assert "m-inspector-kicker" in template
     assert "Observation record" in template
     assert ".m-inspector-kicker" in css
+
+
+def test_transaction_inspector_uses_signed_amount_and_signal_classes():
+    js = _read("static/js/meridian/transaction-inspector.js")
+    css = _read("static/css/meridian/inspector.css")
+    assert "signedAmount(transaction.amount, transaction.currency)" in js
+    assert 'classList.toggle("is-income", transaction.amount >= 0)' in js
+    assert 'classList.toggle("is-spend", transaction.amount < 0)' in js
+    assert ".m-fact.is-income dd" in css
+    assert ".m-fact.is-spend dd" in css

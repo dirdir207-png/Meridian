@@ -120,9 +120,14 @@ function render(transaction, freshness, evidence = []) {
 
   setFact("merchant", transaction.merchant || "—");
   setFact("description", transaction.description || "—");
+  const amountRow = document.querySelector('[data-fact="amount"]');
+  if (amountRow) {
+    amountRow.classList.toggle("is-income", transaction.amount >= 0);
+    amountRow.classList.toggle("is-spend", transaction.amount < 0);
+  }
   setFact(
     "amount",
-    formatCurrency(transaction.amount, transaction.currency)
+    signedAmount(transaction.amount, transaction.currency)
   );
   setFact("date", formatFullDate(transaction.occurred_at));
   setFact("status", (transaction.status || "unknown").toLowerCase());
