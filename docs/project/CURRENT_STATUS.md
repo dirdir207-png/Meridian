@@ -292,6 +292,8 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Hardened the authenticated mutation endpoint to reject malformed JSON shapes before routing; added
   HTTP regression coverage for non-object bodies, params, and missing action types. Routing now also
   fails closed for a missing/non-string action type before provenance-specific branching.
+- Docker Compose configuration validates successfully (`docker compose config -q`); the tested digest
+  is still not deployed to the daily-use instance, so release remains owner-gated.
 - Corrected provider synchronization to treat an explicit zero reserve as authoritative instead of
   retaining the prior local reserve; omitted reserves still preserve existing observations.
 
