@@ -234,6 +234,61 @@ def test_bill_projection_funds_the_amount_by_its_due_date():
     assert all(event.date <= bill.due_date for event in projection.events)
 
 
+def test_bill_projection_funds_only_the_unreserved_remainder():
+    """D01: a bill's existing reserve must reduce what the rule still funds."""
+    bill = _goal(target="0")
+    bill.type = "bill"
+    bill.amount = Decimal("120.00")
+    bill.funded_amount = Decimal("100.00")
+    bill.due_date = date(2026, 9, 22)
+
+    projection = project_funding(
+        _rule(kind="even_by_due_date", amount=None, cadence="weekly"),
+        bill,
+        [],
+        as_of=date(2026, 9, 1),
+    )
+
+    assert projection.total == Decimal("20.00")
+    assert projection.shortfall == Decimal("0")
+
+
+def test_fully_reserved_bill_projects_nothing():
+    bill = _goal(target="0")
+    bill.type = "bill"
+    bill.amount = Decimal("120.00")
+    bill.funded_amount = Decimal("120.00")
+    bill.due_date = date(2026, 9, 22)
+
+    projection = project_funding(
+        _rule(kind="even_by_due_date", amount=None, cadence="weekly"),
+        bill,
+        [],
+        as_of=date(2026, 9, 1),
+    )
+
+    assert projection.total == Decimal("0")
+    assert projection.events == ()
+
+
+def test_over_reserved_bill_never_projects_a_negative_target():
+    bill = _goal(target="0")
+    bill.type = "bill"
+    bill.amount = Decimal("120.00")
+    bill.funded_amount = Decimal("150.00")
+    bill.due_date = date(2026, 9, 22)
+
+    projection = project_funding(
+        _rule(kind="even_by_due_date", amount=None, cadence="weekly"),
+        bill,
+        [],
+        as_of=date(2026, 9, 1),
+    )
+
+    assert projection.total == Decimal("0")
+    assert projection.shortfall == Decimal("0")
+
+
 def test_unknown_kind_is_rejected():
     with pytest.raises(ValueError):
         project_funding(_rule(kind="magic"), _goal(), [], as_of=date(2026, 9, 1))

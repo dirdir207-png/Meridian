@@ -118,13 +118,16 @@ def _cadence_dates(rule: FundingRule, end: date) -> list[date]:
 def _commitment_target(commitment) -> Decimal:
     """Remaining amount the rule is trying to fund."""
     commitment_type = getattr(commitment, "type", "")
+    funded = _money(getattr(commitment, "funded_amount", None) or _ZERO)
     if commitment_type == "bill":
-        return _money(getattr(commitment, "amount") or 0)
+        target = _money(getattr(commitment, "amount") or _ZERO)
+        return max(_ZERO, target - funded)
     target = getattr(commitment, "target_amount", None)
     if target is None:
         return _ZERO
-    funded = getattr(commitment, "funded_amount", None) or _ZERO
-    remaining = _money(target) - _money(funded)
+    target = _money(target)
+    funded = _money(getattr(commitment, "funded_amount", None) or _ZERO)
+    remaining = target - funded
     return remaining if remaining > _ZERO else _ZERO
 
 
