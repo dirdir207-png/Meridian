@@ -374,3 +374,11 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Added the existing caution-token tone for pending action notes; no new visual component or design authority was introduced. No preview was running on port 8081, so this slice makes no browser-capture claim.
 - Verification: RED->GREEN — three new tests failed before the helper/integration/style existed; Node exercises every durable state and source guards reject the old false-success copy; `tests/meridian` 569 passed; Node syntax, Ruff, and `git diff --check` clean.
 - Commit: `57ba383`.
+
+## Memory retains failed and uncertain action outcomes — 2026-09-10
+
+- Closed A09 from the consolidated handoff. Memory management previously treated every HTTP-200 execute response as success: it wrote `executed`, removed the proposal row, hid the pending container, and refreshed Accounts without inspecting the durable action state.
+- The execute response body now passes through the shared action-outcome interpreter. Only `verified` removes the row and refreshes memory. Failed, uncertain, rejected, expired, executing, executed, and malformed outcomes remain visible with honest recovery copy.
+- The Execute control is disabled after a durable outcome, so failure/uncertainty cannot become a blind resend path; recovery routes through Actions & Approvals and Crew-state readback.
+- Verification: RED->GREEN — three focused tests failed against the old behavior; focused source/integration coverage 11 passed; `tests/meridian` 572 passed; Node syntax, Ruff, and `git diff --check` clean.
+- Commit: `72b6bc0`.

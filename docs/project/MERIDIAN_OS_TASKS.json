@@ -140,6 +140,28 @@
         "commit": "57ba383",
         "verification": "RED->GREEN tests/meridian/test_action_outcome_js.py (3); Node exercises all durable states; tests/meridian 569 passed; Node syntax, Ruff, git diff --check clean"
       }
+    },
+    {
+      "id": "OS-008",
+      "title": "Memory retains and explains failed action outcomes",
+      "phase": "action-truth",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-007"
+      ],
+      "authority_impact": "none; presentation and refresh gating only, no execution change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Memory parses the durable action returned by the execute endpoint",
+        "Only verified execution removes the pending row and refreshes Accounts memory",
+        "Failed, uncertain, rejected, expired, executing, executed, and malformed outcomes remain visible",
+        "A returned durable outcome cannot expose a blind resend through the same Execute control"
+      ],
+      "evidence": {
+        "commit": "72b6bc0",
+        "verification": "RED->GREEN tests/meridian/test_memory_action_outcome_js.py (3); focused integration 11 passed; tests/meridian 572 passed; Node syntax, Ruff, git diff --check clean"
+      }
     }
   ]
 }
