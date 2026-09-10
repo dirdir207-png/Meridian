@@ -38,6 +38,16 @@
   padding-top: var(--m-space-4);
 }
 
+.m-inspector-kicker {
+  margin: 0 0 var(--m-space-1);
+  color: var(--m-ink-faint);
+  font-size: var(--m-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+
 .m-inspector-title {
   font-family: var(--m-font-serif);
   font-weight: 500;

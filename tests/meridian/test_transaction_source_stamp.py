@@ -17,3 +17,11 @@ def test_transaction_inspector_has_source_stamp():
     assert "formatTimestamp" in js
     assert '"[data-inspector-observed]"' in js
     assert ".m-inspector-source-stamp" in css
+
+
+def test_transaction_inspector_has_observation_record_kicker():
+    template = _read("templates/meridian/partials/transaction-inspector.html")
+    css = _read("static/css/meridian/inspector.css")
+    assert "m-inspector-kicker" in template
+    assert "Observation record" in template
+    assert ".m-inspector-kicker" in css
