@@ -94,6 +94,28 @@
         "commit": "768c7e4",
         "verification": "tests/meridian/test_proactive.py (12), API weather cases in tests/meridian/test_api.py, tests/meridian 563 passed, Ruff clean, git diff --check clean"
       }
+    },
+    {
+      "id": "OS-006",
+      "title": "Bill funding target respects an existing reserve",
+      "phase": "financial-event-model",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-002"
+      ],
+      "authority_impact": "none; pure projection math, no authority or mutation change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "A bill's existing funded_amount reduces the amount a funding rule still projects",
+        "A fully reserved bill projects no further contributions",
+        "An over-reserved bill never yields a negative target or shortfall",
+        "Red->Green coverage proves the previous behaviour over-allocated"
+      ],
+      "evidence": {
+        "commit": "44bf73b",
+        "verification": "tests/meridian/test_funding.py (21 passed, 3 new), tests/meridian 566 passed, Ruff clean, git diff --check clean"
+      }
     }
   ]
 }

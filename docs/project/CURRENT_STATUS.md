@@ -357,3 +357,11 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Exposed via read-only `GET /api/meridian/weather` (login required, `@_safe_read`), reusing `build_dial` so the dial stays the single source of dates and amounts. No UI, mutation, or authority change.
 - Verification: `tests/meridian` 563 passed (12 new proactive unit tests plus API cases for auth, shape, invalid `as_of`, and zero repository writes on read); full suite 793 passed, 56 skipped, with the pre-existing `tests/test_capture_contract.py` environment gate unchanged; Ruff and `git diff --check` clean.
 - Commit: `768c7e4`.
+
+## Bill funding target respects an existing reserve — 2026-09-10
+
+- Fixed D01 from the consolidated handoff. `meridian/funding.py::_commitment_target` returned a bill's full amount and ignored its reserve, so a bill with `amount=120.00` and `funded_amount=100.00` projected 120.00 more instead of 20.00 — over-allocating by 100.00 through `project_funding` (used by Plan and Payday).
+- Bills now use the same remaining-target rule goals already used: `max(0, target - funded_amount)`, so a fully reserved bill projects nothing and an over-reserved bill can never produce a negative target or shortfall.
+- `services/plan.py` keeps its separate full-target `_commitment_target` (it subtracts `funded_amount` itself) and is intentionally unchanged.
+- Verification: RED->GREEN — three new tests in `tests/meridian/test_funding.py` fail against the previous behaviour and pass with the fix; `tests/meridian` 566 passed; Ruff and `git diff --check` clean.
+- Commit: `44bf73b`.
