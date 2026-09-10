@@ -1,5 +1,7 @@
 """Tests for Crew write-back executors plugged into the action pipeline."""
 
+import pytest
+
 from crew.actions import ActionStore
 from crew.executors import ExecutorSpec
 from meridian.crew_write_actions import crew_write_executors
@@ -78,6 +80,119 @@ def test_unknown_write_type_rejected_by_store(tmp_path):
     except ValueError:
         return
     raise AssertionError("unknown action type must be rejected")
+
+
+@pytest.mark.parametrize(
+    ("connector_outcome", "expected"),
+    [
+        (
+            {
+                "ok": False,
+                "error": "uncertain",
+                "message": "Outcome unknown; verify in Crew.",
+                "retry_allowed": False,
+                "verify_state": True,
+            },
+            {
+                "success": False,
+                "error": "Outcome unknown; verify in Crew.",
+                "error_code": "uncertain",
+                "retry_allowed": False,
+                "verify_state": True,
+            },
+        ),
+        (
+            {
+                "ok": False,
+                "error": "blocked",
+                "message": "Input did not pass the connector gate.",
+                "retry_allowed": False,
+            },
+            {
+                "success": False,
+                "error": "Input did not pass the connector gate.",
+                "error_code": "blocked",
+                "retry_allowed": False,
+                "verify_state": False,
+            },
+        ),
+        (
+            {
+                "ok": False,
+                "error": "rejected",
+                "message": "Crew rejected the operation.",
+                "retry_allowed": False,
+            },
+            {
+                "success": False,
+                "error": "Crew rejected the operation.",
+                "error_code": "rejected",
+                "retry_allowed": False,
+                "verify_state": False,
+            },
+        ),
+    ],
+)
+def test_executor_preserves_structured_connector_failures(
+    tmp_path, monkeypatch, connector_outcome, expected
+):
+    from meridian import crew_write_actions
+
+    monkeypatch.setattr(
+        crew_write_actions,
+        "execute_crew_write",
+        lambda operation, input_payload: connector_outcome,
+    )
+    executor = crew_write_actions.crew_write_executors(str(tmp_path / "m.db"))[
+        "update_crew_bill"
+    ][0]
+
+    assert executor({"billId": "Bill:1"}) == expected
+
+
+def test_uncertain_connector_outcome_is_persisted_without_retry(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions
+
+    calls = []
+
+    def uncertain(operation, input_payload):
+        calls.append((operation, input_payload))
+        return {
+            "ok": False,
+            "error": "uncertain",
+            "message": "Outcome unknown; verify in Crew.",
+            "retry_allowed": False,
+            "verify_state": True,
+        }
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", uncertain)
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("update_crew_bill",))
+    execute, verifier = crew_write_actions.crew_write_executors(db)["update_crew_bill"]
+    request = store.propose(
+        "update_crew_bill",
+        {"billId": "Bill:1", "name": "Rent"},
+        "Update the bill",
+        requested_by="owner",
+    )
+    store.approve(request["id"], decided_by="owner")
+
+    outcome = execute_approved_action(
+        store,
+        request["id"],
+        {"update_crew_bill": ExecutorSpec(execute=execute, verifier=verifier)},
+    )
+
+    assert calls == [("update_bill", {"billId": "Bill:1", "name": "Rent"})]
+    assert outcome["state"] == "failed"
+    assert outcome["result"] == {
+        "success": False,
+        "error": "Outcome unknown; verify in Crew.",
+        "error_code": "uncertain",
+        "retry_allowed": False,
+        "verify_state": True,
+    }
 
 
 def test_autopilot_rule_executor_enriches_formula_before_write(tmp_path, monkeypatch):

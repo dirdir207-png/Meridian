@@ -36,18 +36,40 @@ def test_success_result_maps_ok_and_returns_payload(monkeypatch):
     assert outcome["retry_allowed"] is False
 
 
-def test_rejected_maps_to_blocked(monkeypatch):
+def test_rejected_outcome_remains_rejected(monkeypatch):
     monkeypatch.setattr(
         subprocess,
         "run",
         lambda cmd, timeout=None, capture_output=True, **kwargs: _fake_run(
-            3, json.dumps({"ok": False, "error": "rejected", "message": "no"})
+            3, json.dumps({"ok": False, "error": "rejected", "message": "Crew rejected the change"})
         ),
     )
     outcome = execute_crew_write("update_bill", {"input": {"billId": "b1"}})
-    assert outcome["ok"] is False
-    assert outcome["error"] in ("rejected", "blocked")
-    assert outcome["retry_allowed"] is False
+    assert outcome == {
+        "ok": False,
+        "error": "rejected",
+        "message": "Crew rejected the change",
+        "retry_allowed": False,
+    }
+
+
+def test_connector_blocked_outcome_remains_blocked(monkeypatch):
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda cmd, timeout=None, capture_output=True, **kwargs: _fake_run(
+            3, json.dumps({"ok": False, "error": "blocked", "message": "Input was blocked"})
+        ),
+    )
+
+    outcome = execute_crew_write("update_bill", {"input": {"billId": "b1"}})
+
+    assert outcome == {
+        "ok": False,
+        "error": "blocked",
+        "message": "Input was blocked",
+        "retry_allowed": False,
+    }
 
 
 def test_uncertain_never_retries(monkeypatch):
@@ -61,6 +83,34 @@ def test_uncertain_never_retries(monkeypatch):
     outcome = execute_crew_write("update_bill", {"input": {"billId": "b1"}})
     assert outcome["ok"] is False
     assert outcome["error"] == "uncertain"
+    assert outcome["verify_state"] is True
+    assert outcome["retry_allowed"] is False
+
+
+def test_timeout_is_unknown_and_requires_readback(monkeypatch):
+    def timeout(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd="crew-write", timeout=60)
+
+    monkeypatch.setattr(subprocess, "run", timeout)
+
+    outcome = execute_crew_write("update_bill", {"input": {"billId": "b1"}})
+
+    assert outcome["error"] == "uncertain"
+    assert outcome["verify_state"] is True
+    assert outcome["retry_allowed"] is False
+
+
+def test_unreadable_response_is_unknown_and_requires_readback(monkeypatch):
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda cmd, timeout=None, capture_output=True, **kwargs: _fake_run(4, "not-json"),
+    )
+
+    outcome = execute_crew_write("update_bill", {"input": {"billId": "b1"}})
+
+    assert outcome["error"] == "uncertain"
+    assert outcome["verify_state"] is True
     assert outcome["retry_allowed"] is False
 
 

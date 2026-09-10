@@ -93,6 +93,7 @@ def execute_crew_write(
             "error": "uncertain",
             "message": "Crew write timed out; outcome unknown — verify in Crew, do not retry.",
             "retry_allowed": False,
+            "verify_state": True,
         }
     except OSError as exc:
         return {
@@ -110,6 +111,7 @@ def execute_crew_write(
             "error": "uncertain",
             "message": "Crew write connector returned an unreadable response; verify in Crew.",
             "retry_allowed": False,
+            "verify_state": True,
         }
 
     if payload.get("ok"):
@@ -121,10 +123,11 @@ def execute_crew_write(
             "error": "uncertain",
             "message": payload.get("message") or "Crew write outcome unknown; verify in Crew.",
             "retry_allowed": False,
+            "verify_state": True,
         }
     return {
         "ok": False,
-        "error": "rejected" if error in ("rejected", "blocked") else "failed",
+        "error": error if error in ("rejected", "blocked") else "failed",
         "message": payload.get("message") or "Crew write was not accepted.",
         "retry_allowed": False,
     }

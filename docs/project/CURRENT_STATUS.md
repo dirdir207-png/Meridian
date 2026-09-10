@@ -391,3 +391,10 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Scope boundary: this does **not** close A12. Fresh base-state capture, source-version/precondition checks, conflict detection, and true before/after comparison remain separate work.
 - Verification: RED->GREEN — four contract tests failed before implementation; focused action-history/memory/browser-source coverage 15 passed; `tests/meridian` 576 passed; isolated preview browser shell/smoke 18 passed; Node syntax, Ruff, and `git diff --check` clean. The temporary preview was stopped afterward.
 - Commit: `f27f553`.
+
+## Structured Crew write outcomes — 2026-09-10
+
+- Closed the structured-outcome portion of A04. Crew connector failures no longer collapse into a generic executor exception: `blocked`, `rejected`, and `uncertain` classifications plus their sanitized messages now survive into the durable action result.
+- Timeouts, unreadable connector responses, and connector-reported uncertainty are explicitly stored with `verify_state=true` and `retry_allowed=false`. The executor is invoked exactly once, no verifier runs after a failed result, and the owner-facing recovery path remains Crew-state readback before any new request.
+- Scope boundary: this does not implement automated reconciliation, operation-specific provider readback, typed action input schemas, or A12 stale-base preconditions. No action authority, mutation registry, retry policy, or UI route changed.
+- Verification: RED→GREEN focused connector/pipeline tests; 34 focused action/outcome tests passed; `tests/meridian` 581 passed; full suite 811 passed, 64 skipped; Ruff and `git diff --check` clean. Browser-only tests were collected but skipped without `APP_URL`; no UI changed. Independent read-only review reported no findings.

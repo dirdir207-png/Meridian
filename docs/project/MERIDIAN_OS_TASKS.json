@@ -185,6 +185,27 @@
         "commit": "f27f553",
         "verification": "RED->GREEN tests/meridian/test_action_review_js.py (4); focused 15 passed; tests/meridian 576 passed; browser shell/smoke 18 passed; Node syntax, Ruff, git diff --check clean"
       }
+    },
+    {
+      "id": "OS-010",
+      "title": "Preserve structured Crew write failure outcomes",
+      "phase": "write-integrity",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-009"
+      ],
+      "authority_impact": "none; failure classification and persistence only, with no routing, mutation, or retry change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Blocked, rejected, and uncertain Crew connector outcomes remain distinguishable in the durable action result",
+        "Timeouts, unreadable responses, and uncertain outcomes require provider-state readback and never permit automatic retry",
+        "A failed connector outcome invokes the executor once and skips post-execution verification",
+        "The slice adds no mutation, authority path, automated reconciliation, or live financial test"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN connector/pipeline coverage; 34 focused passed; tests/meridian 581 passed; full suite 811 passed, 64 skipped; Ruff and git diff --check clean; independent review no findings"
+      }
     }
   ]
 }

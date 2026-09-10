@@ -33,7 +33,14 @@ def _crew_write_executor(operation: str):
         else:
             outcome = execute_crew_write(operation, params)
         if not outcome.get("ok"):
-            raise RuntimeError(outcome.get("message") or outcome.get("error") or "Crew write failed")
+            error_code = outcome.get("error") or "failed"
+            return {
+                "success": False,
+                "error": outcome.get("message") or "Crew write failed",
+                "error_code": error_code,
+                "retry_allowed": False,
+                "verify_state": error_code == "uncertain" or bool(outcome.get("verify_state")),
+            }
         # execute_approved_action expects an explicit success flag.
         return {"success": True, "crew": outcome}
 
