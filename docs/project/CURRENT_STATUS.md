@@ -324,3 +324,9 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Added four contract tests covering the complete 8-state matrix, missing metadata, mismatched DPR/theme, and JSON-safe serialization.
 - Documented harness usage in `docs/project/MERIDIAN_VISUAL_CAPTURE_SPEC.md`. This changes no product behavior and does not regenerate visual baselines.
 - Verification: capture-contract tests passed; Ruff and `git diff --check` passed.
+
+## Capture-matrix runner — 2026-09-10
+
+- Added `scripts/capture_meridian_matrix.py` to execute the full governed viewport/theme/DPR matrix and emit a validated metadata manifest.
+- The runner explicitly configures reduced motion and theme, waits for network/fonts/data settlement, disables animations/transitions, and requires the fixture and frozen clock to be named.
+- Existing approved baselines were not regenerated; no product behavior or financial data was changed.

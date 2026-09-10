@@ -39,3 +39,5 @@ Visual parity is not complete until the capture harness enforces this contract a
 ## Harness implementation
 
 The pure contract validator lives in `tests/browser/capture_contract.py`. It encodes the four viewport/DPR pairs, light/dark themes, and required deterministic metadata fields. `tests/test_capture_contract.py` protects the matrix and rejects incomplete or mismatched capture records.
+
+`scripts/capture_meridian_matrix.py` drives Playwright across all eight governed viewport/theme combinations for each workspace, explicitly setting DPR, color scheme, and reduced motion. It waits for network idle, fonts, and workspace data settlement, disables animation/transitions, and writes a validated `manifest.json` beside the screenshots. Supply the isolated synthetic preview URL, governing concept directory, fixture identifier, and frozen clock explicitly; this tool must never target live financial data.
