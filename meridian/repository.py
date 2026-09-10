@@ -837,7 +837,7 @@ class FinancialRepository:
         with self._connect() as connection:
             rows = connection.execute(
                 f"SELECT {_ACCOUNT_COLUMNS} FROM financial_accounts "
-                "ORDER BY name COLLATE NOCASE ASC, id ASC"
+                "WHERE is_active = 1 ORDER BY name COLLATE NOCASE ASC, id ASC"
             ).fetchall()
         return [self._account_from_row(row) for row in rows]
 
