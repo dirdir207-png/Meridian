@@ -74,6 +74,8 @@ def classify_action(
     ``params`` may carry an explicit ``confidence``/``deterministic`` hint; a
     missing amount/target is treated as under-specified (interpreted).
     """
+    if not isinstance(action_type, str) or not action_type.strip():
+        raise ValueError("action_type must be a non-empty string")
     prov = _coerce_provenance(provenance)
 
     # Under-specified params -> the AI must have interpreted/intended something

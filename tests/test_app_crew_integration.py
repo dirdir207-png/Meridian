@@ -383,6 +383,15 @@ def test_pending_endpoint_tolerates_claim_during_expiry_sweep(authenticated_clie
     assert store.get(expires["id"])["state"] == ActionState.EXPIRED.value
 
 
+def test_mutate_rejects_missing_action_type(authenticated_client):
+    response = authenticated_client.post(
+        "/api/actions/mutate",
+        json={"params": {"target": "checking"}, "provenance": "ai_interpreted"},
+    )
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "action_type must be a non-empty string"
+
+
 def test_mutate_rejects_non_object_json_body(authenticated_client):
     response = authenticated_client.post("/api/actions/mutate", json=[])
     assert response.status_code == 400
