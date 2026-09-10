@@ -69,6 +69,31 @@
         "commit": "dbdca2f",
         "verification": "tests/test_meridian_workspace_invariant.py (13 checks), 566 tests passed, Ruff clean, git diff --check clean"
       }
+    },
+    {
+      "id": "OS-005",
+      "title": "Proactive financial weather and grouped meaningful events",
+      "phase": "proactive",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-002",
+        "OS-003"
+      ],
+      "authority_impact": "none; read-only projection over the dial model, no authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Near-term dial events are grouped and capped with omitted counts (noise control)",
+        "Zero, duplicate, and unparseable events are suppressed rather than rendered",
+        "Weather fails to unknown when freshness is not fresh or the available balance is unknown (missing data is not zero)",
+        "Amounts are never added across currencies",
+        "Every state and group carries a plain-language explanation",
+        "Read-only GET /api/meridian/weather exposes the model and writes no repository rows"
+      ],
+      "evidence": {
+        "commit": "768c7e4",
+        "verification": "tests/meridian/test_proactive.py (12), API weather cases in tests/meridian/test_api.py, tests/meridian 563 passed, Ruff clean, git diff --check clean"
+      }
     }
   ]
 }

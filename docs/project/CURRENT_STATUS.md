@@ -347,3 +347,13 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Verification: 13 checks pass in `tests/test_meridian_workspace_invariant.py`, including rendered-DOM parsing that proves the four workspace sections parse with intact attributes and no leaked tag syntax; 566 tests passed; Ruff and `git diff --check` clean.
 - Negative control: reintroducing the corrupted markup fails 7 of those checks, confirming the guard has teeth.
 - Commits: `dbdca2f` (code and regression tests), `7c4efab` (status record).
+
+## Proactive financial weather slice — 2026-09-10
+
+- Added `meridian/proactive.py`: a pure, read-only projection that groups near-term Observatory dial events and classifies a financial-weather `state` (`steady` / `tight` / `strained` / `unknown`).
+- Noise control: each group is capped at three events and reports an `omitted` count; zero, duplicate, and unparseable events are suppressed and counted rather than rendered.
+- Freshness behaviour fails closed: when dial freshness is not `fresh`, or the available balance is missing, the state is `unknown` at confidence 0.2 with the reason recorded as an assumption. Missing data is never treated as zero, and amounts are never added across currencies.
+- Every state and group carries a plain-language explanation, and each event explains its own funding meaning.
+- Exposed via read-only `GET /api/meridian/weather` (login required, `@_safe_read`), reusing `build_dial` so the dial stays the single source of dates and amounts. No UI, mutation, or authority change.
+- Verification: `tests/meridian` 563 passed (12 new proactive unit tests plus API cases for auth, shape, invalid `as_of`, and zero repository writes on read); full suite 793 passed, 56 skipped, with the pre-existing `tests/test_capture_contract.py` environment gate unchanged; Ruff and `git diff --check` clean.
+- Commit: `768c7e4`.
