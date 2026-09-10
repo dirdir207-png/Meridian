@@ -13,6 +13,7 @@ from meridian.cancellation import (
     CancellationState,
     VerificationSignal,
 )
+from meridian.cancellation.deadlines import upcoming_deadlines
 from meridian.commitments import CommitmentRepository
 from meridian.connections import ConnectionRepository, ConnectionState
 from meridian.evidence import EvidenceRepository
@@ -1554,6 +1555,16 @@ def create_trial():
     except (TypeError, ValueError) as error:
         return _error("invalid_request", str(error), "Provide complete, accurate trial terms.", 400)
     return jsonify({"trial": trial.as_dict()}), 201
+
+
+@meridian_api.get("/trials/deadlines")
+@login_required
+def list_trial_deadlines():
+    include_overdue = request.args.get("include_overdue", "true").lower() == "true"
+    deadlines = upcoming_deadlines(
+        _trial_repository().list(), include_overdue=include_overdue
+    )
+    return jsonify({"deadlines": deadlines, "read_only": True})
 
 
 @meridian_api.get("/trials/<int:trial_id>")

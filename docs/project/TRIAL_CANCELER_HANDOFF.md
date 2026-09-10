@@ -35,7 +35,7 @@ Do not describe this as an autonomous canceler shipped to production. The follow
 remain intentionally absent:
 
 1. No browser extension or local bridge; no merchant website is driven.
-2. No scheduler invokes deadline events or creates cancellation actions automatically.
+2. No scheduler invokes deadline events or creates cancellation actions automatically; `/trials/deadlines` is read-only.
 3. No Gmail/Plaid/transaction ingestion creates trials automatically.
 4. No recipe files are enabled for real merchants.
 5. No evidence-ledger attachment adapter is wired to cancellation artifacts yet.
@@ -53,6 +53,7 @@ Use the existing repository factory/database path. Optional test injection point
 Routes are under the existing `/api/meridian` prefix:
 
 - `GET/POST /trials`
+- `GET /trials/deadlines` (read-only deadline projection)
 - `GET/PATCH /trials/<id>`
 - `GET/POST /trials/<id>/cancellation-actions`
 - `POST /cancellation-actions/<id>/transition`

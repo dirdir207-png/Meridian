@@ -42,3 +42,17 @@ def test_routing_guardrails():
         base = dict(known_recipe=True, confidence=1, allowlisted=False, essential=False)
         base.update(kwargs)
         assert route_cancellation(**base).requires_approval is True
+
+
+def test_deadline_projection_is_read_only_and_skips_terminal_trials(tmp_path):
+    from datetime import datetime
+
+    from meridian.cancellation.deadlines import upcoming_deadlines
+    from meridian.trials import TrialRepository
+
+    repo = TrialRepository(str(tmp_path / "deadline.db"))
+    active = repo.create(service="Active", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-20T00:00:00Z")
+    repo.create(service="Canceled", status="canceled", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-20T00:00:00Z")
+    events = upcoming_deadlines(repo.list(include_canceled=True), now=datetime.fromisoformat("2026-09-10T00:00:00+00:00"))
+    assert {event["trial_id"] for event in events} == {active.id}
+    assert all(event["service"] == "Active" for event in events)
