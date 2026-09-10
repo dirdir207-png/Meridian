@@ -675,9 +675,10 @@ function renderEventList(state, container) {
     subheading.textContent = "Upcoming money moments";
     wrap.appendChild(subheading);
     const list = document.createElement("ul");
-    list.className = "obs-event-list";
+    list.className = "obs-event-list obs-event-list--orbit";
     for (const event of upcoming) {
       const item = document.createElement("li");
+      item.dataset.eventDate = event.date;
       const button = document.createElement("button");
       button.type = "button";
       button.className = "obs-event-item";

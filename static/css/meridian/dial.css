@@ -364,7 +364,42 @@
 }
 
 .obs-dial-events {
+  position: relative;
   min-width: 0;
+}
+
+/* The side rail is the readable counterpart to the dial's orbit markers. Keep
+   a small engraved-looking bridge between the instrument and each event card
+   without making the decorative SVG responsible for readable labels. */
+.obs-event-list--orbit {
+  padding-left: var(--obs-space-2);
+}
+
+.obs-event-list--orbit > li {
+  position: relative;
+}
+
+.obs-event-list--orbit > li::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(100% + var(--obs-space-2));
+  width: var(--obs-space-5);
+  border-top: 1px dashed rgba(193, 169, 226, 0.38);
+  transform: translateY(-50%);
+}
+
+.obs-event-list--orbit > li::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(var(--obs-space-2) * -1);
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--obs-brass);
+  border-radius: 50%;
+  background: var(--obs-bg);
+  transform: translate(-50%, -50%);
 }
 
 .obs-dial-date-heading {
@@ -521,12 +556,10 @@
 .obs-evidence-ticket {
   display: grid;
   gap: var(--obs-space-4);
-}
-
   border: 16px solid transparent;
   border-image: url("/static/img/meridian/observatory/ticket-corners.svg") 40 / 24px round;
   border-radius: 0;
-
+}
 
 .obs-ticket-header {
   display: flex;
@@ -613,6 +646,15 @@
 @media (max-width: 900px) {
   .obs-dial-panel {
     grid-template-columns: 1fr;
+  }
+
+  .obs-event-list--orbit {
+    padding-left: 0;
+  }
+
+  .obs-event-list--orbit > li::before,
+  .obs-event-list--orbit > li::after {
+    display: none;
   }
 }
 

@@ -7,7 +7,7 @@ the dial deliberately reports ``fundingStatus: "unknown"`` and omits a reserved
 amount rather than misrepresenting one reserve across every future due date.
 """
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Optional, Sequence
 
@@ -279,6 +279,7 @@ def build_dial(
     *,
     as_of: date,
     paycheck=None,
+    now: Optional[datetime] = None,
 ) -> dict:
     """Build the read-only Observatory dial model."""
     if commitments is None:
@@ -294,7 +295,7 @@ def build_dial(
         graph,
         account_ids=[account.id for account in accounts],
         include_all_connections=True,
-        now=None,
+        now=now,
     )
 
     return {

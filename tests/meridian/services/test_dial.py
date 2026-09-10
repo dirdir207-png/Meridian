@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 
 from meridian.commitments import CommitmentRepository, CommitmentType
 from meridian.paycheck import PaycheckConfig
@@ -93,9 +93,19 @@ def test_build_dial_includes_paycheck_horizon_events(tmp_path):
     assert result["events"][0]["amount"] == {"minor": 124000, "currency": "USD"}
 
 
-def test_build_dial_returns_empty_horizon_when_no_records(tmp_path):
+def test_build_dial_returns_empty_horizon_when_no_records(tmp_path, monkeypatch):
+    fixed_now = datetime(2026, 9, 8, 12, tzinfo=timezone.utc)
+    monkeypatch.setattr(
+        "meridian.repository._now",
+        lambda: fixed_now.isoformat().replace("+00:00", "Z"),
+    )
     repository = _connected_repository(tmp_path)
-    result = build_dial(repository, [], as_of=date(2026, 9, 8))
+    result = build_dial(
+        repository,
+        [],
+        as_of=fixed_now.date(),
+        now=fixed_now,
+    )
     assert result["events"] == []
     assert result["freshness"] == "fresh"
 

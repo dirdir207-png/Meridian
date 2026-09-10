@@ -1,6 +1,6 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-08-31 (OpenRouter/ORSC build handoff)
+Last consolidated: 2026-09-10 (Observatory dial continuation)
 
 ## Canonical sources
 
@@ -197,12 +197,16 @@ See `docs/project/PRIVATE_RELEASE_ACCEPTANCE.md` for the full record. Summary:
   - Added full-width desktop Today staging so the dial/event rail is concept-scale rather than compressed beside Virgil.
   - Added Today command hierarchy: Today title, truthful orbit subtitle, and a real Crew observation stamp.
   - Added deterministic paper/ink WEBP textures to the decorative asset set.
+   - Added a readable orbit bridge between desktop event cards and the dial, while hiding
+     decorative connectors on mobile where the rail stacks below the instrument.
+
   - Added `tests/browser/test_observatory_dial.py`: Playwright verifies event selection updates
     the center/ticket, no non-GET request occurs during selection, and 390px has no horizontal
     overflow. Local run: 2 passed against the source preview.
 - Verified in this session:
-  - `tests/meridian` — 504 passed, 1 known date-sensitive fixture test deselected because its
-    hard-coded 2026-09-08 source timestamp is now over the 24-hour freshness threshold.
+  - `tests/meridian` — 520 passed, including the formerly date-sensitive dial fixture with a
+    frozen clock and explicit `build_dial(..., now=...)` value.
+  - `tests/meridian/test_dial_js.py tests/meridian/services/test_dial.py` — 26 passed.
   - `APP_URL=http://127.0.0.1:8081 pytest tests/browser/test_observatory_dial.py -q` — 2 passed.
   - `ruff check app.py crew meridian tests` — clean.
   - Full non-browser baseline — 651 passed, 1 skipped, 1 pre-existing isolated failure in
