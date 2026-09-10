@@ -25,6 +25,7 @@ from meridian.connections import ConnectionRepository, ConnectionState
 from meridian.evidence import EvidenceRepository
 from meridian.funding_repo import FundingRuleRepository
 from meridian.models import AccountRecord, TransactionRecord
+from meridian.observations import ObservationRepository
 from meridian.services.accounts import build_accounts
 from meridian.services.activity import (
     get_activity,
@@ -212,6 +213,22 @@ def _positive_int(value: str) -> int:
     if parsed < 1:
         raise ValueError
     return parsed
+
+
+@meridian_api.get("/observations")
+@login_required
+@_safe_read
+def observations():
+    """Return credential-free immutable observation metadata."""
+    try:
+        limit = int(request.args.get("limit", "100"))
+    except ValueError:
+        return _error("invalid_request", "limit must be an integer.", "Use a limit between 1 and 500.", 400)
+    try:
+        records = ObservationRepository(_repository().db_path).list_recent(limit)
+    except ValueError as error:
+        return _error("invalid_request", str(error), "Use a limit between 1 and 500.", 400)
+    return jsonify({"observations": [record.to_dict() for record in records], "data_mode": "actual"})
 
 
 @meridian_api.get("/plan")
