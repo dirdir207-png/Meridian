@@ -28,3 +28,20 @@ def test_cancellation_action_rejects_missing_evidence(tmp_path):
     action = repo.create(1, "email")
     with pytest.raises(ValueError, match="evidence_id"):
         repo.attach_evidence(action.id, 999)
+
+
+def test_due_notifications_are_idempotent(tmp_path):
+    from datetime import datetime, timezone
+
+    from meridian.cancellation.notifications import TrialNotificationRepository
+
+    db_path = str(tmp_path / "notifications.db")
+    TrialRepository(db_path).create(service="Example", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-10T00:00:00Z")
+    repo = TrialNotificationRepository(db_path)
+    now = datetime(2026, 9, 10, tzinfo=timezone.utc)
+    first = repo.materialize_due(now=now)
+    second = repo.materialize_due(now=now)
+    assert len(first) == 4
+    assert len(second) == 4
+    sent = repo.mark_sent(first[0].id)
+    assert sent.status == "sent"
