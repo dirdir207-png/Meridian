@@ -47,6 +47,28 @@
       "acceptance_criteria": [
         "Policy decisions identify rules, evidence, assumptions, and recovery"
       ]
+    },
+    {
+      "id": "OS-004",
+      "title": "Repair shell markup and restore the four-workspace navigation invariant",
+      "phase": "correctness",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-001"
+      ],
+      "authority_impact": "none; UI structure only, no authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Rendered shell contains exactly four workspace sections with intact attributes",
+        "Primary navigation exposes exactly four workspaces",
+        "Trials remains reachable as a Settings section without API or safety changes",
+        "Regression guards fail against the corrupted markup (negative control)"
+      ],
+      "evidence": {
+        "commit": "dbdca2f",
+        "verification": "tests/test_meridian_workspace_invariant.py (13 checks), 566 tests passed, Ruff clean, git diff --check clean"
+      }
     }
   ]
 }

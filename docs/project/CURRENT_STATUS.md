@@ -344,5 +344,6 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Repaired `index.html` structural corruption from commit `5ea003d`: removed the spliced Trials `<section>` and restored the Accounts workspace's `data-workspace-section="accounts"` element.
 - Added `trials` to the Settings sections list in `app.py` and wired the partial + `trials.js` include into `settings.html`.
 - The Trials capability (API, `trials.py`, `cancellation/` logic, deadline ledger) remains fully reachable at `/api/meridian/trials*` and via `/meridian/settings?section=trials`; no API surface or safety semantics changed.
-- Verification: 6 regression checks pass (`tests/test_meridian_workspace_invariant.py`); Meridian suite 548 passed; `tests/browser/test_evidence_memory.py` passes; Ruff and `git diff --check` pass.
-- Commit intent: restore governing design authority without orphaning the Trials capability.
+- Verification: 13 checks pass in `tests/test_meridian_workspace_invariant.py`, including rendered-DOM parsing that proves the four workspace sections parse with intact attributes and no leaked tag syntax; 566 tests passed; Ruff and `git diff --check` clean.
+- Negative control: reintroducing the corrupted markup fails 7 of those checks, confirming the guard has teeth.
+- Commits: `dbdca2f` (code and regression tests), `7c4efab` (status record).
