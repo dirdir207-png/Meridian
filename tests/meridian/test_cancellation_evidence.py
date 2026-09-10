@@ -45,3 +45,10 @@ def test_due_notifications_are_idempotent(tmp_path):
     assert len(second) == 4
     sent = repo.mark_sent(first[0].id)
     assert sent.status == "sent"
+
+
+def test_notification_repository_rejects_invalid_status(tmp_path):
+    from meridian.cancellation.notifications import TrialNotificationRepository
+
+    with pytest.raises(ValueError, match="status"):
+        TrialNotificationRepository(str(tmp_path / "notifications.db")).list(status="bogus")

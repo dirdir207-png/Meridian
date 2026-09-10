@@ -15,6 +15,7 @@ from meridian.cancellation import (
 )
 from meridian.cancellation.brief import build_cancellation_brief
 from meridian.cancellation.deadlines import upcoming_deadlines
+from meridian.cancellation.notifications import TrialNotificationRepository
 from meridian.commitments import CommitmentRepository
 from meridian.connections import ConnectionRepository, ConnectionState
 from meridian.evidence import EvidenceRepository
@@ -1594,6 +1595,39 @@ def update_trial(trial_id: int):
 def _cancellation_repository():
     factory = current_app.config.get("MERIDIAN_CANCELLATION_FACTORY")
     return factory() if factory else CancellationRepository(_repository().db_path)
+
+
+def _trial_notification_repository():
+    factory = current_app.config.get("MERIDIAN_TRIAL_NOTIFICATIONS_FACTORY")
+    return factory() if factory else TrialNotificationRepository(_repository().db_path)
+
+
+@meridian_api.get("/trials/notifications")
+@login_required
+def list_trial_notifications():
+    status = request.args.get("status")
+    try:
+        notifications = _trial_notification_repository().list(status=status)
+    except ValueError as error:
+        return _error("invalid_request", str(error), "Use pending, sent, or dismissed.", 400)
+    return jsonify({"notifications": [notification.__dict__ for notification in notifications]})
+
+
+@meridian_api.post("/trials/notifications/materialize")
+@login_required
+def materialize_trial_notifications():
+    notifications = _trial_notification_repository().materialize_due()
+    return jsonify({"notifications": [notification.__dict__ for notification in notifications], "sent": False})
+
+
+@meridian_api.post("/trials/notifications/<int:notification_id>/mark-sent")
+@login_required
+def mark_trial_notification_sent(notification_id: int):
+    try:
+        notification = _trial_notification_repository().mark_sent(notification_id)
+    except KeyError:
+        return _error("not_found", "Trial notification not found or already handled.", "Refresh notifications.", 404)
+    return jsonify({"notification": notification.__dict__})
 
 
 @meridian_api.get("/trials/<int:trial_id>/cancellation-brief")
