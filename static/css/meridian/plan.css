@@ -581,6 +581,21 @@
 
 /* ---------- Funding editor ---------- */
 
+/* Dynamic editors are appended to body by the shell sheet primitive. Keep
+   them in the viewport so an action never appears to do nothing at page end. */
+.m-sheet.m-funding-editor {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  z-index: 60;
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: min(90svh, 48rem);
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  background: var(--m-surface);
+  box-shadow: var(--m-elevation-3, 0 16px 48px rgba(0, 0, 0, 0.2));
+}
+
 .m-funding-editor {
   grid-column: 1 / -1;
   margin-top: var(--m-space-4);

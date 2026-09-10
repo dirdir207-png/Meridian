@@ -1100,6 +1100,10 @@ function openAutopilotRuleEditor() {
 
   document.body.appendChild(sheet);
   window.MeridianShell.openSheet(sheet, { modal: true });
+  requestAnimationFrame(() => {
+    const initial = sheet.querySelector('input[name="rule-name"]');
+    if (initial) initial.focus();
+  });
 }
 
 /* ---------- New commitment (approval-gated proposal) ---------- */
