@@ -226,7 +226,11 @@ function renderConnections(items, dataFreshness) {
   const list = root.querySelector("[data-connections-list]");
   const status = root.querySelector("[data-connection-status]");
   const freshness = root.querySelector("[data-accounts-freshness]");
+  const lastMaterial = root.querySelector("[data-connection-last]");
   list.replaceChildren();
+  if (lastMaterial && dataFreshness && dataFreshness.last_updated_at) {
+    lastMaterial.textContent = `Last material data · ${relativeAge(dataFreshness.last_updated_at)}`;
+  }
   const computedState = (dataFreshness && dataFreshness.status) || "unavailable";
   if (!items.length) {
     list.append(textNode("p", "m-empty-note", "No provider connections are configured."));
