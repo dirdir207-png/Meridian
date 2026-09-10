@@ -6,6 +6,8 @@
 // and the pending proposals are approved/executed via the existing
 // /api/actions endpoints.
 
+import { describeActionOutcome } from "./action-outcome.js";
+
 (function () {
     'use strict';
 
@@ -232,6 +234,7 @@
                     const body = await response.json().catch(() => ({}));
                     throw new Error((body.error && body.error.message) || `Request failed (${response.status})`);
                 }
+                const body = await response.json();
                 if (step === 'approve') {
                     // Approval succeeds: the action is no longer PROPOSED, so do
                     // NOT re-fetch pending (it would wipe the row). Instead enable
@@ -239,18 +242,25 @@
                     if (execute) execute.disabled = false;
                     if (statusEl) statusEl.textContent = 'approved';
                 } else if (step === 'execute') {
-                    if (statusEl) statusEl.textContent = 'executed';
-                    if (row) row.remove();
-                    // Hide the container when no pending proposals remain.
-                    const container = document.querySelector('[data-testid=pending-memory-proposals]');
-                    if (container && !container.querySelector('.pending-memory-proposal')) {
-                        container.hidden = true;
+                    const outcome = describeActionOutcome({ routing_direct: true, action: body });
+                    if (statusEl) statusEl.textContent = outcome.message;
+                    if (statusEl) statusEl.dataset.state = outcome.tone;
+                    // A durable outcome is not a resend invitation. Keep failed,
+                    // uncertain, or unverified rows visible and route recovery to
+                    // Actions & Approvals rather than enabling another execution.
+                    if (execute) execute.disabled = true;
+                    if (outcome.refresh) {
+                        if (row) row.remove();
+                        // Hide the container only after verified execution removes
+                        // its final pending row.
+                        const container = document.querySelector('[data-testid=pending-memory-proposals]');
+                        if (container && !container.querySelector('.pending-memory-proposal')) {
+                            container.hidden = true;
+                        }
+                        document.dispatchEvent(new CustomEvent('memory:refresh', {
+                            detail: { workspace: 'accounts' },
+                        }));
                     }
-                    // The action is now applied; refresh the accounts memory region
-                    // so the newly created/updated record shows up.
-                    document.dispatchEvent(new CustomEvent('memory:refresh', {
-                        detail: { workspace: 'accounts' },
-                    }));
                 }
             } catch (error) {
                 if (statusEl) statusEl.textContent = error.message;
