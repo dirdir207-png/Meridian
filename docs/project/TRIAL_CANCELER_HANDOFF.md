@@ -2,7 +2,7 @@
 
 **Lane:** ORSC (`/Users/stephenwest/Openrouter/simplecrew-latest`)
 **Branch:** `feat/meridian-implementation`
-**Status:** implemented foundation, **uncommitted and not yet shipped**
+**Status:** implemented foundation, **committed but not yet shipped**
 **Scope:** local-only trial ledger and cancellation workflow primitives
 
 ## What is valid and tested
@@ -25,8 +25,9 @@ routes are reachable when the running app uses this branch.
 - `meridian/api.py` — authenticated CRUD for trials and cancellation-action creation,
   listing, and state transitions.
 
-Verification at handoff: `tests/meridian` **520 passed**; targeted trial/cancellation,
-recipe, migration, and API tests pass; Ruff passes for the new/changed code.
+Verification at handoff: `tests/meridian` **520 passed**; the repository suite currently
+passes **728 tests with 64 skips**; targeted trial/cancellation, recipe, migration, and API
+tests pass; Ruff passes for the new/changed code.
 
 ## What is *not* plugged in yet
 
