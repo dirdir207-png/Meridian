@@ -26,6 +26,7 @@ from meridian.evidence import EvidenceRepository
 from meridian.funding_repo import FundingRuleRepository
 from meridian.models import AccountRecord, TransactionRecord
 from meridian.observations import ObservationRepository, build_simulation_input
+from meridian.proactive import build_financial_weather
 from meridian.services.accounts import build_accounts
 from meridian.services.activity import (
     get_activity,
@@ -837,6 +838,37 @@ def dial():
             paycheck=_paycheck_config(graph),
         )
     )
+
+
+@meridian_api.get("/weather")
+@login_required
+@_safe_read
+def weather():
+    """Read-only proactive weather derived from the Observatory dial.
+
+    Returns grouped near-term events plus a financial-weather state and its
+    plain-language explanation. It reports ``unknown`` rather than a reassuring
+    state when provider data is stale or the available balance is unavailable,
+    and it never mutates anything.
+    """
+    graph, commitments, _rules = _plan_repositories()
+    as_of_value = request.args.get("as_of")
+    try:
+        as_of = date.fromisoformat(as_of_value) if as_of_value else date.today()
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "as_of must be an ISO date (YYYY-MM-DD).",
+            "Use today's date or omit as_of.",
+            400,
+        )
+    dial = build_dial(
+        graph,
+        commitments.list_active(),
+        as_of=as_of,
+        paycheck=_paycheck_config(graph),
+    )
+    return jsonify(build_financial_weather(dial).to_dict())
 
 
 @meridian_api.get("/sync")

@@ -106,6 +106,7 @@ def _partial_connection_without_records(repository, *, provider="simplefin"):
     [
         "/api/meridian/today",
         "/api/meridian/dial",
+        "/api/meridian/weather",
         "/api/meridian/activity",
         "/api/meridian/transactions/1",
         "/api/meridian/accounts",
@@ -142,6 +143,33 @@ def test_dial_read_api_returns_observatory_model(api_client):
     assert "availableToSpend" in payload
     assert "freshness" in payload
     assert payload["projections"] == []
+
+
+def test_weather_read_api_returns_proactive_model_without_mutating(api_client):
+    client, repository = api_client
+    _complete_connection(repository)
+    accounts_before = len(repository.list_accounts())
+
+    response = client.get("/api/meridian/weather")
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["state"] in {"steady", "tight", "strained", "unknown"}
+    assert payload["windowDays"] == 14
+    assert isinstance(payload["groups"], list)
+    assert isinstance(payload["suppressed"], int)
+    # The proactive layer is a pure projection: reading it must not write rows.
+    assert len(repository.list_accounts()) == accounts_before
+
+
+def test_weather_read_api_rejects_invalid_as_of(api_client):
+    client, repository = api_client
+    _complete_connection(repository)
+
+    response = client.get("/api/meridian/weather?as_of=not-a-date")
+
+    assert response.status_code == 400
+    assert response.get_json()["error"]["code"] == "invalid_request"
 
 
 def test_plan_scenario_preview_requires_login_and_is_read_only(api_client):
