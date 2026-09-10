@@ -272,7 +272,8 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 ## Whole-project safety continuation — 2026-09-10
 
 - Revisited the governing product spec, implementation plan, consolidated handoff, release acceptance,
-  current status, and Trial Canceler handoff. Historical unchecked plan boxes are not treated as current
+  current status, and Trial Canceler handoff; reconciled the latter's stale uncommitted label.
+  Historical unchecked plan boxes are not treated as current
   status; the consolidated handoff's concrete findings drive follow-up work.
 - Hardened the durable action pipeline so an approved action older than the configured 3600-second TTL
   is atomically marked `expired` during execution claim, closing the pending-list/execute race. Invalid
