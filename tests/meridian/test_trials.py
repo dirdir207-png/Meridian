@@ -59,3 +59,15 @@ def test_deadline_events_are_anchored_to_cancel_by(repository):
     assert [event["kind"] for event in events] == ["7_days", "3_days", "1_day", "deadline"]
     assert events[-1]["due_at"] == "2026-09-19T09:00:00-04:00"
     assert events[0]["overdue"] == "false"
+
+
+def test_capture_requires_explicit_merchant_terms(repository):
+    from meridian.cancellation.capture import capture_trial
+
+    with pytest.raises(ValueError, match="explicit"):
+        capture_trial(repository, {"service": "Example", "trial_started_at": "2026-09-01T00:00:00Z"})
+    trial = capture_trial(repository, {
+        "service": "Example", "trial_started_at": "2026-09-01T00:00:00Z",
+        "trial_ends_at": "2026-09-10T00:00:00Z", "price_after": 12.99,
+    })
+    assert trial.source_of_truth == "checkout_capture"

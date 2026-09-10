@@ -14,6 +14,7 @@ from meridian.cancellation import (
     VerificationSignal,
 )
 from meridian.cancellation.brief import build_cancellation_brief
+from meridian.cancellation.capture import capture_trial
 from meridian.cancellation.deadlines import upcoming_deadlines
 from meridian.cancellation.notifications import TrialNotificationRepository
 from meridian.commitments import CommitmentRepository
@@ -1557,6 +1558,17 @@ def create_trial():
     except (TypeError, ValueError) as error:
         return _error("invalid_request", str(error), "Provide complete, accurate trial terms.", 400)
     return jsonify({"trial": trial.as_dict()}), 201
+
+
+@meridian_api.post("/trials/capture")
+@login_required
+def capture_trial_terms():
+    payload = request.get_json(silent=True) or {}
+    try:
+        trial = capture_trial(_trial_repository(), payload)
+    except (TypeError, ValueError) as error:
+        return _error("invalid_capture", str(error), "Capture explicit merchant trial dates before saving.", 400)
+    return jsonify({"trial": trial.as_dict(), "captured": True}), 201
 
 
 @meridian_api.get("/trials/deadlines")
