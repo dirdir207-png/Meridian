@@ -83,3 +83,26 @@ def test_observation_api_returns_metadata_without_payload(observation_api_client
     assert body["data_mode"] == "actual"
     assert body["observations"][0]["snapshot_id"] == records[0].snapshot_id
     assert "payload" not in body["observations"][0]
+
+from meridian.observations import build_simulation_input
+
+
+def test_actual_snapshot_can_seed_only_read_only_simulation_input(tmp_path):
+    repo = ObservationRepository(str(tmp_path / "obs.db"))
+    records = repo.append_snapshot(provider="crew", snapshot=snapshot(), observed_at="2026-09-10T10:02:00Z")
+    actual = repo.load_snapshot(records[0].snapshot_id)
+    simulation = build_simulation_input(actual, {"income": 20})
+    assert actual.data_mode == "actual"
+    assert simulation.to_dict() == {"source_snapshot_id": actual.snapshot_id, "changes": {"income": 20}, "data_mode": "simulated", "read_only": True}
+    assert actual.objects[0].payload["external_id"]
+
+
+def test_snapshot_and_simulation_api_are_read_only(observation_api_client):
+    client, repository = observation_api_client
+    records = repository.append_snapshot(provider="crew", snapshot=snapshot(), observed_at="2026-09-10T10:02:00Z")
+    snapshot_response = client.get(f"/api/meridian/observations/{records[0].snapshot_id}")
+    assert snapshot_response.status_code == 200
+    assert snapshot_response.get_json()["data_mode"] == "actual"
+    simulation_response = client.post(f"/api/meridian/observations/{records[0].snapshot_id}/simulation", json={"income": 20})
+    assert simulation_response.status_code == 200
+    assert simulation_response.get_json() == {"source_snapshot_id": records[0].snapshot_id, "changes": {"income": 20}, "data_mode": "simulated", "read_only": True}

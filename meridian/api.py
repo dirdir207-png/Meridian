@@ -25,7 +25,7 @@ from meridian.connections import ConnectionRepository, ConnectionState
 from meridian.evidence import EvidenceRepository
 from meridian.funding_repo import FundingRuleRepository
 from meridian.models import AccountRecord, TransactionRecord
-from meridian.observations import ObservationRepository
+from meridian.observations import ObservationRepository, build_simulation_input
 from meridian.services.accounts import build_accounts
 from meridian.services.activity import (
     get_activity,
@@ -229,6 +229,33 @@ def observations():
     except ValueError as error:
         return _error("invalid_request", str(error), "Use a limit between 1 and 500.", 400)
     return jsonify({"observations": [record.to_dict() for record in records], "data_mode": "actual"})
+
+
+@meridian_api.get("/observations/<snapshot_id>")
+@login_required
+@_safe_read
+def observation_snapshot(snapshot_id):
+    try:
+        snapshot = ObservationRepository(_repository().db_path).load_snapshot(snapshot_id)
+    except ValueError:
+        return _error("not_found", "Observation snapshot was not found.", "Refresh observations and select an available snapshot.", 404)
+    return jsonify(snapshot.to_dict())
+
+
+@meridian_api.post("/observations/<snapshot_id>/simulation")
+@login_required
+@_safe_read
+def observation_simulation(snapshot_id):
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return _error("invalid_request", "Simulation changes must be an object.", "Submit JSON object changes.", 400)
+    try:
+        snapshot = ObservationRepository(_repository().db_path).load_snapshot(snapshot_id)
+        simulation = build_simulation_input(snapshot, payload)
+    except ValueError as error:
+        status = 404 if str(error) == "unknown snapshot" else 400
+        return _error("not_found" if status == 404 else "invalid_request", str(error), "Use an actual observation snapshot and object changes.", status)
+    return jsonify(simulation.to_dict())
 
 
 @meridian_api.get("/plan")

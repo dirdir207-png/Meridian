@@ -265,7 +265,10 @@ the §5 live acceptance to clear the two non-green items.
 - Replays of the same observed snapshot are idempotent; partial and empty snapshots remain explicitly labeled.
 - Added authenticated read-only `GET /api/meridian/observations`, exposing metadata only and never raw observation payloads.
 - Verification: 542 `tests/meridian` tests passed; targeted Ruff and `git diff --check` passed. No financial mutation was added or executed.
-- Next action: review and commit this bounded slice; later work may add reproducible snapshot views and simulation isolation.
+- Added reproducible actual snapshot loading and a strictly read-only `SimulationInput` boundary; simulation inputs must reference an actual snapshot and are labeled `simulated`.
+- Added authenticated read-only snapshot and simulation-preview endpoints; no actual repository or financial state is changed.
+- Verification for this continuation: targeted observation tests passed; no financial mutation was added or executed.
+- Next action: review and commit this bounded digital-twin continuation.
 
 ## Trial Canceler / Meridian Sentinel foundation — 2026-09-10 (committed)
 

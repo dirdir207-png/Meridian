@@ -6,10 +6,22 @@ import json
 import sqlite3
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Mapping, Optional
 
 from .db import run_migrations
 from .providers.base import ProviderSnapshot
+
+
+@dataclass(frozen=True)
+class ObservationObject:
+    object_kind: str
+    external_id: str
+    source_updated_at: Optional[str]
+    payload: dict[str, Any]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"object_kind": self.object_kind, "external_id": self.external_id,
+                "source_updated_at": self.source_updated_at, "payload": self.payload}
 
 
 @dataclass(frozen=True)
@@ -33,6 +45,45 @@ class ObservationRecord:
         result = asdict(self)
         result["assumptions"] = list(self.assumptions)
         return result
+
+
+@dataclass(frozen=True)
+class ActualSnapshot:
+    snapshot_id: str
+    provider: str
+    connection_external_id: str
+    observed_at: str
+    freshness: str
+    confidence: Optional[float]
+    assumptions: tuple[str, ...]
+    objects: tuple[ObservationObject, ...]
+    data_mode: str = "actual"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"snapshot_id": self.snapshot_id, "provider": self.provider,
+                "connection_external_id": self.connection_external_id, "observed_at": self.observed_at,
+                "freshness": self.freshness, "confidence": self.confidence,
+                "assumptions": list(self.assumptions), "objects": [item.to_dict() for item in self.objects],
+                "data_mode": self.data_mode}
+
+
+@dataclass(frozen=True)
+class SimulationInput:
+    source_snapshot_id: str
+    changes: dict[str, Any]
+    data_mode: str = "simulated"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"source_snapshot_id": self.source_snapshot_id, "changes": self.changes,
+                "data_mode": self.data_mode, "read_only": True}
+
+
+def build_simulation_input(snapshot: ActualSnapshot, changes: Mapping[str, Any]) -> SimulationInput:
+    if snapshot.data_mode != "actual":
+        raise ValueError("simulation requires an actual snapshot")
+    if not isinstance(changes, Mapping):
+        raise ValueError("changes must be an object")
+    return SimulationInput(snapshot.snapshot_id, dict(changes))
 
 
 def _now() -> str:
@@ -96,6 +147,19 @@ class ObservationRepository:
                      source_updated_at, freshness, confidence, assumptions_json, _canonical(payload), _digest(payload)))
             rows = connection.execute("SELECT * FROM financial_observations WHERE snapshot_id = ? ORDER BY object_kind, external_id", (snapshot_id,)).fetchall()
         return tuple(self._record(row) for row in rows)
+
+    def load_snapshot(self, snapshot_id: str) -> ActualSnapshot:
+        with self._connect() as connection:
+            rows = connection.execute("SELECT * FROM financial_observations WHERE snapshot_id = ? ORDER BY object_kind, external_id", (snapshot_id,)).fetchall()
+        if not rows:
+            raise ValueError("unknown snapshot")
+        first = rows[0]
+        return ActualSnapshot(snapshot_id=snapshot_id, provider=first["provider"],
+            connection_external_id=first["connection_external_id"], observed_at=first["observed_at"],
+            freshness=first["freshness"], confidence=first["confidence"],
+            assumptions=tuple(json.loads(first["assumptions_json"])),
+            objects=tuple(ObservationObject(row["object_kind"], row["external_id"],
+                row["source_updated_at"], json.loads(row["payload_json"])) for row in rows))
 
     def list_snapshot(self, snapshot_id: str) -> list[ObservationRecord]:
         with self._connect() as connection:
