@@ -108,8 +108,18 @@ def expire_stale_approvals(
         if not decided_at:
             continue
         try:
-            age = (reference - datetime.fromisoformat(decided_at)).total_seconds()
-        except ValueError:
+            approved_at = datetime.fromisoformat(decided_at)
+            # SQLite stores both legacy naive timestamps and newer aware ones;
+            # compare them on the same wall-clock basis rather than raising a
+            # TypeError during the scheduled cleanup sweep.
+            if approved_at.tzinfo is not None and reference.tzinfo is None:
+                reference_for_compare = reference.replace(tzinfo=approved_at.tzinfo)
+            elif approved_at.tzinfo is None and reference.tzinfo is not None:
+                reference_for_compare = reference.replace(tzinfo=None)
+            else:
+                reference_for_compare = reference
+            age = (reference_for_compare - approved_at).total_seconds()
+        except (TypeError, ValueError):
             continue
         if age >= ttl_seconds:
             try:

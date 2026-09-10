@@ -173,6 +173,24 @@ def test_stale_approvals_expire_recent_ones_survive(store, monkeypatch):
         execute_approved_action(store, stale_id, make_executors())
 
 
+def test_expiry_sweep_handles_aware_approval_timestamps(store):
+    from datetime import datetime, timedelta, timezone
+
+    action_id = seed_approved_action(store)
+    decided_at = (datetime.now() - timedelta(hours=2)).replace(tzinfo=timezone.utc).isoformat()
+    with store._connect() as connection:
+        connection.execute(
+            "UPDATE action_requests SET decided_at = ? WHERE id = ?",
+            (decided_at, action_id),
+        )
+        connection.commit()
+
+    expired_ids = expire_stale_approvals(store, ttl_seconds=3600, now=datetime.now())
+
+    assert expired_ids == [action_id]
+    assert store.get(action_id)["state"] == ActionState.EXPIRED.value
+
+
 def test_expiry_sweep_tolerates_claim_race_and_continues(tmp_path):
     from datetime import datetime, timedelta
 
