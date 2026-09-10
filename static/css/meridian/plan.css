@@ -698,6 +698,10 @@
   color: var(--m-healthy);
 }
 
+.m-action-note[data-state="pending"] {
+  color: var(--m-caution);
+}
+
 .m-action-note[data-state="error"] {
   color: var(--m-risk, #c0392b);
 }

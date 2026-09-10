@@ -3,6 +3,7 @@
    approval-gated proposal. */
 
 import { MeridianApiError, meridianFetch, meridianPropose, meridianMutate } from "./api.js";
+import { describeActionOutcome } from "./action-outcome.js";
 import { formatCurrency, parseLocalDate } from "./format.js";
 
 let controller = null;
@@ -581,11 +582,14 @@ function renderCommitments(root, plan, template) {
               provenance: "owner_direct",
               rationale: `Delete the Crew bill ${commitment.name} from Meridian.`,
             });
-            note.textContent = result.routing_direct
-              ? `Deleted (${result.action && result.action.state}).`
-              : "Proposed — approve it in Pending Actions.";
-            // A direct delete removes the bill locally too, so refresh the plan.
-            if (result.routing_direct) {
+            const outcome = describeActionOutcome(result, {
+              verifiedMessage: `Bill ${commitment.name} was deleted and verified.`,
+            });
+            note.dataset.state = outcome.tone;
+            note.textContent = outcome.message;
+            // Refresh only after durable verification; HTTP success or an
+            // intermediate EXECUTED state is not proof that Crew changed.
+            if (outcome.refresh) {
               setTimeout(() => loadPlan(), 600);
             }
           } catch (error) {
@@ -1086,10 +1090,12 @@ function openAutopilotRuleEditor() {
         provenance: "owner_direct",
         rationale: `Create an autopilot rule (${action}) from Meridian.`,
       });
-      const direct = result.routing_direct;
-      const state = result.action && result.action.state;
-      note.hidden = false; note.dataset.state = "ok";
-      note.textContent = direct ? `Executed (${state}).` : "Proposed — approve it in Pending Actions.";
+      const outcome = describeActionOutcome(result, {
+        verifiedMessage: "Autopilot rule was created and verified.",
+      });
+      note.hidden = false;
+      note.dataset.state = outcome.tone;
+      note.textContent = outcome.message;
     } catch (error) {
       note.hidden = false; note.dataset.state = "error";
       note.textContent = error instanceof MeridianApiError
@@ -1278,6 +1284,9 @@ function renderRules(root) {
       paused.textContent = "Paused";
       head.appendChild(paused);
     }
+    const note = document.createElement("p");
+    note.className = "m-action-note";
+    note.hidden = true;
     const del = document.createElement("button");
     del.type = "button";
     del.className = "m-button m-button--quiet m-button--small m-button--danger";
@@ -1295,16 +1304,30 @@ function renderRules(root) {
             provenance: "owner_direct",
             rationale: `Delete the Crew rule ${rule.name} from Meridian.`,
           });
-          del.textContent = result.routing_direct ? "Deleted." : "Proposed.";
+          const outcome = describeActionOutcome(result, {
+            verifiedMessage: "Rule deleted and verified.",
+          });
+          note.hidden = false;
+          note.dataset.state = outcome.tone;
+          note.textContent = outcome.message;
+          // A returned action record is durable history. Do not turn the same
+          // control into a blind resend path after failure or uncertainty.
           del.disabled = true;
-          setTimeout(() => loadPlan(), 600);
-        } catch {
-          del.textContent = "Failed";
+          if (outcome.refresh) {
+            setTimeout(() => loadPlan(), 600);
+          }
+        } catch (error) {
+          note.hidden = false;
+          note.dataset.state = "error";
+          note.textContent = error instanceof MeridianApiError
+            ? `${error.message} ${error.recoveryAction}`
+            : "The rule could not be deleted.";
         }
       })();
     });
     head.appendChild(del);
     card.appendChild(head);
+    card.appendChild(note);
     const body = document.createElement("p");
     body.className = "m-rule-card-body";
     body.textContent = ruleActionsSummary(rule);
@@ -1467,13 +1490,10 @@ function wireCrewActions(root) {
       note.hidden = true;
       try {
         const result = await meridianMutate(payload);
-        const direct = result.routing_direct;
-        const state = result.action && result.action.state;
+        const outcome = describeActionOutcome(result);
         note.hidden = false;
-        note.dataset.state = "ok";
-        note.textContent = direct
-          ? `Executed (${state}).`
-          : `Proposed — approve it in Pending Actions.`;
+        note.dataset.state = outcome.tone;
+        note.textContent = outcome.message;
       } catch (error) {
         note.hidden = false;
         note.dataset.state = "error";
