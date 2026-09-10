@@ -16,6 +16,7 @@ from meridian.cancellation import (
 from meridian.cancellation.brief import build_cancellation_brief
 from meridian.cancellation.capture import capture_trial
 from meridian.cancellation.deadlines import upcoming_deadlines
+from meridian.cancellation.notification_payload import build_trial_reminder_payload
 from meridian.cancellation.notifications import TrialNotificationRepository
 from meridian.commitments import CommitmentRepository
 from meridian.connections import ConnectionRepository, ConnectionState
@@ -1622,7 +1623,12 @@ def list_trial_notifications():
         notifications = _trial_notification_repository().list(status=status)
     except ValueError as error:
         return _error("invalid_request", str(error), "Use pending, sent, or dismissed.", 400)
-    return jsonify({"notifications": [notification.__dict__ for notification in notifications]})
+    payloads = []
+    for notification in notifications:
+        trial = _trial_repository().get(notification.trial_id)
+        if trial is not None:
+            payloads.append(build_trial_reminder_payload(notification, service=trial.service).as_dict())
+    return jsonify({"notifications": [notification.__dict__ for notification in notifications], "payloads": payloads})
 
 
 @meridian_api.post("/trials/notifications/materialize")

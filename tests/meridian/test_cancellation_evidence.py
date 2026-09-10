@@ -79,3 +79,20 @@ def test_reminder_cycle_marks_sent_only_after_delivery(tmp_path):
     )
     assert delivered == [item.id for item in result]
     assert all(item.status == "sent" for item in result)
+
+
+def test_trial_reminder_payload_is_read_only(tmp_path):
+    from datetime import datetime, timezone
+
+    from meridian.cancellation.notification_payload import build_trial_reminder_payload
+    from meridian.cancellation.notifications import TrialNotificationRepository
+
+    db_path = str(tmp_path / "payload.db")
+    TrialRepository(db_path).create(service="Example", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-10T00:00:00Z")
+    notification = TrialNotificationRepository(db_path).materialize_due(
+        now=datetime(2026, 9, 10, tzinfo=timezone.utc)
+    )[0]
+    payload = build_trial_reminder_payload(notification, service="Example")
+    assert payload.data["read_only"] is True
+    assert "cancel" in payload.body
+    assert "Example" in payload.title
