@@ -124,3 +124,19 @@ def test_execution_requires_approval_and_adapter(tmp_path):
     result = execute_approved(action, approved, adapter=type("Adapter", (), {"submit": lambda _, value: {"reference": "R1"}})())
     assert result.attempted is True
     assert result.state == "attempted"
+
+
+def test_dry_run_adapter_never_contacts_external_service(tmp_path):
+    from meridian.cancellation.adapters import DryRunAdapter
+    from meridian.cancellation.approval import ApprovalDecision
+    from meridian.cancellation.executor import execute_approved
+    from meridian.cancellation.repository import CancellationRepository
+    from meridian.trials import TrialRepository
+
+    db_path = str(tmp_path / "dry-run.db")
+    trial = TrialRepository(db_path).create(service="Example", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-10T00:00:00Z")
+    action = CancellationRepository(db_path).create(trial.id, "email")
+    result = execute_approved(action, ApprovalDecision(True, False, "approved"), adapter=DryRunAdapter())
+    assert result.attempted is True
+    assert result.provider_result["dry_run"] is True
+    assert result.provider_result["external_contact"] is False
