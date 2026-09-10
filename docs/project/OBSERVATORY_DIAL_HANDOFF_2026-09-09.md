@@ -38,9 +38,12 @@ Before coding, read:
 
 At handoff time:
 
-- HEAD: `23fbb40` `docs: record latest concept-focused dial refinements`
-- ahead of `origin/feat/meridian-implementation` by **42 commits**
-- no tracked dirty files
+- Verify the actual current HEAD with `git log --oneline -1`; this handoff is
+  committed and may be one commit behind the live branch tip.
+- At handoff time the branch was **45+ commits ahead** of
+  `origin/feat/meridian-implementation` and had no tracked dirty files.
+- The handoff commit is `928339c`; two follow-up inspector commits are
+  `eb1e64f` (observation-record kicker) and `c39daf9` (signed amount/signal colors).
 - untracked machine-local/design artifacts:
   - `.env.save` — DO NOT COMMIT
   - `tmp/` — DO NOT COMMIT
@@ -172,8 +175,9 @@ cd /Users/stephenwest/Openrouter/simplecrew-latest
 
 Known result at handoff time:
 
-- `tests/meridian`: **505 collected**; **504 passed, 1 deselected** when
-  running `-k 'not test_build_dial_returns_empty_horizon_when_no_records'`
+- `tests/meridian`: recollect and run the full file set in this session before
+  relying on a count; at handoff time the known blocker is the date-sensitive
+  `test_build_dial_returns_empty_horizon_when_no_records` test described above.
 - `tests/browser/test_observatory_dial.py`: **2 passed** with
   `APP_URL=http://127.0.0.1:8081`
 - `ruff check app.py crew meridian tests`: clean
