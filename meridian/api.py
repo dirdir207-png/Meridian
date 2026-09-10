@@ -8,6 +8,11 @@ from flask import Blueprint, Response, current_app, jsonify, request
 from flask_login import login_required
 
 from meridian.ai.advisor import AdvisorContext
+from meridian.cancellation import (
+    CancellationRepository,
+    CancellationState,
+    VerificationSignal,
+)
 from meridian.commitments import CommitmentRepository
 from meridian.connections import ConnectionRepository, ConnectionState
 from meridian.evidence import EvidenceRepository
@@ -24,6 +29,7 @@ from meridian.services.connections import build_connections, get_connection_deta
 from meridian.services.dial import build_dial
 from meridian.services.plan import build_plan
 from meridian.services.today import build_today, data_freshness
+from meridian.trials import TrialRepository
 
 meridian_api = Blueprint("meridian_api", __name__)
 
@@ -1524,6 +1530,97 @@ def contextual_advisor():
             400,
         )
     return jsonify(result)
+
+
+
+def _trial_repository():
+    factory = current_app.config.get("MERIDIAN_TRIALS_FACTORY")
+    return factory() if factory else TrialRepository(_repository().db_path)
+
+
+@meridian_api.get("/trials")
+@login_required
+def list_trials():
+    include_canceled = request.args.get("include_canceled", "false").lower() == "true"
+    return jsonify({"trials": [trial.as_dict() for trial in _trial_repository().list(include_canceled=include_canceled)]})
+
+
+@meridian_api.post("/trials")
+@login_required
+def create_trial():
+    payload = request.get_json(silent=True) or {}
+    try:
+        trial = _trial_repository().create(**payload)
+    except (TypeError, ValueError) as error:
+        return _error("invalid_request", str(error), "Provide complete, accurate trial terms.", 400)
+    return jsonify({"trial": trial.as_dict()}), 201
+
+
+@meridian_api.get("/trials/<int:trial_id>")
+@login_required
+def get_trial(trial_id: int):
+    trial = _trial_repository().get(trial_id)
+    if trial is None:
+        return _error("not_found", "Trial not found.", "Refresh the trial list.", 404)
+    return jsonify({"trial": trial.as_dict()})
+
+
+@meridian_api.patch("/trials/<int:trial_id>")
+@login_required
+def update_trial(trial_id: int):
+    payload = request.get_json(silent=True) or {}
+    try:
+        trial = _trial_repository().update(trial_id, **payload)
+    except KeyError:
+        return _error("not_found", "Trial not found.", "Refresh the trial list.", 404)
+    except (TypeError, ValueError) as error:
+        return _error("invalid_request", str(error), "Provide valid trial terms.", 400)
+    return jsonify({"trial": trial.as_dict()})
+
+
+
+def _cancellation_repository():
+    factory = current_app.config.get("MERIDIAN_CANCELLATION_FACTORY")
+    return factory() if factory else CancellationRepository(_repository().db_path)
+
+
+@meridian_api.get("/trials/<int:trial_id>/cancellation-actions")
+@login_required
+def list_cancellation_actions(trial_id: int):
+    return jsonify({"actions": [action.as_dict() for action in _cancellation_repository().list_for_trial(trial_id)]})
+
+
+@meridian_api.post("/trials/<int:trial_id>/cancellation-actions")
+@login_required
+def create_cancellation_action(trial_id: int):
+    payload = request.get_json(silent=True) or {}
+    try:
+        action = _cancellation_repository().create(trial_id, payload.get("channel"), notes=payload.get("notes"))
+    except ValueError as error:
+        return _error("invalid_request", str(error), "Choose a cancellation channel.", 400)
+    return jsonify({"action": action.as_dict()}), 201
+
+
+@meridian_api.post("/cancellation-actions/<int:action_id>/transition")
+@login_required
+def transition_cancellation_action(action_id: int):
+    payload = request.get_json(silent=True) or {}
+    try:
+        target = CancellationState(payload.get("state"))
+        signals = {VerificationSignal(value) for value in payload.get("signals", [])}
+        action = _cancellation_repository().transition(
+            action_id,
+            target,
+            signals=signals,
+            confirmation_reference=payload.get("confirmation_reference"),
+            artifact_ids=payload.get("artifact_ids"),
+            notes=payload.get("notes"),
+        )
+    except KeyError:
+        return _error("not_found", "Cancellation action not found.", "Refresh the trial.", 404)
+    except (TypeError, ValueError) as error:
+        return _error("invalid_transition", str(error), "Use the next permitted workflow state and include evidence.", 400)
+    return jsonify({"action": action.as_dict()})
 
 
 @meridian_api.get("/crew/mutations-status")

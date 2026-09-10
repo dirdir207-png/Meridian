@@ -257,3 +257,14 @@ A corrected handoff document has been created at `docs/project/CODEX_CLI_HANDOFF
 Remaining gate (desktop / owner): reconcile the autopilot query in WorkAssistant and
 optionally move the daily-use instance onto the tested Docker digest, then re-run
 the §5 live acceptance to clear the two non-green items.
+
+## Trial Canceler / Meridian Sentinel foundation — 2026-09-10 (uncommitted)
+
+A separate additive foundation was implemented in this ORSC lane; it is documented in
+`docs/project/TRIAL_CANCELER_HANDOFF.md` and is **not yet committed, shipped, or wired
+to a UI, scheduler, browser extension, mail/transaction intake, or live Crew card
+flow**. It adds `meridian/trials.py`, `meridian/cancellation/`, migrations 016–017,
+and authenticated `/api/meridian/trials*` / cancellation-action routes. The state
+machine requires positive billing evidence before `Billing stopped`; no merchant action
+or financial mutation was executed. `tests/meridian` passed 520 tests after the change.
+Parallel Observatory dirty/untracked files were not altered by this work.
