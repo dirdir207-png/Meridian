@@ -3943,9 +3943,14 @@ def api_actions_mutate():
     composed / low-confidence / plan-level / scheduled mutation creates a
     PROPOSAL for the owner to approve.
     """
-    data = request.json or {}
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "A JSON object body is required"}), 400
     action_type = data.get('type')
-    params = data.get('params') or {}
+    raw_params = data.get('params')
+    params = {} if raw_params is None else raw_params
+    if not isinstance(params, dict):
+        return jsonify({"error": "params must be a JSON object"}), 400
     provenance = data.get('provenance', 'owner_direct')
     user = getattr(current_user, 'username', 'owner')
     try:

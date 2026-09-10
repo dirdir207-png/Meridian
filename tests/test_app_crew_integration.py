@@ -383,6 +383,21 @@ def test_pending_endpoint_tolerates_claim_during_expiry_sweep(authenticated_clie
     assert store.get(expires["id"])["state"] == ActionState.EXPIRED.value
 
 
+def test_mutate_rejects_non_object_json_body(authenticated_client):
+    response = authenticated_client.post("/api/actions/mutate", json=[])
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "A JSON object body is required"
+
+
+def test_mutate_rejects_non_object_params(authenticated_client):
+    response = authenticated_client.post(
+        "/api/actions/mutate",
+        json={"type": "move_money", "params": [], "provenance": "owner_direct"},
+    )
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "params must be a JSON object"
+
+
 def test_propose_unknown_type_is_400(authenticated_client):
     response = authenticated_client.post(
         "/api/actions/propose",

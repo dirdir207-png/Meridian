@@ -282,6 +282,8 @@ Parallel Observatory dirty/untracked files were not altered by this work.
   require the running preview (`APP_URL`) and
   were previously verified separately. The evidence integration expectation was reconciled with
   the intentionally safe HTML evidence viewer.
+- Hardened the authenticated mutation endpoint to reject malformed JSON shapes before routing; added
+  HTTP regression coverage for non-object bodies and params.
 - Corrected provider synchronization to treat an explicit zero reserve as authoritative instead of
   retaining the prior local reserve; omitted reserves still preserve existing observations.
 
