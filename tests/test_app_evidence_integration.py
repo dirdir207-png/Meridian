@@ -44,4 +44,8 @@ def test_evidence_content_resolves(app):
     item_id = items[0]["id"]
     response = client.get(f"/api/meridian/evidence/{item_id}/content")
     assert response.status_code == 200
-    assert response.data == b"hello evidence"
+    assert response.mimetype == "text/html"
+    # Evidence is rendered through the protected, script-free viewer rather than
+    # returning the encrypted blob bytes directly.
+    assert b"hello evidence" in response.data
+    assert b"<!DOCTYPE html>" in response.data
