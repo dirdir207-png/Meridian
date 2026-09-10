@@ -2917,7 +2917,7 @@ def create_bill_action(name, amount, frequency_key, day_of_month, match_string=N
 
 # --- MERIDIAN SHELL ---
 
-MERIDIAN_WORKSPACES = ("today", "plan", "activity", "trials", "accounts")
+MERIDIAN_WORKSPACES = ("today", "plan", "activity", "accounts")
 LEGACY_WORKSPACE_MAP = {
     "activity": "activity",
     "expenses": "plan",
@@ -2946,7 +2946,7 @@ def meridian():
 def meridian_settings():
     """Meridian utility settings; financial workspaces remain unchanged."""
     section = request.args.get('section', 'connections')
-    if section not in {'connections', 'payday', 'actions', 'security'}:
+    if section not in {'connections', 'payday', 'actions', 'security', 'trials'}:
         return redirect(url_for('meridian_settings', section='connections'))
     return render_template(
         'meridian/settings.html',

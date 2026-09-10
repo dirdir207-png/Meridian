@@ -6,7 +6,7 @@
 (() => {
   "use strict";
 
-  const WORKSPACES = ["today", "plan", "activity", "trials", "accounts"];
+  const WORKSPACES = ["today", "plan", "activity", "accounts"];
   const DEFAULT_WORKSPACE = "today";
 
   let activeWorkspace = null;

@@ -35,6 +35,8 @@
         {% include 'meridian/partials/actions.html' %}
       {% elif active_settings_section == 'security' %}
         {% include 'meridian/partials/security.html' %}
+      {% elif active_settings_section == 'trials' %}
+        {% include 'meridian/partials/trials.html' %}
       {% else %}
         <p class="m-empty-note">Payday &amp; Funding is the next implementation slice.</p>
       {% endif %}
@@ -67,5 +69,6 @@
   <script type="module" src="/static/js/meridian/payday.js"></script>
   <script type="module" src="/static/js/meridian/actions.js"></script>
   <script type="module" src="/static/js/meridian/security.js"></script>
+  <script type="module" src="/static/js/meridian/trials.js"></script>
 </body>
 </html>
