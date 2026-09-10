@@ -218,7 +218,33 @@
 }
 
 @media (max-width: 600px) {
+  /* Keep long account names from colliding with balances and activity actions.
+     The action drops to its own row while retaining a 44px touch target. */
+  .m-account-row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--m-space-3);
+    row-gap: var(--m-space-2);
+  }
+
+  .m-account-icon {
+    grid-row: span 2;
+  }
+
+  .m-account-identity {
+    grid-column: 2;
+  }
+
+  .m-account-balance {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
   .m-account-activity {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    justify-self: end;
     min-height: 44px;
     padding: var(--m-space-2) var(--m-space-3);
   }
