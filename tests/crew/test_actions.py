@@ -2,6 +2,7 @@ import json
 import sqlite3
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -134,6 +135,19 @@ def test_expiry_only_from_approved(store):
     assert expired["state"] == ActionState.EXPIRED.value
     with pytest.raises(IllegalTransitionError):
         store.mark_executed(expired["id"], result={})
+
+
+def test_execution_claim_expires_old_approval_atomically(tmp_path):
+    store = ActionStore(db_path=str(tmp_path / "actions.db"), allowed_types=ALLOWED_TYPES, approval_ttl_seconds=3600)
+    request = store.propose("move_money", {}, "r", "owner")
+    store.approve(request["id"], decided_by="owner")
+    old_decision = (datetime.now() - timedelta(hours=2)).isoformat()
+    with sqlite3.connect(str(tmp_path / "actions.db")) as conn:
+        conn.execute("UPDATE action_requests SET decided_at = ? WHERE id = ?", (old_decision, request["id"]))
+
+    with pytest.raises(IllegalTransitionError, match="expired"):
+        store.claim_for_execution(request["id"], execution_key="late-key")
+    assert store.get(request["id"])["state"] == ActionState.EXPIRED.value
 
 
 def test_stale_expiry_cannot_overwrite_execution_claim(tmp_path):

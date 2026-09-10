@@ -83,9 +83,17 @@ def _now() -> str:
 
 
 class ActionStore:
-    def __init__(self, db_path: str, allowed_types: Tuple[str, ...]):
+    def __init__(
+        self,
+        db_path: str,
+        allowed_types: Tuple[str, ...],
+        approval_ttl_seconds: float = 3600,
+    ):
         self._db_path = db_path
         self._allowed_types = frozenset(allowed_types)
+        if approval_ttl_seconds <= 0:
+            raise ValueError("approval_ttl_seconds must be positive")
+        self._approval_ttl_seconds = approval_ttl_seconds
         with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
             conn.execute(_SCHEMA)
@@ -195,10 +203,44 @@ class ActionStore:
     def claim_for_execution(self, request_id: str, execution_key: str) -> Dict[str, Any]:
         with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute(
+                f"SELECT {_SELECT_COLUMNS} FROM action_requests WHERE id = ?",
+                (request_id,),
+            ).fetchone()
+            if row is None:
+                raise IllegalTransitionError("Unknown action request")
+            current = self._row_to_dict(row)
+            if current["state"] != ActionState.APPROVED.value:
+                raise IllegalTransitionError("Action is not available for execution")
+            decided_at = current.get("decided_at")
+            if decided_at:
+                try:
+                    approved_on = datetime.fromisoformat(decided_at)
+                    raw_now = _now()
+                    reference = raw_now if isinstance(raw_now, datetime) else datetime.fromisoformat(raw_now)
+                    if approved_on.tzinfo is not None and reference.tzinfo is None:
+                        reference = reference.replace(tzinfo=approved_on.tzinfo)
+                    elif approved_on.tzinfo is None and reference.tzinfo is not None:
+                        reference = reference.replace(tzinfo=None)
+                    if (reference - approved_on).total_seconds() >= self._approval_ttl_seconds:
+                        conn.execute(
+                            "UPDATE action_requests SET state=? WHERE id=? AND state=?",
+                            (ActionState.EXPIRED.value, request_id, ActionState.APPROVED.value),
+                        )
+                        conn.commit()
+                        raise IllegalTransitionError("Action approval has expired")
+                except ValueError:
+                    # A malformed timestamp cannot safely authorize a mutation.
+                    conn.execute(
+                        "UPDATE action_requests SET state=? WHERE id=? AND state=?",
+                        (ActionState.EXPIRED.value, request_id, ActionState.APPROVED.value),
+                    )
+                    conn.commit()
+                    raise IllegalTransitionError("Action approval timestamp is invalid")
             updated = conn.execute(
                 "UPDATE action_requests SET state=?, execution_key=?, execution_started_at=? "
                 "WHERE id=? AND state=?",
-                ("executing", execution_key, _now(), request_id, "approved"),
+                (ActionState.EXECUTING.value, execution_key, _now(), request_id, ActionState.APPROVED.value),
             )
             if updated.rowcount != 1:
                 raise IllegalTransitionError("Action is not available for execution")

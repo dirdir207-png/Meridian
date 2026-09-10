@@ -258,13 +258,25 @@ Remaining gate (desktop / owner): reconcile the autopilot query in WorkAssistant
 optionally move the daily-use instance onto the tested Docker digest, then re-run
 the §5 live acceptance to clear the two non-green items.
 
-## Trial Canceler / Meridian Sentinel foundation — 2026-09-10 (uncommitted)
+## Trial Canceler / Meridian Sentinel foundation — 2026-09-10 (committed)
 
-A separate additive foundation was implemented in this ORSC lane; it is documented in
-`docs/project/TRIAL_CANCELER_HANDOFF.md` and is **not yet committed, shipped, or wired
+A separate additive foundation was implemented and committed in this ORSC lane; it is documented in
+`docs/project/TRIAL_CANCELER_HANDOFF.md` and is **not yet shipped or wired
 to a UI, scheduler, browser extension, mail/transaction intake, or live Crew card
 flow**. It adds `meridian/trials.py`, `meridian/cancellation/`, migrations 016–017,
 and authenticated `/api/meridian/trials*` / cancellation-action routes. The state
 machine requires positive billing evidence before `Billing stopped`; no merchant action
 or financial mutation was executed. `tests/meridian` passed 520 tests after the change.
 Parallel Observatory dirty/untracked files were not altered by this work.
+
+## Whole-project safety continuation — 2026-09-10
+
+- Revisited the governing product spec, implementation plan, consolidated handoff, release acceptance,
+  current status, and Trial Canceler handoff. Historical unchecked plan boxes are not treated as current
+  status; the consolidated handoff's concrete findings drive follow-up work.
+- Hardened the durable action pipeline so an approved action older than the configured 3600-second TTL
+  is atomically marked `expired` during execution claim, closing the pending-list/execute race. Invalid
+  approval timestamps fail closed. Added regression coverage.
+- Verification: action-store tests 11 passed; `tests/meridian` 520 passed; memory contract tests 5 passed.
+  Observatory browser tests require the running preview (`APP_URL`) and were previously verified separately.
+
