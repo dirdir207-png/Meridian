@@ -37,21 +37,6 @@
       "id": "OS-003",
       "title": "Constitution policy evaluator",
       "phase": "safety",
-      "status": "planned",
-      "priority": "high",
-      "dependencies": [
-        "OS-002"
-      ],
-      "authority_impact": "policy model only; activation owner-gated",
-      "owner_decision_required": true,
-      "acceptance_criteria": [
-        "Policy decisions identify rules, evidence, assumptions, and recovery"
-      ]
-    },
-    {
-      "id": "OS-003",
-      "title": "Constitution policy evaluator",
-      "phase": "safety",
       "status": "complete",
       "priority": "high",
       "dependencies": [

@@ -316,4 +316,4 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Evaluation fails closed while inactive, reports rules/evidence/assumptions/confidence/recovery, and never approves or executes actions.
 - Automatic actions without bounded limits are blocked; otherwise results remain `requires_approval`.
 - Verification: `tests/meridian` passed 548 tests; Ruff and `git diff --check` passed. No policy activation or financial mutation occurred.
-- Commit: `7a6c985`.
+- Commits: `7a6c985` (implementation) and `23c03ae` (status/ledger documentation).
