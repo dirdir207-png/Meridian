@@ -317,3 +317,10 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Automatic actions without bounded limits are blocked; otherwise results remain `requires_approval`.
 - Verification: `tests/meridian` passed 548 tests; Ruff and `git diff --check` passed. No policy activation or financial mutation occurred.
 - Commits: `7a6c985` (implementation) and `23c03ae` (status/ledger documentation).
+
+## Capture-contract harness — 2026-09-10
+
+- Added pure capture metadata validation in `tests/browser/capture_contract.py` for the governed four viewport/DPR pairs, light/dark themes, and required deterministic fields.
+- Added four contract tests covering the complete 8-state matrix, missing metadata, mismatched DPR/theme, and JSON-safe serialization.
+- Documented harness usage in `docs/project/MERIDIAN_VISUAL_CAPTURE_SPEC.md`. This changes no product behavior and does not regenerate visual baselines.
+- Verification: capture-contract tests passed; Ruff and `git diff --check` passed.

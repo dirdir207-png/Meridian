@@ -35,3 +35,7 @@ Every capture set must record concept path, current path, viewport, DPR, theme, 
 ## Completion rule
 
 Visual parity is not complete until the capture harness enforces this contract and the required matrix has fresh evidence. Existing screenshots are historical unless regenerated under this specification.
+
+## Harness implementation
+
+The pure contract validator lives in `tests/browser/capture_contract.py`. It encodes the four viewport/DPR pairs, light/dark themes, and required deterministic metadata fields. `tests/test_capture_contract.py` protects the matrix and rejects incomplete or mismatched capture records.
