@@ -140,3 +140,21 @@ def test_dry_run_adapter_never_contacts_external_service(tmp_path):
     assert result.attempted is True
     assert result.provider_result["dry_run"] is True
     assert result.provider_result["external_contact"] is False
+
+
+def test_stubbed_replay_never_reports_success_without_verification(tmp_path):
+    from meridian.cancellation.adapters import DryRunAdapter
+    from meridian.cancellation.replay import replay_stubbed_cancellation
+    from meridian.cancellation.repository import CancellationRepository
+    from meridian.trials import TrialRepository
+
+    db_path = str(tmp_path / "replay.db")
+    trial = TrialRepository(db_path).create(service="Example", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-10T00:00:00Z")
+    repo = CancellationRepository(db_path)
+    action = repo.create(trial.id, "live_browser")
+    result = replay_stubbed_cancellation(repo, action.id, DryRunAdapter())
+    assert result.attempted is True
+    assert result.verified is False
+    assert result.status == "Unverified"
+    result = replay_stubbed_cancellation(repo, repo.create(trial.id, "live_browser").id, DryRunAdapter(), verification=__import__("meridian.cancellation", fromlist=["VerificationSignal"]).VerificationSignal.BILLING_STOPPED)
+    assert result.verified is True
