@@ -7,6 +7,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -22,6 +23,38 @@ from tests.browser.capture_contract import (
 )
 from tests.browser.conftest import WORKSPACES, login
 
+CONCEPT_FILES = {
+    "today": "01-today.png",
+    "plan": "02-plan.png",
+    "activity": "03-activity.png",
+    "accounts": "04-accounts.png",
+}
+
+_FREEZE_SCRIPT = r"""
+(value => {
+  const frozen = new Date(value).valueOf();
+  const NativeDate = Date;
+  class FrozenDate extends NativeDate {
+    constructor(...args) { super(...(args.length ? args : [frozen])); }
+    static now() { return frozen; }
+  }
+  window.Date = FrozenDate;
+  window.setInterval = () => 0;
+  window.clearInterval = () => {};
+})(%s);
+"""
+
+
+def _validate_capture_target(app_url: str, fixture: str, frozen_clock: str) -> None:
+    parsed = urlparse(app_url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise ValueError("app_url must be an absolute HTTP(S) URL")
+    if parsed.hostname not in {"127.0.0.1", "localhost", "::1"}:
+        raise ValueError("capture runner only accepts an isolated loopback preview")
+    if not fixture.strip():
+        raise ValueError("fixture is required")
+    datetime.fromisoformat(frozen_clock.replace("Z", "+00:00"))
+
 
 def _git_commit() -> str:
     return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
@@ -36,6 +69,7 @@ def capture_matrix(
     frozen_clock: str,
     full_page: bool = True,
 ) -> list[dict]:
+    _validate_capture_target(app_url, fixture, frozen_clock)
     output.mkdir(parents=True, exist_ok=True)
     records = []
     commit = _git_commit()
@@ -53,6 +87,7 @@ def capture_matrix(
                         color_scheme=theme,
                         reduced_motion="reduce",
                     )
+                    context.add_init_script(_FREEZE_SCRIPT % json.dumps(frozen_clock))
                     page = context.new_page()
                     login(page, app_url)
                     for workspace in WORKSPACES:
@@ -67,10 +102,18 @@ def capture_matrix(
                             arg=workspace,
                             timeout=12000,
                         )
-                        current = output / f"{workspace}-{viewport_name}-{theme}.png"
-                        page.screenshot(path=str(current), full_page=full_page)
+                        base = output / f"{workspace}-{viewport_name}-{theme}"
+                        viewport_capture = base.with_name(base.name + "-viewport.png")
+                        page.screenshot(path=str(viewport_capture), full_page=False)
+                        current = viewport_capture
+                        artifacts = [viewport_capture]
+                        if full_page:
+                            full_capture = base.with_name(base.name + "-full.png")
+                            page.screenshot(path=str(full_capture), full_page=True)
+                            current = full_capture
+                            artifacts.append(full_capture)
                         metadata = CaptureMetadata(
-                            concept_path=str(concept_dir / f"{workspace}.png"),
+                            concept_path=str(concept_dir / CONCEPT_FILES[workspace]),
                             current_path=str(current),
                             viewport=viewport_name,
                             theme=theme,
@@ -85,6 +128,7 @@ def capture_matrix(
                             dpr=viewport["dpr"],
                         ).to_dict()
                         validate_metadata(metadata)
+                        metadata["artifacts"] = [str(path) for path in artifacts]
                         records.append(metadata)
                     context.close()
         finally:

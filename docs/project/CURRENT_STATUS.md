@@ -330,3 +330,9 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Added `scripts/capture_meridian_matrix.py` to execute the full governed viewport/theme/DPR matrix and emit a validated metadata manifest.
 - The runner explicitly configures reduced motion and theme, waits for network/fonts/data settlement, disables animations/transitions, and requires the fixture and frozen clock to be named.
 - Existing approved baselines were not regenerated; no product behavior or financial data was changed.
+
+## Deterministic capture-runner hardening — 2026-09-10
+
+- The matrix runner now freezes browser `Date`, disables interval polling before application scripts load, and captures both initial viewport and full-page artifacts.
+- Capture targets are restricted to isolated loopback previews, and workspace metadata maps to the governing Observatory concept filenames.
+- Approved visual baselines were not regenerated; no product or financial behavior changed.

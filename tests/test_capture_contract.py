@@ -51,3 +51,26 @@ def test_capture_script_uses_full_matrix_dpr_theme_and_manifest():
     assert 'reduced_motion="reduce"' in source
     assert "manifest.write_text" in source
     assert "validate_metadata(metadata)" in source
+    assert "context.add_init_script" in source
+    assert "window.setInterval = () => 0" in source
+    assert "full_page=False" in source
+    assert "full_page=True" in source
+    assert "only accepts an isolated loopback preview" in source
+
+
+def test_capture_target_rejects_non_loopback_and_invalid_clock():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("capture_meridian_matrix", "scripts/capture_meridian_matrix.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    with pytest.raises(ValueError, match="loopback"):
+        module._validate_capture_target("https://bank.example", "fixture", "2026-09-10T12:00:00Z")
+    with pytest.raises(ValueError):
+        module._validate_capture_target("http://127.0.0.1:8081", "fixture", "not-a-time")
+
+
+def test_capture_script_maps_workspaces_to_governing_concept_files():
+    source = __import__("pathlib").Path("scripts/capture_meridian_matrix.py").read_text()
+    for concept in ("01-today.png", "02-plan.png", "03-activity.png", "04-accounts.png"):
+        assert concept in source
