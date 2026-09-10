@@ -91,3 +91,18 @@ def test_escalation_plan_skips_attempted_channels(tmp_path):
     assert channels[0] == "live_browser"
     assert plan["read_only"] is True
     assert plan["requires_owner"] is True
+
+
+def test_submission_approval_never_auto_approves_risky_routes(tmp_path):
+    from meridian.cancellation.approval import evaluate_submission
+    from meridian.cancellation.repository import CancellationRepository
+    from meridian.trials import TrialRepository
+
+    db_path = str(tmp_path / "approval.db")
+    trial = TrialRepository(db_path).create(service="Example", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-10T00:00:00Z")
+    action = CancellationRepository(db_path).create(trial.id, "email")
+    denied = evaluate_submission(action, owner_approved=False, known_recipe=True, confidence=1)
+    assert denied.approved is False
+    approved = evaluate_submission(action, owner_approved=True, known_recipe=False, confidence=0.5)
+    assert approved.approved is True
+    assert approved.expires_at is not None

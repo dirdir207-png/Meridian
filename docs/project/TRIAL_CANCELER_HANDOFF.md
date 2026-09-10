@@ -57,6 +57,7 @@ Routes are under the existing `/api/meridian` prefix:
 - `GET /trials/deadlines` (read-only deadline projection)
 - `GET /trials/<id>/cancellation-brief` (read-only human handoff brief)
 - `GET /trials/<id>/escalation-plan` (read-only owner-review channel ladder)
+- `POST /cancellation-actions/<id>/approval-check` (decision-only approval gate; never submits)
 - `GET/POST /cancellation-actions/<id>/evidence` (existing evidence-ledger links)
 - `GET/PATCH /trials/<id>`
 - `GET/POST /trials/<id>/cancellation-actions`

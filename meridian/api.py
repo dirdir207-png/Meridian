@@ -13,6 +13,7 @@ from meridian.cancellation import (
     CancellationState,
     VerificationSignal,
 )
+from meridian.cancellation.approval import evaluate_submission
 from meridian.cancellation.brief import build_cancellation_brief
 from meridian.cancellation.capture import capture_trial
 from meridian.cancellation.deadlines import upcoming_deadlines
@@ -1715,6 +1716,27 @@ def attach_cancellation_evidence(action_id: int):
     except (TypeError, ValueError) as error:
         return _error("invalid_request", str(error), "Provide an accessible evidence id.", 400)
     return jsonify({"evidence": evidence}), 201
+
+
+@meridian_api.post("/cancellation-actions/<int:action_id>/approval-check")
+@login_required
+def check_cancellation_approval(action_id: int):
+    payload = request.get_json(silent=True) or {}
+    action = _cancellation_repository().get(action_id)
+    if action is None:
+        return _error("not_found", "Cancellation action not found.", "Refresh the trial.", 404)
+    try:
+        decision = evaluate_submission(
+            action, owner_approved=bool(payload.get("owner_approved")),
+            known_recipe=bool(payload.get("known_recipe")),
+            confidence=float(payload.get("confidence", 0)),
+            allowlisted=bool(payload.get("allowlisted")),
+            essential=bool(payload.get("essential")),
+            multi_operation=bool(payload.get("multi_operation")),
+        )
+    except (TypeError, ValueError) as error:
+        return _error("invalid_request", str(error), "Provide a valid approval context.", 400)
+    return jsonify({"decision": decision.__dict__, "submit": False})
 
 
 @meridian_api.post("/cancellation-actions/<int:action_id>/transition")
