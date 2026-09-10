@@ -52,3 +52,30 @@ def test_notification_repository_rejects_invalid_status(tmp_path):
 
     with pytest.raises(ValueError, match="status"):
         TrialNotificationRepository(str(tmp_path / "notifications.db")).list(status="bogus")
+
+
+def test_reminder_cycle_is_persistence_only_without_delivery_callback(tmp_path):
+    from datetime import datetime, timezone
+
+    from meridian.cancellation.scheduler import run_reminder_cycle
+
+    db_path = str(tmp_path / "cycle.db")
+    TrialRepository(db_path).create(service="Example", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-10T00:00:00Z")
+    pending = run_reminder_cycle(db_path, now=datetime(2026, 9, 10, tzinfo=timezone.utc))
+    assert pending and all(item.status == "pending" for item in pending)
+
+
+def test_reminder_cycle_marks_sent_only_after_delivery(tmp_path):
+    from datetime import datetime, timezone
+
+    from meridian.cancellation.scheduler import run_reminder_cycle
+
+    db_path = str(tmp_path / "cycle.db")
+    TrialRepository(db_path).create(service="Example", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-10T00:00:00Z")
+    delivered = []
+    result = run_reminder_cycle(
+        db_path, now=datetime(2026, 9, 10, tzinfo=timezone.utc),
+        deliver=lambda notification: delivered.append(notification.id),
+    )
+    assert delivered == [item.id for item in result]
+    assert all(item.status == "sent" for item in result)
