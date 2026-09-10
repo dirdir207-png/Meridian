@@ -34,7 +34,7 @@ tests pass; Ruff passes for the new/changed code.
 Do not describe this as an autonomous canceler shipped to production. The following
 remain intentionally absent:
 
-1. No browser extension or local bridge; no merchant website is driven. The cancellation brief is now available as a read-only API response.
+1. No browser extension or local bridge; no merchant website is driven. A provider adapter protocol now exists, but the default executor hard-stops unless an adapter is explicitly injected. The cancellation brief is now available as a read-only API response.
 2. No scheduler invokes deadline events or creates cancellation actions automatically; `/trials/deadlines` is read-only.
 3. No Gmail/Plaid/transaction ingestion creates trials automatically. The capture endpoint accepts explicit parsed terms only; it does not parse mail or browser traffic.
 4. No recipe files are enabled for real merchants. Escalation planning is read-only and owner-led.
