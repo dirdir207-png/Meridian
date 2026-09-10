@@ -37,7 +37,7 @@ remain intentionally absent:
 1. No browser extension or local bridge; no merchant website is driven. The cancellation brief is now available as a read-only API response.
 2. No scheduler invokes deadline events or creates cancellation actions automatically; `/trials/deadlines` is read-only.
 3. No Gmail/Plaid/transaction ingestion creates trials automatically. The capture endpoint accepts explicit parsed terms only; it does not parse mail or browser traffic.
-4. No recipe files are enabled for real merchants.
+4. No recipe files are enabled for real merchants. Escalation planning is read-only and owner-led.
 5. No evidence-ledger attachment adapter is wired to cancellation artifacts yet.
 6. No UI surface has been added for trials/actions. Cancellation-action evidence can now link into the existing evidence ledger via the API.
 7. No Crew virtual-card prevention flow is connected; no card mutation was executed. Post-deadline reconciliation now provides a conservative `billing_stopped` signal only when the sync window is explicitly complete.
@@ -56,6 +56,7 @@ Routes are under the existing `/api/meridian` prefix:
 - `POST /trials/capture` (strict explicit-term capture; no inferred dates)
 - `GET /trials/deadlines` (read-only deadline projection)
 - `GET /trials/<id>/cancellation-brief` (read-only human handoff brief)
+- `GET /trials/<id>/escalation-plan` (read-only owner-review channel ladder)
 - `GET/POST /cancellation-actions/<id>/evidence` (existing evidence-ledger links)
 - `GET/PATCH /trials/<id>`
 - `GET/POST /trials/<id>/cancellation-actions`

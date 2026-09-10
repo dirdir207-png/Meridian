@@ -16,6 +16,7 @@ from meridian.cancellation import (
 from meridian.cancellation.brief import build_cancellation_brief
 from meridian.cancellation.capture import capture_trial
 from meridian.cancellation.deadlines import upcoming_deadlines
+from meridian.cancellation.escalation import build_escalation_plan
 from meridian.cancellation.notification_payload import build_trial_reminder_payload
 from meridian.cancellation.notifications import TrialNotificationRepository
 from meridian.commitments import CommitmentRepository
@@ -1646,6 +1647,17 @@ def mark_trial_notification_sent(notification_id: int):
     except KeyError:
         return _error("not_found", "Trial notification not found or already handled.", "Refresh notifications.", 404)
     return jsonify({"notification": notification.__dict__})
+
+
+@meridian_api.get("/trials/<int:trial_id>/escalation-plan")
+@login_required
+def get_escalation_plan(trial_id: int):
+    trial = _trial_repository().get(trial_id)
+    if trial is None:
+        return _error("not_found", "Trial not found.", "Refresh the trial list.", 404)
+    actions = _cancellation_repository().list_for_trial(trial_id)
+    plan = build_escalation_plan(trial, actions)
+    return jsonify({"plan": plan})
 
 
 @meridian_api.get("/trials/<int:trial_id>/cancellation-brief")

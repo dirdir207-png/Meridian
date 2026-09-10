@@ -74,3 +74,20 @@ def test_post_deadline_reconciliation_is_conservative(tmp_path):
         now=now, reconciliation_complete=True,
     )
     assert not signals and "charge" in reason
+
+
+def test_escalation_plan_skips_attempted_channels(tmp_path):
+    from meridian.cancellation.escalation import build_escalation_plan
+    from meridian.cancellation.repository import CancellationRepository
+    from meridian.trials import TrialRepository
+
+    db_path = str(tmp_path / "escalation.db")
+    trial = TrialRepository(db_path).create(service="Example", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-10T00:00:00Z")
+    repo = CancellationRepository(db_path)
+    action = repo.create(trial.id, "email")
+    plan = build_escalation_plan(trial, [action])
+    channels = [step["channel"] for step in plan["next"]]
+    assert "email" not in channels
+    assert channels[0] == "live_browser"
+    assert plan["read_only"] is True
+    assert plan["requires_owner"] is True
