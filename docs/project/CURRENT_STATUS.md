@@ -277,6 +277,9 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Hardened the durable action pipeline so an approved action older than the configured 3600-second TTL
   is atomically marked `expired` during execution claim, closing the pending-list/execute race. Invalid
   approval timestamps fail closed. Added regression coverage.
-- Verification: action-store tests 11 passed; `tests/meridian` 520 passed; memory contract tests 5 passed.
-  Observatory browser tests require the running preview (`APP_URL`) and were previously verified separately.
+- Verification: action-store tests 11 passed; `tests/meridian` 520 passed; memory contract tests 5 passed;
+  sync reserve regression 5 passed. Observatory browser tests require the running preview (`APP_URL`) and
+  were previously verified separately.
+- Corrected provider synchronization to treat an explicit zero reserve as authoritative instead of
+  retaining the prior local reserve; omitted reserves still preserve existing observations.
 

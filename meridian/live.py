@@ -71,8 +71,7 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
                 recurrence=candidate.recurrence or "monthly",
                 due_date=candidate.due_date,
                 target_amount=candidate.amount,
-                funded_amount=candidate.funded_amount or 0.0,
-                legacy_source=adapter.provider_name,
+                funded_amount=(candidate.funded_amount if candidate.funded_amount is not None else 0.0),                legacy_source=adapter.provider_name,
                 legacy_id=candidate.external_id,
             )
         else:
@@ -83,8 +82,11 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
                 currency=candidate.currency,
                 due_date=candidate.due_date or existing.due_date,
                 recurrence=candidate.recurrence or existing.recurrence,
-                funded_amount=candidate.funded_amount or existing.funded_amount,
-            )
+                funded_amount=(
+                    candidate.funded_amount
+                    if candidate.funded_amount is not None
+                    else existing.funded_amount
+                ),            )
     return report
 
 

@@ -156,6 +156,32 @@ def test_reconcile_is_idempotent_and_leaves_ambiguous_matches_unlinked(repositor
     assert repository.list_transaction_relations() == []
 
 
+def test_sync_updates_authoritative_zero_reserve_instead_of_retaining_old_value(repository):
+    from meridian.providers.base import CommitmentCandidate
+
+    first = ProviderSnapshot(
+        connection_external_id="crew-household",
+        connection_name="Crew",
+        accounts=(),
+        transactions=(),
+        commitment_candidates=(CommitmentCandidate("bill:1", "Rent", 120.0, funded_amount=100.0),),
+    )
+    second = ProviderSnapshot(
+        connection_external_id="crew-household",
+        connection_name="Crew",
+        accounts=(),
+        transactions=(),
+        commitment_candidates=(CommitmentCandidate("bill:1", "Rent", 120.0, funded_amount=0.0),),
+    )
+
+    sync_providers((SnapshotAdapter("crew", first),), repository)
+    sync_providers((SnapshotAdapter("crew", second),), repository)
+
+    with repository._connect() as connection:
+        reserve = connection.execute("SELECT funded_amount FROM commitments WHERE legacy_id = ?", ("bill:1",)).fetchone()[0]
+    assert reserve == 0.0
+
+
 def test_multi_provider_sync_upserts_splitwise_commitment_candidates(repository):
     from meridian.providers.base import CommitmentCandidate
 
