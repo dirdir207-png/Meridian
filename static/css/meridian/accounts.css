@@ -111,6 +111,8 @@
 
 /* Account structure sheet (white rounded card) */
 .m-account-list-sheet {
+  width: 100%;
+  min-width: 0;
   padding: var(--m-space-3) var(--m-space-5);
   border: 1px solid var(--m-border);
   border-radius: var(--m-radius-lg);

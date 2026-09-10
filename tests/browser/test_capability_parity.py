@@ -87,6 +87,9 @@ def test_every_deferred_capability_has_an_honest_marker(browser):
     context = browser.new_context(viewport=DESKTOP)
     page = _authed_page(context)
     page.goto(f"{APP_URL}/meridian?workspace=plan", wait_until="networkidle")
+    # Deferred Crew parity is intentionally scoped to the Crew segment, which
+    # keeps the main Plan surface focused while remaining discoverable.
+    page.get_by_role("button", name="Crew", exact=True).click()
 
     for key, label in DEFERRED_CAPABILITIES.items():
         marker = page.locator(f"[data-parity-deferred='{key}']")

@@ -278,6 +278,8 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Hardened the durable action pipeline so an approved action older than the configured 3600-second TTL
   is atomically marked `expired` during execution claim, closing the pending-list/execute race. Invalid
   approval timestamps fail closed. Added regression coverage.
+- Fixed a real 390px Accounts overflow caused by the account list sheet's intrinsic min-content width;
+  responsive and capability-parity browser coverage now pass (8 tests).
 - Verification: full suite `730 passed, 64 skipped`; `tests/meridian` 520 passed; action-store tests
   11 passed; memory contract tests 5 passed; sync reserve regression 5 passed. Observatory browser tests
   require the running preview (`APP_URL`) and were previously verified separately. A fresh browser-suite
