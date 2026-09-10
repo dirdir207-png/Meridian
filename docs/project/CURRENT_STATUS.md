@@ -279,7 +279,9 @@ Parallel Observatory dirty/untracked files were not altered by this work.
   approval timestamps fail closed. Added regression coverage.
 - Verification: action-store tests 11 passed; `tests/meridian` 520 passed; memory contract tests 5 passed;
   sync reserve regression 5 passed. Observatory browser tests require the running preview (`APP_URL`) and
-  were previously verified separately.
+  were previously verified separately. The broad `tests` run currently has one unrelated known
+  failure in `tests/test_app_evidence_integration.py`: it still expects raw blob bytes while the
+  current endpoint intentionally returns the safe HTML evidence viewer.
 - Corrected provider synchronization to treat an explicit zero reserve as authoritative instead of
   retaining the prior local reserve; omitted reserves still preserve existing observations.
 
