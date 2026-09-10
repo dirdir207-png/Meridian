@@ -382,3 +382,12 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - The Execute control is disabled after a durable outcome, so failure/uncertainty cannot become a blind resend path; recovery routes through Actions & Approvals and Crew-state readback.
 - Verification: RED->GREEN — three focused tests failed against the old behavior; focused source/integration coverage 11 passed; `tests/meridian` 572 passed; Node syntax, Ruff, and `git diff --check` clean.
 - Commit: `72b6bc0`.
+
+## Exact recorded action review details — 2026-09-10
+
+- Implemented the recorded-detail half of A10 across the Settings history, Memory approvals, and the legacy account approval panel. Every surface now displays all stored operation parameters, including exact amounts, sources, destinations, memos, and nested fields.
+- Added shared `action-review.js`: values are rendered with `textContent` only; secret-shaped keys are recursively replaced with `[redacted]`; no action data is inserted through `innerHTML`.
+- Review truth fails closed. If a durable action does not contain reviewed before/after or preserved-field evidence, the surface says **not recorded** rather than inferring it from the rationale or requested parameters.
+- Scope boundary: this does **not** close A12. Fresh base-state capture, source-version/precondition checks, conflict detection, and true before/after comparison remain separate work.
+- Verification: RED->GREEN — four contract tests failed before implementation; focused action-history/memory/browser-source coverage 15 passed; `tests/meridian` 576 passed; isolated preview browser shell/smoke 18 passed; Node syntax, Ruff, and `git diff --check` clean. The temporary preview was stopped afterward.
+- Commit: `f27f553`.

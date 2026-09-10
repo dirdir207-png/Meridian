@@ -162,6 +162,29 @@
         "commit": "72b6bc0",
         "verification": "RED->GREEN tests/meridian/test_memory_action_outcome_js.py (3); focused integration 11 passed; tests/meridian 572 passed; Node syntax, Ruff, git diff --check clean"
       }
+    },
+    {
+      "id": "OS-009",
+      "title": "Action reviews show exact recorded parameters safely",
+      "phase": "action-truth",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-008"
+      ],
+      "authority_impact": "none; review presentation only, no approval or mutation change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Every approval/history surface displays all stored operation parameters",
+        "Secret-shaped values are recursively redacted and never written with innerHTML",
+        "Missing reviewed before/after evidence is labelled not recorded rather than inferred",
+        "Missing preserved-field evidence is labelled not recorded rather than inferred",
+        "The slice does not claim A12 base-state capture or conflict preconditions are implemented"
+      ],
+      "evidence": {
+        "commit": "f27f553",
+        "verification": "RED->GREEN tests/meridian/test_action_review_js.py (4); focused 15 passed; tests/meridian 576 passed; browser shell/smoke 18 passed; Node syntax, Ruff, git diff --check clean"
+      }
     }
   ]
 }
