@@ -56,3 +56,21 @@ def test_deadline_projection_is_read_only_and_skips_terminal_trials(tmp_path):
     events = upcoming_deadlines(repo.list(include_canceled=True), now=datetime.fromisoformat("2026-09-10T00:00:00+00:00"))
     assert {event["trial_id"] for event in events} == {active.id}
     assert all(event["service"] == "Active" for event in events)
+
+
+def test_post_deadline_reconciliation_is_conservative(tmp_path):
+    from datetime import datetime, timezone
+
+    from meridian.cancellation.reconcile import verify_post_deadline_billing
+    from meridian.trials import TrialRepository
+    trial = TrialRepository(str(tmp_path / "reconcile.db")).create(service="Example", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-10T00:00:00Z")
+    now = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    signals, reason = verify_post_deadline_billing(trial, [], now=now, reconciliation_complete=False)
+    assert not signals and "Insufficient" in reason
+    signals, reason = verify_post_deadline_billing(trial, [], now=now, reconciliation_complete=True)
+    assert signals and "complete" in reason
+    signals, reason = verify_post_deadline_billing(
+        trial, [{"merchant": "Example", "occurred_at": "2026-09-12T00:00:00Z"}],
+        now=now, reconciliation_complete=True,
+    )
+    assert not signals and "charge" in reason

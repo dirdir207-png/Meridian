@@ -40,7 +40,7 @@ remain intentionally absent:
 4. No recipe files are enabled for real merchants.
 5. No evidence-ledger attachment adapter is wired to cancellation artifacts yet.
 6. No UI surface has been added for trials/actions. Cancellation-action evidence can now link into the existing evidence ledger via the API.
-7. No Crew virtual-card prevention flow is connected; no card mutation was executed.
+7. No Crew virtual-card prevention flow is connected; no card mutation was executed. Post-deadline reconciliation now provides a conservative `billing_stopped` signal only when the sync window is explicitly complete.
 8. The state machine records provider observations but does not itself verify a merchant.
 
 ## Integration contract for the next session
