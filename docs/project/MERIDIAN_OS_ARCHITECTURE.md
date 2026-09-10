@@ -24,6 +24,10 @@ Core boundaries:
 - **UI:** exposes actual, stale, inferred, simulated, and proposed states distinctly.
 - **Audit:** records evidence, assumptions, decisions, approvals, executions, verification, and failures.
 
+## Visual fidelity control system
+
+Visual fidelity is a formal engineering track, not an informal screenshot review. Before visual changes, maintain a baseline manifest identifying the authoritative concept, exact viewport, theme, fixture, clock, and current capture. Capture current pages with deterministic fixture data, loaded fonts, frozen animation, settled network state, and matching dimensions. Produce side-by-side and overlay/difference views where possible. Review landmark geometry before typography, spacing, controls/accessibility, and decoration. Change one visual gap at a time and recapture. Live-data validation is separate from concept-fidelity validation.
+
 ## Sequence
 
 1. Reconcile governing documents and current code.

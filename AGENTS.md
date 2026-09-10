@@ -26,6 +26,10 @@ Implement one bounded vertical slice at a time. Prefer test-first development. R
 
 Agents may observe, explain, simulate, forecast, investigate, challenge, teach, draft, prepare, test, and propose. Only the constrained executor may mutate financial state. Never expose secrets. Never auto-retry mutations. Never perform external transfers autonomously. Preserve proposal → approval → execution → provider verification. Treat uncertain writes as unknown until readback. Keep actual, inferred, and simulated values separate; stale data must remain visibly stale; missing data is not zero.
 
+## Visual fidelity protocol
+
+Visual work must use the newest governing concept set, exact matching viewport dimensions, the same theme, deterministic fixture data, frozen time, loaded fonts, disabled animation, and settled network state. Never compare a mobile concept to a desktop capture or treat a different page length/data state as a design defect. For each comparison, preserve the concept aspect ratio and record concept path, current path, viewport, fixture, commit, and capture date. Generate side-by-side and overlay/difference views when tooling permits. Review structure first, then typography, spacing, controls/accessibility, and decoration; change one visual gap at a time and recapture.
+
 ## Verification and release
 
 Never claim completion because only a schema, endpoint, button, prompt, or placeholder exists. Production deployment, live acceptance, credential changes, authority-policy activation, and self-modifying installation are owner-gated. When blocked, do safe read-only inspection, testing, documentation, or simulation rather than guessing.
