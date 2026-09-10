@@ -8,6 +8,10 @@ os.environ.setdefault(
     os.environ.get("GATE_DB", "/tmp/gate-preview/gate.db"),
 )
 
+# The private Tailscale preview is served over HTTP; allow its session cookie
+# to round-trip from phones. Production defaults remain Secure in app.py.
+os.environ.setdefault("SESSION_COOKIE_SECURE", "0")
+
 # Patch out legacy background threads before importing app
 import app as a
 

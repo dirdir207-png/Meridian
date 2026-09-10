@@ -94,7 +94,10 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=os.getenv("FLASK_DEBUG") != "1",
+    SESSION_COOKIE_SECURE=os.getenv(
+        "SESSION_COOKIE_SECURE",
+        "0" if os.getenv("FLASK_DEBUG") == "1" else "1",
+    ) != "0",
 )
 
 @app.after_request

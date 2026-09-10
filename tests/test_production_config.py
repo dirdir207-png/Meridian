@@ -44,6 +44,16 @@ def test_development_launch_enables_debug_only_with_explicit_opt_in(monkeypatch,
     assert run_calls == [{"host": "0.0.0.0", "debug": True, "port": 8080}]
 
 
+def test_session_cookie_secure_can_be_explicitly_disabled_for_private_http_preview(monkeypatch, tmp_path):
+    monkeypatch.setenv("DB_FILE", str(tmp_path / "simplecrew.db"))
+    monkeypatch.delenv("FLASK_DEBUG", raising=False)
+    monkeypatch.setenv("SESSION_COOKIE_SECURE", "0")
+
+    preview_module = runpy.run_path(Path(__file__).parents[1] / "app.py", run_name="preview_app")
+
+    assert preview_module["app"].config["SESSION_COOKIE_SECURE"] is False
+
+
 def test_session_cookie_is_not_secure_when_debug_is_explicitly_enabled(monkeypatch, tmp_path):
     monkeypatch.setenv("DB_FILE", str(tmp_path / "simplecrew.db"))
     monkeypatch.setenv("FLASK_DEBUG", "1")
