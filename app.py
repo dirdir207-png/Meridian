@@ -2917,7 +2917,7 @@ def create_bill_action(name, amount, frequency_key, day_of_month, match_string=N
 
 # --- MERIDIAN SHELL ---
 
-MERIDIAN_WORKSPACES = ("today", "plan", "activity", "accounts")
+MERIDIAN_WORKSPACES = ("today", "plan", "activity", "trials", "accounts")
 LEGACY_WORKSPACE_MAP = {
     "activity": "activity",
     "expenses": "plan",

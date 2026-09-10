@@ -2,6 +2,9 @@
    Workspace-specific styles live in today.css / activity.css / accounts.css. */
 
 
+.m-trials-panel{max-width:920px}.m-trials-list{white-space:pre-line;display:grid;gap:.6rem}.m-trial-row{padding:.85rem 0;border-bottom:1px solid var(--m-border)}
+
+
 
 .m-command-header {
   display: flex;
