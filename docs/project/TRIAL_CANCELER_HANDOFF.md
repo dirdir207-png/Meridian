@@ -39,7 +39,7 @@ remain intentionally absent:
 3. No Gmail/Plaid/transaction ingestion creates trials automatically.
 4. No recipe files are enabled for real merchants.
 5. No evidence-ledger attachment adapter is wired to cancellation artifacts yet.
-6. No UI surface has been added for trials/actions.
+6. No UI surface has been added for trials/actions. Cancellation-action evidence can now link into the existing evidence ledger via the API.
 7. No Crew virtual-card prevention flow is connected; no card mutation was executed.
 8. The state machine records provider observations but does not itself verify a merchant.
 
@@ -55,6 +55,7 @@ Routes are under the existing `/api/meridian` prefix:
 - `GET/POST /trials`
 - `GET /trials/deadlines` (read-only deadline projection)
 - `GET /trials/<id>/cancellation-brief` (read-only human handoff brief)
+- `GET/POST /cancellation-actions/<id>/evidence` (existing evidence-ledger links)
 - `GET/PATCH /trials/<id>`
 - `GET/POST /trials/<id>/cancellation-actions`
 - `POST /cancellation-actions/<id>/transition`

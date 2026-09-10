@@ -1626,6 +1626,33 @@ def create_cancellation_action(trial_id: int):
     return jsonify({"action": action.as_dict()}), 201
 
 
+@meridian_api.get("/cancellation-actions/<int:action_id>/evidence")
+@login_required
+def list_cancellation_evidence(action_id: int):
+    try:
+        evidence = _cancellation_repository().list_evidence(action_id)
+    except KeyError:
+        return _error("not_found", "Cancellation action not found.", "Refresh the trial.", 404)
+    return jsonify({"evidence": evidence})
+
+
+@meridian_api.post("/cancellation-actions/<int:action_id>/evidence")
+@login_required
+def attach_cancellation_evidence(action_id: int):
+    payload = request.get_json(silent=True) or {}
+    try:
+        evidence = _cancellation_repository().attach_evidence(
+            action_id, int(payload.get("evidence_id")),
+            relation=payload.get("relation", "supports"),
+            provenance=payload.get("provenance", "owner"),
+        )
+    except KeyError:
+        return _error("not_found", "Cancellation action not found.", "Refresh the trial.", 404)
+    except (TypeError, ValueError) as error:
+        return _error("invalid_request", str(error), "Provide an accessible evidence id.", 400)
+    return jsonify({"evidence": evidence}), 201
+
+
 @meridian_api.post("/cancellation-actions/<int:action_id>/transition")
 @login_required
 def transition_cancellation_action(action_id: int):

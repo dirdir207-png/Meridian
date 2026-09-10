@@ -90,3 +90,29 @@ class CancellationRepository:
                 (target.value, label, confirmation_reference or current.confirmation_reference, started, completed, json.dumps(artifact_ids if artifact_ids is not None else current.artifact_ids), notes if notes is not None else current.notes, now, action_id),
             )
         return self.get(action_id)
+    def attach_evidence(self, action_id: int, evidence_id: int, *, relation: str = "supports", provenance: str = "owner") -> dict[str, object]:
+        if self.get(action_id) is None:
+            raise KeyError(action_id)
+        from ..evidence import EvidenceRepository
+
+        evidence = EvidenceRepository(self.db_path).get_item(evidence_id)
+        if evidence is None:
+            raise ValueError("evidence_id does not reference accessible evidence")
+        link = EvidenceRepository(self.db_path).add_link(
+            evidence_id=evidence_id,
+            target_kind="cancellation_action",
+            target_id=str(action_id),
+            relation=relation,
+            provenance=provenance,
+        )
+        return {"id": link.id, "evidence_id": link.evidence_id, "relation": link.relation, "provenance": link.provenance}
+
+    def list_evidence(self, action_id: int) -> list[dict[str, object]]:
+        if self.get(action_id) is None:
+            raise KeyError(action_id)
+        from ..evidence import EvidenceRepository
+
+        evidence = EvidenceRepository(self.db_path)
+        links = evidence.list_links_for_target("cancellation_action", str(action_id))
+        return [{"id": link.id, "evidence_id": link.evidence_id, "relation": link.relation, "provenance": link.provenance} for link in links]
+

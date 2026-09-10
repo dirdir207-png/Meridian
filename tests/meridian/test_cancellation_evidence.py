@@ -1,0 +1,30 @@
+import hashlib
+
+import pytest
+
+from meridian.cancellation import CancellationRepository
+from meridian.evidence import EvidenceRepository
+from meridian.trials import TrialRepository
+
+
+def test_cancellation_action_links_existing_evidence(tmp_path):
+    db_path = str(tmp_path / "evidence.db")
+    TrialRepository(db_path).create(service="Example", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-10T00:00:00Z")
+    action = CancellationRepository(db_path).create(1, "email")
+    evidence = EvidenceRepository(db_path).add_item(
+        source_kind="test", source_id="mail-1", content_hash=hashlib.sha256(b"confirmation").hexdigest(),
+        mime_type="message/rfc822", size_bytes=12, title="Cancellation confirmation",
+    )
+    repo = CancellationRepository(db_path)
+    link = repo.attach_evidence(action.id, evidence.id, relation="confirmation", provenance="mail_intake")
+    assert link["evidence_id"] == evidence.id
+    assert repo.list_evidence(action.id)[0]["relation"] == "confirmation"
+
+
+def test_cancellation_action_rejects_missing_evidence(tmp_path):
+    db_path = str(tmp_path / "evidence.db")
+    TrialRepository(db_path).create(service="Example", trial_started_at="2026-09-01T00:00:00Z", trial_ends_at="2026-09-10T00:00:00Z")
+    repo = CancellationRepository(db_path)
+    action = repo.create(1, "email")
+    with pytest.raises(ValueError, match="evidence_id"):
+        repo.attach_evidence(action.id, 999)
