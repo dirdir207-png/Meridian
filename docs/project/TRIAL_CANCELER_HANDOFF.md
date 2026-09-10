@@ -34,7 +34,7 @@ tests pass; Ruff passes for the new/changed code.
 Do not describe this as an autonomous canceler shipped to production. The following
 remain intentionally absent:
 
-1. No browser extension or local bridge; no merchant website is driven.
+1. No browser extension or local bridge; no merchant website is driven. The cancellation brief is now available as a read-only API response.
 2. No scheduler invokes deadline events or creates cancellation actions automatically; `/trials/deadlines` is read-only.
 3. No Gmail/Plaid/transaction ingestion creates trials automatically.
 4. No recipe files are enabled for real merchants.
@@ -54,6 +54,7 @@ Routes are under the existing `/api/meridian` prefix:
 
 - `GET/POST /trials`
 - `GET /trials/deadlines` (read-only deadline projection)
+- `GET /trials/<id>/cancellation-brief` (read-only human handoff brief)
 - `GET/PATCH /trials/<id>`
 - `GET/POST /trials/<id>/cancellation-actions`
 - `POST /cancellation-actions/<id>/transition`

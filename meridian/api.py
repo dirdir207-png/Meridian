@@ -13,6 +13,7 @@ from meridian.cancellation import (
     CancellationState,
     VerificationSignal,
 )
+from meridian.cancellation.brief import build_cancellation_brief
 from meridian.cancellation.deadlines import upcoming_deadlines
 from meridian.commitments import CommitmentRepository
 from meridian.connections import ConnectionRepository, ConnectionState
@@ -1593,6 +1594,19 @@ def update_trial(trial_id: int):
 def _cancellation_repository():
     factory = current_app.config.get("MERIDIAN_CANCELLATION_FACTORY")
     return factory() if factory else CancellationRepository(_repository().db_path)
+
+
+@meridian_api.get("/trials/<int:trial_id>/cancellation-brief")
+@login_required
+def get_cancellation_brief(trial_id: int):
+    trial = _trial_repository().get(trial_id)
+    if trial is None:
+        return _error("not_found", "Trial not found.", "Refresh the trial list.", 404)
+    actions = _cancellation_repository().list_for_trial(trial_id)
+    brief = build_cancellation_brief(
+        trial, existing_channels=(action.channel for action in actions)
+    )
+    return jsonify({"brief": brief, "read_only": True})
 
 
 @meridian_api.get("/trials/<int:trial_id>/cancellation-actions")
