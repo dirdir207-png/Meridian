@@ -309,3 +309,11 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Corrected provider synchronization to treat an explicit zero reserve as authoritative instead of
   retaining the prior local reserve; omitted reserves still preserve existing observations.
 
+
+## Read-only constitution evaluator — 2026-09-10
+
+- Added `meridian/policy.py` with typed `Constitution`, `ActionPlan`, and structured `PolicyDecision` models.
+- Evaluation fails closed while inactive, reports rules/evidence/assumptions/confidence/recovery, and never approves or executes actions.
+- Automatic actions without bounded limits are blocked; otherwise results remain `requires_approval`.
+- Verification: `tests/meridian` passed 548 tests; Ruff and `git diff --check` passed. No policy activation or financial mutation occurred.
+- Commit: `7a6c985`.

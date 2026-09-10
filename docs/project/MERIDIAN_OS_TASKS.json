@@ -12,7 +12,10 @@
       "dependencies": [],
       "authority_impact": "none",
       "owner_decision_required": false,
-      "acceptance_criteria": ["Current governing documents and implementation are reconciled", "Exactly one safe first slice is selected"]
+      "acceptance_criteria": [
+        "Current governing documents and implementation are reconciled",
+        "Exactly one safe first slice is selected"
+      ]
     },
     {
       "id": "OS-002",
@@ -20,10 +23,15 @@
       "phase": "digital-twin",
       "status": "complete",
       "priority": "high",
-      "dependencies": ["OS-001"],
+      "dependencies": [
+        "OS-001"
+      ],
       "authority_impact": "none",
       "owner_decision_required": false,
-      "acceptance_criteria": ["Observations preserve provenance and timestamps", "Actual and simulated values cannot mix"]
+      "acceptance_criteria": [
+        "Observations preserve provenance and timestamps",
+        "Actual and simulated values cannot mix"
+      ]
     },
     {
       "id": "OS-003",
@@ -31,10 +39,29 @@
       "phase": "safety",
       "status": "planned",
       "priority": "high",
-      "dependencies": ["OS-002"],
+      "dependencies": [
+        "OS-002"
+      ],
       "authority_impact": "policy model only; activation owner-gated",
       "owner_decision_required": true,
-      "acceptance_criteria": ["Policy decisions identify rules, evidence, assumptions, and recovery"]
+      "acceptance_criteria": [
+        "Policy decisions identify rules, evidence, assumptions, and recovery"
+      ]
+    },
+    {
+      "id": "OS-003",
+      "title": "Constitution policy evaluator",
+      "phase": "safety",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-002"
+      ],
+      "authority_impact": "policy model only; activation owner-gated",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "Policy decisions identify rules, evidence, assumptions, and recovery"
+      ]
     }
   ]
 }
