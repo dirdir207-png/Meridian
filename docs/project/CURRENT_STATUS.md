@@ -336,3 +336,13 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - The matrix runner now freezes browser `Date`, disables interval polling before application scripts load, and captures both initial viewport and full-page artifacts.
 - Capture targets are restricted to isolated loopback previews, and workspace metadata maps to the governing Observatory concept filenames.
 - Approved visual baselines were not regenerated; no product or financial behavior changed.
+
+## Four-workspace invariant restored — 2026-09-10
+
+- Removed Trials as a fifth primary workspace from `navigation.html`, `shell.js`, and `MERIDIAN_WORKSPACES` in `app.py`, restoring the governing four‑workspace invariant.
+- Moved Trials into the **Settings** surface as a new `section=trials` entry, matching the precedent of Payday & Funding and Actions & Approvals.
+- Repaired `index.html` structural corruption from commit `5ea003d`: removed the spliced Trials `<section>` and restored the Accounts workspace's `data-workspace-section="accounts"` element.
+- Added `trials` to the Settings sections list in `app.py` and wired the partial + `trials.js` include into `settings.html`.
+- The Trials capability (API, `trials.py`, `cancellation/` logic, deadline ledger) remains fully reachable at `/api/meridian/trials*` and via `/meridian/settings?section=trials`; no API surface or safety semantics changed.
+- Verification: 6 regression checks pass (`tests/test_meridian_workspace_invariant.py`); Meridian suite 548 passed; `tests/browser/test_evidence_memory.py` passes; Ruff and `git diff --check` pass.
+- Commit intent: restore governing design authority without orphaning the Trials capability.
