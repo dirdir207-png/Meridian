@@ -632,3 +632,43 @@ from current accounts only and a filter entry for a non-current account would be
 inconsistent; `transaction.accountName` was removed rather than aliased, so the ledger
 sub-line now reads from the API's `account_name`; and absent-account reconciliation still
 covers accounts only (Crew bills and other collections remain open under C02).
+
+## The preview outage, its cause, and its repair — 2026-09-11
+
+The preview app served 503 on every financial endpoint (Today, dial, Accounts,
+memory) while `/api/actions/pending` kept returning 200. The log named the cause
+exactly:
+
+    meridian refresh failed: RuntimeError: Applied migration 020 has a name or checksum mismatch
+
+`020_account_absence_reconciliation.sql` was edited *after* an earlier revision of it
+had already been applied to the preview database `/private/tmp/gate-preview/gate.db`.
+`meridian/db.py` keeps migration history append-only and refuses to run when an applied
+migration's name or checksum no longer matches the file, so every `run_migrations`
+call raised and every repository read failed. The guard did its job; the verification
+that preceded the edit was wrong — it confirmed only that `savings_data.db` was still
+at 019 and never checked the preview database, which is the one the running app uses.
+
+Repair: `gate.db` was backed up to `gate.db.pre-020-checksum-repair`, then the recorded
+checksum for 020 was reconciled to the current file **after confirming the schema effect
+was identical** (`absent_since` present, `idx_financial_accounts_absent` present — the
+two revisions differed only in comment text). Verified by readback: `run_migrations`
+returns `[]` without raising, repository reads work, and the refresh log shows
+`meridian refresh provider=crew status=complete accounts=6 transactions=100 errors=0`
+with no further checksum errors. No other database carries 020 (`savings_data.db` is at
+019; the 2026-08-30 production backup is unaffected).
+
+Lesson, now a rule: **a migration file is immutable from the moment any database may
+have applied it — including throwaway preview and `/tmp` databases.** Ship a new
+migration instead of editing a shipped one, and when a shipped file does change, check
+every database the app can reach before assuming the change is free.
+
+Still outstanding because it needs a restart, not a code change: the preview process
+started 2026-09-10 13:08 and therefore runs the code as it was before commits `9486820`,
+`eef9ce0` and `0030ae9`. Until it restarts, absent-account reconciliation never runs, so
+the orphan row keeps Today at `stale` pinned to 2026-09-07, and the Accounts "No longer
+returned" section is not served (Jinja has the previous template cached).
+
+Follow-up finding: the 503 body reads "Try again after your provider reconnects", which
+misattributes a schema/migration failure to the provider. The message should distinguish
+"we could not read your data" from "your provider is unavailable".
