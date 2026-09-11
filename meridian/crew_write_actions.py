@@ -74,6 +74,85 @@ def _verify_stored(db_path: str, check_field: str):
     return verify
 
 
+def _verify_crew_bill_readback():
+    """Verify an update_crew_bill against a fresh provider snapshot.
+
+    Replaces the local-commitment re-read (A06): Crew's own snapshot is the
+    authoritative confirmation. Outcomes: ok True (matched), ok False (mismatch
+    or the bill is gone — provider_truth True), or ok None (the snapshot could
+    not be read — neither verified nor failed; the action stays EXECUTED).
+    """
+
+    def verify(params: Dict[str, Any], _result: Dict[str, Any]) -> Dict[str, Any]:
+        from .live import capture_crew_snapshot
+        from .providers.crewwork import CrewWorkSnapshotAdapter
+
+        bill_id = str(params.get("billId") or "")
+        requested = {
+            "name": params.get("name"),
+            "amount": (
+                round(float(params["amount"])) if params.get("amount") is not None else None
+            ),
+        }
+
+        try:
+            dashboard = capture_crew_snapshot()
+            snapshot = CrewWorkSnapshotAdapter(dashboard).fetch_snapshot()
+        except Exception as exc:  # noqa: BLE001 - an unreadable snapshot cannot confirm
+            return {
+                "ok": None,
+                "check": "crew-bill-readback",
+                "provider_truth": False,
+                "reason": f"readback unavailable: {exc}",
+                "requested": requested,
+            }
+
+        candidate = next(
+            (c for c in snapshot.commitment_candidates if c.external_id == bill_id),
+            None,
+        )
+        if candidate is None:
+            return {
+                "ok": False,
+                "check": "crew-bill-readback",
+                "provider_truth": True,
+                "reason": "the bill is no longer present in Crew",
+                "requested": requested,
+                "observed": None,
+            }
+
+        observed = {
+            "name": candidate.name,
+            "amount": round(candidate.amount * 100),
+        }
+        mismatches = []
+        if requested["name"] is not None and candidate.name != requested["name"]:
+            mismatches.append("name")
+        if (
+            requested["amount"] is not None
+            and round(candidate.amount * 100) != requested["amount"]
+        ):
+            mismatches.append("amount")
+
+        if mismatches:
+            return {
+                "ok": False,
+                "check": "crew-bill-readback",
+                "provider_truth": True,
+                "reason": f"bill fields differ from the write: {', '.join(mismatches)}",
+                "requested": requested,
+                "observed": observed,
+            }
+        return {
+            "ok": True,
+            "check": "crew-bill-readback",
+            "provider_truth": True,
+            "matched": observed,
+        }
+
+    return verify
+
+
 def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Callable]]]:
     """Register the Crew write executor specs (params-dict adapters)."""
     def _exec(op: str):
@@ -81,7 +160,7 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
 
     no_verify = None
     base: Dict[str, tuple[Callable, Optional[Callable]]] = {
-        "update_crew_bill": (_exec("update_bill"), _verify_stored(db_path, "name")),
+        "update_crew_bill": (_exec("update_bill"), _verify_crew_bill_readback()),
         "update_crew_bill_reserve_settings": (
             _exec("update_bill_reserve_settings"),
             _verify_stored(db_path, "name"),

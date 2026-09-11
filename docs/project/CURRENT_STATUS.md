@@ -729,3 +729,33 @@ Verified: the routing test now asserts the legacy path calls `sync_live_crew` on
 DB, so a revert to the client adapter fails; the two tests that patched the removed
 `sync_provider` name were repointed to the live seam. Full suite 875 passed, 56 skipped,
 same pre-existing playwright-unavailable failure; Ruff and `git diff --check` clean.
+
+## A06 — a Crew bill write is now verified against the provider, not local state — 2026-09-11
+
+The verify leg of propose→approve→execute→verify was hollow for Crew bill writes:
+`_verify_stored` re-read the *local* commitment and explicitly never failed an accepted
+Crew write over local state, so "verification" could not actually verify anything.
+
+`update_crew_bill` now verifies against a fresh Crew snapshot (`capture_crew_snapshot` →
+`CrewWorkSnapshotAdapter`) and compares the requested `name` and `amount` (normalizing
+cents↔dollars) against what Crew now reports:
+
+- matched → `VERIFIED` (`provider_truth: true`);
+- mismatch, or the bill is gone → `FAILED` (`verification_failed`, with `requested` and
+  `observed` recorded, `provider_truth: true`);
+- snapshot unreadable → stays `EXECUTED` (`verification pending`, `provider_truth: false`)
+  — never VERIFIED, never FAILED, because Crew already accepted the write.
+
+Engine: `execute_approved_action` now treats a verifier's `ok is None` as "verification
+pending" via the new `ActionStore.record_verification_pending` (an in-place result note
+with no state change), instead of `bool(None) → False → failed`. This generalises the
+OS-012 no-verifier-registered honesty to "a readback ran but could not confirm."
+
+Composes with A12: A12 refuses a write whose reviewed state changed *before* it runs;
+A06 confirms the provider state *after* it lands. Scope is `update_crew_bill` only; every
+other verifier is unchanged. A `FAILED` verification is terminal — no automatic retry.
+
+Verified RED→GREEN: 1 engine test plus 3 wired tests (matched/mismatch/unreadable);
+neutralising the `ok is None` branch turns 2 red, including "cannot be read stays
+executed". Full suite 879 passed, 56 skipped, same pre-existing playwright-unavailable
+failure; Ruff and `git diff --check` clean.

@@ -417,3 +417,31 @@ def test_a_refused_action_cannot_be_executed_again(store):
 
     with pytest.raises(IllegalTransitionError):
         execute_approved_action(store, action_id, executors)
+
+
+def test_a_verifier_that_cannot_confirm_stays_executed_not_failed(store):
+    """A readback that ran but could not confirm is neither VERIFIED nor FAILED.
+
+    The provider already accepted the write, so a failed readback must not be
+    recorded as a failed mutation — it stays EXECUTED (verification pending),
+    exactly like the no-verifier-registered case (A06).
+    """
+    action_id = seed_approved_action(store)
+
+    final = execute_approved_action(
+        store,
+        action_id,
+        make_executors(
+            verifier=lambda params, result: {
+                "ok": None,
+                "check": "crew-bill-readback",
+                "reason": "the snapshot could not be read",
+            }
+        ),
+    )
+
+    assert final["state"] == ActionState.EXECUTED.value
+    # The note is recorded in the result, not claimed as a verification column.
+    assert final["verification"] is None
+    assert final["result"]["verification"]["ok"] is None
+    assert final["result"]["verification"]["check"] == "crew-bill-readback"

@@ -189,7 +189,7 @@ def execute_approved_action(
 
     try:
         verification = spec.verifier(request["params"] or {}, result)
-        ok = bool(verification.get("ok"))
+        ok = verification.get("ok")
     except Exception as exc:
         return store.mark_failed(
             request_id,
@@ -198,6 +198,23 @@ def execute_approved_action(
                 f"Verification raised: {exc}" if str(exc) else "Verification raised",
                 "verifier_exception",
             ),
+        )
+
+    if ok is None:
+        # A readback verifier ran but could not confirm the resulting state. The
+        # provider already accepted the write, so this is neither VERIFIED nor
+        # FAILED: it stays EXECUTED (verification pending), mirroring the
+        # no-verifier-registered honesty (A06).
+        return store.record_verification_pending(
+            request_id,
+            {
+                "ok": None,
+                "check": verification.get("check") if isinstance(verification, dict) else None,
+                "reason": (
+                    verification.get("reason") if isinstance(verification, dict) else None
+                )
+                or "The resulting state could not be confirmed.",
+            },
         )
 
     if not ok:

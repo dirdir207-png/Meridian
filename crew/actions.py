@@ -270,6 +270,30 @@ class ActionStore:
     def mark_failed(self, request_id: str, error: Dict[str, Any]) -> Dict[str, Any]:
         return self._transition(request_id, ActionState.FAILED, payload_json=json.dumps(error or {}))
 
+    def record_verification_pending(
+        self, request_id: str, verification: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Record that a readback ran but could not confirm the outcome.
+
+        The action stays EXECUTED (verification pending): the provider already
+        accepted the write, so this is neither VERIFIED nor FAILED. Only the
+        recorded result changes, never the state.
+        """
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT result_json FROM action_requests WHERE id = ? AND state = ?",
+                (request_id, ActionState.EXECUTED.value),
+            ).fetchone()
+            if row is None:
+                raise IllegalTransitionError("Action is not in executed state")
+            result = json.loads(row[0]) if row[0] else {}
+            result["verification"] = verification
+            conn.execute(
+                "UPDATE action_requests SET result_json = ? WHERE id = ?",
+                (json.dumps(result), request_id),
+            )
+        return self.get(request_id)
+
     def _transition(
         self,
         request_id: str,

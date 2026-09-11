@@ -50,6 +50,17 @@ def test_propose_approve_execute_roundtrip(tmp_path, monkeypatch):
     monkeypatch.setattr(crew_write_actions, "execute_crew_write", fake)
     monkeypatch.setattr(crew_write, "execute_crew_write", fake)
 
+    # The readback verifier must not shell out to the real crew-readonly in
+    # this roundtrip test; simulate an unavailable readback so the action ends
+    # EXECUTED (the dedicated A06 tests cover matched/mismatch readbacks).
+    import meridian.live as live
+
+    monkeypatch.setattr(
+        live,
+        "capture_crew_snapshot",
+        lambda: (_ for _ in ()).throw(RuntimeError("readback unavailable in test")),
+    )
+
     from crew.executors import execute_approved_action
 
     request = store.propose(
@@ -446,3 +457,123 @@ def test_an_unchanged_bill_executes_normally(tmp_path, monkeypatch):
     # This spec has no verifier, so a successful write stays EXECUTED, never
     # VERIFIED — the check here is that the precondition allowed it to run.
     assert outcome["state"] == "executed"
+
+
+
+# --- A06: an update_crew_bill is verified by a provider readback, not local state ---
+
+
+def _readback_dashboard(bill_id, name, amount_cents):
+    return {
+        "mode": "read-only",
+        "source": "crew",
+        "complete": True,
+        "captured_at": "2026-09-11T21:00:00Z",
+        "data": {
+            "expenses": {
+                "data": {
+                    "currentUser": {
+                        "accounts": [
+                            {
+                                "billReserve": {
+                                    "bills": [
+                                        {
+                                            "id": bill_id,
+                                            "name": name,
+                                            "amount": amount_cents,
+                                            "anchorDate": "2026-01-22",
+                                            "frequency": "MONTHLY",
+                                            "reservedAmount": amount_cents,
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+    }
+
+
+def _bill_write_executor(db):
+    from crew.executors import ExecutorSpec
+    from meridian.crew_write_actions import crew_write_executors
+
+    execute, verify = crew_write_executors(db)["update_crew_bill"]
+    return execute, {"update_crew_bill": ExecutorSpec(execute=execute, verifier=verify)}
+
+
+def _seed_approved_bill(db, bill_id="Bill:1", name="Verizon", amount=9500):
+    from crew.actions import ActionStore
+
+    store = ActionStore(db, allowed_types=("update_crew_bill",))
+    request = store.propose(
+        "update_crew_bill",
+        {"billId": bill_id, "name": name, "amount": amount},
+        "Update the bill",
+        requested_by="owner",
+    )
+    store.approve(request["id"], decided_by="owner")
+    return store, request["id"]
+
+
+def test_crew_bill_readback_confirms_the_provider_state(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", lambda op, p: {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _readback_dashboard("Bill:1", "Verizon", 9500))
+
+    db = str(tmp_path / "m.db")
+    store, action_id = _seed_approved_bill(db)
+    execute, executors = _bill_write_executor(db)
+
+    outcome = execute_approved_action(store, action_id, executors)
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-bill-readback"
+    assert outcome["verification"]["provider_truth"] is True
+
+
+def test_crew_bill_readback_fails_a_write_that_does_not_land(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", lambda op, p: {"ok": True})
+    # Crew now reports a different name and amount than what was requested.
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _readback_dashboard("Bill:1", "T-Mobile", 17500))
+
+    db = str(tmp_path / "m.db")
+    store, action_id = _seed_approved_bill(db)
+    execute, executors = _bill_write_executor(db)
+
+    outcome = execute_approved_action(store, action_id, executors)
+
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["error_code"] == "verification_failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert outcome["result"]["verification"]["requested"]["name"] == "Verizon"
+    assert outcome["result"]["verification"]["observed"]["name"] == "T-Mobile"
+
+
+def test_crew_bill_readback_that_cannot_be_read_stays_executed(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", lambda op, p: {"ok": True})
+
+    def unavailable():
+        raise RuntimeError("crew-readonly snapshot timed out")
+
+    monkeypatch.setattr(live, "capture_crew_snapshot", unavailable)
+
+    db = str(tmp_path / "m.db")
+    store, action_id = _seed_approved_bill(db)
+    execute, executors = _bill_write_executor(db)
+
+    outcome = execute_approved_action(store, action_id, executors)
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["check"] == "crew-bill-readback"

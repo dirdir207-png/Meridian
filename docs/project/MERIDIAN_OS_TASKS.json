@@ -349,6 +349,30 @@
       "evidence": {
         "verification": "Routing test asserts the legacy path calls meridian.live.sync_live_crew on the app DB, so reverting to the client adapter fails; two tests patching the removed sync_provider name were repointed; full suite 875 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean"
       }
+    },
+    {
+      "id": "OS-017",
+      "title": "Crew bill writes verified against the provider, not local state (A06)",
+      "phase": "action-truth-review",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-012",
+        "OS-015"
+      ],
+      "authority_impact": "narrows; verification now requires provider truth or stays unconfirmed",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "update_crew_bill is confirmed by a fresh Crew snapshot readback, not the local commitment",
+        "A matched readback records provider_truth true and reaches VERIFIED",
+        "A mismatched or vanished bill fails as verification_failed with requested and observed recorded",
+        "An unreadable snapshot leaves the action EXECUTED (verification pending), never VERIFIED or FAILED",
+        "A verifier returning ok None is treated as pending, not failure, for every operation",
+        "No automatic retry of a failed verification"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN 1 engine test plus 3 wired tests (matched/mismatch/unreadable); neutralising the ok-is-None branch turns 2 red including the unreadable-stays-executed assertion; full suite 879 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean"
+      }
     }
   ]
 }
