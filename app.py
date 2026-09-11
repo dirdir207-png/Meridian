@@ -1053,8 +1053,21 @@ except Exception:  # pragma: no cover - import-time resilience
     def crew_write_executors(db_path):  # noqa: E306
         return {}
 
+try:
+    from meridian.crew_write_actions import crew_write_preconditions
+except Exception:  # pragma: no cover - import-time resilience
+
+    def crew_write_preconditions(db_path):  # noqa: E306
+        return {}
+
+
+_crew_write_preconditions = crew_write_preconditions(DB_FILE)
 for _kind, (_execute, _verify) in crew_write_executors(DB_FILE).items():
-    action_executors[_kind] = ExecutorSpec(execute=_execute, verifier=_verify)
+    action_executors[_kind] = ExecutorSpec(
+        execute=_execute,
+        verifier=_verify,
+        precondition=_crew_write_preconditions.get(_kind),
+    )
 
 # Write-routing: a mutation request is routed DIRECT (owner-direct, single,
 # unambiguous) or to a PROPOSAL (AI-interpreted/composed/low-confidence/plan-level)
@@ -1074,7 +1087,23 @@ for _kind, (_execute, _verify) in {
 
 def _meridian_memory_proposal_sink(action_type, params):
     summary = f"Meridian {action_type}: {params.get('name') or params.get('record_id')}"
-    return action_store.propose(action_type, params, summary, requested_by="meridian-owner")
+    # Capture the state the reviewer is about to approve, so execution can prove
+    # the reviewed state still holds. None for types without a declared base
+    # state; those types are unaffected.
+    base_state = None
+    try:
+        from meridian.crew_write_actions import capture_base_state
+
+        base_state = capture_base_state(action_type, params, DB_FILE)
+    except Exception:  # pragma: no cover - capture must never block proposing
+        base_state = None
+    return action_store.propose(
+        action_type,
+        params,
+        summary,
+        requested_by="meridian-owner",
+        base_state=base_state,
+    )
 
 
 app.config["MERIDIAN_PROPOSAL_SINK_FACTORY"] = lambda: _meridian_memory_proposal_sink

@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS action_requests (
 _SELECT_COLUMNS = (
     "id, type, params_json, rationale, requested_by, state, created_at, "
     "decided_by, decided_at, execution_key, execution_started_at, executed_at, "
-    "result_json, verification_json"
+    "result_json, verification_json, base_state_json"
 )
 
 _EXECUTION_COLUMNS = {
@@ -76,6 +76,10 @@ _EXECUTION_COLUMNS = {
 
 # Added so repeated proposers (e.g. funding schedules) can be idempotent.
 _DEDUP_COLUMN = ("dedup_key", "TEXT")
+
+# Added so an approval can carry the state its reviewer actually saw. Execution
+# compares against it before touching the provider; see executors.py.
+_BASE_STATE_COLUMN = ("base_state_json", "TEXT")
 
 
 def _now() -> str:
@@ -98,7 +102,11 @@ class ActionStore:
             conn.execute("BEGIN IMMEDIATE")
             conn.execute(_SCHEMA)
             columns = {row[1] for row in conn.execute("PRAGMA table_info(action_requests)")}
-            for column, column_type in (*_EXECUTION_COLUMNS.items(), _DEDUP_COLUMN):
+            for column, column_type in (
+                *_EXECUTION_COLUMNS.items(),
+                _DEDUP_COLUMN,
+                _BASE_STATE_COLUMN,
+            ):
                 if column not in columns:
                     conn.execute(f"ALTER TABLE action_requests ADD COLUMN {column} {column_type}")
             conn.execute(
@@ -119,6 +127,7 @@ class ActionStore:
         rationale: str,
         requested_by: str,
         dedup_key: Optional[str] = None,
+        base_state: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         if action_type not in self._allowed_types:
             raise UnknownActionTypeError(f"Action type is not permitted: {action_type}")
@@ -137,8 +146,8 @@ class ActionStore:
                 if existing_row is not None:
                     return self.get(existing_row[0])
             conn.execute(
-                "INSERT INTO action_requests (id, type, params_json, rationale, requested_by, state, created_at, dedup_key) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO action_requests (id, type, params_json, rationale, requested_by, state, created_at, dedup_key, base_state_json) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     request_id,
                     action_type,
@@ -148,6 +157,7 @@ class ActionStore:
                     ActionState.PROPOSED.value,
                     _now(),
                     dedup_key,
+                    json.dumps(base_state) if base_state is not None else None,
                 ),
             )
         return self.get(request_id)
@@ -325,6 +335,8 @@ class ActionStore:
             "executed_at": row[11],
             "result": json.loads(row[12]) if row[12] else None,
             "verification": json.loads(row[13]) if row[13] else None,
+            # The state the reviewer approved, or None when it was not captured.
+            "base_state": json.loads(row[14]) if row[14] else None,
         }
 
     def _list_by_state(self, state: ActionState) -> list:

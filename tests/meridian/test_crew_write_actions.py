@@ -300,3 +300,149 @@ def test_create_virtual_card_executor_reaches_write(tmp_path, monkeypatch):
     assert seen["operation"] == "create_virtual_card"
     assert seen["payload"]["user_id"] == "User:1"
     assert seen["payload"]["name"] == "Zz Card"
+
+
+# --- A12: an approved Crew bill write must still match the reviewed record ---
+
+
+def _migrated_db(tmp_path):
+    from meridian.db import run_migrations
+
+    db = str(tmp_path / "m.db")
+    run_migrations(db)
+    return db
+
+
+def _seed_bill(db, bill_id="QmlsbDox", name="Verizon", amount=95.0):
+    from meridian.commitments import CommitmentRepository, CommitmentType
+
+    repo = CommitmentRepository(db)
+    repo.create(
+        type=CommitmentType.BILL,
+        name=name,
+        amount=amount,
+        recurrence="monthly",
+        legacy_source="crew",
+        legacy_id=bill_id,
+    )
+    return repo.get_commitment_by_legacy("crew", bill_id)
+
+
+def test_capture_base_state_records_only_the_reviewed_fields(tmp_path):
+    from meridian.crew_write_actions import capture_base_state
+
+    db = _migrated_db(tmp_path)
+    _seed_bill(db, bill_id="QmlsbDox", name="Verizon", amount=95.0)
+
+    state = capture_base_state(
+        "update_crew_bill",
+        {"billId": "QmlsbDox", "name": "Verizon", "amount": 9500},
+        db,
+    )
+
+    assert state["source"] == "commitment"
+    assert state["crew_bill_id"] == "QmlsbDox"
+    assert state["observed_at"]
+    # The wire amount is cents; the reviewed record is local dollars, and the
+    # precondition compares local against local — never params against local.
+    assert state["values"] == {"name": "Verizon", "amount": 95.0}
+
+
+def test_capture_base_state_is_absent_for_unknown_records_and_types(tmp_path):
+    from meridian.crew_write_actions import capture_base_state
+
+    db = _migrated_db(tmp_path)
+
+    assert capture_base_state("update_crew_bill", {"billId": "Missing"}, db) is None
+    _seed_bill(db, bill_id="QmlsbDox", name="Verizon", amount=95.0)
+    assert capture_base_state("create_crew_pocket", {"name": "x"}, db) is None
+
+
+def _prepare_approved_bill_write(tmp_path, monkeypatch):
+    from crew.actions import ActionStore
+    from meridian import crew_write_actions
+
+    db = _migrated_db(tmp_path)
+    bill = _seed_bill(db, bill_id="QmlsbDox", name="Verizon", amount=95.0)
+
+    calls = []
+    monkeypatch.setattr(
+        crew_write_actions,
+        "execute_crew_write",
+        lambda op, payload: calls.append((op, payload)) or {"ok": True},
+    )
+
+    base_state = crew_write_actions.capture_base_state(
+        "update_crew_bill",
+        {"billId": "QmlsbDox", "name": "Verizon", "amount": 9500},
+        db,
+    )
+    assert base_state is not None
+
+    store = ActionStore(db, allowed_types=("update_crew_bill",))
+    request = store.propose(
+        "update_crew_bill",
+        {"billId": "QmlsbDox", "name": "Verizon", "amount": 9500},
+        "Update the bill",
+        requested_by="owner",
+        base_state=base_state,
+    )
+    store.approve(request["id"], decided_by="owner")
+    return db, bill, calls, store, request["id"]
+
+
+def _bill_executors(db):
+    from crew.executors import ExecutorSpec
+    from meridian.crew_write_actions import (
+        crew_write_executors,
+        crew_write_preconditions,
+    )
+
+    execute = crew_write_executors(db)["update_crew_bill"][0]
+    return {
+        "update_crew_bill": ExecutorSpec(
+            execute=execute,
+            precondition=crew_write_preconditions(db)["update_crew_bill"],
+        )
+    }
+
+
+def test_a_changed_bill_is_refused_and_never_reaches_crew(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian.commitments import CommitmentRepository
+
+    db, bill, calls, store, action_id = _prepare_approved_bill_write(tmp_path, monkeypatch)
+
+    # Another surface edits the bill between approval and execution.
+    CommitmentRepository(db).update(bill.id, name="Verizon (changed)")
+
+    outcome = execute_approved_action(store, action_id, _bill_executors(db))
+
+    assert calls == [], "the stale write must never reach Crew"
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["error_code"] == "precondition_conflict"
+    assert outcome["result"]["sent_to_provider"] is False
+    assert outcome["result"]["retry_allowed"] is False
+    assert outcome["result"]["precondition"]["reviewed"] == {
+        "name": "Verizon",
+        "amount": 95.0,
+    }
+    assert outcome["result"]["precondition"]["current"] == {
+        "name": "Verizon (changed)",
+        "amount": 95.0,
+    }
+
+
+def test_an_unchanged_bill_executes_normally(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+
+    db, bill, calls, store, action_id = _prepare_approved_bill_write(tmp_path, monkeypatch)
+
+    outcome = execute_approved_action(store, action_id, _bill_executors(db))
+
+    assert calls == [
+        ("update_bill", {"billId": "QmlsbDox", "name": "Verizon", "amount": 9500})
+    ]
+    # This spec has no verifier, so a successful write stays EXECUTED, never
+    # VERIFIED — the check here is that the precondition allowed it to run.
+    assert outcome["state"] == "executed"

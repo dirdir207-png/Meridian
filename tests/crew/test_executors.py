@@ -280,3 +280,140 @@ def test_expiry_sweep_tolerates_claim_race_and_continues(tmp_path):
     assert expired_ids == [expired_id]
     assert racing_store.get(claimed_id)["state"] == ActionState.EXECUTING.value
     assert racing_store.get(expired_id)["state"] == ActionState.EXPIRED.value
+
+
+# --- A12: an approved action must still match the state that was reviewed ---
+
+
+def make_preconditioned_executor(executed, precondition):
+    def execute(params):
+        executed.append(params)
+        return {"success": True, "result": {"id": "tx-1"}}
+
+    return {"move_money": ExecutorSpec(execute=execute, precondition=precondition)}
+
+
+def seed_approved_action_with_base_state(store, base_state):
+    request = store.propose(
+        "move_money", {"amount": 100}, "r", "ai-helper", base_state=base_state
+    )
+    store.approve(request["id"], decided_by="owner")
+    return request["id"]
+
+
+def test_a_changed_base_state_refuses_and_never_calls_the_executor(store):
+    executed = []
+    action_id = seed_approved_action_with_base_state(store, {"amount": 100})
+
+    final = execute_approved_action(
+        store,
+        action_id,
+        make_preconditioned_executor(
+            executed,
+            lambda params, base_state: {
+                "ok": False,
+                "code": "conflict",
+                "reason": "amount changed from 100 to 175",
+                "reviewed": base_state,
+                "current": {"amount": 175},
+            },
+        ),
+    )
+
+    assert executed == [], "a stale approval must never reach the provider"
+    assert final["state"] == ActionState.FAILED.value
+    assert final["result"]["error_code"] == "precondition_conflict"
+    assert final["result"]["sent_to_provider"] is False
+    assert final["result"]["retry_allowed"] is False
+    assert final["result"]["precondition"]["reviewed"] == {"amount": 100}
+    assert final["result"]["precondition"]["current"] == {"amount": 175}
+
+
+def test_an_unreadable_base_state_refuses_rather_than_assuming_unchanged(store):
+    executed = []
+    action_id = seed_approved_action_with_base_state(store, {"amount": 100})
+
+    final = execute_approved_action(
+        store,
+        action_id,
+        make_preconditioned_executor(
+            executed,
+            lambda params, base_state: {
+                "ok": False,
+                "code": "unverifiable",
+                "reason": "the record could not be read",
+            },
+        ),
+    )
+
+    assert executed == []
+    assert final["result"]["error_code"] == "precondition_unverifiable"
+    assert final["result"]["sent_to_provider"] is False
+
+
+def test_an_approval_with_no_recorded_base_state_refuses_closed(store):
+    executed = []
+    action_id = seed_approved_action(store)  # no base state recorded
+
+    final = execute_approved_action(
+        store,
+        action_id,
+        make_preconditioned_executor(executed, lambda params, base_state: {"ok": True}),
+    )
+
+    assert executed == []
+    assert final["state"] == ActionState.FAILED.value
+    assert final["result"]["error_code"] == "precondition_unverifiable"
+    assert "approve" in final["result"]["error"].lower()
+
+
+def test_a_matching_base_state_executes_normally(store):
+    executed = []
+    action_id = seed_approved_action_with_base_state(store, {"amount": 100})
+
+    final = execute_approved_action(
+        store,
+        action_id,
+        make_preconditioned_executor(
+            executed, lambda params, base_state: {"ok": True, "check": "unchanged"}
+        ),
+    )
+
+    assert executed == [{"amount": 100}]
+    assert final["state"] == ActionState.EXECUTED.value
+
+
+def test_the_precondition_receives_both_params_and_reviewed_state(store):
+    seen = []
+    action_id = seed_approved_action_with_base_state(store, {"amount": 100})
+
+    execute_approved_action(
+        store,
+        action_id,
+        make_preconditioned_executor(
+            [],  # a separate collector, so the precondition's record is unambiguous
+            lambda params, base_state: seen.append((params, base_state)) or {"ok": True},
+        ),
+    )
+
+    assert seen == [({"amount": 100}, {"amount": 100})]
+
+
+def test_an_executor_without_a_precondition_is_unaffected(store):
+    """Only operation types that opt in get the check; nothing else changes."""
+    action_id = seed_approved_action_with_base_state(store, {"amount": 100})
+
+    final = execute_approved_action(store, action_id, make_executors())
+
+    assert final["state"] == ActionState.EXECUTED.value
+
+
+def test_a_refused_action_cannot_be_executed_again(store):
+    action_id = seed_approved_action_with_base_state(store, {"amount": 100})
+    executors = make_preconditioned_executor(
+        [], lambda params, base_state: {"ok": False, "code": "conflict", "reason": "changed"}
+    )
+    execute_approved_action(store, action_id, executors)
+
+    with pytest.raises(IllegalTransitionError):
+        execute_approved_action(store, action_id, executors)

@@ -11,6 +11,11 @@ from typing import Any, Callable, Dict, Optional
 from .commitments import CommitmentRepository
 from .crew_write import execute_crew_write
 
+# Wire field -> local commitment field, for the fields `update_crew_bill` can
+# change. Only the fields an action actually touches are compared, so unrelated
+# churn between approval and execution cannot refuse a still-valid write.
+_BILL_REVIEWED_FIELDS = {"name": "name", "amount": "amount"}
+
 # Params payloads follow the Crew wire contract (camelCase) so the executor is a
 # thin pass-through; the UI/proposal layer maps local records to wire form.
 
@@ -119,3 +124,101 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
         ),
     }
     return base
+
+
+def _bill_record(params: Dict[str, Any], db_path: str):
+    """The local record behind a Crew bill proposal, or None when unknown.
+
+    The Plan UI proposes by Crew bill id; other callers may pass the local
+    commitment id. Either way this is the same record the reviewer's screen was
+    rendered from, which is what the precondition compares against.
+    """
+    repo = CommitmentRepository(db_path)
+    commitment_id = params.get("commitment_id")
+    if commitment_id is not None:
+        try:
+            record = repo.get(int(commitment_id))
+        except (TypeError, ValueError):
+            return None
+        if record is not None:
+            return record
+    bill_id = params.get("billId")
+    if bill_id:
+        return repo.get_commitment_by_legacy("crew", str(bill_id))
+    return None
+
+
+def _reviewed_values(record, params: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        local_field: getattr(record, local_field, None)
+        for wire_field, local_field in _BILL_REVIEWED_FIELDS.items()
+        if wire_field in params
+    }
+
+
+def capture_base_state(
+    action_type: str, params: Dict[str, Any], db_path: str
+) -> Optional[Dict[str, Any]]:
+    """Record the state a reviewer is about to approve, when the type declares one.
+
+    Returns None for every type that has no declared base state, so the absence
+    is visible rather than silently fabricated. An approval recorded without one
+    is refused at execution, never executed on an assumption.
+    """
+    if action_type != "update_crew_bill":
+        return None
+    record = _bill_record(params, db_path)
+    if record is None:
+        # No local record to compare against: record nothing, so execution
+        # refuses rather than mutating a record whose reviewed state we never saw.
+        return None
+    return {
+        "source": "commitment",
+        "commitment_id": record.id,
+        "crew_bill_id": str(params.get("billId") or record.legacy_id or ""),
+        "observed_at": record.updated_at,
+        "values": _reviewed_values(record, params),
+    }
+
+
+def _bill_precondition(db_path: str):
+    """Refuse a bill write whose reviewed state no longer holds locally.
+
+    This compares our own record against what was approved. It is NOT a provider
+    readback: a change made in Crew that we have not re-synced is invisible here,
+    which is why the refusal payload records provider_truth=False.
+    """
+
+    def precondition(params: Dict[str, Any], base_state: Any) -> Dict[str, Any]:
+        reviewed = (base_state or {}).get("values") or {}
+        current_record = _bill_record(params, db_path)
+        if current_record is None:
+            return {
+                "ok": False,
+                "code": "unverifiable",
+                "reason": "the local record for this bill could not be read",
+                "reviewed": reviewed,
+                "current": None,
+                "check": "commitment-base-state",
+            }
+        current = {
+            field: getattr(current_record, field, None)
+            for field in reviewed
+        }
+        if current != reviewed:
+            return {
+                "ok": False,
+                "code": "conflict",
+                "reason": "the record changed after this action was approved",
+                "reviewed": reviewed,
+                "current": current,
+                "check": "commitment-base-state",
+            }
+        return {"ok": True, "check": "commitment-base-state", "reviewed": reviewed}
+
+    return precondition
+
+
+def crew_write_preconditions(db_path: str) -> Dict[str, Callable]:
+    """Preconditions, keyed by action type. Only types listed here are guarded."""
+    return {"update_crew_bill": _bill_precondition(db_path)}

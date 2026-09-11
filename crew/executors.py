@@ -21,9 +21,99 @@ from .actions import ActionState, ActionStore, IllegalTransitionError
 class ExecutorSpec:
     execute: Callable[[Dict[str, Any]], Dict[str, Any]]
     verifier: Optional[Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]] = None
+    # Optional guard evaluated after the atomic claim and BEFORE any provider
+    # call. It compares the state the approver reviewed against the state now,
+    # and returns a dict: {"ok": True} to proceed, or {"ok": False,
+    # "code": "conflict"|"unverifiable", "reason": ..., "reviewed": ...,
+    # "current": ...} to refuse. Declaring one makes a missing reviewed state a
+    # refusal, never an assumption of agreement.
+    precondition: Optional[Callable[[Dict[str, Any], Any], Dict[str, Any]]] = None
 
     def __repr__(self) -> str:
         return "ExecutorSpec()"
+
+
+def _precondition_payload(
+    code: str,
+    message: str,
+    reviewed: Any,
+    current: Any,
+    reason: str,
+    check: Optional[str] = None,
+) -> Dict[str, Any]:
+    """The recorded refusal of an action whose reviewed state no longer holds.
+
+    ``provider_truth`` is False on purpose: this compares our own record against
+    what was approved. It is not a provider readback and must not be read as one.
+    """
+    return {
+        "error": message,
+        "error_code": code,
+        "sent_to_provider": False,
+        "retry_allowed": False,
+        "verify_state": True,
+        "precondition": {
+            "check": check,
+            "reason": reason,
+            "reviewed": reviewed,
+            "current": current,
+            "provider_truth": False,
+        },
+    }
+
+
+def _precondition_refusal(
+    spec: "ExecutorSpec", request: Dict[str, Any]
+) -> Optional[Dict[str, Any]]:
+    """Refuse the action, or return None when execution may proceed.
+
+    A mutation must never run against state its approver did not review, so a
+    missing or unreadable reviewed state refuses rather than assuming agreement.
+    """
+    if spec.precondition is None:
+        return None
+
+    base_state = request.get("base_state")
+    if base_state is None:
+        return _precondition_payload(
+            "precondition_unverifiable",
+            "This approval was recorded before Meridian captured the state that was "
+            "reviewed, so it cannot be checked against anything. Nothing was sent to "
+            "Crew. Review the record and approve it again.",
+            reviewed=None,
+            current=None,
+            reason="no reviewed state was recorded with this approval",
+        )
+
+    try:
+        verdict = spec.precondition(request.get("params") or {}, base_state)
+    except Exception as exc:  # noqa: BLE001 - any failure here must refuse
+        return _precondition_payload(
+            "precondition_unverifiable",
+            "The state that was reviewed could not be checked, so nothing was sent to "
+            f"Crew ({exc}). Review the record and approve it again.",
+            reviewed=base_state,
+            current=None,
+            reason="the precondition could not be evaluated",
+        )
+
+    if isinstance(verdict, dict) and verdict.get("ok"):
+        return None
+
+    verdict = verdict if isinstance(verdict, dict) else {}
+    conflicting = verdict.get("code") == "conflict"
+    return _precondition_payload(
+        "precondition_conflict" if conflicting else "precondition_unverifiable",
+        verdict.get("reason")
+        or (
+            "The record changed after you approved this action, so nothing was sent to "
+            "Crew. Review it and approve again."
+        ),
+        reviewed=verdict.get("reviewed", base_state),
+        current=verdict.get("current"),
+        reason=verdict.get("reason") or "",
+        check=verdict.get("check"),
+    )
 
 
 def _failure(payload: Dict[str, Any], error: str, code: str) -> Dict[str, Any]:
@@ -46,6 +136,13 @@ def execute_approved_action(
             request_id,
             _failure({}, f"No executor registered for action type '{request['type']}'", "no_executor"),
         )
+
+    refusal = _precondition_refusal(spec, request)
+    if refusal is not None:
+        # The claim already moved the action to EXECUTING, so this is recorded as
+        # a failure. FAILED is terminal, which is what makes the refusal
+        # unretryable: nothing re-runs a mutation that lost its reviewed state.
+        return store.mark_failed(request_id, refusal)
 
     try:
         result = spec.execute(request.get("params") or {})

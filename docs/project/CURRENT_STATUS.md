@@ -672,3 +672,34 @@ returned" section is not served (Jinja has the previous template cached).
 Follow-up finding: the 503 body reads "Try again after your provider reconnects", which
 misattributes a schema/migration failure to the provider. The message should distinguish
 "we could not read your data" from "your provider is unavailable".
+
+## A12 — an approved Crew write is refused when the reviewed state changed — 2026-09-11
+
+The write-integrity gap from the handoff: an approved action carried only its
+requested parameters, never the state the reviewer actually saw, and execution
+claimed the action before comparing anything. A bill edited between approval and
+execution — by another surface, an agent, or the sync cadence — would still receive
+the approved write.
+
+This slice makes the guard real for one operation, `update_crew_bill`:
+
+- `action_requests` gains `base_state_json` (nullable, self-migrating); `propose`
+  accepts a `base_state` captured by the proposal path from the same local record the
+  reviewer's screen was rendered from (name and amount only, never a fabricated whole).
+- `ExecutorSpec` gains an optional `precondition`, evaluated after the atomic claim and
+  **before any provider call**. A mismatch refuses the action as `precondition_conflict`;
+  a missing or unreadable reviewed state refuses as `precondition_unverifiable` (fail
+  closed). The recorded outcome says `sent_to_provider: false`, `retry_allowed: false`,
+  and `provider_truth: false` — it compares our own record, not a provider readback.
+- Because `FAILED` is terminal, a refusal can never be retried or silently re-run.
+- Wired to `update_crew_bill` only; the other 21 action types are untouched.
+
+Non-goals, stated explicitly: this does **not** provide provider truth (A06 remains
+open); it did **not** add a new action state (a refusal is a `failed` action with a
+distinct error code); and it did not change the Plan UI, which already proposes with
+the Crew bill id.
+
+Verified RED→GREEN: 7 engine tests plus 4 wired-operation tests; neutralising the guard
+turns 5 of them red (including "a changed bill is refused and never reaches Crew").
+Full suite 875 passed, 56 skipped, with the same pre-existing playwright-unavailable
+capture failure; Ruff and `git diff --check` clean.
