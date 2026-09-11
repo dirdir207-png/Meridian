@@ -87,6 +87,13 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
                     if candidate.funded_amount is not None
                     else existing.funded_amount
                 ),            )
+    # A complete, error-free read may conclude that a bill Crew no longer returns
+    # is gone; the row and its history are kept.
+    if snap.is_complete and not snap.errors:
+        commitment_repository.mark_absent_bills(
+            provider=adapter.provider_name,
+            observed_external_ids=tuple(c.external_id for c in snap.commitment_candidates),
+        )
     return report
 
 

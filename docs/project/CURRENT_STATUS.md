@@ -759,3 +759,37 @@ Verified RED→GREEN: 1 engine test plus 3 wired tests (matched/mismatch/unreada
 neutralising the `ok is None` branch turns 2 red, including "cannot be read stays
 executed". Full suite 879 passed, 56 skipped, same pre-existing playwright-unavailable
 failure; Ruff and `git diff --check` clean.
+
+## C02 for bills — a complete Crew read now concludes absence for bills it stops returning — 2026-09-11
+
+OS-013 reconciled accounts; bills were left unreconciled, so a Crew bill that disappeared
+stayed a live obligation locally forever. This mirrors the account rule onto commitments.
+
+Migration 021 adds `commitments.absent_since`. `CommitmentRepository.mark_absent_bills`
+archives (and timestamps) this provider's bills that a complete read no longer returns,
+scoped by `legacy_source` so another provider's commitments are never touched. The row,
+its funded amount and its transactions are kept — absence is evidence about the local read
+model, not a deletion.
+
+Deliberate deviations from the account rule, both conservative:
+
+- **An empty enumeration never concludes absence.** Unlike accounts (where an empty
+  observed set archives everything in scope), a read that listed no bills at all is
+  treated as an unreadable surface rather than "every bill disappeared".
+- **The bill is archived, not left active.** Accounts carry `is_active`; commitments carry
+  a lifecycle `status`, so absence sets `status='archived'` and `absent_since` together.
+  `absent_since` is what distinguishes provider absence from the owner's own archive.
+
+Re-observing a bill clears its absence and restores it to `active`, but only for rows that
+were concluded absent — an owner-archived bill is never silently revived. Both upsert paths
+are wired (`sync_live_crew` and `sync_providers`), gated on a complete, error-free read.
+
+Verified RED→GREEN: 9 tests (repository scoping, idempotence, no-provider-identity,
+reactivation, owner-archive protection, plus two end-to-end sync tests through the real
+adapter); neutralising the completeness gate turns the incomplete-read test red. Full suite
+888 passed, 56 skipped, same pre-existing playwright-unavailable failure; Ruff and
+`git diff --check` clean. `tests/meridian/test_migrations.py` gained 021 in its expected
+migration lists.
+
+Companion slice still open: Plan-surface provenance for an absent bill (the OS-014 parallel),
+so the owner can see *why* a bill they remember vanished instead of it silently leaving Plan.

@@ -373,6 +373,31 @@
       "evidence": {
         "verification": "RED->GREEN 1 engine test plus 3 wired tests (matched/mismatch/unreadable); neutralising the ok-is-None branch turns 2 red including the unreadable-stays-executed assertion; full suite 879 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean"
       }
+    },
+    {
+      "id": "OS-018",
+      "title": "A complete Crew read concludes absence for bills it no longer returns (C02 for bills)",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-013",
+        "OS-016"
+      ],
+      "authority_impact": "none; read-model reconciliation archived bills, nothing deleted",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "A complete, error-free Crew read archives bills it no longer returns",
+        "An incomplete or failed read never concludes absence",
+        "An empty bill enumeration is never read as 'every bill disappeared'",
+        "Absence is scoped to the reading provider's own bills (legacy_source)",
+        "Absence is recorded once, and the row, funded amount and transactions are kept",
+        "Re-observation reactivates a concluded-absent bill but never an owner-archived one",
+        "A bill with no provider identity is never concluded absent"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN 9 tests (repository scoping, idempotence, no-provider-identity, reactivation, owner-archive protection, two end-to-end sync tests through the real adapter); neutralising the completeness gate turns the incomplete-read test red; full suite 888 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean"
+      }
     }
   ]
 }

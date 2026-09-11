@@ -58,13 +58,16 @@ class Commitment:
     migration_version: Optional[str]
     created_at: str
     updated_at: str
+    # Set when a complete provider read no longer returns this bill; cleared when
+    # the provider returns it again. Never set on a local-only commitment.
+    absent_since: Optional[str] = None
 
 
 _COLUMNS = (
     "id, type, name, status, priority, currency, target_amount, target_date,"
     " funded_amount, amount, due_date, recurrence, cadence, minimum_payment,"
     " buffer_minimum, payoff_strategy, backing_account_id, legacy_source,"
-    " legacy_id, migration_version, created_at, updated_at"
+    " legacy_id, migration_version, created_at, updated_at, absent_since"
 )
 
 
@@ -316,6 +319,13 @@ class CommitmentRepository:
         assignments = {key: value for key, value in validated.items() if value is not ...}
         if not assignments:
             return existing
+        # Re-observing a bill the provider had stopped returning makes it a
+        # current fact again. Only rows concluded absent are affected, so an
+        # owner's own archive is never silently revived.
+        if getattr(existing, "absent_since", None) is not None:
+            assignments["absent_since"] = None
+            if "status" not in assignments:
+                assignments["status"] = CommitmentStatus.ACTIVE
         assignments["updated_at"] = _now()
         columns = ", ".join(f"{key} = ?" for key in assignments)
         with self._connect() as connection:
@@ -350,6 +360,43 @@ class CommitmentRepository:
             ).fetchall()
         return [self._from_row(row) for row in rows]
 
+    def mark_absent_bills(
+        self,
+        *,
+        provider: str,
+        observed_external_ids,
+        absent_since: Optional[str] = None,
+    ) -> int:
+        """Record that a complete provider read no longer returns these bills.
+
+        Absence is evidence about the local read model only: the row keeps its
+        history, its funded amount and its transactions, and simply stops being a
+        current observation. Rows already concluded absent are left untouched, so
+        one observation cannot masquerade as a repeatedly refreshed fact.
+
+        Only this provider's own bills are in scope (legacy_source), and an empty
+        enumeration is never treated as "every bill disappeared" — absence can
+        only be concluded from a read that actually listed bills.
+        """
+        observed = tuple(str(item) for item in observed_external_ids)
+        if not observed:
+            return 0
+        timestamp = absent_since or _now()
+        placeholders = ", ".join("?" for _ in observed)
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            cursor = connection.execute(
+                f"""
+                UPDATE commitments
+                SET status = 'archived', absent_since = ?, updated_at = ?
+                WHERE legacy_source = ? AND legacy_id IS NOT NULL
+                    AND absent_since IS NULL
+                    AND legacy_id NOT IN ({placeholders})
+                """,
+                (timestamp, timestamp, provider, *observed),
+            )
+            return cursor.rowcount
+
     def archive(self, commitment_id: int) -> Commitment:
         with self._connect() as connection:
             connection.execute(
@@ -382,4 +429,5 @@ class CommitmentRepository:
             migration_version=row["migration_version"],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
+            absent_since=row["absent_since"],
         )

@@ -215,6 +215,15 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
                         else existing.funded_amount
                     ),
                 )
+        if report.status == "complete":
+            # Only a complete, error-free read of this provider may conclude that a
+            # bill it used to return is gone.
+            commitment_repository.mark_absent_bills(
+                provider=adapter.provider_name,
+                observed_external_ids=tuple(
+                    candidate.external_id for candidate in snapshot.commitment_candidates
+                ),
+            )
         for expected_inflow in snapshot.expected_inflows:
             repository.upsert_reimbursement(
                 provider=adapter.provider_name,
