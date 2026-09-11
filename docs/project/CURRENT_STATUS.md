@@ -498,3 +498,70 @@ Known follow-ups found by review, deliberately not in this slice: the recorded
 `no-verifier-registered` reason is stored but not yet rendered in the Approvals history; and
 `meridian/crew_write_actions.py::_verify_stored` still derives its result from local commitment
 state, so the two `update_crew_bill*` types are not true provider readbacks either (handoff A06).
+
+## Absent provider accounts are reconciled, not left frozen — 2026-09-11
+
+Finding C02 from the consolidated handoff, with C04's rule applied: Meridian only
+ever upserted the accounts a provider returned, so an account the provider stopped
+returning kept `is_active = 1` and a frozen `source_updated_at` forever. Because
+freshness is the oldest in-scope account observation, that single orphan pinned the
+whole workspace to `stale` indefinitely while transactions stayed current. This was
+not hypothetical: the owner's database holds one such row (a pocket Crew no longer
+returns, last observed four days before its neighbours).
+
+Change — reconciliation, deliberately **not** a weaker freshness rule:
+
+- `absent_since` (migration 020) records the moment a complete read concluded an
+  account is gone. The row keeps its history; it only stops being a current observation.
+- `sync_provider` reconciles only when `snapshot.is_complete and errors == 0`, so a
+  partial or errored read never concludes a deletion, and the scope is the reading
+  provider's **own connection**, so another provider's accounts are never archived.
+- `mark_absent_accounts` marks a row absent once (`absent_since` is set only where it
+  is still null), so one observation cannot masquerade as a repeatedly refreshed fact.
+- An account the provider returns again is reactivated and its absence evidence cleared.
+- The freshness join no longer counts a concluded-absent account — in either direction:
+  it can no longer pin the workspace stale, and it can no longer rescue it. A connection
+  whose every account was archived therefore reports `stale`, and an unreconciled frozen
+  account still pins `stale` exactly as before.
+- `_reclassify_relations` no longer indexes the active-account map directly: an absent
+  account keeps its row, so its historical transactions are still classified in the
+  account context they were recorded under instead of aborting the sync.
+- Account reads select only the columns the database actually has, mirroring the
+  existing transaction-column tolerance, so a reader meeting a database that has not
+  yet applied migration 020 does not fail.
+
+No authority changed: this writes no provider state, adds no routing, retry, or mutation
+path, and never deletes or restores anything. The owner's deleted pocket is **not**
+recreated — its row is archived locally and its 19 historical transactions remain.
+
+Verification: RED→GREEN — 12 tests in `tests/meridian/test_sync_reconciliation.py`
+(the in-flight draft could not even collect: it had no `repository` fixture, and its
+absence logic did not exist), plus 1 migration test that pins both account-column
+tolerance branches on a database stopped before 020. Seven mutation checks confirm the
+tests are load-bearing: removing the reconciliation call, the freshness exclusion, the
+reactivation reset, the once-only guard, the completeness gate, the unmigrated-database
+column filter, or the conditional absence reset each fails the tests that pin it. Full
+suite 845 passed, 56 skipped, with the one pre-existing `playwright`-unavailable capture
+test failing identically with this change stashed. Ruff clean on changed paths (the 7
+reported findings are pre-existing, in `scripts/` and `tmp/pdfs/`), `git diff --check` clean.
+
+Verified end to end on a **copy** of the owner's database with a live, complete,
+read-only Crew snapshot (`complete: true`, `errors: 0`): Crew returned 6 accounts, one
+local pocket was absent from that read, that pocket was archived with `absent_since`
+while its 19 transactions stayed linked, no other account changed, and workspace
+freshness moved `stale` → `fresh`. The real database was not modified and no
+credential, token, or payload was logged.
+
+Owner-visible consequence, and the next slice: `list_accounts` lists only current
+accounts, so an archived account now correctly leaves the Accounts workspace and stops
+counting in cash math. That is honest, but a silent disappearance is exactly the
+experience the owner reported as data loss, so the archived row must be shown as
+archived with its provenance rather than vanishing (OS-014).
+
+Known follow-ups found while reviewing this slice, deliberately not fixed here:
+`app.py::sync_crew_to_meridian` logs `report.accounts_upserted`, `report.transactions_upserted`
+and `report.error`, none of which exist on `SyncReport`; the resulting `AttributeError` is
+caught and printed as a sync failure even though the sync itself succeeded, so that path's
+log is untrue. Absence reconciliation is implemented for accounts only — Crew bills and
+other collections (C02's other half), C03's delete-reload, and C05's null-versus-empty
+semantics are untouched.

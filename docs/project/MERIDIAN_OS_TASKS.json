@@ -250,6 +250,31 @@
       "evidence": {
         "verification": "RED->GREEN 4 new tests plus 1 destructive-control guard (negative control verified); corrected 1 pre-existing verified expectation; registry audit showed 15 of 27 action types have no verifier; full suite 832 passed, 64 skipped; Ruff, git diff --check, node --check clean"
       }
+    },
+    {
+      "id": "OS-013",
+      "title": "Reconcile accounts a complete provider read no longer returns",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-002"
+      ],
+      "authority_impact": "none; local read-model archival only, no provider write, no routing, retry, or mutation path added",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Only a complete, error-free provider read may conclude that an account is gone",
+        "A conclusion of absence is scoped to the reading provider's own connection",
+        "An absent account keeps its row, its transactions and its transaction links; nothing is deleted",
+        "An absent account stops being a current observation and stops pinning or rescuing workspace freshness",
+        "An account the provider returns again is reactivated and its absence evidence is cleared",
+        "Absence is recorded once per observation and is not re-stamped by later reads",
+        "An unreconciled frozen account, and a connection with no observed accounts, still report stale",
+        "Account reads tolerate a database that has not yet applied migration 020"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN 12 tests in tests/meridian/test_sync_reconciliation.py plus 1 migration test pinning both account-column tolerance branches on a database stopped before 020; 7 mutation checks confirm the tests are load-bearing (no reconciliation, unguarded freshness join, no reactivation, re-stamped absence, completeness gate ignored, unconditional absence reset, untolerated account columns); full suite 845 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff clean on changed paths, git diff --check clean; verified end to end on a copy of the owner's database with a live complete read-only Crew snapshot: the one pocket Crew no longer returns was archived with absent_since, its 19 historical transactions were retained, and freshness moved stale -> fresh"
+      }
     }
   ]
 }

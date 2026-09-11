@@ -80,7 +80,7 @@ _COMPATIBLE_CURSOR_OCCURRED_AT = re.compile(
 _ACCOUNT_COLUMNS = (
     "id, provider, external_id, name, account_type, balance, currency, "
     "available_balance, is_active, source_updated_at, synced_at, created_at, "
-    "updated_at"
+    "updated_at, absent_since"
 )
 _TRANSACTION_COLUMNS = (
     "id, provider, external_id, account_id, amount, currency, occurred_at, "
@@ -102,6 +102,32 @@ def _available_transaction_columns(connection: sqlite3.Connection) -> str:
         for name in _TRANSACTION_COLUMNS.split(",")
         if name.strip() in available
     )
+
+
+def _available_account_columns(connection: sqlite3.Connection) -> str:
+    """The account columns this database actually has.
+
+    A reader can meet a database another process has not finished migrating, so
+    a column added by a later migration is selected only when it exists;
+    ``AccountRecord`` defaults the ones that are missing.
+    """
+    available = {
+        row["name"]
+        for row in connection.execute("PRAGMA table_info(financial_accounts)")
+    }
+    return ", ".join(
+        name.strip() for name in _ACCOUNT_COLUMNS.split(",") if name.strip() in available
+    )
+
+
+def _reconciles_absence(connection: sqlite3.Connection) -> bool:
+    """Whether this database can record account absence yet (migration 020)."""
+    return any(
+        row["name"] == "absent_since"
+        for row in connection.execute("PRAGMA table_info(financial_accounts)")
+    )
+
+
 _ACCOUNT_FRESHNESS_CONDITION = """
     financial_accounts.source_updated_at IS NULL
     OR (
@@ -183,6 +209,15 @@ class FinancialRepository:
         timestamp = synced_at or _now()
         with self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
+            absence_reset = (
+                """
+                    -- A returned account is present again: absence evidence from a
+                    -- previous complete read cannot outlive the observation that
+                    -- contradicts it.
+                    absent_since = NULL,"""
+                if _reconciles_absence(connection)
+                else ""
+            )
             connection.execute(
                 f"""
                 INSERT INTO financial_accounts (
@@ -202,7 +237,7 @@ class FinancialRepository:
                         THEN excluded.available_balance
                         ELSE financial_accounts.available_balance END,
                     currency = CASE WHEN {_ACCOUNT_FRESHNESS_CONDITION}
-                        THEN excluded.currency ELSE financial_accounts.currency END,
+                        THEN excluded.currency ELSE financial_accounts.currency END,{absence_reset}
                     is_active = CASE WHEN {_ACCOUNT_FRESHNESS_CONDITION}
                         THEN excluded.is_active ELSE financial_accounts.is_active END,
                     source_updated_at = CASE
@@ -237,12 +272,51 @@ class FinancialRepository:
                 ),
             )
             row = connection.execute(
-                f"SELECT {_ACCOUNT_COLUMNS} FROM financial_accounts "
+                f"SELECT {_available_account_columns(connection)} FROM financial_accounts "
                 "WHERE provider = ? AND external_id = ?",
                 (provider, external_id),
             ).fetchone()
         assert row is not None
         return self._account_from_row(row)
+
+    def mark_absent_accounts(
+        self,
+        *,
+        provider: str,
+        connection_id: int,
+        observed_external_ids: Sequence[str],
+        absent_since: Optional[str] = None,
+    ) -> int:
+        """Record that a complete provider read no longer returns these accounts.
+
+        Absence is evidence about the local read model only: the row keeps its
+        history and is never deleted, it simply stops being a current
+        observation. Rows already concluded absent are left untouched, so one
+        observation cannot masquerade as a repeatedly refreshed fact, and the
+        scope is the provider's own connection, so another provider's accounts
+        are never archived by this read.
+        """
+        timestamp = absent_since or _now()
+        observed = tuple(observed_external_ids)
+        unobserved_condition = ""
+        parameters: tuple[object, ...] = (timestamp, timestamp, provider, connection_id)
+        if observed:
+            placeholders = ", ".join("?" for _ in observed)
+            unobserved_condition = f" AND external_id NOT IN ({placeholders})"
+            parameters += observed
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            cursor = connection.execute(
+                f"""
+                UPDATE financial_accounts
+                SET is_active = 0, absent_since = ?, updated_at = ?
+                WHERE provider = ? AND connection_id = ?
+                    AND absent_since IS NULL
+                    {unobserved_condition}
+                """,
+                parameters,
+            )
+            return cursor.rowcount
 
     def upsert_transaction(
         self,
@@ -836,10 +910,20 @@ class FinancialRepository:
     def list_accounts(self) -> list[AccountRecord]:
         with self._connect() as connection:
             rows = connection.execute(
-                f"SELECT {_ACCOUNT_COLUMNS} FROM financial_accounts "
+                f"SELECT {_available_account_columns(connection)} FROM financial_accounts "
                 "WHERE is_active = 1 ORDER BY name COLLATE NOCASE ASC, id ASC"
             ).fetchall()
         return [self._account_from_row(row) for row in rows]
+
+    def get_account(self, account_id: int) -> Optional[AccountRecord]:
+        """Return one account row, including one no longer returned by a provider."""
+        with self._connect() as connection:
+            row = connection.execute(
+                f"SELECT {_available_account_columns(connection)} FROM financial_accounts "
+                "WHERE id = ?",
+                (account_id,),
+            ).fetchone()
+        return self._account_from_row(row) if row is not None else None
 
     def list_transactions(
         self,
@@ -959,7 +1043,11 @@ class FinancialRepository:
                 SELECT connection.id, connection.provider, connection.status,
                        connection.last_successful_at, account.source_updated_at
                 FROM provider_connections AS connection
-                LEFT JOIN financial_accounts AS account ON account.connection_id = connection.id
+                -- An account a complete read concluded is gone is no longer a
+                -- current observation, so it must not pin or rescue freshness.
+                LEFT JOIN financial_accounts AS account
+                    ON account.connection_id = connection.id
+                    AND account.absent_since IS NULL
                 WHERE connection.id IN ({placeholders})
                 ORDER BY connection.id ASC, account.id ASC
                 """,

@@ -124,6 +124,15 @@ def sync_provider(adapter: ProviderAdapter, repository, *, ai_classifier=None) -
         transactions_synced += 1
 
     status = "complete" if snapshot.is_complete and errors == 0 else "partial"
+    if snapshot.is_complete and errors == 0:
+        # Only a complete, error-free read of this provider's own connection may
+        # conclude that an account it used to return is gone. The conclusion is
+        # recorded on the row; no history is deleted here.
+        repository.mark_absent_accounts(
+            provider=adapter.provider_name,
+            connection_id=run.connection_id,
+            observed_external_ids=tuple(accounts_by_external_id),
+        )
     repository.finish_sync_run(
         run.id,
         status=status,
@@ -250,13 +259,21 @@ def _reclassify_relations(repository) -> None:
             transaction = repository.get_transaction(transaction_id)
             if transaction is None:
                 continue
+            account = accounts.get(transaction.account_id)
+            if account is None:
+                # An absent account keeps its row, so its historical
+                # transactions can still be classified with the account context
+                # they were recorded under; only currentness was withdrawn.
+                account = repository.get_account(transaction.account_id)
+            if account is None:
+                continue
             classification = classify_deterministic(
                 ClassificationInput(
                     id=transaction.id,
                     amount=transaction.amount,
                     description=transaction.description,
                     merchant=transaction.merchant,
-                    account_type=accounts[transaction.account_id].account_type,
+                    account_type=account.account_type,
                     occurred_at=transaction.occurred_at,
                     relation_type=relation.relation_type,
                 ),

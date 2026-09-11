@@ -27,6 +27,7 @@ _LATER_MIGRATIONS = [
     "017_cancellation_actions.sql",
     "018_trial_notifications.sql",
     "019_immutable_observations.sql",
+    "020_account_absence_reconciliation.sql",
 ]
 
 
@@ -137,6 +138,7 @@ def test_migrations_are_idempotent_and_preserve_legacy_rows(tmp_path):
         ("017", "017_cancellation_actions.sql"),
         ("018", "018_trial_notifications.sql"),
         ("019", "019_immutable_observations.sql"),
+        ("020", "020_account_absence_reconciliation.sql"),
     ]
     assert legacy_row == ("2026-08-26", 1234.56)
     assert {
@@ -517,3 +519,49 @@ def test_timestamp_migration_quarantines_unsupported_high_precision_separators(
         ).fetchone()
 
     assert row == (legacy_timestamp, 0, "2026-08-27T08:00:00Z#unsupported-precision")
+
+
+def test_account_writes_and_reads_tolerate_a_database_before_absence_migration(
+    tmp_path, monkeypatch
+):
+    """A reader meeting an unmigrated database must not fail on a later column.
+
+    Meridian can read a database another process has not finished migrating, so
+    an account column added by migration 020 is used only when it exists.
+    """
+    db_path = tmp_path / "pre-absence.db"
+    legacy_migrations = tmp_path / "legacy-migrations"
+    legacy_migrations.mkdir()
+    for source in sorted(db_module.MIGRATIONS_DIR.glob("0*.sql")):
+        if source.name < "020_account_absence_reconciliation.sql":
+            shutil.copy(source, legacy_migrations / source.name)
+    with monkeypatch.context() as migration_patch:
+        migration_patch.setattr(db_module, "MIGRATIONS_DIR", legacy_migrations)
+        applied = run_migrations(str(db_path))
+    assert "020_account_absence_reconciliation.sql" not in applied
+
+    repository = object.__new__(FinancialRepository)
+    repository._db_path = str(db_path)
+    account = repository.upsert_account(
+        provider="crew",
+        external_id="legacy-pocket",
+        name="Legacy Pocket",
+        account_type="pocket",
+        balance=12.0,
+        source_updated_at="2026-09-01T00:00:00Z",
+    )
+
+    assert account.absent_since is None
+    assert [item.id for item in repository.list_accounts()] == [account.id]
+    assert repository.get_account(account.id).external_id == "legacy-pocket"
+
+    merged = repository.upsert_account(
+        provider="crew",
+        external_id="legacy-pocket",
+        name="Legacy Pocket",
+        account_type="pocket",
+        balance=20.0,
+        source_updated_at="2026-09-02T00:00:00Z",
+    )
+    assert merged.id == account.id
+    assert merged.balance == 20.0
