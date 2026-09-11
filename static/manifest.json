@@ -1,10 +1,10 @@
 {
-  "name": "SimpleCrew",
-  "short_name": "SimpleCrew",
+  "name": "Meridian",
+  "short_name": "Meridian",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FDFDFD",
-  "theme_color": "#FDFDFD",
+  "background_color": "#172334",
+  "theme_color": "#172334",
   "icons": [
     {
       "src": "/static/images/192.png",

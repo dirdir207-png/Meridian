@@ -206,6 +206,27 @@
       "evidence": {
         "verification": "RED->GREEN connector/pipeline coverage; 34 focused passed; tests/meridian 581 passed; full suite 811 passed, 64 skipped; Ruff and git diff --check clean; independent review no findings"
       }
+    },
+    {
+      "id": "OS-011",
+      "title": "Meridian identity on auth and first-run surfaces",
+      "phase": "identity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-010"
+      ],
+      "authority_impact": "none; template, manifest, and service-worker branding only, no routing, mutation, or credential change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The first-run landing page rendered by /login with an empty users table identifies the app as Meridian",
+        "No template or manifest still names another product for Home Screen installation",
+        "The service worker never serves a cached manifest and its cache version is bumped",
+        "Register and login form ids, endpoints, payloads, and error handling are unchanged"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN tests/meridian/test_auth_branding.py (13); empty-DB first-run /login returns Meridian - Setup with 0 SimpleCrew occurrences; full suite 826 passed, 64 skipped; Ruff, git diff --check, node --check, manifest JSON clean"
+      }
     }
   ]
 }

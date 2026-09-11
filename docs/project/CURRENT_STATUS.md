@@ -398,3 +398,49 @@ Parallel Observatory dirty/untracked files were not altered by this work.
 - Timeouts, unreadable connector responses, and connector-reported uncertainty are explicitly stored with `verify_state=true` and `retry_allowed=false`. The executor is invoked exactly once, no verifier runs after a failed result, and the owner-facing recovery path remains Crew-state readback before any new request.
 - Scope boundary: this does not implement automated reconciliation, operation-specific provider readback, typed action input schemas, or A12 stale-base preconditions. No action authority, mutation registry, retry policy, or UI route changed.
 - Verification: RED→GREEN focused connector/pipeline tests; 34 focused action/outcome tests passed; `tests/meridian` 581 passed; full suite 811 passed, 64 skipped; Ruff and `git diff --check` clean. Browser-only tests were collected but skipped without `APP_URL`; no UI changed. Independent read-only review reported no findings.
+
+## Meridian identity on auth and first-run surfaces — 2026-09-10
+
+Owner-reported symptom: the landing page and the installed Home Screen app showed
+"SimpleCrew" again. Diagnosis found three separate causes, only one of which was in
+ORSC's control:
+
+1. **Port 8080 is not this build.** `docker ps` shows container `simplecrew`, image
+   `simplecrewbranch-finance-app`, compose working directory
+   `/Users/stephenwest/Documents/ChatGPT/Simplecrew Branch`, created 2026-09-06. Its
+   `/login` is titled `SimpleCrew - Login`. Opening `localhost:8080` shows that other
+   product, not ORSC Meridian. Stopping it is owner action outside this repository.
+2. **`/login` renders `register.html` whenever the users table is empty**, so
+   `register.html` *is* the first-run landing page. Commit `27db882` gave the Observatory
+   treatment only to `login.html` and `index.html`, so every fresh database still landed on
+   the untouched `SimpleCrew - Setup` page. This was an incomplete branding sweep, not a
+   revert of earlier work.
+3. **A stale cache kept the old name installed.** `static/sw.js` answered
+   `/manifest.json` from a cache-first branch under an unchanged cache name
+   (`simple-finance-v12`), so an installed app kept the previous product name even after
+   the file was corrected.
+
+Changes: `register.html` now uses the same approved Observatory treatment already applied
+to `login.html` (identical `obs-shell`, obs tokens, card/field/button classes) with Meridian
+copy; the `login.html` footer, `base.html`, and `onboarding.html` no longer carry another
+product name; `static/manifest.json` is named Meridian with the Observatory background and
+theme colors; `sw.js` now treats `/manifest.json` as network-first, bumps `CACHE_NAME` to
+`simple-finance-v13` so existing installs drop the stale manifest, and uses Meridian push
+defaults. Every register/login form id, name, autocomplete, placeholder, endpoint, payload,
+and error path is preserved.
+
+Verification: RED→GREEN — 13 guards in `tests/meridian/test_auth_branding.py` failed first
+(wrong manifest name, SimpleCrew on all four templates, cache-first manifest) and pass now.
+Rendered through the real first-run path with an empty database, `/login` returns
+`Meridian - Setup`, `apple-mobile-web-app-title: Meridian`, **zero** `SimpleCrew` occurrences,
+and `manifest.json` name `Meridian`. Full suite 826 passed, 64 skipped; Ruff,
+`git diff --check`, `node --check static/sw.js`, and manifest JSON validation all clean.
+
+Owner-visible remains:
+- The running preview on port 8081 (`run_preview.py:46`, `debug=False, use_reloader=False`)
+  caches Jinja templates in-process, so it will keep serving the old page until it is
+  restarted. This is why the symptom persisted across previous fixes.
+- An already-saved iOS Home Screen icon keeps its cached name; remove and re-add it once to
+  pick up the new manifest.
+- `static/js/app.js` console log strings still say SimpleCrew. They are developer-console
+  text with no user-visible surface and are deliberately left out of this slice.
