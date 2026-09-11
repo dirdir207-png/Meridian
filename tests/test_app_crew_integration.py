@@ -531,3 +531,76 @@ def test_advisor_unconfigured_chat_is_503(authenticated_client, monkeypatch):
     monkeypatch.setattr(simplecrew.advisor_service, "_client", None)
     response = authenticated_client.post("/api/advisor/chat", json={"message": "hi"})
     assert response.status_code == 503
+
+
+def test_legacy_meridian_sync_routes_through_the_canonical_sync(monkeypatch, capsys):
+    """The legacy refresh path must actually mirror Crew data.
+
+    It previously imported a ``CrewAdapter`` that does not exist and built it from
+    a bearer token (a token is not a client), so every call raised ImportError,
+    was logged as a sync failure, and mirrored nothing at all. It must now read
+    through the same adapter and client the cadence sync uses, so both entry
+    points write one connection identity instead of creating a competing one.
+    """
+    from meridian.providers.crew import CrewReadAdapter
+    from meridian.sync import SyncReport
+
+    captured = {}
+
+    def stub_sync_provider(adapter, repository, **kwargs):
+        captured["adapter"] = adapter
+        captured["client"] = adapter._client
+        return SyncReport(
+            provider="crew",
+            status="complete",
+            accounts_synced=6,
+            transactions_synced=86,
+            errors=0,
+        )
+
+    monkeypatch.setattr(simplecrew, "get_crew_bearer_token", lambda: "sentinel-token-value")
+    monkeypatch.setattr(simplecrew, "sync_provider", stub_sync_provider)
+
+    report = simplecrew.sync_crew_to_meridian()
+    logged = "".join(capsys.readouterr())
+
+    assert report is not None
+    assert report.status == "complete"
+    # The canonical adapter bound to the canonical client, not a token string.
+    assert isinstance(captured["adapter"], CrewReadAdapter)
+    assert captured["client"] is simplecrew.crew_client
+    assert "status=complete" in logged
+    assert "accounts=6" in logged
+    assert "transactions=86" in logged
+    assert "errors=0" in logged
+    assert "failed" not in logged.lower()
+    assert "sentinel-token-value" not in logged
+
+
+def test_legacy_meridian_sync_is_skipped_without_credentials(monkeypatch, capsys):
+    """No credential means no provider read at all, reported as skipped."""
+    calls = []
+
+    monkeypatch.setattr(simplecrew, "get_crew_bearer_token", lambda: None)
+    monkeypatch.setattr(simplecrew, "sync_provider", lambda *a, **k: calls.append(a))
+
+    report = simplecrew.sync_crew_to_meridian()
+    logged = "".join(capsys.readouterr())
+
+    assert report is None
+    assert calls == []
+    assert "skipped" in logged
+    assert "failed" not in logged.lower()
+
+
+def test_legacy_meridian_sync_reports_an_unreadable_crew_truthfully(monkeypatch, capsys):
+    """A read that could not happen is reported as a failure, not as silence."""
+    monkeypatch.setattr(simplecrew, "get_crew_bearer_token", lambda: "sentinel-token-value")
+    monkeypatch.setattr(simplecrew, "sync_crew_snapshot", lambda: None)
+
+    report = simplecrew.sync_crew_to_meridian()
+    logged = "".join(capsys.readouterr())
+
+    assert report is None
+    assert "Meridian sync failed" in logged
+    assert "sentinel-token-value" not in logged

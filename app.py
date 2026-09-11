@@ -1477,28 +1477,34 @@ def get_crew_headers():
 
 def sync_crew_to_meridian():
     """Sync Crew data to Meridian financial graph.
-    
+
     Called after a successful Crew data refresh. Logs counts and status,
     never payloads. Returns SyncReport or None if sync cannot run.
+
+    Routes through the single canonical sync, ``sync_crew_snapshot``, so both
+    entry points read Crew through the same client and adapter and write one
+    connection identity. This previously imported a ``CrewAdapter`` that does not
+    exist and built it from a bearer token (a token is not a client), so every
+    call raised ImportError, was reported as a sync failure, and mirrored
+    nothing. Adapter identity is deliberately NOT chosen here: the two Crew
+    adapters use different connection identities over one account id space
+    (handoff C06), and introducing a second identity would leave the existing
+    connection account-less and hold the workspace stale.
     """
     try:
-        from meridian.providers.crew import CrewAdapter
-        from meridian.repository import FinancialRepository
-        from meridian.sync import sync_provider
-        
-        bearer_token = get_crew_bearer_token()
-        if not bearer_token:
+        if not get_crew_bearer_token():
             print("⚠️ Meridian sync skipped: No Crew bearer token")
             return None
-        
-        adapter = CrewAdapter(bearer_token)
-        repo = FinancialRepository(DB_FILE)
-        report = sync_provider(adapter, repo)
-        
+
+        report = sync_crew_snapshot()
+        if report is None:
+            print("❌ Meridian sync failed: Crew data could not be read")
+            return None
+
         print(f"🔄 Meridian sync: provider={report.provider} status={report.status} "
-              f"accounts={report.accounts_upserted} transactions={report.transactions_upserted}"
-              + (f" error={report.error}" if report.error else ""))
-        
+              f"accounts={report.accounts_synced} transactions={report.transactions_synced} "
+              f"errors={report.errors}")
+
         return report
     except Exception as e:
         print(f"❌ Meridian sync failed: {e}")
