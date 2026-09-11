@@ -76,10 +76,8 @@ from meridian.memory_actions import (
     asset_executors,
     contract_executors,
 )
-from meridian.providers.crew import CrewReadAdapter
 from meridian.refresh import MeridianRefreshService
 from meridian.repository import FinancialRepository
-from meridian.sync import sync_provider
 from meridian.sync_gate import MeridianSyncGate
 
 app = Flask(__name__)
@@ -840,9 +838,19 @@ crew_health_service = CredentialHealthService(crew_client)
 
 
 def sync_crew_snapshot():
-    """Mirror Crew reads into Meridian without affecting legacy API responses."""
+    """Mirror Crew reads into Meridian without affecting legacy API responses.
+
+    Routes through the single sanctioned Crew connector — the read-only
+    CrewWorkAssistant snapshot (meridian.live.sync_live_crew) under the
+    ``crew-work-assistant`` connection — so every Crew sync path writes one
+    identity. The earlier client-based ``CrewReadAdapter`` used a separate
+    ``current-user`` identity over the same account id space, which could strand
+    accounts in an old connection and hold the workspace stale (handoff C06).
+    """
+    from meridian.live import sync_live_crew
+
     try:
-        report = sync_provider(CrewReadAdapter(crew_client), FinancialRepository(DB_FILE))
+        report = sync_live_crew(DB_FILE)
     except Exception:
         app.logger.warning("Meridian Crew sync could not complete")
         return None

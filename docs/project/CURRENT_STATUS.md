@@ -703,3 +703,29 @@ Verified RED→GREEN: 7 engine tests plus 4 wired-operation tests; neutralising 
 turns 5 of them red (including "a changed bill is refused and never reaches Crew").
 Full suite 875 passed, 56 skipped, with the same pre-existing playwright-unavailable
 capture failure; Ruff and `git diff --check` clean.
+
+## C06 — one canonical Crew connector — 2026-09-11
+
+Handoff C06: two Crew adapters represented the same provider over the same account
+id space under two connection identities. `CrewReadAdapter` (GraphQL client) wrote
+connection `current-user`; `CrewWorkSnapshotAdapter` (read-only `crew-readonly` CLI)
+wrote `crew-work-assistant`. If both ever ran, accounts would migrate connections and
+the emptied connection would hold the whole workspace `stale`.
+
+Decision (owner authorized): the canonical connector is the read-only CrewWorkAssistant
+snapshot under `crew-work-assistant`. It is the only path that has ever produced data in
+either database, and a read-only CLI fits the observe-never-mutate boundary better than a
+bearer-token GraphQL client.
+
+Change: `app.py::sync_crew_snapshot` now delegates to `meridian.live.sync_live_crew`, so
+the cadence gate, the legacy `/api/savings` refresh, and the live loop all write the one
+identity. The `CrewReadAdapter` and `sync_provider` module imports were removed from
+`app.py` (`sync_provider` remains the sync engine inside `meridian/sync`, still used by
+the snapshot adapter). `CrewReadAdapter` the class and `crew_client` the GraphQL client
+are left in place — `crew_client` still serves the legacy savings read, the health check,
+and session renewal; deleting them is a separate cleanup.
+
+Verified: the routing test now asserts the legacy path calls `sync_live_crew` on the app's
+DB, so a revert to the client adapter fails; the two tests that patched the removed
+`sync_provider` name were repointed to the live seam. Full suite 875 passed, 56 skipped,
+same pre-existing playwright-unavailable failure; Ruff and `git diff --check` clean.

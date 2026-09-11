@@ -327,6 +327,28 @@
       "evidence": {
         "verification": "RED->GREEN 7 engine tests (tests/crew/test_executors.py) plus 4 wired tests (tests/meridian/test_crew_write_actions.py); neutralising the guard turns 5 red including the never-reaches-Crew assertion; full suite 875 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean"
       }
+    },
+    {
+      "id": "OS-016",
+      "title": "One canonical Crew connector (C06)",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-013"
+      ],
+      "authority_impact": "none; read path only, removes a competing connection identity",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "Every Crew sync entry point writes the single connection identity crew-work-assistant",
+        "The client-based CrewReadAdapter is no longer wired into the sync path",
+        "No second connection identity can be created by a sync run",
+        "The legacy /api/savings refresh, the cadence gate and the live loop share one connector",
+        "sync_provider remains the sync engine inside meridian/sync, used by the snapshot adapter"
+      ],
+      "evidence": {
+        "verification": "Routing test asserts the legacy path calls meridian.live.sync_live_crew on the app DB, so reverting to the client adapter fails; two tests patching the removed sync_provider name were repointed; full suite 875 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean"
+      }
     }
   ]
 }

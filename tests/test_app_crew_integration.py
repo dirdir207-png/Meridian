@@ -174,8 +174,14 @@ def test_financial_refresh_keeps_legacy_response_when_meridian_sync_fails(monkey
                 }
             }
 
+    import meridian.live as live
+
     monkeypatch.setattr(simplecrew.requests, "post", lambda *args, **kwargs: StubResponse())
-    monkeypatch.setattr(simplecrew, "sync_provider", lambda *args: (_ for _ in ()).throw(RuntimeError("offline")))
+    monkeypatch.setattr(
+        live,
+        "sync_live_crew",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("offline")),
+    )
 
     result = simplecrew.get_financial_data.__wrapped__()
 
@@ -539,17 +545,17 @@ def test_legacy_meridian_sync_routes_through_the_canonical_sync(monkeypatch, cap
     It previously imported a ``CrewAdapter`` that does not exist and built it from
     a bearer token (a token is not a client), so every call raised ImportError,
     was logged as a sync failure, and mirrored nothing at all. It must now read
-    through the same adapter and client the cadence sync uses, so both entry
-    points write one connection identity instead of creating a competing one.
+    through the single sanctioned Crew connector — the read-only CrewWorkAssistant
+    snapshot — so every entry point writes the one ``crew-work-assistant``
+    connection identity instead of creating a competing one.
     """
-    from meridian.providers.crew import CrewReadAdapter
+    import meridian.live as live
     from meridian.sync import SyncReport
 
     captured = {}
 
-    def stub_sync_provider(adapter, repository, **kwargs):
-        captured["adapter"] = adapter
-        captured["client"] = adapter._client
+    def stub_sync_live_crew(db_path, **kwargs):
+        captured["db_path"] = db_path
         return SyncReport(
             provider="crew",
             status="complete",
@@ -559,16 +565,15 @@ def test_legacy_meridian_sync_routes_through_the_canonical_sync(monkeypatch, cap
         )
 
     monkeypatch.setattr(simplecrew, "get_crew_bearer_token", lambda: "sentinel-token-value")
-    monkeypatch.setattr(simplecrew, "sync_provider", stub_sync_provider)
+    monkeypatch.setattr(live, "sync_live_crew", stub_sync_live_crew)
 
     report = simplecrew.sync_crew_to_meridian()
     logged = "".join(capsys.readouterr())
 
     assert report is not None
     assert report.status == "complete"
-    # The canonical adapter bound to the canonical client, not a token string.
-    assert isinstance(captured["adapter"], CrewReadAdapter)
-    assert captured["client"] is simplecrew.crew_client
+    # Routed through the one sanctioned snapshot connector, on this app's DB.
+    assert captured["db_path"] == simplecrew.DB_FILE
     assert "status=complete" in logged
     assert "accounts=6" in logged
     assert "transactions=86" in logged
@@ -579,10 +584,12 @@ def test_legacy_meridian_sync_routes_through_the_canonical_sync(monkeypatch, cap
 
 def test_legacy_meridian_sync_is_skipped_without_credentials(monkeypatch, capsys):
     """No credential means no provider read at all, reported as skipped."""
+    import meridian.live as live
+
     calls = []
 
     monkeypatch.setattr(simplecrew, "get_crew_bearer_token", lambda: None)
-    monkeypatch.setattr(simplecrew, "sync_provider", lambda *a, **k: calls.append(a))
+    monkeypatch.setattr(live, "sync_live_crew", lambda *a, **k: calls.append(a))
 
     report = simplecrew.sync_crew_to_meridian()
     logged = "".join(capsys.readouterr())
