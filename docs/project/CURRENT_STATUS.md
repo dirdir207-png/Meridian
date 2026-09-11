@@ -444,3 +444,57 @@ Owner-visible remains:
   pick up the new manifest.
 - `static/js/app.js` console log strings still say SimpleCrew. They are developer-console
   text with no user-visible surface and are deliberately left out of this slice.
+
+## Accepted is not verified for verifier-less operations — 2026-09-10
+
+Finding A05 from the consolidated handoff: `crew/executors.py` substituted `{"ok": True}`
+whenever an executor registered no verifier, so a provider acceptance was recorded as
+`verified`. An audit of the live registry shows the scale of the overstatement —
+**15 of 27 registered action types have no verifier at all**, including
+`crew_initiate_transfer`, `top_up_crew_reserve`, `set_crew_spend_pocket`,
+`create_crew_pocket`, both pocket-reassignment rules, the three paycheck-funding-plan
+operations, `create_crew_virtual_card`, and the bill/pocket/rule create and archive
+operations.
+
+Change: a successful execution with no registered verifier now stays in `executed`
+(verification pending) and records why, inside the durable result payload:
+
+```
+"verification": {"ok": null, "check": "no-verifier-registered", "reason": "..."}
+```
+
+Only a readback verifier may move an action to `verified`. The explicit-verifier path is
+unchanged, a failing verifier still lands in `failed`, and a verifier that raises still
+lands in `failed` with `verifier_exception`. `executed` remains non-claimable, so the
+existing single-claim guarantee still prevents a second execution of the same action; a
+regression test now pins that.
+
+No authority, routing, retry, or mutation behaviour changed, and no new state or schema was
+introduced — `executed` already existed and already rendered honestly. The UI needed no
+change: `static/js/meridian/action-outcome.js` has treated `executed` as
+"sent, verification pending, do not resubmit" since OS-007, and the memory/asset/contract
+flows are unaffected because all six of those operations do register real verifiers.
+
+Scope boundary: this makes the recorded outcome honest. It does **not** implement the
+readback service that would later confirm these operations (handoff A15) or operation-specific
+provider readback (A06), so a verifier-less action now stays `executed` until such a service
+exists. That is the truthful state rather than a silent success.
+
+Review consequence fixed in the same slice: `archive_crew_bill` is verifier-less, and its Plan
+Delete control relied on `outcome.refresh` to reload the list and drop the archived row. With
+that refresh now unreachable, the row would have stayed listed behind a live Delete button that
+creates a **second** archive request. The bill-archive control now disables itself after a
+durable outcome, exactly as the rule-delete control already did. A new guard test asserts that
+every destructive Plan control refuses a second request, and a negative control (removing the
+guard) makes it fail. This closes a widened resend path rather than shipping it as a side
+effect of the truth fix.
+
+Verification: RED→GREEN — 3 new executor tests plus 1 pipeline test failed before the change;
+the one pre-existing expectation that a verifier-less `create_crew_pocket` reached `verified`
+was corrected to `executed`. Full suite 832 passed, 64 skipped; Ruff, `git diff --check`, and
+`node --check static/js/meridian/plan.js` clean.
+
+Known follow-ups found by review, deliberately not in this slice: the recorded
+`no-verifier-registered` reason is stored but not yet rendered in the Approvals history; and
+`meridian/crew_write_actions.py::_verify_stored` still derives its result from local commitment
+state, so the two `update_crew_bill*` types are not true provider readbacks either (handoff A06).

@@ -227,6 +227,29 @@
       "evidence": {
         "verification": "RED->GREEN tests/meridian/test_auth_branding.py (13); empty-DB first-run /login returns Meridian - Setup with 0 SimpleCrew occurrences; full suite 826 passed, 64 skipped; Ruff, git diff --check, node --check, manifest JSON clean"
       }
+    },
+    {
+      "id": "OS-012",
+      "title": "Accepted is not verified for verifier-less operations",
+      "phase": "action-truth",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-010"
+      ],
+      "authority_impact": "none; outcome classification only, no routing, retry, mutation, or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "An action with no registered verifier never reaches verified",
+        "Such an action stays executed and records that no readback verifier is registered",
+        "An explicit verifier still reaches verified and a failing verifier still reaches failed",
+        "An executed action cannot be claimed and executed a second time",
+        "The change introduces no new state, schema, or mutation path",
+        "A destructive Plan control cannot create a second request after a durable outcome for a verifier-less operation"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN 4 new tests plus 1 destructive-control guard (negative control verified); corrected 1 pre-existing verified expectation; registry audit showed 15 of 27 action types have no verifier; full suite 832 passed, 64 skipped; Ruff, git diff --check, node --check clean"
+      }
     }
   ]
 }

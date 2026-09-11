@@ -50,6 +50,63 @@ def test_approved_action_executes_and_verifies(store):
     assert verifications[0][0] == {"amount": 100}
 
 
+def test_action_without_a_verifier_is_accepted_but_never_called_verified(store):
+    """A provider-accepted write with no readback is not a verified outcome.
+
+    Fifteen of the registered action types have no verifier. Marking those
+    ``verified`` asserts a readback that never happened.
+    """
+    action_id = seed_approved_action(store)
+
+    final = execute_approved_action(store, action_id, make_executors())
+
+    assert final["state"] == ActionState.EXECUTED.value
+    assert final["state"] != ActionState.VERIFIED.value
+    assert final["verification"] is None
+
+
+def test_action_without_a_verifier_records_why_verification_is_missing(store):
+    action_id = seed_approved_action(store)
+
+    final = execute_approved_action(store, action_id, make_executors())
+
+    recorded = final["result"]["verification"]
+    assert recorded["ok"] is None
+    assert recorded["check"] == "no-verifier-registered"
+    assert "accepted" in recorded["reason"]
+
+
+def test_executed_action_without_a_verifier_cannot_be_re_executed(store):
+    """Staying EXECUTED must not open a second claim on the same mutation."""
+    calls = []
+
+    def executor(params):
+        calls.append(params)
+        return {"success": True, "result": {"id": "tx-once"}}
+
+    action_id = seed_approved_action(store)
+    execute_approved_action(store, action_id, make_executors(fn=executor))
+
+    with pytest.raises(IllegalTransitionError):
+        execute_approved_action(store, action_id, make_executors(fn=executor))
+
+    assert len(calls) == 1
+
+
+def test_explicit_verifier_still_reaches_verified(store):
+    """The honest-outcome change must not weaken operations that do read back."""
+    action_id = seed_approved_action(store)
+
+    final = execute_approved_action(
+        store,
+        action_id,
+        make_executors(verifier=lambda params, result: {"ok": True, "check": "readback"}),
+    )
+
+    assert final["state"] == ActionState.VERIFIED.value
+    assert final["verification"]["check"] == "readback"
+
+
 def test_error_contract_lands_in_failed_without_verification(store):
     calls = []
 
@@ -143,7 +200,7 @@ def test_concurrent_execution_claims_action_once(store):
     assert len(conflicts) == 1
     assert str(conflicts[0]) == "Action is not available for execution"
     assert len(terminal_results) == 1
-    assert terminal_results[0]["state"] == ActionState.VERIFIED.value
+    assert terminal_results[0]["state"] == ActionState.EXECUTED.value
 
 
 def test_stale_approvals_expire_recent_ones_survive(store, monkeypatch):

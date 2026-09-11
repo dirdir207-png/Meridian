@@ -92,3 +92,20 @@ def test_plan_action_note_has_pending_tone():
 
     assert '.m-action-note[data-state="pending"]' in css
     assert "color: var(--m-caution" in css
+
+
+def test_every_destructive_plan_control_refuses_a_second_request():
+    """A durable action record must not leave the same control live.
+
+    Verifier-less operations stay EXECUTED and never refresh the list, so a
+    destructive control that relied on that refresh to disappear would stay
+    clickable and create a second mutation request.
+    """
+    source = (ROOT / "static/js/meridian/plan.js").read_text(encoding="utf-8")
+
+    for action_type in ("archive_crew_bill", "delete_crew_autopilot_rule"):
+        assert f'type: "{action_type}"' in source, f"{action_type} call site missing"
+        handler = source.split(f'type: "{action_type}"', 1)[1].split("} catch (error)", 1)[0]
+        assert "del.disabled = true" in handler, (
+            f"the {action_type} control can be clicked again after a durable outcome"
+        )

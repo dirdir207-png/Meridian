@@ -195,6 +195,45 @@ def test_uncertain_connector_outcome_is_persisted_without_retry(tmp_path, monkey
     }
 
 
+def test_verifier_less_crew_write_stays_executed_and_is_never_claimed_verified(
+    tmp_path, monkeypatch
+):
+    """Real verifier-less Crew ops (transfer, reserve top-up, pocket create).
+
+    Fifteen of the registered action types register no verifier. A provider
+    acceptance must not be reported as a verified outcome.
+    """
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions
+
+    calls = []
+
+    def accepted(operation, input_payload):
+        calls.append(operation)
+        return {"ok": True, "result": {"id": "xfer-1"}, "retry_allowed": False}
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", accepted)
+    db = str(tmp_path / "m.db")
+    specs = crew_write_actions.crew_write_executors(db)
+    for action_type in ("crew_initiate_transfer", "top_up_crew_reserve"):
+        assert specs[action_type][1] is None, f"{action_type} unexpectedly has a verifier"
+
+        store = ActionStore(db, allowed_types=(action_type,))
+        execute, verifier = specs[action_type]
+        request = store.propose(action_type, {"amount": 100}, "Move money", requested_by="owner")
+        store.approve(request["id"], decided_by="owner")
+
+        outcome = execute_approved_action(
+            store, request["id"], {action_type: ExecutorSpec(execute=execute, verifier=verifier)}
+        )
+
+        assert outcome["state"] == "executed", action_type
+        assert outcome["verification"] is None, action_type
+        assert outcome["result"]["verification"]["check"] == "no-verifier-registered"
+
+    assert calls == ["initiate_transfer", "top_up_reserve"]
+
+
 def test_autopilot_rule_executor_enriches_formula_before_write(tmp_path, monkeypatch):
     """The create-autopilot executor must inject real accountId into the action so
     Crew never rejects a null accountId."""

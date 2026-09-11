@@ -1,9 +1,12 @@
 """Executor registry for approved actions.
 
 Each whitelisted action type maps to one vetted function (wrapped as a
-params-dict adapter) plus a verifier that confirms the outcome after
+params-dict adapter) plus an optional verifier that confirms the outcome after
 execution. Executors inherit the safety semantics of the functions they wrap
 (e.g., move_money's no-retry / uncertain-write contract).
+
+A successful execution with no registered verifier ends in EXECUTED
+(verification pending), never VERIFIED: only a readback may claim verification.
 """
 
 import uuid
@@ -63,14 +66,32 @@ def execute_approved_action(
             _failure(payload, "Action did not complete successfully", "action_failed"),
         )
 
+    if spec.verifier is None:
+        # No readback verifier is registered for this operation. The provider
+        # accepted the write, but Meridian cannot confirm the resulting state, so
+        # the action stays EXECUTED (verification pending) instead of claiming
+        # VERIFIED. Marking it verified would assert a readback that never
+        # happened — see A05 in the consolidated handoff.
+        store.mark_executed(
+            request_id,
+            result={
+                **result,
+                "verification": {
+                    "ok": None,
+                    "check": "no-verifier-registered",
+                    "reason": (
+                        f"No readback verifier is registered for '{request['type']}'. "
+                        "The provider accepted the write; the resulting state is unconfirmed."
+                    ),
+                },
+            },
+        )
+        return store.get(request_id)
+
     store.mark_executed(request_id, result=result)
 
     try:
-        verification = (
-            spec.verifier(request["params"] or {}, result)
-            if spec.verifier
-            else {"ok": True}
-        )
+        verification = spec.verifier(request["params"] or {}, result)
         ok = bool(verification.get("ok"))
     except Exception as exc:
         return store.mark_failed(

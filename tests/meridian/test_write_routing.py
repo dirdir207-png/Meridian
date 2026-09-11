@@ -144,7 +144,9 @@ def test_direct_mutation_runs_executor_proposal_does_not(monkeypatch):
         rationale="set pocket", requested_by="owner", provenance="owner_direct",
     )
     assert direct["routing_direct"] is True
-    assert direct["action"]["state"] == "verified"   # executor ran + verified
+    # create_crew_pocket has no readback verifier, so the accepted write stays
+    # EXECUTED (verification pending) and is never claimed as VERIFIED.
+    assert direct["action"]["state"] == "executed"
     assert calls, "owner-direct mutation should have reached the executor"
 
     # AI-interpreted -> proposal only, executor never called.

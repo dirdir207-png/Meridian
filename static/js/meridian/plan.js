@@ -587,6 +587,11 @@ function renderCommitments(root, plan, template) {
             });
             note.dataset.state = outcome.tone;
             note.textContent = outcome.message;
+            // A returned action record is durable history. archive_crew_bill has
+            // no readback verifier, so it stays EXECUTED and never refreshes the
+            // list — without this guard the archived bill would keep an active
+            // Delete control that could create a second archive request.
+            del.disabled = true;
             // Refresh only after durable verification; HTTP success or an
             // intermediate EXECUTED state is not proof that Crew changed.
             if (outcome.refresh) {
