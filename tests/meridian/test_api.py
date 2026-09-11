@@ -1004,3 +1004,94 @@ def test_crew_mutations_status_requires_login():
     response = simplecrew.app.test_client().get("/api/meridian/crew/mutations-status")
     assert response.status_code == 302
     assert "/login" in response.headers["Location"]
+
+
+def _only_connection_id(repository):
+    scope = repository.get_freshness_scope(include_all_connections=True)
+    assert len(scope.connections) == 1
+    return scope.connections[0].connection_id
+
+
+def test_accounts_api_reports_an_archived_account_with_provenance(api_client):
+    """An account a complete read concluded is gone is still reported, never
+    silently dropped from the workspace."""
+    client, repository = api_client
+    _complete_connection(repository)
+    archived_count = repository.mark_absent_accounts(
+        provider="crew",
+        connection_id=_only_connection_id(repository),
+        observed_external_ids=(),
+        absent_since="2026-09-11T14:09:37Z",
+    )
+    assert archived_count == 1
+
+    payload = client.get("/api/meridian/accounts").get_json()
+
+    assert payload["accounts"] == []
+    assert len(payload["archived"]) == 1
+    entry = payload["archived"][0]
+    assert entry["name"] == "Crew checking"
+    assert entry["provider"] == "crew"
+    assert entry["absent_since"] == "2026-09-11T14:09:37Z"
+    assert entry["retained_transactions"] == 1
+    # A last known figure is not a current balance.
+    assert "balance" not in entry
+    assert "available_balance" not in entry
+
+
+def test_activity_marks_a_transaction_of_an_archived_account(api_client):
+    client, repository = api_client
+    _complete_connection(repository)
+    repository.mark_absent_accounts(
+        provider="crew",
+        connection_id=_only_connection_id(repository),
+        observed_external_ids=(),
+        absent_since="2026-09-11T14:09:37Z",
+    )
+
+    payload = client.get("/api/meridian/activity").get_json()
+
+    transaction = payload["transactions"][0]
+    assert transaction["account_name"] == "Crew checking"
+    assert transaction["account_archived"] is True
+
+
+def test_activity_does_not_mark_a_current_accounts_transaction(api_client):
+    client, repository = api_client
+    _complete_connection(repository)
+
+    payload = client.get("/api/meridian/activity").get_json()
+
+    transaction = payload["transactions"][0]
+    assert transaction["account_name"] == "Crew checking"
+    assert transaction["account_archived"] is False
+
+
+def test_transaction_detail_carries_its_account_label(api_client):
+    client, repository = api_client
+    account = _complete_connection(repository)
+    transaction_id = repository.list_transactions(account_id=account.id)[0][0].id
+    repository.mark_absent_accounts(
+        provider="crew",
+        connection_id=_only_connection_id(repository),
+        observed_external_ids=(),
+        absent_since="2026-09-11T14:09:37Z",
+    )
+
+    payload = client.get(f"/api/meridian/transactions/{transaction_id}").get_json()
+
+    assert payload["transaction"]["account_name"] == "Crew checking"
+    assert payload["transaction"]["account_archived"] is True
+
+
+def test_accounts_workspace_renders_the_archived_section_hidden(api_client):
+    """The archived section ships collapsed until something is actually reported."""
+    client, _ = api_client
+
+    response = client.get("/meridian?workspace=accounts")
+
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert "data-archived-accounts hidden" in html
+    assert "data-archived-account-list" in html
+    assert "No longer returned" in html

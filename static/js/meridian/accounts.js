@@ -1,4 +1,5 @@
 import { meridianFetch } from "./api.js";
+import { describeArchivedAccount } from "./archived-accounts.js";
 import { formatCurrency } from "./format.js";
 
 const root = document.querySelector("[data-accounts]");
@@ -154,6 +155,42 @@ function renderGroups(groups) {
   if (!roles.length) target.append(textNode("p", "m-empty-note", "No accounts are connected yet."));
 }
 
+/* ---------- Accounts no longer returned by a provider ---------- */
+
+function archivedAccountRow(item) {
+  const view = describeArchivedAccount(item);
+  const row = document.createElement("article");
+  row.className = "m-account-row m-account-row-archived";
+  row.dataset.archivedAccount = String(item.id);
+  const identity = document.createElement("div");
+  identity.className = "m-account-identity";
+  const name = textNode("h3", "m-account-name", view.name);
+  name.dataset.archivedAccountName = "";
+  const source = textNode("p", "m-account-source", view.source + " \u00b7 " + view.observed);
+  source.dataset.archivedAccountSource = "";
+  const history = textNode(
+    "p",
+    "m-account-history",
+    view.absent + " \u00b7 " + view.history
+  );
+  history.dataset.archivedAccountHistory = "";
+  identity.append(name, source, history);
+  // No amount and no control: a last known figure is not a current balance, and
+  // there is nothing here the owner could change.
+  row.append(identity);
+  return row;
+}
+
+function renderArchived(items) {
+  const section = root.querySelector("[data-archived-accounts]");
+  const list = root.querySelector("[data-archived-account-list]");
+  if (!section || !list) return;
+  list.replaceChildren();
+  const archived = Array.isArray(items) ? items : [];
+  for (const item of archived) list.append(archivedAccountRow(item));
+  section.hidden = archived.length === 0;
+}
+
 /* ---------- Net-position summary ---------- */
 
 function summarize(groups) {
@@ -289,6 +326,7 @@ async function loadAccounts() {
     const groups = payload.groups || [];
     renderGroups(groups);
     renderSummary(summarize(groups));
+    renderArchived(payload.archived || []);
     renderReimbursements(payload.reimbursements || []);
     renderConnections(payload.connections || [], payload.data_freshness);
   } catch (failure) {

@@ -1,6 +1,7 @@
 /* Activity workspace: a stable, date-grouped ledger with cursor pagination. */
 
 import { MeridianApiError, meridianFetch } from "./api.js";
+import { describeTransactionAccount } from "./archived-accounts.js";
 import { dayKey, dayLabel, formatCurrency } from "./format.js";
 
 const state = {
@@ -45,10 +46,22 @@ function buildRow(transaction) {
     transaction.merchant || transaction.description || `Transaction ${transaction.id}`;
   const sub = document.createElement("span");
   sub.className = "m-row-sub";
+  const accountView = describeTransactionAccount(transaction);
   sub.textContent =
     transaction.merchant && transaction.description
       ? transaction.description
       : (transaction.provider || "");
+  if (accountView.name) {
+    const account = document.createElement("span");
+    account.className = "m-row-account";
+    account.dataset.rowAccount = "";
+    account.textContent = accountView.note
+      ? `${accountView.name} \u00b7 ${accountView.note}`
+      : accountView.name;
+    if (sub.textContent) sub.append(" \u00b7 ");
+    sub.append(account);
+    row.dataset.accountArchived = accountView.archived ? "true" : "false";
+  }
   left.append(title, sub);
 
   const category = document.createElement("span");
@@ -73,7 +86,9 @@ function buildRow(transaction) {
 
     // Merchant · date · account sub-line.
     const date = dayLabel(transaction.occurred_at);
-    const account = transaction.accountName || "";
+    const account = accountView.note
+      ? `${accountView.name} \u00b7 ${accountView.note}`
+      : accountView.name;
     const meta = document.createElement("div");
     meta.className = "m-review-meta";
     meta.textContent = [

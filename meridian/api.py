@@ -3,6 +3,7 @@
 import os
 from datetime import date
 from functools import wraps
+from typing import Optional
 
 from flask import Blueprint, Response, current_app, jsonify, request
 from flask_login import login_required
@@ -163,10 +164,32 @@ def _account_payload(account: AccountRecord) -> dict[str, object]:
     }
 
 
-def _transaction_payload(transaction: TransactionRecord) -> dict[str, object]:
+def _account_labels(repository) -> dict[int, dict[str, object]]:
+    """Name and currentness for every account a transaction page can reference.
+
+    An archived account keeps its row, so its historical transactions can still be
+    labelled with the account they were recorded under, marked as no longer
+    returned by the provider.
+    """
+    labels: dict[int, dict[str, object]] = {
+        account.id: {"name": account.name, "archived": False}
+        for account in repository.list_accounts()
+    }
+    for item in repository.list_archived_accounts():
+        labels[item.account.id] = {"name": item.account.name, "archived": True}
+    return labels
+
+
+def _transaction_payload(
+    transaction: TransactionRecord,
+    account_labels: Optional[dict[int, dict[str, object]]] = None,
+) -> dict[str, object]:
+    account = (account_labels or {}).get(transaction.account_id)
     return {
         "id": transaction.id,
         "account_id": transaction.account_id,
+        "account_name": account["name"] if account else None,
+        "account_archived": bool(account and account["archived"]),
         "provider": transaction.provider,
         "amount": transaction.amount,
         "currency": transaction.currency,
@@ -190,10 +213,10 @@ def _transaction_payload(transaction: TransactionRecord) -> dict[str, object]:
     }
 
 
-def _transaction_payload_with_suggestion(repository, transaction):
+def _transaction_payload_with_suggestion(repository, transaction, account_labels=None):
     """Transaction payload plus a data-derived category suggestion (the "smart"
     first guess for the Review editor) and ranked category options."""
-    payload = _transaction_payload(transaction)
+    payload = _transaction_payload(transaction, account_labels)
     if payload["classification"].get("category"):
         payload["suggested_category"] = None
         payload["category_options"] = []
@@ -1174,10 +1197,11 @@ def activity():
         )
     if mode == "review":
         repository = _repository()
+        account_labels = _account_labels(repository)
         return jsonify(
             {
                 "transactions": [
-                    _transaction_payload_with_suggestion(repository, item)
+                    _transaction_payload_with_suggestion(repository, item, account_labels)
                     for item in get_review_queue(repository)
                 ],
                 "next_cursor": None,
@@ -1219,9 +1243,10 @@ def activity():
             400,
         )
 
+    repository = _repository()
     try:
         page = get_activity(
-            _repository(),
+            repository,
             limit=limit,
             cursor=request.args.get("cursor"),
             account_id=account_id,
@@ -1233,10 +1258,11 @@ def activity():
             "Restart from the first Activity page and try again.",
             400,
         )
+    account_labels = _account_labels(repository)
     return jsonify(
         {
             "transactions": [
-                _transaction_payload(transaction)
+                _transaction_payload(transaction, account_labels)
                 for transaction in page["transactions"]
             ],
             "next_cursor": page["next_cursor"],
@@ -1277,7 +1303,9 @@ def transaction_detail(transaction_id: str):
     ]
     return jsonify(
         {
-            "transaction": _transaction_payload(transaction),
+            "transaction": _transaction_payload(
+                transaction, _account_labels(repository)
+            ),
             "evidence": evidence,
             "data_freshness": data_freshness(
                 repository,

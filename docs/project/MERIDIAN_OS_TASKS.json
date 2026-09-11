@@ -275,6 +275,31 @@
       "evidence": {
         "verification": "RED->GREEN 12 tests in tests/meridian/test_sync_reconciliation.py plus 1 migration test pinning both account-column tolerance branches on a database stopped before 020; 7 mutation checks confirm the tests are load-bearing (no reconciliation, unguarded freshness join, no reactivation, re-stamped absence, completeness gate ignored, unconditional absence reset, untolerated account columns); full suite 845 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff clean on changed paths, git diff --check clean; verified end to end on a copy of the owner's database with a live complete read-only Crew snapshot: the one pocket Crew no longer returns was archived with absent_since, its 19 historical transactions were retained, and freshness moved stale -> fresh"
       }
+    },
+    {
+      "id": "OS-014",
+      "title": "An archived account is reported with provenance, never as a current balance",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-013"
+      ],
+      "authority_impact": "none; read-model and presentation only, no new control, no mutation path",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "An account a complete read concluded is gone is reported in the Accounts read model instead of disappearing",
+        "The report carries provenance: provider, account type, absent_since, last observation and how much history survives",
+        "No amount is exposed for an archived account, because a last known balance is not a current balance",
+        "Archived accounts never appear in the current account structure, the summary maths, or the Account filter options",
+        "The archived list is bounded and ordered by conclusion time, not row id",
+        "A database that has not applied migration 020 reports no archived accounts rather than failing",
+        "Activity labels the account each transaction belongs to and marks transactions of archived accounts",
+        "The archived surface adds no interactive control and ships collapsed when empty"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN 11 tests in tests/meridian/test_archived_accounts.py (executable label checks through node) plus 4 API/rendered-page tests in tests/meridian/test_api.py; mutations caught: ordering by row id, rendering a balance in an archived row, dropping the ledger account label; full suite 860 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff, git diff --check and node --check clean; verified end to end on a copy of the owner's database with a live complete read-only Crew snapshot: 6 current accounts, 1 archived with 19 retained transactions and no amount exposed, 0 current rows wrongly archived"
+      }
     }
   ]
 }

@@ -28,6 +28,25 @@ class AccountRecord:
 
 
 @dataclass(frozen=True)
+class ArchivedAccountRecord:
+    """An account a complete provider read concluded is gone.
+
+    The account row and its history are retained. Pairing the row with how much
+    of that history survives lets a reader report provenance without presenting
+    the last known balance as a current one.
+    """
+
+    account: AccountRecord
+    retained_transaction_count: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "account": self.account.to_dict(),
+            "retained_transaction_count": self.retained_transaction_count,
+        }
+
+
+@dataclass(frozen=True)
 class TransactionRecord:
     id: int
     provider: str

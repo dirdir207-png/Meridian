@@ -51,7 +51,9 @@ def _account_view(account) -> dict[str, object]:
     }
 
 
-def build_accounts(repository: FinancialRepository) -> dict[str, object]:
+def build_accounts(
+    repository: FinancialRepository, *, archived_limit: int = 50
+) -> dict[str, object]:
     accounts = repository.list_accounts()
     grouped = {role: [] for role in _ROLE_ORDER}
     for account in accounts:
@@ -82,12 +84,29 @@ def build_accounts(repository: FinancialRepository) -> dict[str, object]:
         }
         for item in repository.list_reimbursements()
     ]
+    # Accounts a complete read concluded are gone keep their rows and their
+    # history. They are reported here with provenance instead of vanishing, and
+    # never as a current balance.
+    archived = [
+        {
+            "id": item.account.id,
+            "name": item.account.name,
+            "provider": item.account.provider,
+            "account_type": item.account.account_type,
+            "absent_since": item.account.absent_since,
+            "last_observed_at": item.account.source_updated_at,
+            "retained_transactions": item.retained_transaction_count,
+        }
+        for item in repository.list_archived_accounts(limit=archived_limit)
+    ]
+
     return {
         "groups": [
             {"role": role, "label": _ROLE_LABELS[role], "accounts": grouped[role]}
             for role in _ROLE_ORDER
             if grouped[role]
         ],
+        "archived": archived,
         "reimbursements": reimbursements,
         "connections": connections,
         "data_freshness": data_freshness(

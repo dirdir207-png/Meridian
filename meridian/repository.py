@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Optional, Sequence
 
 from .db import run_migrations
-from .models import AccountRecord, TransactionRecord
+from .models import AccountRecord, ArchivedAccountRecord, TransactionRecord
 from .timestamps import canonical_occurred_at
 
 
@@ -914,6 +914,43 @@ class FinancialRepository:
                 "WHERE is_active = 1 ORDER BY name COLLATE NOCASE ASC, id ASC"
             ).fetchall()
         return [self._account_from_row(row) for row in rows]
+
+    def list_archived_accounts(self, *, limit: int = 50) -> list[ArchivedAccountRecord]:
+        """Accounts a complete read concluded are gone, newest conclusion first.
+
+        A database that has not applied migration 020 cannot have archived an
+        account, so it reports none rather than failing on the new column.
+        """
+        if limit < 1 or limit > 200:
+            raise ValueError("limit must be between 1 and 200")
+        with self._connect() as connection:
+            if not _reconciles_absence(connection):
+                return []
+            rows = connection.execute(
+                f"""
+                SELECT {_available_account_columns(connection)}, (
+                    SELECT COUNT(*)
+                    FROM financial_transactions AS financial_transaction
+                    WHERE financial_transaction.account_id = financial_accounts.id
+                ) AS retained_transaction_count
+                FROM financial_accounts
+                WHERE absent_since IS NOT NULL
+                ORDER BY absent_since DESC, id DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+        archived: list[ArchivedAccountRecord] = []
+        for row in rows:
+            values = dict(row)
+            retained = int(values.pop("retained_transaction_count", 0) or 0)
+            archived.append(
+                ArchivedAccountRecord(
+                    account=self._account_from_row(values),
+                    retained_transaction_count=retained,
+                )
+            )
+        return archived
 
     def get_account(self, account_id: int) -> Optional[AccountRecord]:
         """Return one account row, including one no longer returned by a provider."""

@@ -50,6 +50,22 @@
         </div>
         <div class="m-account-list" data-reimbursement-list></div>
       </section>
+
+      {# Accounts a complete provider read concluded are gone keep their rows and
+         their history. They are shown here with provenance rather than
+         disappearing, and never with a current balance. #}
+      <section class="m-account-section" aria-labelledby="archived-accounts-heading" data-archived-accounts hidden>
+        <div class="m-section-heading-row">
+          <div>
+            <h2 id="archived-accounts-heading" class="m-section-label">No longer returned</h2>
+            <p class="m-section-copy">
+              Your provider stopped returning these accounts. Meridian kept the
+              history; nothing was deleted.
+            </p>
+          </div>
+        </div>
+        <div class="m-account-list" data-archived-account-list></div>
+      </section>
     </div>
 
     <aside class="m-connection-health" aria-labelledby="connections-heading" data-connections>

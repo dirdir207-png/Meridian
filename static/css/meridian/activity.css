@@ -255,6 +255,12 @@
   text-overflow: ellipsis;
 }
 
+/* A transaction recorded under an account the provider no longer returns is
+   history. The label says so in words; the row is simply not emphasised. */
+.m-transaction-row[data-account-archived="true"] .m-row-account {
+  color: var(--m-ink-muted);
+}
+
 .m-row-sub {
   font-size: var(--m-text-xs);
   color: var(--m-ink-muted);

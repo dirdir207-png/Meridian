@@ -217,6 +217,24 @@
   color: var(--m-ink);
 }
 
+/* An account a complete read concluded is gone: it keeps its history and is
+   reported with provenance instead of disappearing, so it must not read as a
+   live balance row. */
+.m-account-row-archived {
+  align-items: flex-start;
+  border-bottom-style: dashed;
+}
+
+.m-account-row-archived .m-account-identity {
+  max-width: 60ch;
+}
+
+.m-account-history {
+  margin: var(--m-space-1) 0 0;
+  font-size: var(--m-text-xs);
+  color: var(--m-ink-muted);
+}
+
 @media (max-width: 600px) {
   /* Keep long account names from colliding with balances and activity actions.
      The action drops to its own row while retaining a 44px touch target. */

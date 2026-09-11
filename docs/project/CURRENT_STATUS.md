@@ -565,3 +565,70 @@ caught and printed as a sync failure even though the sync itself succeeded, so t
 log is untrue. Absence reconciliation is implemented for accounts only — Crew bills and
 other collections (C02's other half), C03's delete-reload, and C05's null-versus-empty
 semantics are untouched.
+
+## An archived account is reported, not silently dropped — 2026-09-11
+
+OS-013 archived accounts a complete provider read concluded are gone, but
+`list_accounts` returns only current accounts, so the owner's deleted pocket simply
+left the Accounts workspace. That is correct for cash math — a withdrawn observation
+must not count as current money — but a silent disappearance is the same experience
+the owner reported as data loss. This slice makes the archived row visible with
+provenance and, deliberately, without a current balance.
+
+Change:
+
+- `repository.list_archived_accounts(limit=50)` returns archived rows newest
+  conclusion first, each paired with how many of its transactions survive. A
+  database that has not applied migration 020 cannot have archived anything, so it
+  reports none rather than failing on the new column.
+- `build_accounts` reports an `archived` list (name, provider, account type,
+  `absent_since`, `last_observed_at`, `retained_transactions`) **and no amount**: the
+  last known figure is history, not a current balance. The list is bounded.
+- `templates/meridian/partials/accounts.html` gains a "No longer returned" section
+  that ships collapsed and empty, reusing the existing workspace section pattern
+  (`section` + `h2` + `aria-labelledby`). It adds no interactive control at all.
+- `static/js/meridian/archived-accounts.js` is a new pure module whose labels are
+  executed by tests: `describeArchivedAccount` (provider no longer returns this
+  account · last observed date · concluded absent date · N transactions kept in
+  Activity) and `describeTransactionAccount` (the ledger label, marked when the
+  account is archived).
+- Activity now labels the account a transaction belongs to, in both the ledger and
+  the Review card, and marks the ones whose account the provider no longer returns.
+  This also removes a dead `transaction.accountName` reference that expected a field
+  the API never sent. The API resolves `account_name` and `account_archived` from the
+  account rows, including archived ones, so historical rows keep their account context.
+
+No authority changed: nothing here mutates provider state, adds a control, or
+introduces an approval/execution path. The archived row offers no action because there
+is nothing the owner could safely change from it.
+
+Verification: RED→GREEN — 11 tests in `tests/meridian/test_archived_accounts.py`
+(6 of the 9 first-run tests failed on the missing read model, then the ordering test
+was rewritten until a mutation could break it) plus 4 API/rendered-page tests in
+`tests/meridian/test_api.py`. Mutation checks confirm the guards are load-bearing:
+ordering by row id instead of conclusion time, rendering a balance in an archived row,
+and dropping the ledger's account label each fail a test. Full suite 860 passed,
+56 skipped, with the same pre-existing `playwright`-unavailable capture failure.
+Ruff clean on changed paths, `git diff --check` clean, `node --check` clean on all
+three touched modules.
+
+Verified end to end on a **copy** of the owner's database with a live, complete,
+read-only Crew snapshot: 6 accounts reported as current, 1 reported as archived with
+`absent_since`, `last_observed_at` and **19 retained transactions**, no amount
+exposed for it, its Activity label marked archived, and 0 current rows wrongly marked
+archived. The real database was not modified; no credential, token, or payload was
+logged, and the temporary copies were deleted.
+
+Not verified here, and recorded rather than claimed: the browser/viewport pass for this
+surface. `playwright` is unavailable in this environment, so `tests/browser/*` (including
+`test_accounts.py`) skips and the pre-existing capture-contract test fails for the same
+reason. The section reuses existing workspace markup and adds no interactive control, and
+every label carries its meaning in text rather than by colour alone, but a real
+viewport/contrast pass still has to run where the browser tooling exists.
+
+Known follow-ups, deliberately not in this slice: an archived account's rows offer no
+"view its history in Activity" control, because the Activity account filter is populated
+from current accounts only and a filter entry for a non-current account would be
+inconsistent; `transaction.accountName` was removed rather than aliased, so the ledger
+sub-line now reads from the API's `account_name`; and absent-account reconciliation still
+covers accounts only (Crew bills and other collections remain open under C02).
