@@ -1,5 +1,9 @@
 # Observatory / Today visual QA
 
+## September 12 phone alignment correction
+
+The three-event baseline below missed the tall-list case. The owner's reported blank space was reproduced with twelve invented events and corrected: dial top alignment, bounded keyboard-scrollable callouts, full-width mobile text/amounts, and controls in a separate row. Regression and preview-template refresh checks pass within a **71-test** focused run. `artifacts/dial-refinement-2026-09-12/alignment-dense-final/` contains the fresh 16-image matrix, with zero page overflow/errors; mobile images were inspected. The local preview was reloaded and its served assets verified. See `docs/project/DIAL_ALIGNMENT_FIX_2026-09-12.md` for scope and runtime evidence. Older broad-fidelity observations below are retained, not silently treated as fixed by this incident correction.
+
 Source: `design/observatory-drafts-2026-09-08/06-interactive-observatory-vision.png`.
 
 Implementation: production Today template and dial/Today/shell controllers in the isolated synthetic preview

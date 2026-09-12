@@ -295,6 +295,7 @@ function renderInstrumentOverlay(state) {
   badge.className = "obs-dial-center-badge";
   if (selected) badge.appendChild(kindIcon(selected.kind));
   else badge.hidden = true;
+  if (amount.textContent.length > 10) amount.classList.add("obs-dial-center-amount--compact");
   center.append(kicker, badge, title, amount, status);
   overlay.appendChild(center);
 
@@ -551,6 +552,9 @@ function describeSelectedDay(state) {
 function renderEventList(state, container) {
   const wrap = document.createElement("div");
   wrap.className = "obs-dial-events";
+  wrap.tabIndex = 0;
+  wrap.setAttribute("role", "region");
+  wrap.setAttribute("aria-label", "Upcoming money moments; scroll for more events");
 
   const heading = document.createElement("h3");
   heading.className = "obs-dial-date-heading";
@@ -863,8 +867,17 @@ function update(state, container, rangeValue) {
   if (oldOverlay) oldOverlay.replaceWith(newOverlay);
 
   const oldEvents = panel.querySelector(".obs-dial-events");
+  const previousScroll = oldEvents?.scrollTop || 0;
   const newEvents = renderEventList(state, container);
   if (oldEvents) oldEvents.replaceWith(newEvents);
+  newEvents.scrollTop = previousScroll;
+  const selectedRow = newEvents.querySelector('.obs-event-item[data-selected="true"]');
+  if (selectedRow) {
+    const rowBox = selectedRow.getBoundingClientRect();
+    const railBox = newEvents.getBoundingClientRect();
+    if (rowBox.top < railBox.top) newEvents.scrollTop -= railBox.top - rowBox.top;
+    else if (rowBox.bottom > railBox.bottom) newEvents.scrollTop += rowBox.bottom - railBox.bottom;
+  }
 
   const oldTicket = panel.querySelector(".obs-evidence-ticket");
   if (oldTicket) oldTicket.replaceWith(renderEvidenceTicket(state, selectedEventForState(state)));
@@ -1017,11 +1030,11 @@ export function renderDial(container, inputModel) {
   const overlay = renderInstrumentOverlay(state);
   svgWrap.appendChild(overlay);
   const controls = renderControls(state, () => update(state, container));
-  instrument.append(svgWrap, controls, renderLegend());
+  instrument.append(svgWrap, renderLegend());
   bindPointerDrag(svg, state, container, model.totalDays);
 
   const eventsColumn = renderEventList(state, container);
-  panel.append(instrument, eventsColumn, renderEvidenceTicket(state, selectedEventForState(state)));
+  panel.append(instrument, eventsColumn, controls, renderEvidenceTicket(state, selectedEventForState(state)));
   container.appendChild(panel);
 
   return function stop() {

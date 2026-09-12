@@ -34,6 +34,12 @@ os.environ.setdefault("SESSION_COOKIE_SECURE", "0")
 # Patch out legacy background threads before importing app
 import app as a
 
+# The preview serves edited static assets immediately. Recheck template files
+# too, so a long-running process cannot combine old markup with new CSS/JS.
+# This does not enable Flask's debugger or process reloader.
+a.app.config["TEMPLATES_AUTO_RELOAD"] = True
+a.app.jinja_env.auto_reload = True
+
 a._background_thread_started = True
 
 # Remove the before_request hook that starts threads

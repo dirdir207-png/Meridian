@@ -2,6 +2,10 @@
 
 Last consolidated: 2026-09-10 (Observatory dial continuation)
 
+## Dial alignment incident fixed — 2026-09-12
+
+See [DIAL_ALIGNMENT_FIX_2026-09-12.md](DIAL_ALIGNMENT_FIX_2026-09-12.md). Implemented top-aligned dial, bounded scrollable callouts, full-width mobile titles/amounts, a separate date-control row and preview template auto-reload. Twelve synthetic events reproduced an 879px blank offset before the fix. **71 focused tests passed**, Ruff/diff checks passed; a 16-capture dense-data matrix reports zero overflow/page errors. Existing local preview on 8081 reloaded with the same database path/runtime configuration; login HTTP 200 and all three served UI asset hashes verified. No image publication, financial mutation, credential change or migration. Authenticated phone rendering has not been recaptured; broader visual QA remains separately tracked.
+
 ## Observatory refinement checkpoint — 2026-09-12
 
 **Paused at owner request (usage budget).** Code/assets are saved; latest focused verification is **68 passed**, Ruff clean and diff whitespace clean. Safe-to-spend and original side-callout composition are restored, with keyboard focus fixes and a compact evidence card. The last full matrix had zero overflow/page errors but predates the compact-card adjustment; final screenshot review remains pending. Resume from the latest section in [OBSERVATORY_REFINEMENT_2026-09-12.md](OBSERVATORY_REFINEMENT_2026-09-12.md). No production deployment or live-data change.

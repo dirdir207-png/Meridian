@@ -91,6 +91,49 @@ def test_evidence_ticket_keeps_amount_reserve_and_source_in_compact_card(dial_pa
     assert "No evidence is attached" in ticket.inner_text()
 
 
+@pytest.mark.parametrize("width", [390, 430])
+def test_long_event_list_does_not_push_dial_down_or_split_amounts(dial_page, width):
+    page = dial_page
+    page.set_viewport_size({"width": width, "height": 844})
+    page.evaluate("""async () => {
+      const {renderDial} = await import('/static/js/meridian/dial.js');
+      const model = structuredClone(window.MeridianObservatoryDialModel);
+      model.horizonEnd = '2026-09-30';
+      model.events = Array.from({length: 12}, (_, i) => ({
+        ...model.events[0], id: `synthetic-stress-${i}`,
+        title: i === 0 ? 'Household payment arrangement' : `Synthetic obligation ${i + 1}`,
+        date: `2026-09-${String(11 + Math.floor(i / 2) * 3).padStart(2, '0')}`,
+        amount: {minor: 123456 + i, currency: 'USD'}, fundingStatus: 'unknown', reserved: null
+      }));
+      renderDial(document.querySelector('[data-observatory-dial]'), model);
+    }""")
+    panel = page.locator(".obs-dial-panel").bounding_box()
+    dial = page.locator(".obs-dial-svg").bounding_box()
+    rail = page.locator(".obs-dial-events").bounding_box()
+    assert dial["y"] - panel["y"] <= 8, "The event list must not vertically center the dial below its first item"
+    assert rail["height"] <= dial["height"] + 48, "The orbit rail must stay bounded beside the dial"
+    controls = page.locator(".obs-dial-controls").bounding_box()
+    assert controls["y"] >= rail["y"] + rail["height"], "Date controls must not overlap the scrollable callouts"
+    assert page.locator(".obs-dial-center-amount").evaluate("el => el.scrollWidth <= el.clientWidth + 1")
+    assert page.locator(".obs-event-item").count() == 12, "All events remain reachable"
+    assert page.locator(".obs-event-amount").evaluate_all("""items => items.every(el =>
+      el.scrollWidth <= el.clientWidth + 1 &&
+      el.getBoundingClientRect().height <= parseFloat(getComputedStyle(el).lineHeight) * 1.5)
+    """)
+    assert page.locator(".obs-event-title").first.evaluate("""el => {
+      const start = el.firstChild.textContent.indexOf('arrangement');
+      const range = document.createRange();
+      range.setStart(el.firstChild, start);
+      range.setEnd(el.firstChild, start + 'arrangement'.length);
+      return range.getClientRects().length === 1;
+    }"""), "Ordinary words should not split in the callout column"
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    page.locator(".obs-event-item").last.click()
+    assert page.locator(".obs-dial-center-title").inner_text() == "Synthetic obligation 12"
+    assert page.locator(".obs-dial-events").evaluate("el => el.scrollTop") > 0
+    assert page.evaluate("window.scrollY") == 0
+
+
 @pytest.mark.parametrize("width,height", [(390, 844), (430, 932), (1024, 768), (1440, 900)])
 @pytest.mark.parametrize("theme", ["light", "dark"])
 def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height, theme):

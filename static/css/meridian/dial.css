@@ -367,6 +367,12 @@
 .obs-dial-events {
   position: relative;
   min-width: 0;
+  max-height: 620px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--obs-lilac) transparent;
+  padding-right: 6px;
 }
 
 /* The side rail is the readable counterpart to the dial's orbit markers. Keep
@@ -687,14 +693,14 @@
 [data-observatory-dial] .obs-dial-panel {
   grid-template-columns: minmax(0, 1.7fr) minmax(210px, 1fr);
   gap: 24px 36px;
-  align-items: center;
+  align-items: start;
 }
 .obs-dial-svg-wrap { width: min(100%, 620px); aspect-ratio: 1; }
 .obs-dial-instrument { padding: 0; }
 .obs-dial-overlay { aspect-ratio: 1; }
-.obs-dial-center { top: 49%; width: 43%; gap: 5px; }
+.obs-dial-center { top: 49%; width: 52%; gap: 5px; }
 .obs-dial-center-kicker { font-size: clamp(10px, 1.2vw, 13px); letter-spacing: .16em; color: #c9bedb; }
-.obs-dial-center-title { font-size: clamp(21px, 2.7vw, 31px); line-height: 1.12; }
+.obs-dial-center-title { font-size: clamp(21px, 2.7vw, 31px); line-height: 1.12; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .obs-dial-center-amount { font-size: clamp(34px, 4.6vw, 54px); line-height: 1.08; }
 .obs-dial-center-status { font-size: 14px; font-weight: 400; color: #d0c6d9; }
 .obs-dial-day-label { display: grid; gap: 1px; font-weight: 400; text-shadow: none; }
@@ -832,7 +838,7 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
 .obs-shell .m-observatory-dial-wrap { margin-top: 0; }
 .obs-dial-events .obs-dial-date-heading,
 .obs-dial-events .obs-dial-subheading { display: none; }
-.obs-dial-controls { order: 2; }
+.obs-dial-controls { grid-column: 1 / -1; order: 0; }
 .obs-dial-legend { display: none; }
 .obs-dial-caption--top { display: none; }
 @media (max-width: 700px) {
@@ -841,25 +847,25 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
   .m-observatory-safe-horizon { font-size: 17px; }
   .m-observatory-safe-observed { font-size: 11px; }
   .obs-shell .m-observatory-note .obs-today-orbit { font-size: 16px; }
-  [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 104px; gap: 12px 0; align-items: center; }
+  [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 104px; gap: 12px 0; align-items: start; }
   .obs-dial-svg-wrap { width: calc(100% + 60px); max-width: none; margin: 0 0 0 -42px; justify-self: start; }
-  .obs-dial-events { z-index: 3; align-self: center; }
-  .obs-event-list--orbit { grid-template-columns: 1fr !important; gap: 22px; }
+  .obs-dial-events { z-index: 3; align-self: start; max-height: calc(100vw - 48px); }
+  .obs-event-list--orbit { grid-template-columns: 1fr !important; gap: 16px; }
   .obs-event-list--orbit .obs-event-item { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 3px 7px; padding: 5px 0; align-items: start; }
-  .obs-event-list--orbit .obs-event-kind { width: 30px; height: 30px; min-width: 30px; }
+  .obs-event-list--orbit .obs-event-kind { width: 30px; height: 30px; min-width: 30px; grid-row: 1; }
   .obs-event-kind img { width: 17px; height: 17px; }
-  .obs-event-list--orbit .obs-event-body { gap: 3px; }
-  .obs-event-list--orbit .obs-event-title { font-size: 17px; }
-  .obs-event-list--orbit .obs-event-date { font-size: 11px; }
-  .obs-event-list--orbit .obs-event-meta { font-size: 10px; }
-  .obs-event-list--orbit .obs-event-amount { font-size: 17px; grid-column: 2; letter-spacing: -.03em; }
+  .obs-event-list--orbit .obs-event-body { display: contents; }
+  .obs-event-list--orbit .obs-event-title { font-size: 17px; grid-column: 1 / -1; overflow-wrap: break-word; }
+  .obs-event-list--orbit .obs-event-date { font-size: 11px; grid-column: 2; align-self: center; }
+  .obs-event-list--orbit .obs-event-meta { font-size: 10px; grid-column: 1 / -1; }
+  .obs-event-list--orbit .obs-event-amount { font-size: 17px; grid-column: 1 / -1; letter-spacing: -.03em; white-space: nowrap; }
   .obs-dial-center-title { font-size: 20px; }
   .obs-dial-center-amount { font-size: 31px; }
   .obs-dial-center-kicker { font-size: 8px; }
   .obs-dial-center-status { font-size: 11px; }
   .obs-dial-day-label strong { font-size: 20px; }
   .obs-dial-day-label small { font-size: 8px; }
-  .obs-dial-controls { width: calc(100% + 104px); max-width: none; justify-self: start; }
+  .obs-dial-controls { width: 100%; max-width: none; justify-self: start; }
   .obs-evidence-ticket { margin-top: -2px; }
 }
 .obs-shell .m-observatory-note .obs-today-orbit::after { display: none; }
@@ -869,10 +875,12 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
 html[data-theme="light"] .obs-shell:has([data-workspace-section="today"]:not([hidden])) { background: #f4ecdf; }
 @media (max-width: 700px) {
   [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 116px; }
-  .obs-dial-controls { width: calc(100% + 116px); }
+  .obs-dial-controls { width: 100%; }
   .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar .m-brand--compact { font-size: 0; }
   .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar-title { font: 30px/1.1 var(--obs-font-serif); }
 }
+
+.obs-dial-center-amount.obs-dial-center-amount--compact { font-size: 24px; }
 
 /* Light page surfaces retain dark ink without changing the navy instrument's
    ivory lettering or the evidence ticket's parchment material. */
