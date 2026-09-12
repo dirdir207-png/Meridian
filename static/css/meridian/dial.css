@@ -847,9 +847,12 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
   .m-observatory-safe-horizon { font-size: 17px; }
   .m-observatory-safe-observed { font-size: 11px; }
   .obs-shell .m-observatory-note .obs-today-orbit { font-size: 16px; }
-  [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 104px; gap: 12px 0; align-items: start; }
-  .obs-dial-svg-wrap { width: calc(100% + 60px); max-width: none; margin: 0 0 0 -42px; justify-self: start; }
-  .obs-dial-events { z-index: 3; align-self: start; max-height: calc(100vw - 48px); }
+  [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 104px; gap: 12px; align-items: start; }
+  /* Enlarge only into the left margin. The right edge stays in its own grid
+     track, separated from callout text and hit targets by the column gap. */
+  .obs-dial-svg-wrap { width: calc(100% + 42px); max-width: none; margin: 0 0 0 -42px; justify-self: start; }
+  .obs-dial-center { width: 56%; }
+  .obs-dial-events { z-index: 3; align-self: start; max-height: calc(100vw - 90px); }
   .obs-event-list--orbit { grid-template-columns: 1fr !important; gap: 16px; }
   .obs-event-list--orbit .obs-event-item { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 3px 7px; padding: 5px 0; align-items: start; }
   .obs-event-list--orbit .obs-event-kind { width: 30px; height: 30px; min-width: 30px; grid-row: 1; }

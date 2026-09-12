@@ -4,6 +4,8 @@ Last consolidated: 2026-09-10 (Observatory dial continuation)
 
 ## Dial alignment incident fixed — 2026-09-12
 
+**iPhone Air follow-up:** corrected an additional 18px horizontal overlap by keeping the enlarged dial inside its right grid boundary and adding a 12px gutter. WebKit and Chromium tests at 420×912 pass; **47 focused checks passed** and eight device-specific captures show zero overflow. Corrected CSS verified on the running local preview. Details and evidence are in the incident report below.
+
 See [DIAL_ALIGNMENT_FIX_2026-09-12.md](DIAL_ALIGNMENT_FIX_2026-09-12.md). Implemented top-aligned dial, bounded scrollable callouts, full-width mobile titles/amounts, a separate date-control row and preview template auto-reload. Twelve synthetic events reproduced an 879px blank offset before the fix. **71 focused tests passed**, Ruff/diff checks passed; a 16-capture dense-data matrix reports zero overflow/page errors. Existing local preview on 8081 reloaded with the same database path/runtime configuration; login HTTP 200 and all three served UI asset hashes verified. No image publication, financial mutation, credential change or migration. Authenticated phone rendering has not been recaptured; broader visual QA remains separately tracked.
 
 ## Observatory refinement checkpoint — 2026-09-12

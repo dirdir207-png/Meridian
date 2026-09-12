@@ -9,11 +9,11 @@ FIXTURE = ROOT / "tests/browser/fixtures/observatory-dial.html"
 
 
 @pytest.fixture
-def dial_page():
+def dial_page(request):
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch()
+        browser = getattr(playwright, getattr(request, "param", "chromium")).launch()
         context = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=3)
         context.add_init_script("window.setInterval = () => 0;")
         page = context.new_page()
@@ -91,7 +91,7 @@ def test_evidence_ticket_keeps_amount_reserve_and_source_in_compact_card(dial_pa
     assert "No evidence is attached" in ticket.inner_text()
 
 
-@pytest.mark.parametrize("width", [390, 430])
+@pytest.mark.parametrize("width", [390, 420, 430])
 def test_long_event_list_does_not_push_dial_down_or_split_amounts(dial_page, width):
     page = dial_page
     page.set_viewport_size({"width": width, "height": 844})
@@ -132,6 +132,22 @@ def test_long_event_list_does_not_push_dial_down_or_split_amounts(dial_page, wid
     assert page.locator(".obs-dial-center-title").inner_text() == "Synthetic obligation 12"
     assert page.locator(".obs-dial-events").evaluate("el => el.scrollTop") > 0
     assert page.evaluate("window.scrollY") == 0
+
+
+@pytest.mark.parametrize("dial_page", ["chromium", "webkit"], indirect=True)
+def test_iphone_air_dial_and_right_callouts_have_separate_hit_areas(dial_page):
+    page = dial_page
+    page.set_viewport_size({"width": 420, "height": 912})
+    dial = page.locator(".obs-dial-svg-wrap").bounding_box()
+    rail = page.locator(".obs-dial-events").bounding_box()
+    assert dial["x"] + dial["width"] + 10 <= rail["x"], "The enlarged dial must not intrude into the right-hand callouts"
+    assert page.locator(".obs-dial-day-label").evaluate_all("""(labels) => {
+      const railLeft = document.querySelector('.obs-dial-events').getBoundingClientRect().left;
+      return labels.every(label => label.getBoundingClientRect().right + 8 <= railLeft);
+    }""")
+    page.get_by_role("button", name="Internet", exact=False).click()
+    assert page.locator(".obs-dial-center-title").inner_text() == "Internet"
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
 
 @pytest.mark.parametrize("width,height", [(390, 844), (430, 932), (1024, 768), (1440, 900)])

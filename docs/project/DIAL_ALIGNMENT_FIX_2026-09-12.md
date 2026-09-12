@@ -1,5 +1,11 @@
 # Dial alignment fix — September 12, 2026
 
+## iPhone Air follow-up
+
+The owner's next screenshot exposed a separate horizontal collision. At 420px, the dial wrapper ended at x=306 while the callout region began at x=288: an 18px overlap. Mobile enlargement now extends only into the left margin, with a 12px grid gutter on the right. The scroll-region height was adjusted to the resulting dial size; its titles and signed amounts retain their full callout width.
+
+The extra 420×912/DPR 3 test target follows [Apple's layout table](https://developer.apple.com/design/human-interface-guidelines/layout). Both Chromium and Playwright WebKit pass the separate-hit-area and date-label clearance tests. **47 focused checks passed**, and eight synthetic full-template iPhone Air captures (both engines, both themes, viewport/full-page) record a 12px gap and zero page overflow. Evidence: `artifacts/dial-refinement-2026-09-12/iphone-air-gap/`. The running 8081 preview serves the corrected CSS hash; no restart, financial/data change or new deployment was required for this CSS-only follow-up. Physical-device acceptance remains owner-observed.
+
 ## Symptom and cause
 
 Owner phone screenshots showed a large blank area above the dial, words split inside the narrow event column, and a detached minus sign. The screenshot also contained older Today header markup with the new dial styling.
