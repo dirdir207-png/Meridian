@@ -300,6 +300,7 @@ def build_plan(
     last_paid_by_id: Optional[dict[int, Optional[float]]] = None,
     paycheck=None,
     evidence_repository=None,
+    absent_limit: int = 50,
 ) -> dict:
     """Compose the canonical Plan view model from local planning data.
 
@@ -474,6 +475,18 @@ def build_plan(
             "first_shortfall": first_shortfall,
         },
         "commitments": commitment_views,
+        # Bills a complete provider read concluded are gone keep their rows and
+        # their history. They are reported here with provenance instead of
+        # disappearing, and never as a current obligation.
+        "absent_bills": [
+            {
+                "id": bill.id,
+                "name": bill.name,
+                "provider": bill.legacy_source,
+                "absent_since": bill.absent_since,
+            }
+            for bill in commitment_repository.list_absent_bills(limit=absent_limit)
+        ],
         "timeline": {
             "start": as_of.isoformat(),
             "end": horizon_end.isoformat(),

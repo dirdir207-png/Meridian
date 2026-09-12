@@ -397,6 +397,23 @@ class CommitmentRepository:
             )
             return cursor.rowcount
 
+    def list_absent_bills(self, *, limit: int = 50) -> list:
+        """Bills a complete provider read concluded are no longer returned.
+
+        Newest conclusion first. The row keeps its history; it is reported with
+        provenance rather than disappearing, and never as a current obligation.
+        """
+        if limit < 1 or limit > 200:
+            raise ValueError("limit must be between 1 and 200")
+        with self._connect() as connection:
+            rows = connection.execute(
+                f"SELECT {_COLUMNS} FROM commitments "
+                "WHERE absent_since IS NOT NULL "
+                "ORDER BY absent_since DESC, id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [self._from_row(row) for row in rows]
+
     def archive(self, commitment_id: int) -> Commitment:
         with self._connect() as connection:
             connection.execute(

@@ -163,6 +163,22 @@
     <ul class="m-commitment-list" data-document-discrepancy-list></ul>
   </section>
 
+  {# Bills a complete provider read concluded are gone keep their rows and their
+     history. They are shown here with provenance rather than disappearing, and
+     never as a current obligation. #}
+  <section class="m-plan-commitments" aria-labelledby="absent-bills-heading" data-absent-bills hidden>
+    <div class="m-section-heading-row">
+      <div>
+        <h2 id="absent-bills-heading" class="m-section-label">No longer returned</h2>
+        <p class="m-section-copy">
+          Crew stopped returning these bills. Meridian kept the history; nothing was
+          deleted, and no money is scheduled for them.
+        </p>
+      </div>
+    </div>
+    <ul class="m-commitment-list" data-absent-bill-list></ul>
+  </section>
+
   <p class="m-inline-error" data-plan-error role="alert" hidden></p>
 
   {# Honest list of the small remainder of Crew-backed actions not yet surfaced in

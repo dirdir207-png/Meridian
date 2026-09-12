@@ -17,6 +17,7 @@ import app as simplecrew
 from meridian.classify import ClassificationInput, classify_deterministic
 from meridian.connections import ConnectionRepository, ConnectionState
 from meridian.connectors.email import READ_ONLY_GMAIL_SCOPE
+from meridian.commitments import CommitmentRepository, CommitmentType
 from meridian.repository import FinancialRepository
 
 
@@ -1095,3 +1096,28 @@ def test_accounts_workspace_renders_the_archived_section_hidden(api_client):
     assert "data-archived-accounts hidden" in html
     assert "data-archived-account-list" in html
     assert "No longer returned" in html
+
+
+def test_plan_api_reports_a_bill_the_provider_no_longer_returns(api_client):
+    """The Plan payload carries absent bills with provenance, and no amount."""
+    client, repository = api_client
+    commitments = CommitmentRepository(repository.db_path)
+    commitments.create(
+        type=CommitmentType.BILL,
+        name="T-Mobile",
+        amount=70.0,
+        recurrence="monthly",
+        legacy_source="crew",
+        legacy_id="bill-gone",
+    )
+    commitments.mark_absent_bills(provider="crew", observed_external_ids=("bill-kept",))
+
+    response = client.get("/api/meridian/plan")
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert [bill["name"] for bill in payload["absent_bills"]] == ["T-Mobile"]
+    assert payload["absent_bills"][0]["provider"] == "crew"
+    assert payload["absent_bills"][0]["absent_since"]
+    # A last known figure is not a current obligation.
+    assert "amount" not in payload["absent_bills"][0]

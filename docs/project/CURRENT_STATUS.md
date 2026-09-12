@@ -793,3 +793,33 @@ migration lists.
 
 Companion slice still open: Plan-surface provenance for an absent bill (the OS-014 parallel),
 so the owner can see *why* a bill they remember vanished instead of it silently leaving Plan.
+
+## A bill the provider stops returning now stays visible in Plan — 2026-09-11
+
+The OS-014 parallel for bills. OS-018 archives a bill a complete read no longer returns,
+which meant it left Plan silently — re-creating, for bills, the exact experience the owner
+reported as data loss. The read model now reports it with provenance instead.
+
+- `CommitmentRepository.list_absent_bills(limit=50)` returns concluded-absent bills, newest
+  conclusion first, bounded to 1..200 like the archived-account list.
+- `build_plan` exposes `absent_bills` as `{id, name, provider, absent_since}` — deliberately
+  **no amount and no funded figure**, because a last known figure is not a current obligation.
+- `static/js/meridian/absent-bills.js` holds the label logic as pure functions
+  (`describeAbsentBill`), so it is executed in tests rather than only asserted as text.
+- `plan.js` renders a "No longer returned" section into `[data-absent-bill-list]`; the section
+  is `hidden` until something is actually reported, so it cannot read as a permanent fixture,
+  and the row carries no amount and no control.
+- `templates/meridian/partials/plan.html` gains the section, mirroring the Accounts wording.
+
+No backend latency cost: unlike the A06 readback verifier, this reads local rows only.
+
+Verified: 10 Python tests (repository ordering/bounds, service payload, live-vs-absent
+separation, template presence, renderer shape) plus one API-level test through the
+authenticated test client, plus one Node test executing the label logic. Mutation check:
+dropping the absence filter turns 2 red. Full suite 898 passed, 56 skipped, same pre-existing
+playwright-unavailable failure; Ruff, `git diff --check`, `node --check plan.js` and a Jinja
+parse of the partial are all clean.
+
+**Verification gap, stated plainly:** no browser, viewport, contrast or accessibility check was
+possible — `playwright` is not installed in this environment, so all 56 browser tests skip. The
+section is verified at the payload, label and markup level only; it has not been seen rendered.

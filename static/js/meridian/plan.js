@@ -3,6 +3,7 @@
    approval-gated proposal. */
 
 import { MeridianApiError, meridianFetch, meridianPropose, meridianMutate } from "./api.js";
+import { describeAbsentBill } from "./absent-bills.js";
 import { describeActionOutcome } from "./action-outcome.js";
 import { formatCurrency, parseLocalDate } from "./format.js";
 
@@ -625,6 +626,43 @@ function renderCommitments(root, plan, template) {
     footer.hidden = true;
     footer.textContent = "";
   }
+}
+
+function absentBillRow(bill) {
+  const view = describeAbsentBill(bill);
+  const row = document.createElement("li");
+  row.className = "m-commitment-row m-commitment-row-absent";
+  row.dataset.absentBill = String(bill.id);
+  const name = document.createElement("strong");
+  name.className = "m-commitment-name";
+  name.textContent = view.name;
+  const provenance = document.createElement("span");
+  provenance.className = "m-commitment-meta";
+  provenance.textContent = view.source + " \u00b7 " + view.absent;
+  const note = document.createElement("span");
+  note.className = "m-commitment-note";
+  note.textContent = view.note;
+  // No amount and no control: a last known figure is not a current obligation.
+  row.append(name, provenance, note);
+  return row;
+}
+
+function renderAbsentBills(root, plan) {
+  const section = root.querySelector("[data-absent-bills]");
+  const list = root.querySelector("[data-absent-bill-list]");
+  if (!section || !list) {
+    return;
+  }
+  const bills = Array.isArray(plan.absent_bills) ? plan.absent_bills : [];
+  list.replaceChildren();
+  if (!bills.length) {
+    section.hidden = true;
+    return;
+  }
+  for (const bill of bills) {
+    list.append(absentBillRow(bill));
+  }
+  section.hidden = false;
 }
 
 function renderDocumentDiscrepancies(root, plan) {
@@ -1430,6 +1468,7 @@ async function loadPlan() {
     renderAllocation(root, plan);
     renderTimeline(root, plan);
     renderCommitments(root, plan, template);
+    renderAbsentBills(root, plan);
     renderDocumentDiscrepancies(root, plan);
     loadCaptureStatus(root);
     setupPlanSegs(root);

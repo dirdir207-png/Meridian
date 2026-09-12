@@ -398,6 +398,31 @@
       "evidence": {
         "verification": "RED->GREEN 9 tests (repository scoping, idempotence, no-provider-identity, reactivation, owner-archive protection, two end-to-end sync tests through the real adapter); neutralising the completeness gate turns the incomplete-read test red; full suite 888 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean"
       }
+    },
+    {
+      "id": "OS-019",
+      "title": "An absent bill stays visible in Plan with provenance (OS-014 parallel)",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-018",
+        "OS-014"
+      ],
+      "authority_impact": "none; read-model presentation only",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The Plan payload reports bills a complete read concluded are gone",
+        "An absent bill is never presented with an amount, funded figure or currency",
+        "An absent bill is absent from the live commitment list it used to sit in",
+        "The section stays hidden until something is actually reported",
+        "The row carries no control the owner could act on",
+        "The label logic is executable in tests rather than asserted as file text"
+      ],
+      "evidence": {
+        "verification": "10 Python tests plus 1 authenticated API test plus 1 Node label test; mutation dropping the absence filter turns 2 red; full suite 898 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff, git diff --check, node --check and a Jinja parse clean",
+        "verification_gap": "No browser/viewport/accessibility check: playwright is unavailable in this environment, so all 56 browser tests skip and the section has not been seen rendered"
+      }
     }
   ]
 }
