@@ -1,15 +1,57 @@
-# Observatory / Today visual QA — work in progress
+# Observatory / Today visual QA
 
 Source: `design/observatory-drafts-2026-09-08/06-interactive-observatory-vision.png`.
 
-Implementation: production Today template and dial/Today/shell controllers in the isolated synthetic preview at http://127.0.0.1:8093/.
+Implementation: production Today template and dial/Today/shell controllers in the isolated synthetic preview
+(`.venv311/bin/python scripts/preview_observatory_dial.py`, http://127.0.0.1:8093/). Synthetic data only —
+never the daily banking runtime, never credentials, never a database.
 
-Evidence: `artifacts/dial-refinement-2026-09-12/` captures and manifests. Component-only `final-compact` is superseded by the owner's instruction to restore the original page composition. `today-composition-1` is intermediate; final captures are pending.
+## Verified this pass (2026-09-12, at commit `5ed361e`)
 
-Resolved: placeholder dial layers; center displaced by controls; keyboard focus loss; prominent safe-to-spend restored; mobile event callouts moved to the right.
+- **Fresh governed matrix: `artifacts/dial-refinement-2026-09-12/today-final-2/`** — 16 captures, four
+  viewports × two themes × viewport/full-page, **zero horizontal overflow, zero page errors**, recorded at
+  `commit 5ed361e` with `source_dirty: false`. This is the first matrix taken *after* the compact-card/spacing
+  adjustment, so it supersedes `today-final/` for that change.
+- **Composition matches the owner's direction**: large dial on the left, event callouts on the right, evidence
+  ticket underneath; **safe-to-spend prominent** with separate horizon ("Available until September 16") and
+  source ("Crew · observed Sep 8, 9:42 AM") lines.
+- **Moon asset is in the composition** — `moon-engraving.png`, applied through `.m-observatory-moon` in
+  `dial.css`, with the runway line ("You have about 14 days of runway."). It is a CSS background rather than an
+  `<img>`, so an image-tag scan reports it missing; it is present and rendered.
+- **Focused suite independently reproduced: 68 passed** — `test_dial_fidelity` 12, `test_dial_js` 22,
+  `test_capture_contract` 7, `test_meridian_workspace_invariant` + `services/test_today` 27. Ruff clean;
+  `git diff --check` clean.
 
-Still to verify: final all-viewport/theme matrix, new moon asset in composition, light-theme foregrounds, callout amount fit, exact visual comparison and current broader focused tests. Existing passing intermediate captures are not final acceptance.
+## Remaining gaps (measured, unresolved)
 
-Latest checkpoint: owner requested stopping to preserve usage. Moon/theme/callout fixes were captured in `artifacts/dial-refinement-2026-09-12/today-final/` (16 images, zero overflow/page errors). A subsequent compact-card/spacing change passed the focused suite (**68 tests**) but still needs fresh visual comparison. Keyboard event/date/range focus and inline advisor open/close are covered. No full live application acceptance or production deployment is claimed. Stop here; resume with that bounded capture/review only.
+1. **Payday amount is a tight fit in the callout.** `+$1,660.00` sits in a 79px box and reports
+   `scrollWidth > clientWidth` at `mobile` and `mobile-small`, in **both themes**. Not visibly truncated today
+   (overflow is not hidden), but it is the longest value that currently fits, and the one to watch as amounts
+   grow. This is the "callout amount fit" item.
+2. **Inline Virgil control overlaps the bottom navigation on mobile.** Visual pass records
+   `Ask Virgil about this plan` partially truncated by the bottom navigation panel. No current test covers this.
+3. **Light-theme foregrounds: not verified — and not verifiable by the computed-ratio method used here.**
+   A contrast probe reported 19–24 "low contrast" elements in light theme. Inspection showed the figure is an
+   artifact on both sides: text inside `[hidden]` other-workspace partials was being measured, and the backdrop
+   walker cannot see `linear-gradient` or parchment backgrounds, so the nav's ivory-on-dark and the ticket's
+   navy-on-parchment — correct, readable pairings — were reported at ~1.1:1. The light/dark asymmetry is a
+   by-product of which elements happen to sit on gradients. **Resolve this by inspecting the capture, not by a
+   computed ratio.** A candidate fix (mapping the two light-theme small-caps label rules onto `--m-ink-muted`)
+   was applied and then reverted as unverified.
 
-final result: blocked
+## Environment note
+
+Browser verification can silently stall in two ways, both worth knowing before concluding a test has failed:
+
+- `playwright` and its Chromium build live in `.venv311` (declared in `requirements-dev.txt`), **not** in the
+  uv-isolated environment built from `requirements.txt`. A production-requirements runner cannot execute the
+  browser or capture tests at all.
+- An interrupted browser run leaves orphan Chromium processes behind, and later runs then hang. Clear them with
+  `pkill -9 -f 'chromiumdev_[p]rofile'` (bracket the pattern so it cannot match your own command line).
+
+## Status
+
+Focused suite green and the post-adjustment matrix captured; composition verified against the owner's stated
+direction. **Not claimed:** light-theme contrast verification, broader application acceptance, live served-app
+acceptance, or any deployment. Remaining bounded work: resolve or explicitly accept the two measured gaps
+above, and inspect light-theme foregrounds visually.
