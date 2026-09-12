@@ -64,6 +64,22 @@ def _cents_to_dollars(value: Any) -> float:
         return 0.0
 
 
+def _cents_to_dollars_or_none(value: Any) -> Optional[float]:
+    """Cents to dollars, or None when the provider did not report the field.
+
+    An absent field is not a zero. Conflating them makes a bill whose reserve was
+    never reported look like a bill whose reserve was explicitly emptied, and
+    because ``funded_amount`` is NOT NULL locally that zero then erases the
+    amount Meridian last knew (C01).
+    """
+    if value is None or value == "":
+        return None
+    try:
+        return float(value) / 100
+    except (TypeError, ValueError):
+        return None
+
+
 def _as_dict(value: Any) -> Dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
@@ -134,7 +150,9 @@ class CrewWorkSnapshotAdapter:
                 # bill; do not drop them.
                 anchor_date = str(bill.get("anchorDate") or "") or None
                 frequency = str(bill.get("frequency") or "").lower() or None
-                reserved = _cents_to_dollars(bill.get("reservedAmount"))
+                # Use the nullable form: an unreported reserve must stay absent
+                # rather than reading as an emptied one (C01).
+                reserved = _cents_to_dollars_or_none(bill.get("reservedAmount"))
                 result.append(
                     CommitmentCandidate(
                         external_id=external_id,

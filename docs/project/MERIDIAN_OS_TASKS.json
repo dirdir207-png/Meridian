@@ -423,6 +423,32 @@
         "verification": "10 Python tests plus 1 authenticated API test plus 1 Node label test; mutation dropping the absence filter turns 2 red; full suite 898 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff, git diff --check, node --check and a Jinja parse clean",
         "verification_gap": "No browser/viewport/accessibility check: playwright is unavailable in this environment, so all 56 browser tests skip and the section has not been seen rendered"
       }
+    },
+    {
+      "id": "OS-020",
+      "title": "An unreported reserve is not a zero reserve (C01)",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-013"
+      ],
+      "authority_impact": "narrows; removes a silent overwrite of known state, adds no capability",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "An absent reservedAmount reads as unknown, not as zero",
+        "An explicitly reported zero still reads as zero",
+        "A read that omits the reserve no longer erases the known funded amount",
+        "A new bill with no reported reserve still starts at zero",
+        "amount keeps its non-nullable behaviour (out of scope, deliberately)"
+      ],
+      "evidence": {
+        "verification": "4 new tests (2 targeting the fix, 2 regression guards); reverting the fix turns the 2 target tests red; full suite 902 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean",
+        "followups": [
+          "update_bill_reserve_settings has no documented parameter contract and no fail-closed guard; it needs one before any UI derives a reserve value from local state",
+          "An absent bill amount still conflates to 0.0 and aborts the whole refresh tick via local validation"
+        ]
+      }
     }
   ]
 }

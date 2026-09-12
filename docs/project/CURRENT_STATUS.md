@@ -823,3 +823,32 @@ parse of the partial are all clean.
 **Verification gap, stated plainly:** no browser, viewport, contrast or accessibility check was
 possible — `playwright` is not installed in this environment, so all 56 browser tests skip. The
 section is verified at the payload, label and markup level only; it has not been seen rendered.
+
+## C01 — an unreported reserve is no longer read as a zero reserve — 2026-09-11
+
+`_cents_to_dollars` returned `0.0` for a missing field, so a bill whose `reservedAmount` Crew
+never reported was indistinguishable from a bill whose reserve had been explicitly emptied.
+Because `commitments.funded_amount` is `NOT NULL`, that conflated zero was then written on
+every read — **erasing the amount Meridian last knew**. Same family of silent loss as the
+deleted pocket, arriving through a different door.
+
+Fix: a nullable `_cents_to_dollars_or_none`, used only for `reservedAmount`, so an absent field
+stays `None`. Both upsert paths already handled `None` correctly (`else existing.funded_amount`
+on update, `0.0` on create) and were simply never handed a `None` — so this one-line change
+activates intent that was already written, rather than adding new behaviour.
+
+Deliberately not changed: `amount` keeps the non-nullable helper. An absent `amount` still reads
+as `0.0`, which local validation rejects *loudly* (bills require a positive amount) instead of
+silently — and that loud failure aborts the whole refresh tick for one malformed bill. Recorded
+as a follow-up rather than folded into this slice.
+
+Also flagged, not fixed: `update_bill_reserve_settings` passes its payload straight to the
+crew-write CLI and its parameter contract is **not documented** (only `TopUpReserve` is
+catalogued), so I did not invent a fail-closed guard keyed on a guessed field name. The endpoint
+has no UI caller today, so the risk is latent — but a guard must exist before any UI derives a
+reserve value from local state.
+
+Verified: 4 new tests (2 targeting the fix, 2 regression guards proving an explicit zero still
+clears and a new bill still starts at zero) plus the existing provider tests; reverting the fix
+turns the 2 target tests red. Full suite 902 passed, 56 skipped, same pre-existing
+playwright-unavailable failure; Ruff and `git diff --check` clean.
