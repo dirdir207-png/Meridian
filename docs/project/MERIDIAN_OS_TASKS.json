@@ -15,7 +15,12 @@
       "acceptance_criteria": [
         "Current governing documents and implementation are reconciled",
         "Exactly one safe first slice is selected"
-      ]
+      ],
+      "evidence": {
+        "review": "docs/project/MERIDIAN_SECOND_ROADMAP_REVIEW_2026-09-11.md",
+        "baseline_commit": "a20702716046f2beadfd1d6c1f3801585a9beeeb",
+        "scope": "Informed second-roadmap review and targeted synthetic verification; full audit contract reconciliation remains pending. V1.1 is proposed, not implemented or deployed."
+      }
     },
     {
       "id": "OS-002",

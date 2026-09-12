@@ -2,6 +2,14 @@
 
 Last consolidated: 2026-09-10 (Observatory dial continuation)
 
+## Second roadmap review — 2026-09-11
+
+See [MERIDIAN_SECOND_ROADMAP_REVIEW_2026-09-11.md](MERIDIAN_SECOND_ROADMAP_REVIEW_2026-09-11.md). This informed, single-agent review compares the first vision roadmap with governing documents and targeted source at `a20702716046f2beadfd1d6c1f3801585a9beeeb`. It proposes capability-based delivery, accounts for all 22 concepts and findings A–G, and selects V1.1 (ordinary sync → persisted observation → explained Today amount) as the next proposed bounded slice. No roadmap proposal is recorded as an accepted owner decision.
+
+Implemented: documentation only. Tested: 45 focused policy/proactive/scenario/dial checks passed (exact command in report); isolated synthetic probes characterize observation identity/freshness/empty captures and recurrence drift. Verified after the computer interruption: report is intact; pytest and Playwright packages are installed, and the Chromium executable exists. The older Playwright-install blocker and “entire Observatory unbuilt” claim must not guide current planning. No fresh browser journey, full-suite gate, live provider acceptance, deployment or live-data change occurred. No independent review is claimed.
+
+OS-001 links this partial audit evidence; its existing status is retained pending reconciliation of the full task contract. Next: review the second roadmap and prepare the bounded V1.1 implementation packet. Preserve the first roadmap and historical completion records; do not treat ledger closure as whole-product acceptance.
+
 ## Canonical sources
 
 > This copy of the project is the **separate OpenRouter build** living on
