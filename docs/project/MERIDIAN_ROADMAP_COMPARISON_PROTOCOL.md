@@ -83,6 +83,51 @@ Then produce your own roadmap in the same required format. Where you disagree, s
 is more conservative and why. Do not restate the first roadmap as your own.
 ```
 
+### 1c. The shared-ancestor problem (read this before trusting the comparison)
+
+Both roadmaps are likely to descend from the **same ancestor**: the consolidated handoff's
+"prioritized work order" (action truth -> write integrity -> sync convergence -> financial event
+model -> recovery/release -> Observatory -> owner acceptance). The first roadmap's phase sequence
+follows that spine. A second roadmap that also reads the handoff will very likely reproduce a
+similar spine — and a comparison of two documents sharing an ancestor **confirms the ancestor
+rather than testing it**. The governing documents themselves were authored by the same class of
+intelligence that will now review them, so "blind to the first roadmap" is *not* the same as
+"blind to the project's framing."
+
+Consequence: agreement between the two roadmaps is weak evidence. Only disagreement is
+informative, and only if the disagreement is at the level of the spine rather than the pieces.
+
+### 1d. Third prompt — the spine skeptic (paste as-is)
+
+Run this one in addition to 1a and 1b. It is the only variant that can change the *shape* of the
+answer rather than its detail:
+
+```
+Read the governing documents listed in the protocol's §1a prompt, but NOT
+docs/project/MERIDIAN_VISION_ROADMAP.md.
+
+Your task is to attack the ancestry of the plan, not the plan itself. Specifically, treat the
+consolidated handoff's "prioritized work order" as an untested hypothesis and argue against it:
+
+ 1. Should any product work at all precede remediation? Argue the case that the Observatory UI
+    or the simulation layer should come before the remaining findings, including the D-section,
+    and say what concretely breaks if it does.
+ 2. Is the D-section really the keystone? What if the actual blocker is something else the handoff
+    never examined — the app.py monolith, the unwired provider adapters, the uneven evidence/
+    document/context wiring, or something neither of us has looked at?
+ 3. Is a phase model the right structure at all for this project, or does the substrate's shape
+    (legacy monolith + layered Meridian + unwired breadth) argue for a different organising
+    principle, e.g. capability-completion rather than phase completion?
+ 4. Which of the handoff's 48 findings would you *drop* or downgrade, and why?
+ 5. If you could do exactly one thing first, what is it, and what does the first roadmap get wrong
+    about that choice?
+
+Then produce your own roadmap in the required format. State explicitly which of your disagreements
+are factual (evidence could settle them), which are sequencing (a dependency test could settle
+them), and which are value judgements only the owner can settle.
+```
+
+
 ---
 
 ## 2. Declaration header — required from every roadmap
@@ -203,6 +248,32 @@ When the two roadmaps disagree, resolve in this order — the first rule that ap
 
 Record every resolved conflict as: `conflict → options → rule applied → resolution → why`.
 Unresolved conflicts are **not** silently merged; they are listed as open decisions.
+
+### 7a. Classify every disagreement before resolving it
+
+The precedence rules in §7 assume all disagreements are the same kind. They are not. Classify first:
+
+| Kind | Test | Settled by |
+|---|---|---|
+**Factual** | Can repository evidence settle it? (e.g. "is `assets.py` wired?") | Evidence. Read the source. Both parties must accept the finding. |
+**Sequencing** | Does reversing the order concretely break something? | The dependency test: name what fails, or the dependency is withdrawn. |
+**Value** | Would two well-informed people still differ? (scope, risk appetite, what "done" means) | The owner only. Record in `MERIDIAN_DECISIONS.md`. |
+
+Miscategorising is the common failure: a *value* disagreement dressed as *factual* (pretending
+evidence settles a scope choice), or a *factual* one treated as opinion (leaving a verifiable claim
+unresolved). If a disagreement cannot be settled by the first two tests within its own terms, it is
+a value disagreement and belongs to the owner.
+
+### 7b. Obligations on the adversarial reviewer
+
+An adversarial review that agrees with everything has not been performed. Require it to:
+
+1. Name **at least three things it would delete** from the reviewed roadmap, not merely add.
+2. State **the single first move** it would make if only one were possible, and why the reviewed
+   roadmap's first move is wrong or right.
+3. Declare, for each disagreement, whether it is factual, sequencing, or value (§7a).
+4. Cite **source** (not documentation) for any factual claim, per the evidence tier in §2.
+
 
 ## 8. Merge procedure for the ultimate copy
 
