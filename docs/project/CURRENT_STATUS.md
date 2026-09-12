@@ -2,6 +2,10 @@
 
 Last consolidated: 2026-09-10 (Observatory dial continuation)
 
+## Observatory refinement checkpoint — 2026-09-12
+
+Owner requested a focused visual correction, then emphasized prominent safe-to-spend and the original dial-left/callouts-right composition. Work is saved but not yet declared complete: [checkpoint and evidence](OBSERVATORY_REFINEMENT_2026-09-12.md). Implemented: dial artwork/layout and keyboard-focus correction, Today safe-to-spend presentation, isolated synthetic full-template preview. Latest composition browser checks: 7 passed; earlier focused suite: 36 passed. Final full Today matrix/review remains pending. No production deployment or live financial/data/credential change. Continue from this checkpoint; preserve unrelated files.
+
 ## Second roadmap review — 2026-09-11
 
 See [MERIDIAN_SECOND_ROADMAP_REVIEW_2026-09-11.md](MERIDIAN_SECOND_ROADMAP_REVIEW_2026-09-11.md). This informed, single-agent review compares the first vision roadmap with governing documents and targeted source at `a20702716046f2beadfd1d6c1f3801585a9beeeb`. It proposes capability-based delivery, accounts for all 22 concepts and findings A–G, and selects V1.1 (ordinary sync → persisted observation → explained Today amount) as the next proposed bounded slice. No roadmap proposal is recorded as an accepted owner decision.

@@ -330,9 +330,11 @@ function render(root, payload) {
   }
 
   const throughDate = humanDate(sts.through_date);
-  root.querySelector("[data-sts-label]").textContent = throughDate
-    ? `Safe to spend until ${throughDate}`
-    : "Safe to spend until next payday";
+  root.querySelector("[data-sts-label]").textContent = "Safe to spend";
+  const horizon = root.querySelector("[data-sts-horizon]");
+  if (horizon) horizon.textContent = throughDate
+    ? `Available until ${throughDate}`
+    : "Horizon unavailable";
 
   const change = root.querySelector("[data-sts-change]");
   if (sts.change_since_yesterday !== null && sts.change_since_yesterday !== undefined) {

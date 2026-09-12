@@ -6,32 +6,38 @@
           <p class="m-workspace-kicker" data-today-date>Today</p>
           <button class="m-primary-button" type="button" data-open-advisor>Ask Virgil</button>
         </div>
-        <h2 class="m-editorial-headline obs-today-title">Today</h2>
-        <p class="obs-today-orbit" data-editorial-headline>You are covered through payday.</p>
-        <p class="m-editorial-subline">Meridian reconciles what is available, what is already spoken for, and what changed.</p>
       </header>
 
+      <div class="m-observatory-overview">
       <dl class="m-observatory-safe m-sts" data-today-safe>
-        <dt class="m-sts-label" data-sts-label>Safe to spend until next payday</dt>
+        <dt class="m-sts-label" data-sts-label>Safe to spend</dt>
         <dd class="m-sts-figure-block">
           <span class="m-sts-figure" data-sts-figure aria-live="polite">—</span>
           <span class="m-sts-change" data-sts-change hidden></span>
           <span class="m-sts-note" data-sts-note hidden></span>
         </dd>
-          <span class="m-observatory-safe-observed" data-sts-observed></span>
+        <dd class="m-observatory-safe-horizon" data-sts-horizon>Horizon unavailable</dd>
+        <dd class="m-observatory-safe-observed" data-sts-observed></dd>
 
         <dd class="m-sts-chip-row">
           <span class="m-chip" data-freshness data-state="unavailable"></span>
         </dd>
       </dl>
+      <aside class="m-observatory-note">
+        <div class="m-observatory-moon" aria-hidden="true"></div>
+        <p class="obs-today-orbit" data-editorial-headline>Your forecast is unavailable.</p>
+      </aside>
+      </div>
 
 
       <section class="m-observatory-dial-wrap" aria-labelledby="observatory-dial-heading" data-observatory-dial-wrap>
-        <h2 class="m-section-label" id="observatory-dial-heading">Observatory</h2>
-        <p class="m-observatory-dial-caption">Explore upcoming money moments. This is read-only; no action here changes any data.</p>
+        <h2 class="m-visually-hidden" id="observatory-dial-heading">Explore upcoming money moments</h2>
         <div data-observatory-dial data-model-url="/api/meridian/dial"></div>
       </section>
 
+      <div class="m-observatory-advice">
+        <button class="obs-control" type="button" data-open-advisor>Ask Virgil about this plan</button>
+      </div>
       <a class="obs-button obs-explore-plan" href="/meridian?workspace=plan">
         Explore my plan
         <span aria-hidden="true">→</span>

@@ -164,8 +164,8 @@ def test_dial_instrument_matches_concept_layers():
     js = _read("static/js/meridian/dial.js")
     css = _read("static/css/meridian/dial.css")
     assert "renderInstrumentOverlay" in js
-    assert "obs-dial-face" in js
-    assert "obs-dial-disk" in js
+    assert "dial-plate.png" in css
+    assert (ROOT / "static/img/meridian/observatory/dial-plate.png").is_file()
     assert "obs-dial-center" in js
     assert "obs-dial-day-labels" in js
     assert ".obs-dial-face" in css

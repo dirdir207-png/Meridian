@@ -26,7 +26,7 @@
      }
 */
 
-const VIEWBOX = { w: 600, h: 600, cx: 300, cy: 300, r: 245 };
+const VIEWBOX = { w: 600, h: 600, cx: 300, cy: 300, r: 282 };
 const ARC_START = -120;
 const ARC_END = 120;
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -219,7 +219,7 @@ function formatLongDate(key) {
 function formatShortDay(key) {
   const parsed = parseDateKey(key);
   if (!parsed) return "";
-  return new Intl.DateTimeFormat(undefined, { month: "long", day: "numeric" }).format(parsed);
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(parsed);
 }
 
 function formatCenterDate(key) {
@@ -291,15 +291,12 @@ function renderInstrumentOverlay(state) {
     amount.textContent = "—";
     status.textContent = "Choose a day to explore";
   }
-  center.append(kicker, title, amount, status);
+  const badge = document.createElement("span");
+  badge.className = "obs-dial-center-badge";
+  if (selected) badge.appendChild(kindIcon(selected.kind));
+  else badge.hidden = true;
+  center.append(kicker, badge, title, amount, status);
   overlay.appendChild(center);
-
-  // Engraved observatory/lunar art in the lower-left of the instrument, matching
-  // the concept's decorative scene without carrying financial meaning.
-  const observatory = document.createElement("div");
-  observatory.className = "obs-dial-observatory obs-art";
-  overlay.appendChild(observatory);
-
 
   // Labels for today, selected day, events, and horizon end, positioned around
   // the instrument so they read as the engraved calendar in the concept art.
@@ -327,7 +324,11 @@ function renderInstrumentOverlay(state) {
     const weekday = parsed
       ? new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(parsed).replace(".", "")
       : "";
-    span.textContent = `${dayNumber} ${weekday}`;
+    const number = document.createElement("strong");
+    number.textContent = dayNumber;
+    const dayName = document.createElement("small");
+    dayName.textContent = weekday;
+    span.append(number, dayName);
     span.style.left = `${((point.x / VIEWBOX.w) * 100).toFixed(2)}%`;
     span.style.top = `${((point.y / VIEWBOX.h) * 100).toFixed(2)}%`;
     labels.appendChild(span);
@@ -337,7 +338,7 @@ function renderInstrumentOverlay(state) {
   // Quiet directional copy from the concept.
   const topCaption = document.createElement("p");
   topCaption.className = "obs-dial-caption obs-dial-caption--top";
-  topCaption.textContent = "Days to payday →";
+  topCaption.textContent = "Your upcoming days";
   overlay.appendChild(topCaption);
   const bottomCaption = document.createElement("p");
   bottomCaption.className = "obs-dial-caption obs-dial-caption--bottom";
@@ -359,9 +360,14 @@ function fundingLabel(status) {
   return labels[status] || labels.unknown;
 }
 
-function kindCode(kind) {
-  const codes = { bill: "⚡", income: "✦", goal: "◎", transfer: "⇄" };
-  return codes[kind] || "•";
+function kindIcon(kind) {
+  const icons = { bill: "lightning-charge", income: "star", goal: "bullseye", transfer: "arrow-left-right" };
+  const icon = document.createElement("img");
+  icon.src = `/static/img/meridian/observatory/icons/${icons[kind] || "bullseye"}.svg`;
+  icon.alt = "";
+  icon.width = 24;
+  icon.height = 24;
+  return icon;
 }
 
 function arcPath(r) {
@@ -384,99 +390,6 @@ function renderDialSVG(state, container) {
   // decorative/diagram layer is hidden from assistive technology.
   svg.setAttribute("aria-hidden", "true");
   svg.setAttribute("focusable", "false");
-
-  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-  const radial = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
-  radial.setAttribute("id", "obsDialGlow");
-  const stop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  stop1.setAttribute("offset", "0%");
-  stop1.setAttribute("stop-color", "#c1a9e2");
-  stop1.setAttribute("stop-opacity", "0.18");
-  const stop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  stop2.setAttribute("offset", "100%");
-  stop2.setAttribute("stop-color", "#c1a9e2");
-  stop2.setAttribute("stop-opacity", "0");
-  radial.append(stop1, stop2);
-  defs.appendChild(radial);
-
-  const paper = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
-  paper.setAttribute("id", "obsDialPaper");
-  const paperStop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  paperStop1.setAttribute("offset", "0%");
-  paperStop1.setAttribute("stop-color", "#ead8b5");
-  const paperStop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  paperStop2.setAttribute("offset", "78%");
-  paperStop2.setAttribute("stop-color", "#dfc69c");
-  const paperStop3 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  paperStop3.setAttribute("offset", "100%");
-  paperStop3.setAttribute("stop-color", "#c9a97a");
-  paper.append(paperStop1, paperStop2, paperStop3);
-  defs.appendChild(paper);
-
-  svg.appendChild(defs);
-
-  const glow = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-  glow.setAttribute("cx", String(VIEWBOX.cx));
-  glow.setAttribute("cy", String(VIEWBOX.cy));
-  glow.setAttribute("r", String(VIEWBOX.r + 14));
-  glow.setAttribute("fill", "url(#obsDialGlow)");
-  svg.appendChild(glow);
-
-  // Parchment instrument face: a full circle behind the active horizon arc so
-  // the dial reads as the engraved observatory instrument in the concept art.
-  const face = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-  face.setAttribute("cx", String(VIEWBOX.cx));
-  face.setAttribute("cy", String(VIEWBOX.cy));
-  face.setAttribute("r", String(VIEWBOX.r - 4));
-  face.setAttribute("class", "obs-dial-face");
-  svg.appendChild(face);
-
-  const rim = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-  rim.setAttribute("cx", String(VIEWBOX.cx));
-  rim.setAttribute("cy", String(VIEWBOX.cy));
-  rim.setAttribute("r", String(VIEWBOX.r - 28));
-  rim.setAttribute("class", "obs-dial-rim");
-  svg.appendChild(rim);
-
-  const disk = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-  disk.setAttribute("cx", String(VIEWBOX.cx));
-  disk.setAttribute("cy", String(VIEWBOX.cy));
-  disk.setAttribute("r", String(VIEWBOX.r - 55));
-  disk.setAttribute("class", "obs-dial-disk");
-  svg.appendChild(disk);
-
-  // Starfield inside the dark sky, fixed deterministic positions (decorative).
-  const stars = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  stars.setAttribute("class", "obs-dial-stars");
-  const starPositions = [
-    [300, 190], [348, 175], [260, 180], [390, 230], [230, 240],
-    [370, 290], [255, 300], [420, 320], [200, 330], [340, 360],
-    [270, 370], [300, 250],
-  ];
-  for (const [sx, sy] of starPositions) {
-    const star = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    star.setAttribute("cx", String(sx));
-    star.setAttribute("cy", String(sy));
-    star.setAttribute("r", "1.2");
-    stars.appendChild(star);
-  }
-  svg.appendChild(stars);
-
-
-  // Brass rivets around the parchment ring, purely decorative.
-  const rivets = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  rivets.setAttribute("class", "obs-dial-rivets");
-  for (let i = 0; i < 8; i += 1) {
-    const angle = -180 + i * 45;
-    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 14, angle);
-    const rivet = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    rivet.setAttribute("cx", String(point.x.toFixed(2)));
-    rivet.setAttribute("cy", String(point.y.toFixed(2)));
-    rivet.setAttribute("r", "4");
-    rivets.appendChild(rivet);
-  }
-  svg.appendChild(rivets);
-
 
   const arc = document.createElementNS("http://www.w3.org/2000/svg", "path");
   arc.setAttribute("d", arcPath(VIEWBOX.r));
@@ -512,7 +425,7 @@ function renderDialSVG(state, container) {
   const hit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
   hit.setAttribute("cx", String(VIEWBOX.cx));
   hit.setAttribute("cy", String(VIEWBOX.cy));
-  hit.setAttribute("r", String(VIEWBOX.r + 24));
+  hit.setAttribute("r", String(VIEWBOX.r + 15));
   hit.setAttribute("class", "obs-dial-track-hit");
   svg.appendChild(hit);
 
@@ -528,9 +441,9 @@ function renderDialSVG(state, container) {
     if (eventDate < today || eventDate > horizonEnd) continue;
     const day = dayIndexForDate(eventDate, today);
     const angle = dayToAngle(day, totalDays);
-    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 34, angle);
-    const leaderStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 48, angle);
-    const leaderEnd = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r + 14, angle);
+    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 84, angle);
+    const leaderStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 90, angle);
+    const leaderEnd = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 73, angle);
     const leader = document.createElementNS("http://www.w3.org/2000/svg", "line");
     leader.setAttribute("class", "obs-dial-leader");
     leader.setAttribute("x1", String(leaderStart.x.toFixed(2)));
@@ -579,13 +492,14 @@ function renderDialSVG(state, container) {
   // Pointer for selected day.
   const selectedIndex = dayIndexForDate(state.selectedDate, today);
   const pointerAngle = dayToAngle(selectedIndex, totalDays);
-  const pointerPoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 4, pointerAngle);
+  const pointerPoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 84, pointerAngle);
   const pointerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
   pointerGroup.setAttribute("class", "obs-dial-pointer");
   const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
   line.setAttribute("class", "obs-dial-pointer-line");
-  line.setAttribute("x1", String(VIEWBOX.cx));
-  line.setAttribute("y1", String(VIEWBOX.cy));
+  const pointerStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 132, pointerAngle);
+  line.setAttribute("x1", String(pointerStart.x.toFixed(2)));
+  line.setAttribute("y1", String(pointerStart.y.toFixed(2)));
   line.setAttribute("x2", String(pointerPoint.x.toFixed(2)));
   line.setAttribute("y2", String(pointerPoint.y.toFixed(2)));
   const tip = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -593,20 +507,7 @@ function renderDialSVG(state, container) {
   tip.setAttribute("cx", String(pointerPoint.x.toFixed(2)));
   tip.setAttribute("cy", String(pointerPoint.y.toFixed(2)));
   tip.setAttribute("r", "6");
-  const centerStarPoints = [];
-  for (let i = 0; i < 10; i += 1) {
-    const starAngle = ((-90 + i * 36) * Math.PI) / 180;
-    const starRadius = i % 2 === 0 ? 13 : 5.5;
-    centerStarPoints.push(
-      `${(VIEWBOX.cx + starRadius * Math.cos(starAngle)).toFixed(2)},${
-        (VIEWBOX.cy + starRadius * Math.sin(starAngle)).toFixed(2)
-      }`
-    );
-  }
-  const centerStar = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-  centerStar.setAttribute("class", "obs-dial-pointer-star");
-  centerStar.setAttribute("points", centerStarPoints.join(" "));
-  pointerGroup.append(centerStar, line, tip);
+  pointerGroup.append(line, tip);
   svg.appendChild(pointerGroup);
 
   return svg;
@@ -686,7 +587,7 @@ function renderEventList(state, container) {
       if (event.id === state.selectedEventId) button.setAttribute("data-selected", "true");
       const kind = document.createElement("span");
       kind.className = "obs-event-kind";
-      kind.textContent = kindCode(event.kind);
+      kind.appendChild(kindIcon(event.kind));
       const body = document.createElement("span");
       body.className = "obs-event-body";
       const date = document.createElement("span");
@@ -697,7 +598,8 @@ function renderEventList(state, container) {
       title.textContent = event.title;
       const meta = document.createElement("span");
       meta.className = "obs-event-meta";
-      meta.textContent = `${fundingLabel(event.fundingStatus)} · ${event.source}`;
+      meta.textContent = fundingLabel(event.fundingStatus);
+      button.setAttribute("aria-description", `Source: ${event.source}`);
       body.append(date, title, meta);
       const amount = document.createElement("strong");
       amount.className = "obs-event-amount";
@@ -718,9 +620,6 @@ function renderEventList(state, container) {
     wrap.appendChild(list);
   }
 
-  // Selected evidence ticket.
-  const selectedEvent = upcoming.find((event) => event.id === state.selectedEventId) || null;
-  wrap.appendChild(renderEvidenceTicket(state, selectedEvent || null));
   return wrap;
 }
 
@@ -923,10 +822,11 @@ function paintSVGSelection(svg, state) {
   const pointerTip = svg.querySelector(".obs-dial-pointer-tip");
   const selectedIndex = dayIndexForDate(state.selectedDate, today);
   const pointerAngle = dayToAngle(selectedIndex, totalDays);
-  const pointerPoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 4, pointerAngle);
+  const pointerPoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 84, pointerAngle);
   if (pointerLine) {
-    pointerLine.setAttribute("x1", String(VIEWBOX.cx));
-    pointerLine.setAttribute("y1", String(VIEWBOX.cy));
+    const pointerStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 132, pointerAngle);
+    pointerLine.setAttribute("x1", String(pointerStart.x.toFixed(2)));
+    pointerLine.setAttribute("y1", String(pointerStart.y.toFixed(2)));
     pointerLine.setAttribute("x2", String(pointerPoint.x.toFixed(2)));
     pointerLine.setAttribute("y2", String(pointerPoint.y.toFixed(2)));
   }
@@ -957,6 +857,9 @@ function update(state, container, rangeValue) {
   const newEvents = renderEventList(state, container);
   if (oldEvents) oldEvents.replaceWith(newEvents);
 
+  const oldTicket = panel.querySelector(".obs-evidence-ticket");
+  if (oldTicket) oldTicket.replaceWith(renderEvidenceTicket(state, selectedEventForState(state)));
+
   const range = panel.querySelector(".obs-dial-range");
   if (range) {
     const day = dayIndexForDate(state.selectedDate, state.model.today);
@@ -964,9 +867,8 @@ function update(state, container, rangeValue) {
     range.setAttribute("aria-valuetext", describeSelectedDay(state));
   }
 
-  const oldInstrumentEvents = instrument.querySelector(".obs-dial-controls");
-  const newControls = renderControls(state, () => update(state, container, rangeValue));
-  if (oldInstrumentEvents) oldInstrumentEvents.replaceWith(newControls);
+  // Keep the actual control nodes alive: replacing them drops keyboard focus
+  // and interrupts native range dragging on every date change.
 }
 
 function bindPointerDrag(svg, state, container, totalDays) {
@@ -991,7 +893,7 @@ function bindPointerDrag(svg, state, container, totalDays) {
   function inTrack(data) {
     // The visible instrument occupies a ring around the arc; avoid starting a
     // drag from the center or far outside the dial.
-    return data.distance >= VIEWBOX.r - 46 && data.distance <= VIEWBOX.r + 30;
+    return data.distance >= VIEWBOX.r - 46 && data.distance <= VIEWBOX.r + 15;
   }
 
   let rafId = null;
@@ -1094,7 +996,7 @@ export function renderDial(container, inputModel) {
   panel.className = "obs-dial-panel";
 
   const instrument = document.createElement("section");
-  instrument.className = "obs-panel obs-dial-instrument";
+  instrument.className = "obs-dial-instrument";
   instrument.setAttribute("aria-label", "Upcoming date dial");
 
   const svgWrap = document.createElement("div");
@@ -1106,16 +1008,11 @@ export function renderDial(container, inputModel) {
   const overlay = renderInstrumentOverlay(state);
   svgWrap.appendChild(overlay);
   const controls = renderControls(state, () => update(state, container));
-  svgWrap.appendChild(controls);
-  instrument.append(svgWrap, renderLegend());
+  instrument.append(svgWrap, controls, renderLegend());
   bindPointerDrag(svg, state, container, model.totalDays);
 
-  const eventsColumn = document.createElement("aside");
-  eventsColumn.className = "obs-dial-events";
-  const eventsContent = renderEventList(state, container);
-  eventsColumn.appendChild(eventsContent);
-
-  panel.append(instrument, eventsColumn);
+  const eventsColumn = renderEventList(state, container);
+  panel.append(instrument, eventsColumn, renderEvidenceTicket(state, selectedEventForState(state)));
   container.appendChild(panel);
 
   return function stop() {

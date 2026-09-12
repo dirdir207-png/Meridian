@@ -19,3 +19,7 @@ The newest explicit governing visual design takes precedence over historical scr
 ## D-005 — Release control
 
 Production deployment, live acceptance, credential changes, policy activation, and self-modifying installation require explicit owner approval.
+
+## D-006 — Observatory refinement scope (2026-09-12)
+
+Owner requested focused correction toward the original concept, explicitly retaining prominent safe-to-spend on Today and the original large-dial/side-callout composition. Preserve real API data bindings and use synthetic data for visual acceptance. This is the active visual slice; it does not authorize financial execution or production deployment. See `OBSERVATORY_REFINEMENT_2026-09-12.md`.
