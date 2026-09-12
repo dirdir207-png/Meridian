@@ -82,6 +82,15 @@ def test_pointer_and_keyboard_range_select_the_same_date(dial_page):
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
 
+def test_evidence_ticket_keeps_amount_reserve_and_source_in_compact_card(dial_page):
+    ticket = dial_page.locator(".obs-evidence-ticket")
+    assert ticket.bounding_box()["height"] <= 260
+    assert ticket.locator("time").get_attribute("datetime") == "2026-09-11"
+    assert "Synthetic Crew" in ticket.inner_text()
+    assert ticket.inner_text().count("$84.00") == 2
+    assert "No evidence is attached" in ticket.inner_text()
+
+
 @pytest.mark.parametrize("width,height", [(390, 844), (430, 932), (1024, 768), (1440, 900)])
 @pytest.mark.parametrize("theme", ["light", "dark"])
 def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height, theme):

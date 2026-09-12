@@ -10,4 +10,6 @@ Resolved: placeholder dial layers; center displaced by controls; keyboard focus 
 
 Still to verify: final all-viewport/theme matrix, new moon asset in composition, light-theme foregrounds, callout amount fit, exact visual comparison and current broader focused tests. Existing passing intermediate captures are not final acceptance.
 
+Latest checkpoint: owner requested stopping to preserve usage. Moon/theme/callout fixes were captured in `artifacts/dial-refinement-2026-09-12/today-final/` (16 images, zero overflow/page errors). A subsequent compact-card/spacing change passed the focused suite (**68 tests**) but still needs fresh visual comparison. Keyboard event/date/range focus and inline advisor open/close are covered. No full live application acceptance or production deployment is claimed. Stop here; resume with that bounded capture/review only.
+
 final result: blocked

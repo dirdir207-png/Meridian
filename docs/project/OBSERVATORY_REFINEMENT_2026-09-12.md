@@ -1,6 +1,17 @@
 # Observatory refinement checkpoint — September 12, 2026
 
-Status: work in progress, saved at the owner's request. Source baseline before this pass: `474c019`. No production deployment, financial mutation, credential change or live database access.
+Status: stopped at the owner's request to preserve the remaining usage budget. Work is saved and tested, but final visual acceptance is pending. Source baseline before this pass: `474c019`; earlier recovery checkpoints: `1a27843`, `b3e27b5`. No production deployment, financial mutation, credential change or live database access.
+
+## Latest stopping point
+
+- Safe-to-spend, horizon and observation stamp are prominent on the actual Today template; mobile dial-left/callouts-right layout is implemented.
+- Moon artwork is installed. Light-theme colors preserve ivory dial lettering and parchment tickets. Inline Virgil opens/closes; the overlapping Today FAB is hidden.
+- Date buttons, native keyboard range and event buttons retain focus. The evidence card now shows each source/date/amount/reserve fact once and keeps unknown evidence/shortfall states explicit.
+- Latest verification: **68 passed in 13.37s**, exit 0, using `.venv311/bin/python -m pytest tests/browser/test_dial_fidelity.py tests/meridian/test_dial_js.py tests/test_capture_contract.py tests/test_meridian_workspace_invariant.py tests/meridian/services/test_today.py -q`.
+- Ruff passed for the preview script and changed test files; `git diff --check` passed.
+- Last full rendered matrix: `artifacts/dial-refinement-2026-09-12/today-final/`, 16 images across all four viewports/two themes, zero horizontal overflow and no page errors. This predates the final compact-card/spacing adjustment; do not claim it verifies that last visual change.
+- Preview: http://127.0.0.1:8093/. If stopped, run `.venv311/bin/python scripts/preview_observatory_dial.py` from ORSC. This is synthetic, not the daily banking runtime. Opening the raw template with `file://` is not a valid preview.
+- **Resume narrowly:** recapture the compact card/full Today matrix, compare with the governing concept, finish QA and update evidence. Do not restart the roadmap audit or expand into other workspaces. Deployment still needs its own owner approval.
 
 ## Owner direction
 

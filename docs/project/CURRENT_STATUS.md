@@ -4,6 +4,8 @@ Last consolidated: 2026-09-10 (Observatory dial continuation)
 
 ## Observatory refinement checkpoint — 2026-09-12
 
+**Paused at owner request (usage budget).** Code/assets are saved; latest focused verification is **68 passed**, Ruff clean and diff whitespace clean. Safe-to-spend and original side-callout composition are restored, with keyboard focus fixes and a compact evidence card. The last full matrix had zero overflow/page errors but predates the compact-card adjustment; final screenshot review remains pending. Resume from the latest section in [OBSERVATORY_REFINEMENT_2026-09-12.md](OBSERVATORY_REFINEMENT_2026-09-12.md). No production deployment or live-data change.
+
 Owner requested a focused visual correction, then emphasized prominent safe-to-spend and the original dial-left/callouts-right composition. Work is saved but not yet declared complete: [checkpoint and evidence](OBSERVATORY_REFINEMENT_2026-09-12.md). Implemented: dial artwork/layout and keyboard-focus correction, Today safe-to-spend presentation, isolated synthetic full-template preview. Latest composition browser checks: 7 passed; earlier focused suite: 36 passed. Final full Today matrix/review remains pending. No production deployment or live financial/data/credential change. Continue from this checkpoint; preserve unrelated files.
 
 ## Second roadmap review — 2026-09-11

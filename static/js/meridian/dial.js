@@ -655,21 +655,23 @@ function renderEvidenceTicket(state, event) {
   const observed = event.observedAt || state.model.observedAt || "Observation time unavailable";
   sourceStamp.textContent = `${event.source} · ${formatObservedAt(observed)}`;
   headerText.append(title, sourceStamp);
-  const amount = document.createElement("strong");
-  amount.className = "obs-amount obs-amount--hero";
+  const dateStamp = document.createElement("time");
+  dateStamp.className = "obs-ticket-date";
+  dateStamp.dateTime = event.date;
+  dateStamp.title = formatLongDate(event.date);
+  dateStamp.textContent = `${formatShortDay(event.date)}\n${event.date.slice(0, 4)}`;
   const displayAmount = minorToDisplay(event.amount);
-  amount.textContent = displayAmount || "—";
-  header.append(headerText, amount);
+  header.append(headerText, dateStamp);
 
   const rows = document.createElement("dl");
   rows.className = "obs-ticket-rows";
   const rowData = [
-    ["Due", formatLongDate(event.date)],
-    ["Funding", fundingLabel(event.fundingStatus)],
-    ["Source", event.source],
+    ["Amount", displayAmount || "—"],
   ];
   if (event.reserved && event.reserved.minor != null) {
     rowData.push(["Reserved", minorToDisplay(event.reserved)]);
+  } else {
+    rowData.push(["Funding", fundingLabel(event.fundingStatus)]);
   }
   for (const [label, value] of rowData) {
     const group = document.createElement("div");
@@ -725,7 +727,7 @@ function renderEvidenceTicket(state, event) {
     const noEvidence = document.createElement("p");
     noEvidence.className = "obs-ticket-detail";
     noEvidence.textContent = "No evidence is attached to this event.";
-    body.push(noEvidence);
+    actions.appendChild(noEvidence);
   }
   if (event.detailHref) {
     const detail = document.createElement("a");

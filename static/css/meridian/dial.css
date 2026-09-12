@@ -886,3 +886,18 @@ html[data-theme="light"] .obs-shell .m-command-top .m-workspace-kicker { color: 
 .m-observatory-moon { border-radius: 50%; background-size: 150%; }
 .obs-shell .m-observatory-note .obs-today-orbit { margin-top: 0; }
 body.obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab.m-advisor-trigger { display: none !important; }
+
+/* Compact evidence receipt: each fact appears once, at a readable size. */
+.obs-evidence-ticket { gap: 12px; }
+.obs-ticket-date { flex: 0 0 54px; padding: 7px 4px; border: 1px solid #a99571; border-radius: 50%; color: #665639; white-space: pre-line; text-align: center; font: 11px/1.25 var(--obs-font-sans); text-transform: uppercase; }
+.obs-ticket-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.obs-ticket-actions { align-items: center; justify-content: space-between; }
+.obs-ticket-actions .obs-ticket-detail { flex: 1 1 150px; max-width: 60%; font-size: 12px; line-height: 1.35; }
+.obs-ticket-actions .obs-button { background: none; color: #644780; padding: 6px 0; border: 0; border-radius: 0; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 700px) {
+  .obs-shell .m-today-primary { gap: 12px; }
+  .obs-shell .m-today .m-command-top .m-workspace-kicker { margin: 0; }
+  .m-observatory-moon { width: 72px; margin: 0 auto; }
+  .obs-shell .m-observatory-note .obs-today-orbit { font-size: 15px; }
+  .obs-evidence-ticket { padding: 12px; gap: 10px; }
+}
