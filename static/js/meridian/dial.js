@@ -584,6 +584,7 @@ function renderEventList(state, container) {
       button.type = "button";
       button.className = "obs-event-item";
       button.dataset.kind = event.kind;
+      button.dataset.eventId = event.id;
       if (event.id === state.selectedEventId) button.setAttribute("data-selected", "true");
       const kind = document.createElement("span");
       kind.className = "obs-event-kind";
@@ -608,10 +609,16 @@ function renderEventList(state, container) {
       amount.textContent = displayAmount ? (event.kind === "income" ? `+${displayAmount}` : `−${displayAmount}`) : "—";
       button.append(kind, body, amount);
       button.addEventListener("click", () => {
+        const restoreFocus = document.activeElement === button;
         state.selectedEventId = event.id;
         state.selectedDate = event.date;
         state.mode = "explore";
         update(state, container);
+        if (restoreFocus) {
+          const replacement = [...container.querySelectorAll(".obs-event-item")]
+            .find((item) => item.dataset.eventId === event.id);
+          replacement?.focus({ preventScroll: true });
+        }
         announce(`Selected ${event.title} on ${formatShortDay(event.date)}.`);
       });
       item.appendChild(button);

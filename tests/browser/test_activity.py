@@ -208,7 +208,7 @@ def test_today_live_data_feels_like_a_financial_command_center():
         assert "+$92.00 since yesterday" in page.locator(
             "[data-sts-change]"
         ).inner_text()
-        assert "september 4" in page.locator("[data-sts-label]").inner_text().lower()
+        assert "september 4" in page.locator("[data-sts-horizon]").inner_text().lower()
 
         forecast = page.locator("[data-forecast]")
         assert forecast.is_visible()

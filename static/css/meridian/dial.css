@@ -866,10 +866,23 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
 .m-observatory-advice { display: flex; justify-content: flex-end; margin-top: -12px; }
 .obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab { display: none; }
 .obs-shell:has([data-workspace-section="today"]:not([hidden])) { background: #101a28; }
-html[data-theme="light"] .obs-shell:has([data-workspace-section="today"]:not([hidden])) { background: #f4ecdf; --obs-paper: #20263b; --obs-muted: #655d6c; --obs-mint: #25644f; }
+html[data-theme="light"] .obs-shell:has([data-workspace-section="today"]:not([hidden])) { background: #f4ecdf; }
 @media (max-width: 700px) {
   [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 116px; }
   .obs-dial-controls { width: calc(100% + 116px); }
   .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar .m-brand--compact { font-size: 0; }
   .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar-title { font: 30px/1.1 var(--obs-font-serif); }
 }
+
+/* Light page surfaces retain dark ink without changing the navy instrument's
+   ivory lettering or the evidence ticket's parchment material. */
+html[data-theme="light"] .obs-shell .m-observatory-safe .m-sts-figure[data-signal="positive"],
+html[data-theme="light"] .obs-shell .m-observatory-safe .m-sts-figure[data-signal="zero"],
+html[data-theme="light"] .obs-shell .m-observatory-note .obs-today-orbit { color: #20263b; }
+html[data-theme="light"] .m-observatory-safe .m-sts-label,
+html[data-theme="light"] .m-observatory-safe-observed { color: #655d6c; }
+html[data-theme="light"] .m-observatory-safe-horizon { color: #25644f; }
+html[data-theme="light"] .obs-shell .m-command-top .m-workspace-kicker { color: #674d86; }
+.m-observatory-moon { border-radius: 50%; background-size: 150%; }
+.obs-shell .m-observatory-note .obs-today-orbit { margin-top: 0; }
+body.obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab.m-advisor-trigger { display: none !important; }

@@ -59,6 +59,7 @@ def test_selection_retains_keyboard_focus_and_exact_event_without_writes(dial_pa
     internet.click()
     assert page.locator(".obs-dial-center-title").inner_text() == "Internet"
     assert page.locator(".obs-ticket-title").inner_text() == "Internet"
+    assert page.evaluate("document.activeElement.querySelector('.obs-event-title')?.textContent") == "Internet"
     next_day = page.get_by_role("button", name="Next day", exact=True)
     next_day.focus()
     page.keyboard.press("Enter")
@@ -82,7 +83,8 @@ def test_pointer_and_keyboard_range_select_the_same_date(dial_page):
 
 
 @pytest.mark.parametrize("width,height", [(390, 844), (430, 932), (1024, 768), (1440, 900)])
-def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height):
+@pytest.mark.parametrize("theme", ["light", "dark"])
+def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height, theme):
     """Exercise the actual shell's CSS/layout without importing the banking app."""
     import json
     import re
@@ -100,6 +102,7 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
     html = html.replace("</body>", f'<script>window.MeridianObservatoryDialModel={json.dumps(model)}</script>'
                         '<script type="module" src="/static/js/meridian/dial.js"></script>'
                         '<script type="module" src="/static/js/meridian/today.js"></script>'
+                        '<script src="/static/js/ui/advisor_fab.js"></script>'
                         '<script type="module" src="/static/js/meridian/shell.js"></script></body>')
     page.route("**/shell", lambda route: route.fulfill(body=html, content_type="text/html"))
     page.route("**/api/meridian/today", lambda route: route.fulfill(json={
@@ -108,8 +111,10 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
         "data_freshness": {"status": "fresh", "last_updated_at": "2026-09-08T13:42:00Z"},
         "inputs": {}, "upcoming_events": [],
     }))
+    page.route("**/api/advisor/status", lambda route: route.fulfill(json={"configured": False}))
     page.set_viewport_size({"width": width, "height": height})
     page.goto("http://dial.test/shell")
+    page.evaluate("theme => document.documentElement.dataset.theme = theme", theme)
     page.wait_for_selector(".obs-dial-svg")
     page.wait_for_function("document.querySelector('[data-sts-figure]').textContent.includes('248.50')")
     safe = page.locator("[data-sts-figure]")
@@ -117,6 +122,9 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
     assert safe.bounding_box()["y"] < page.locator(".obs-dial-svg").bounding_box()["y"]
     assert safe.evaluate("el => parseFloat(getComputedStyle(el).fontSize)") >= 48
     assert page.locator("[data-sts-horizon]").inner_text() == "Available until September 16"
+    assert page.locator(".obs-dial-center-amount").evaluate("el => getComputedStyle(el).color") == "rgb(234, 216, 181)"
+    assert not page.locator("#advisor-fab").is_visible()
+    assert page.get_by_role("button", name="Ask Virgil about this plan").is_visible()
     if width <= 430:
         dial_box = page.locator(".obs-dial-svg").bounding_box()
         rail_box = page.locator(".obs-dial-events").bounding_box()
@@ -126,3 +134,8 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
     page.get_by_role("button", name="Internet", exact=False).click()
     assert page.locator(".obs-ticket-title").inner_text() == "Internet"
     assert page.locator(".obs-dial-center-title").inner_text() == "Internet"
+    if width == 390 and theme == "dark":
+        page.get_by_role("button", name="Ask Virgil about this plan").click()
+        assert page.get_by_role("dialog", name="Virgil advisor").is_visible()
+        page.get_by_role("button", name="Close advisor", exact=True).click()
+        assert not page.get_by_role("dialog", name="Virgil advisor").is_visible()

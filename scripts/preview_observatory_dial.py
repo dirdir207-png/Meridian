@@ -3,11 +3,11 @@
 Run with .venv311/bin/python scripts/preview_observatory_dial.py.
 No app import, environment loading, database, authentication, or provider access.
 """
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import mimetypes
-from pathlib import Path
 import re
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 from jinja2 import Environment, FileSystemLoader
@@ -35,9 +35,16 @@ def preview_html():
     scripts = f"<script>document.documentElement.dataset.theme='dark';{model_script}</script>"
     for name in ("shell", "today", "dial"):
         scripts += f'<script type="module" src="/static/js/meridian/{name}.js"></script>'
+    scripts += '<script src="/static/js/meridian/theme.js"></script><script src="/static/js/ui/advisor_fab.js"></script>'
     banner = '<div class="design-preview-banner">Synthetic Today preview · no bank connection</div>'
     styles = '<style>.design-preview-banner{position:fixed;z-index:1000;bottom:0;left:0;right:0;padding:4px;background:#101a28;color:#eee4cf;text-align:center;font:10px system-ui}*{animation:none!important;transition:none!important}</style>'
-    return html.replace("</head>", styles + "</head>").replace("</body>", banner + scripts + "</body>")
+    html = html.replace("</head>", styles + "</head>").replace("</body>", banner + scripts + "</body>")
+
+    def version_asset(match):
+        asset = ROOT / match.group(2).lstrip("/")
+        return f'{match.group(1)}="{match.group(2)}?v={asset.stat().st_mtime_ns}"' if asset.is_file() else match.group(0)
+
+    return re.sub(r'(src|href)="(/static/[^"?]+)"', version_asset, html)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -47,6 +54,8 @@ class Handler(BaseHTTPRequestHandler):
             body, mime = preview_html().encode(), "text/html; charset=utf-8"
         elif path == "/api/meridian/today":
             body, mime = json.dumps(TODAY).encode(), "application/json"
+        elif path == "/api/advisor/status":
+            body, mime = b'{"configured":false}', "application/json"
         elif path.startswith("/static/"):
             candidate = (ROOT / path.lstrip("/")).resolve()
             if (ROOT / "static") not in candidate.parents or not candidate.is_file():

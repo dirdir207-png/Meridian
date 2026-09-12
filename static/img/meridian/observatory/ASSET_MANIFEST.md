@@ -1,9 +1,10 @@
 # Meridian Observatory asset manifest
 
-All files are code-owned SVG/WEBP decorative assets for the initial
-Observatory slice. They must not carry financial meaning. Before release,
-replace or refine against approved source art / image generation and inspect
-transparency at 2x.
+The initial SVG/WEBP decorations remain preserved. The September 12 refinement
+uses the generated raster dial plate and moon below. Decorative assets never
+carry financial meaning: dates, amounts, ticks, selection and pointer remain
+code-owned. The generated dial source is RGB, not alpha-transparent; the CSS
+circular clip excludes the exterior checkerboard.
 
 | File | Role | Intended size | Status |
 |---|---|---|---|
@@ -14,7 +15,11 @@ transparency at 2x.
 | `paper-texture.webp` | Restrained seamless parchment grain | 256x256 tile | generated placeholder |
 | `ink-texture.webp` | Restrained seamless indigo grain | 256x256 tile | generated placeholder |
 | `moon-engraving.webp` | Optional small moon illustration | TBD | not yet produced |
+| `dial-plate.png` | Parchment/brass ring, starfield, observatory landscape | 1254×1254 | Generated from governing concept; circular CSS clip required |
+| `moon-engraving.png` | Decorative moon and orbit lines beside spendable | 1254×1254 | Generated from governing concept; navy backdrop |
+| `icons/*.svg` | Standard event-kind icons | 24px | Bootstrap Icons 1.13.1, MIT; license included |
 
-Sources/generation prompts: placeholders authored in-repo for this slice;
-no external license required. Full Observatory asset set will be produced from
-approved direction images or licensed source art.
+Initial placeholders were authored in-repo. New raster provenance is recorded
+in `docs/project/OBSERVATORY_REFINEMENT_2026-09-12.md`. Bootstrap Icons source:
+https://github.com/twbs/icons/tree/v1.13.1. Remaining placeholder assets outside
+the dial are not represented as completed artwork.
