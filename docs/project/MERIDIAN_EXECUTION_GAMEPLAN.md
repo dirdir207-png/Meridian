@@ -2,6 +2,8 @@
 
 **Status:** proposed execution plan, not approval to install a preset, restart Harness, deploy, conduct live acceptance, change credentials or activate authority. Prepared September 13, 2026. This is the execution companion to `docs/project/MERIDIAN_ROADMAP.md`, not a replacement trajectory or entry point.
 
+**Readiness supplement (September 13):** [MERIDIAN_READINESS_AUDIT.md](MERIDIAN_READINESS_AUDIT.md) now records the wiring audit, tested prerequisite order, 953 passing isolated application tests (one CLI-dependent failure, seven skips), 236 passing Harness tests and successful synthetic restore rehearsal. Read it before executing this plan. R0 has since been implemented in the repository; E4/E5 below retain historical baseline meaning, not current defect status. Use the new concept coverage and implementation plan for depth instead of creating a competing roadmap. No preset activation or production release is implied.
+
 **Goal:** make the build process preserve authority and verified context, then deliver the existing Meridian vision through bounded, useful capabilities.
 
 **Baselines:** application `9d8107ff50e61c3edd9340edb4acb9aedcecd64b` (the assignment's `713d7b2` design plus its assignment commit); Harness `a834868c143f4a896840b8d08a7777df1b899f13`. The installed preset is external to both Git histories and must be inventoried separately before implementation.

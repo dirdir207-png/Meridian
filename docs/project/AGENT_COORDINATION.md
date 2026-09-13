@@ -23,11 +23,15 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Agent | Files claimed | Since | Status |
 |---|---|---|---|
-| Astra — gameplan assignment | `docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md`, `docs/project/README.md`, `docs/project/CURRENT_STATUS.md`, `artifacts/gameplan-2026-09-13/`; own coordination entry only | 2026-09-13 | Explicit new owner assignment; planning/evidence only, no application or installed-preset edits. Existing claims otherwise preserved. |
-| Astra | `static/js/meridian/dial.*`, `static/css/meridian/dial.css`, `tests/browser/test_dial_fidelity.py`, Today partial/CSS - layout refinement (right-side alignment) | 2026-09-12 | **actively editing** - uncommitted change to the fidelity test observed; do not touch these files |
+| Astra — readiness audit | `scripts/verify_readiness.py`, `tests/test_readiness_tools.py`, `docs/project/MERIDIAN_READINESS_AUDIT.md`, `docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md`, `docs/project/README.md`, `docs/project/CURRENT_STATUS.md`, `artifacts/readiness-2026-09-13/`; own coordination entry only | 2026-09-13 | Owner authorized expanded wiring/prerequisite audit and isolated synthetic restore rehearsal. No live data, installed preset, runtime restart or deployment changes. |
 | Builder (this lane) | `docs/project/*` only — roadmap and coordination docs | 2026-09-12 | committing now; **not** touching dial/Today files |
 
 ## Log (append only — newest first)
+
+### 2026-09-13 — Astra
+- Released completed gameplan claim at `70fef64`; the gameplan and planning evidence are committed.
+- Released completed dial/Today claim at `0c2097e`; no continuing UI edit is implied by the old claim.
+- Began the owner's expanded readiness audit with the exact scope above. Other agents' claims/work remain unchanged.
 
 ### 2026-09-12 — Builder
 - Consolidated the two roadmaps into `docs/project/MERIDIAN_ROADMAP.md` (single trajectory; merge record in §11).

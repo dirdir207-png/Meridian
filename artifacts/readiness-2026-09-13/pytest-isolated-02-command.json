@@ -1,0 +1,19 @@
+{
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--network",
+    "none",
+    "--read-only",
+    "--tmpfs",
+    "/tmp:rw,exec,size=1g",
+    "-v",
+    "/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/readiness-2026-09-13:/evidence",
+    "sha256:cbe2d417a1cd9b11b363e0b01def70db987c6eff9ba85f90c9546d6f18b79817",
+    "sh",
+    "-c",
+    "mkdir -p /tmp/meridian-synthetic && python -m pytest tests --ignore=tests/browser -q -p no:cacheprovider --junitxml=/evidence/pytest-isolated-02.xml"
+  ],
+  "exit_code": 1
+}

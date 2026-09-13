@@ -1,0 +1,24 @@
+{
+  "synthetic_only": true,
+  "source_image": "sha256:26210e35c22a2a1163dbf9addbf1309e85fe7803658eec28441ee790426bba56",
+  "source_sha": "f1e4d0a6c9d48767a9795cc03bb00bfc8bd8dfe2",
+  "migration_count": 21,
+  "database_snapshot_digest": "7ec071d3c508b3f09f8fbaa8662d07b0c521d698f53ea08584d10da27650971a",
+  "sqlite_online_backup_includes_wal": true,
+  "failed_migration_rolled_back": true,
+  "wrong_evidence_key_rejected": true,
+  "altered_backup_rejected": true,
+  "restore": {
+    "fresh_process": true,
+    "account_restored": true,
+    "unresolved_action_nonretryable": true,
+    "encrypted_evidence_readable": true,
+    "authenticated_route_statuses": {
+      "/meridian": 200,
+      "/api/meridian/accounts": 200,
+      "/api/meridian/today": 200,
+      "/api/meridian/evidence/1/content": 200
+    }
+  },
+  "limitations": "Synthetic matched-source-image/data restore; no production backup, Keychain migration or live acceptance."
+}

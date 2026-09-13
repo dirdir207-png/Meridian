@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-13T18:22:22+00:00",
+  "agent": "astra",
+  "claim_id": [
+    "astra-readiness-audit"
+  ],
+  "claim_generation": [
+    1
+  ],
+  "repo_root": "/Users/stephenwest/Openrouter/simplecrew-latest",
+  "branch": "feat/meridian-implementation",
+  "base_head": [
+    "72370de78c529f6b88afa01f79d5ac05a3874b17"
+  ],
+  "current_head": "f1e4d0a6c9d48767a9795cc03bb00bfc8bd8dfe2",
+  "constraints_digest": {
+    "AGENTS.md": "a414ff081a2782b3",
+    "docs/project/MERIDIAN_DECISIONS.md": "ed48d28b92f8bcdb",
+    "docs/project/MERIDIAN_ROADMAP.md": "7b6361fedbe37484"
+  },
+  "authorized_scope": [
+    "scripts/verify_readiness.py",
+    "tests/test_readiness_tools.py",
+    "docs/project/MERIDIAN_READINESS_AUDIT.md",
+    "docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md",
+    "docs/project/README.md",
+    "docs/project/CURRENT_STATUS.md",
+    "docs/project/AGENT_COORDINATION.md",
+    "artifacts/readiness-2026-09-13/**",
+    "artifacts/gameplan-2026-09-13/**"
+  ],
+  "changed_paths": {
+    "docs/project/AGENT_COORDINATION.md": "in-scope",
+    "docs/project/CURRENT_STATUS.md": "in-scope",
+    "docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md": "in-scope",
+    "docs/project/README.md": "in-scope",
+    ".env.save": "untracked",
+    "artifacts/design-audit/": "untracked",
+    "artifacts/dial-refinement-2026-09-12/": "untracked",
+    "artifacts/observatory-preview/": "untracked",
+    "artifacts/readiness-2026-09-13/": "untracked",
+    "design/observatory-drafts-2026-09-08/": "untracked",
+    "docs/project/MERIDIAN_CONSOLIDATED_HANDOFF_2026-09-08.md": "untracked",
+    "docs/project/MERIDIAN_READINESS_AUDIT.md": "untracked",
+    "docs/project/MERIDIAN_SUBSTRATE_INVENTORY.md": "untracked",
+    "output/pdf/Meridian_Consolidated_Handoff_2026-09-08.pdf": "untracked",
+    "scripts/verify_readiness.py": "untracked",
+    "tests/test_readiness_tools.py": "untracked",
+    "tmp/": "untracked"
+  },
+  "result": "ok",
+  "violations": [],
+  "notes": [
+    "untracked, untouched (cannot become evidence silently): .env.save",
+    "untracked, untouched (cannot become evidence silently): artifacts/design-audit/",
+    "untracked, untouched (cannot become evidence silently): artifacts/dial-refinement-2026-09-12/",
+    "untracked, untouched (cannot become evidence silently): artifacts/observatory-preview/",
+    "untracked, untouched (cannot become evidence silently): artifacts/readiness-2026-09-13/",
+    "untracked, untouched (cannot become evidence silently): design/observatory-drafts-2026-09-08/",
+    "untracked, untouched (cannot become evidence silently): docs/project/MERIDIAN_CONSOLIDATED_HANDOFF_2026-09-08.md",
+    "untracked, untouched (cannot become evidence silently): docs/project/MERIDIAN_READINESS_AUDIT.md",
+    "untracked, untouched (cannot become evidence silently): docs/project/MERIDIAN_SUBSTRATE_INVENTORY.md",
+    "untracked, untouched (cannot become evidence silently): output/pdf/Meridian_Consolidated_Handoff_2026-09-08.pdf",
+    "untracked, untouched (cannot become evidence silently): scripts/verify_readiness.py",
+    "untracked, untouched (cannot become evidence silently): tests/test_readiness_tools.py",
+    "untracked, untouched (cannot become evidence silently): tmp/"
+  ],
+  "task": null,
+  "last_verified_source": null,
+  "evidence_receipts": [],
+  "unresolved_outcomes": [],
+  "next_action": null,
+  "stop_reason": null
+}

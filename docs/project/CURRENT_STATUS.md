@@ -2,6 +2,12 @@
 
 Last consolidated: 2026-09-10 (Observatory dial continuation)
 
+## Expanded readiness audit — 2026-09-13
+
+Implemented: reusable `scripts/verify_readiness.py`, safety tests, [readiness report](MERIDIAN_READINESS_AUDIT.md), prerequisite order and gameplan supplement. Tested: isolated application image **953 passed, 7 skipped, 1 failed** (machine-local Crew CLI unavailable); selected Harness suites **236 passed**; audit-tool safety checks **3 passed**. Synthetic restore passed across 21 migrations, WAL backup, failed-migration rollback, wrong-key/tamper rejection, fresh-process authenticated routes and unresolved-action non-retryability. Runtime inventory: 199 routes, 27 executors; allowed `update_crew_virtual_card` lacks executor. Static/probe evidence identifies remaining authority, verification, observation, recurrence, scenario and intake gaps. New maintainer R0 and Docker exclusions were reconciled rather than reported as unimplemented.
+
+Deployed: nothing. Verified: synthetic recovery and stated test scope only; no fresh physical-device capture, live financial acceptance, production restore or installed-preset activation. Evidence: `artifacts/readiness-2026-09-13/`. Next: H0 custom-preset negative acceptance tests and bounded C4 financial verification repair, then C1/C2 event/observation integration. Preserve unrelated dirty files; this audit does not authorize live changes.
+
 ## Forward gameplan — 2026-09-13
 
 Planning deliverable: [MERIDIAN_EXECUTION_GAMEPLAN.md](MERIDIAN_EXECUTION_GAMEPLAN.md), sections D1–D8 plus disagreements, one first move and unknowns. Evidence in `artifacts/gameplan-2026-09-13/`. Fresh remote listing returned only `main` and `feat/meridian-implementation`; 23 local tracking entries include 17 absent-server non-ancestor tips that must be preserved/reviewed before pruning. Ruff still reports 11 findings. Two disposable Git-fixture probes demonstrate defects in the proposed guardrail script's migration check. No cleanup, application implementation, preset installation, Harness restart, deployment or live acceptance occurred. Next proposed Harness move: H0 keyless red specification for the combined authority/re-entry gate, after owner approval of D3/D4. Full economic-OS vision remains subject to the mapped product contracts and evaluation; the plan is not a completion claim.

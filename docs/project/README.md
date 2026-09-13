@@ -30,6 +30,8 @@ tree on purpose: they are the record of how decisions were reached.
 `design-qa.md` | Visual acceptance state and known gaps |
 `MERIDIAN_OS_TASKS.json` | The task ledger |
 
+`MERIDIAN_READINESS_AUDIT.md` — current wiring findings, isolated test/restore evidence, installation order and remaining release gates. Read alongside the gameplan before the next build slice.
+
 ## Reference (consult, do not re-derive)
 
 `MERIDIAN_EXECUTION_GAMEPLAN.md` — proposed D1–D8 execution plan: named consolidation candidates, current ref inventory, owners/interfaces, bounded slices, preset migration, first Harness prompt, session architecture and acceptance. Complements the roadmap; does not approve installation, cleanup, restart or deployment.

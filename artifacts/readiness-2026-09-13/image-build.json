@@ -1,0 +1,14 @@
+{
+  "command": [
+    "docker",
+    "build",
+    "-f",
+    "Dockerfile.readiness",
+    "-t",
+    "meridian-readiness:20260913",
+    "/var/folders/bx/d29gvxlj3531yrq_hv4wf3180000gn/T/meridian-readiness-context-1okoi8oq"
+  ],
+  "exit_code": 1,
+  "source_sha": "70fef6446d8cbcbbdac435ac522e349f01ee6dfb",
+  "log": "artifacts/readiness-2026-09-13/image-build.log"
+}

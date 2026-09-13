@@ -1,0 +1,15 @@
+{
+  "command": [
+    "docker",
+    "build",
+    "--progress=plain",
+    "-f",
+    "/var/folders/bx/d29gvxlj3531yrq_hv4wf3180000gn/T/meridian-readiness-context-1bn63ldk/Dockerfile.readiness",
+    "-t",
+    "meridian-readiness:20260913",
+    "/var/folders/bx/d29gvxlj3531yrq_hv4wf3180000gn/T/meridian-readiness-context-1bn63ldk"
+  ],
+  "exit_code": 0,
+  "source_sha": "f1e4d0a6c9d48767a9795cc03bb00bfc8bd8dfe2",
+  "image_id": "sha256:cbe2d417a1cd9b11b363e0b01def70db987c6eff9ba85f90c9546d6f18b79817"
+}

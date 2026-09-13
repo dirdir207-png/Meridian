@@ -1,0 +1,291 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.readiness
+#1 transferring dockerfile: 496B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.11-slim
+#2 DONE 0.1s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/5] FROM docker.io/library/python:3.11-slim@sha256:be1575ed968de893bd54f4c56315ff7c4736ce522c1bca08fd521731aafc0d76
+#4 resolve docker.io/library/python:3.11-slim@sha256:be1575ed968de893bd54f4c56315ff7c4736ce522c1bca08fd521731aafc0d76 0.0s done
+#4 DONE 0.0s
+
+#5 [2/5] WORKDIR /app
+#5 CACHED
+
+#6 [internal] load build context
+#6 transferring context: 10.15MB 0.5s done
+#6 DONE 0.5s
+
+#7 [3/5] COPY requirements.txt requirements-dev.txt readiness-constraints.txt /tmp/
+#7 DONE 0.1s
+
+#8 [4/5] RUN python -m pip install --no-cache-dir -c /tmp/readiness-constraints.txt -r /tmp/requirements.txt -r /tmp/requirements-dev.txt
+#8 4.100 Collecting flask==3.1.3 (from -r /tmp/requirements.txt (line 3))
+#8 4.245   Downloading flask-3.1.3-py3-none-any.whl.metadata (3.2 kB)
+#8 4.278 Collecting flask-login==0.6.3 (from -r /tmp/requirements.txt (line 4))
+#8 4.308   Downloading Flask_Login-0.6.3-py3-none-any.whl.metadata (5.8 kB)
+#8 4.352 Collecting gunicorn==23.0.0 (from -r /tmp/requirements.txt (line 5))
+#8 4.385   Downloading gunicorn-23.0.0-py3-none-any.whl.metadata (4.4 kB)
+#8 4.448 Collecting requests==2.34.2 (from -r /tmp/requirements.txt (line 6))
+#8 4.474   Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+#8 4.530 Collecting urllib3==2.7.0 (from -r /tmp/requirements.txt (line 7))
+#8 4.564   Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+#8 4.612 Collecting click==8.5.0 (from -r /tmp/requirements.txt (line 8))
+#8 4.636   Downloading click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+#8 4.673 Collecting webauthn==2.7.1 (from -r /tmp/requirements.txt (line 9))
+#8 4.691   Downloading webauthn-2.7.1-py3-none-any.whl.metadata (5.7 kB)
+#8 4.737 Collecting pywebpush==2.4.0 (from -r /tmp/requirements.txt (line 10))
+#8 4.758   Downloading pywebpush-2.4.0-py3-none-any.whl.metadata (9.8 kB)
+#8 5.774 Collecting aiohttp==3.14.3 (from -r /tmp/requirements.txt (line 11))
+#8 5.792   Downloading aiohttp-3.14.3-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (8.3 kB)
+#8 5.836 Collecting py-vapid==1.9.4 (from -r /tmp/requirements.txt (line 12))
+#8 5.862   Downloading py_vapid-1.9.4-py2.py3-none-any.whl.metadata (4.6 kB)
+#8 6.072 Collecting cryptography>=42.0.0 (from -r /tmp/requirements.txt (line 13))
+#8 6.104   Downloading cryptography-50.0.1-cp311-abi3-manylinux_2_34_aarch64.whl.metadata (4.3 kB)
+#8 6.160 Collecting pypdf<7.0.0,>=5.0.0 (from -r /tmp/requirements.txt (line 14))
+#8 6.190   Downloading pypdf-6.18.0-py3-none-any.whl.metadata (7.5 kB)
+#8 6.255 Collecting pytest==9.0.3 (from -r /tmp/requirements-dev.txt (line 3))
+#8 6.281   Downloading pytest-9.0.3-py3-none-any.whl.metadata (7.6 kB)
+#8 6.337 Collecting playwright==1.60.0 (from -r /tmp/requirements-dev.txt (line 4))
+#8 6.359   Downloading playwright-1.60.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (3.5 kB)
+#8 7.448 Collecting ruff==0.16.4 (from -r /tmp/requirements-dev.txt (line 5))
+#8 7.495   Downloading ruff-0.16.4-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (26 kB)
+#8 7.550 Collecting pip-audit==2.9.0 (from -r /tmp/requirements-dev.txt (line 6))
+#8 7.578   Downloading pip_audit-2.9.0-py3-none-any.whl.metadata (27 kB)
+#8 7.752 Collecting Pillow>=10.0.0 (from -r /tmp/requirements-dev.txt (line 7))
+#8 7.781   Downloading pillow-12.3.0-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl.metadata (9.1 kB)
+#8 7.820 Collecting blinker>=1.9.0 (from flask==3.1.3->-r /tmp/requirements.txt (line 3))
+#8 7.843   Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+#8 7.878 Collecting itsdangerous>=2.2.0 (from flask==3.1.3->-r /tmp/requirements.txt (line 3))
+#8 7.917   Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+#8 7.962 Collecting jinja2>=3.1.2 (from flask==3.1.3->-r /tmp/requirements.txt (line 3))
+#8 7.985   Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+#8 8.101 Collecting markupsafe>=2.1.1 (from flask==3.1.3->-r /tmp/requirements.txt (line 3))
+#8 8.123   Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (2.7 kB)
+#8 8.172 Collecting werkzeug>=3.1.0 (from flask==3.1.3->-r /tmp/requirements.txt (line 3))
+#8 8.200   Downloading werkzeug-3.1.8-py3-none-any.whl.metadata (4.0 kB)
+#8 8.214 Requirement already satisfied: packaging in /usr/local/lib/python3.11/site-packages (from gunicorn==23.0.0->-r /tmp/requirements.txt (line 5)) (26.3)
+#8 8.414 Collecting charset_normalizer<4,>=2 (from requests==2.34.2->-r /tmp/requirements.txt (line 6))
+#8 8.433   Downloading charset_normalizer-3.5.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (45 kB)
+#8 8.441      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.9/45.9 kB 14.0 MB/s eta 0:00:00
+#8 8.472 Collecting idna<4,>=2.5 (from requests==2.34.2->-r /tmp/requirements.txt (line 6))
+#8 8.499   Downloading idna-3.19-py3-none-any.whl.metadata (9.2 kB)
+#8 8.543 Collecting certifi>=2023.5.7 (from requests==2.34.2->-r /tmp/requirements.txt (line 6))
+#8 8.566   Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+#8 8.615 Collecting pyasn1>=0.6.2 (from webauthn==2.7.1->-r /tmp/requirements.txt (line 9))
+#8 8.639   Downloading pyasn1-0.6.4-py3-none-any.whl.metadata (8.4 kB)
+#8 8.729 Collecting cbor2>=5.6.5 (from webauthn==2.7.1->-r /tmp/requirements.txt (line 9))
+#8 8.750   Downloading cbor2-6.1.4-cp311-cp311-manylinux_2_28_aarch64.whl.metadata (5.5 kB)
+#8 8.798 Collecting pyOpenSSL>=25.0.0 (from webauthn==2.7.1->-r /tmp/requirements.txt (line 9))
+#8 8.827   Downloading pyopenssl-26.4.0-py3-none-any.whl.metadata (22 kB)
+#8 8.948 Collecting http-ece>=1.1.0 (from pywebpush==2.4.0->-r /tmp/requirements.txt (line 10))
+#8 8.973   Downloading http_ece-1.2.1.tar.gz (8.8 kB)
+#8 8.982   Preparing metadata (setup.py): started
+#8 9.519   Preparing metadata (setup.py): finished with status 'done'
+#8 9.570 Collecting aiohappyeyeballs>=2.5.0 (from aiohttp==3.14.3->-r /tmp/requirements.txt (line 11))
+#8 9.591   Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
+#8 9.628 Collecting aiosignal>=1.4.0 (from aiohttp==3.14.3->-r /tmp/requirements.txt (line 11))
+#8 9.678   Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+#8 9.724 Collecting attrs>=17.3.0 (from aiohttp==3.14.3->-r /tmp/requirements.txt (line 11))
+#8 9.746   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+#8 9.815 Collecting frozenlist>=1.1.1 (from aiohttp==3.14.3->-r /tmp/requirements.txt (line 11))
+#8 9.842   Downloading frozenlist-1.8.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (20 kB)
+#8 10.13 Collecting multidict<7.0,>=4.5 (from aiohttp==3.14.3->-r /tmp/requirements.txt (line 11))
+#8 10.16   Downloading multidict-6.7.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (5.3 kB)
+#8 10.24 Collecting propcache>=0.2.0 (from aiohttp==3.14.3->-r /tmp/requirements.txt (line 11))
+#8 10.26   Downloading propcache-0.5.2-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (16 kB)
+#8 10.30 Collecting typing_extensions>=4.4 (from aiohttp==3.14.3->-r /tmp/requirements.txt (line 11))
+#8 10.33   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+#8 10.55 Collecting yarl<2.0,>=1.17.0 (from aiohttp==3.14.3->-r /tmp/requirements.txt (line 11))
+#8 10.59   Downloading yarl-1.24.5-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (103 kB)
+#8 10.59      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 104.0/104.0 kB 45.4 MB/s eta 0:00:00
+#8 10.66 Collecting iniconfig>=1.0.1 (from pytest==9.0.3->-r /tmp/requirements-dev.txt (line 3))
+#8 10.68   Downloading iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+#8 10.73 Collecting pluggy<2,>=1.5 (from pytest==9.0.3->-r /tmp/requirements-dev.txt (line 3))
+#8 10.75   Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+#8 10.80 Collecting pygments>=2.7.2 (from pytest==9.0.3->-r /tmp/requirements-dev.txt (line 3))
+#8 10.83   Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+#8 10.86 Collecting pyee<14,>=13 (from playwright==1.60.0->-r /tmp/requirements-dev.txt (line 4))
+#8 10.88   Downloading pyee-13.0.1-py3-none-any.whl.metadata (3.0 kB)
+#8 11.12 Collecting greenlet<4.0.0,>=3.1.1 (from playwright==1.60.0->-r /tmp/requirements-dev.txt (line 4))
+#8 11.14   Downloading greenlet-3.5.5-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl.metadata (3.8 kB)
+#8 11.19 Collecting CacheControl>=0.13.0 (from CacheControl[filecache]>=0.13.0->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 11.21   Downloading cachecontrol-0.14.4-py3-none-any.whl.metadata (3.1 kB)
+#8 11.28 Collecting cyclonedx-python-lib<10,>=5 (from pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 11.30   Downloading cyclonedx_python_lib-9.1.0-py3-none-any.whl.metadata (6.5 kB)
+#8 11.34 Collecting pip-api>=0.0.28 (from pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 11.37   Downloading pip_api-0.0.34-py3-none-any.whl.metadata (6.6 kB)
+#8 11.40 Collecting pip-requirements-parser>=32.0.0 (from pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 11.42   Downloading pip_requirements_parser-32.0.1-py3-none-any.whl.metadata (9.3 kB)
+#8 11.50 Collecting rich>=12.4 (from pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 11.52   Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+#8 11.57 Collecting toml>=0.10 (from pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 11.60   Downloading toml-0.10.2-py2.py3-none-any.whl.metadata (7.1 kB)
+#8 11.65 Collecting platformdirs>=4.2.0 (from pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 11.67   Downloading platformdirs-4.11.7-py3-none-any.whl.metadata (5.5 kB)
+#8 11.81 Collecting cffi>=2.0.0 (from cryptography>=42.0.0->-r /tmp/requirements.txt (line 13))
+#8 11.83   Downloading cffi-2.1.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl.metadata (2.5 kB)
+#8 11.95 Collecting msgpack<2.0.0,>=0.5.2 (from CacheControl>=0.13.0->CacheControl[filecache]>=0.13.0->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 12.00   Downloading msgpack-1.2.2-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (8.3 kB)
+#8 12.07 Collecting filelock>=3.8.0 (from CacheControl[filecache]>=0.13.0->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 12.09   Downloading filelock-3.32.5-py3-none-any.whl.metadata (2.0 kB)
+#8 12.13 Collecting pycparser (from cffi>=2.0.0->cryptography>=42.0.0->-r /tmp/requirements.txt (line 13))
+#8 12.16   Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+#8 12.21 Collecting license-expression<31,>=30 (from cyclonedx-python-lib<10,>=5->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 12.22   Downloading license_expression-30.4.4-py3-none-any.whl.metadata (11 kB)
+#8 12.29 Collecting packageurl-python<2,>=0.11 (from cyclonedx-python-lib<10,>=5->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 12.33   Downloading packageurl_python-0.17.6-py3-none-any.whl.metadata (5.1 kB)
+#8 12.40 Collecting py-serializable<3.0.0,>=2.0.0 (from cyclonedx-python-lib<10,>=5->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 12.42   Downloading py_serializable-2.1.0-py3-none-any.whl.metadata (4.3 kB)
+#8 12.46 Collecting sortedcontainers<3.0.0,>=2.4.0 (from cyclonedx-python-lib<10,>=5->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 12.48   Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl.metadata (10 kB)
+#8 12.59 Collecting pip (from pip-api>=0.0.28->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 12.62   Downloading pip-26.2.1-py3-none-any.whl.metadata (4.6 kB)
+#8 12.67 Collecting pyparsing (from pip-requirements-parser>=32.0.0->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 12.70   Downloading pyparsing-3.3.2-py3-none-any.whl.metadata (5.8 kB)
+#8 12.80 Collecting markdown-it-py>=2.2.0 (from rich>=12.4->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 12.82   Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+#8 12.90 Collecting boolean.py>=4.0 (from license-expression<31,>=30->cyclonedx-python-lib<10,>=5->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 12.94   Downloading boolean_py-5.0-py3-none-any.whl.metadata (2.3 kB)
+#8 13.01 Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=12.4->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 13.04   Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+#8 13.13 Collecting defusedxml<0.8.0,>=0.7.1 (from py-serializable<3.0.0,>=2.0.0->cyclonedx-python-lib<10,>=5->pip-audit==2.9.0->-r /tmp/requirements-dev.txt (line 6))
+#8 13.15   Downloading defusedxml-0.7.1-py2.py3-none-any.whl.metadata (32 kB)
+#8 13.23 Downloading flask-3.1.3-py3-none-any.whl (103 kB)
+#8 13.23    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 103.4/103.4 kB 238.4 MB/s eta 0:00:00
+#8 13.26 Downloading Flask_Login-0.6.3-py3-none-any.whl (17 kB)
+#8 13.29 Downloading gunicorn-23.0.0-py3-none-any.whl (85 kB)
+#8 13.30    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 85.0/85.0 kB 12.3 MB/s eta 0:00:00
+#8 13.32 Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+#8 13.32    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.1/73.1 kB 152.9 MB/s eta 0:00:00
+#8 13.35 Downloading urllib3-2.7.0-py3-none-any.whl (131 kB)
+#8 13.36    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 131.1/131.1 kB 39.9 MB/s eta 0:00:00
+#8 13.39 Downloading click-8.5.0-py3-none-any.whl (125 kB)
+#8 13.39    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 125.3/125.3 kB 136.2 MB/s eta 0:00:00
+#8 13.41 Downloading webauthn-2.7.1-py3-none-any.whl (71 kB)
+#8 13.42    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 71.7/71.7 kB 98.1 MB/s eta 0:00:00
+#8 13.44 Downloading pywebpush-2.4.0-py3-none-any.whl (21 kB)
+#8 13.47 Downloading aiohttp-3.14.3-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (1.8 MB)
+#8 13.53    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 29.3 MB/s eta 0:00:00
+#8 13.55 Downloading py_vapid-1.9.4-py2.py3-none-any.whl (23 kB)
+#8 13.59 Downloading pytest-9.0.3-py3-none-any.whl (375 kB)
+#8 13.62    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 375.2/375.2 kB 12.0 MB/s eta 0:00:00
+#8 13.66 Downloading playwright-1.60.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (47.2 MB)
+#8 14.54    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 47.2/47.2 MB 71.7 MB/s eta 0:00:00
+#8 14.56 Downloading ruff-0.16.4-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (10.0 MB)
+#8 14.71    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.0/10.0 MB 65.6 MB/s eta 0:00:00
+#8 14.74 Downloading pip_audit-2.9.0-py3-none-any.whl (58 kB)
+#8 14.74    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 58.6/58.6 kB 192.5 MB/s eta 0:00:00
+#8 14.76 Downloading cryptography-50.0.1-cp311-abi3-manylinux_2_34_aarch64.whl (4.7 MB)
+#8 14.96    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 24.5 MB/s eta 0:00:00
+#8 14.99 Downloading pypdf-6.18.0-py3-none-any.whl (393 kB)
+#8 15.00    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 393.8/393.8 kB 61.3 MB/s eta 0:00:00
+#8 15.03 Downloading pillow-12.3.0-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl (6.3 MB)
+#8 15.15    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 52.2 MB/s eta 0:00:00
+#8 15.18 Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+#8 15.22 Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+#8 15.25 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+#8 15.25    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 67.5/67.5 kB 87.8 MB/s eta 0:00:00
+#8 15.28 Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+#8 15.31 Downloading cachecontrol-0.14.4-py3-none-any.whl (22 kB)
+#8 15.33 Downloading cbor2-6.1.4-cp311-cp311-manylinux_2_28_aarch64.whl (457 kB)
+#8 15.35    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 457.3/457.3 kB 25.3 MB/s eta 0:00:00
+#8 15.38 Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+#8 15.38    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 137.0/137.0 kB 100.4 MB/s eta 0:00:00
+#8 15.41 Downloading cffi-2.1.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl (218 kB)
+#8 15.41    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 218.7/218.7 kB 76.2 MB/s eta 0:00:00
+#8 15.45 Downloading charset_normalizer-3.5.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (251 kB)
+#8 15.45    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 251.2/251.2 kB 101.9 MB/s eta 0:00:00
+#8 15.48 Downloading cyclonedx_python_lib-9.1.0-py3-none-any.whl (374 kB)
+#8 15.50    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 375.0/375.0 kB 39.7 MB/s eta 0:00:00
+#8 15.52 Downloading frozenlist-1.8.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (233 kB)
+#8 15.53    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 233.2/233.2 kB 87.1 MB/s eta 0:00:00
+#8 15.56 Downloading greenlet-3.5.5-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl (613 kB)
+#8 15.57    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 613.6/613.6 kB 75.8 MB/s eta 0:00:00
+#8 15.59 Downloading idna-3.19-py3-none-any.whl (68 kB)
+#8 15.60    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 68.5/68.5 kB 117.8 MB/s eta 0:00:00
+#8 15.62 Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+#8 15.65 Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+#8 15.69 Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+#8 15.70    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 59.7 MB/s eta 0:00:00
+#8 15.73 Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (24 kB)
+#8 15.76 Downloading multidict-6.7.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (246 kB)
+#8 15.77    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 246.4/246.4 kB 58.6 MB/s eta 0:00:00
+#8 15.79 Downloading pip_api-0.0.34-py3-none-any.whl (120 kB)
+#8 15.80    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 120.4/120.4 kB 83.7 MB/s eta 0:00:00
+#8 15.84 Downloading pip_requirements_parser-32.0.1-py3-none-any.whl (35 kB)
+#8 15.87 Downloading platformdirs-4.11.7-py3-none-any.whl (23 kB)
+#8 15.90 Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+#8 15.93 Downloading propcache-0.5.2-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (57 kB)
+#8 15.94    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.6/57.6 kB 176.3 MB/s eta 0:00:00
+#8 15.96 Downloading pyasn1-0.6.4-py3-none-any.whl (84 kB)
+#8 15.97    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 84.4/84.4 kB 34.4 MB/s eta 0:00:00
+#8 16.00 Downloading pyee-13.0.1-py3-none-any.whl (15 kB)
+#8 16.02 Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+#8 16.04    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 62.3 MB/s eta 0:00:00
+#8 16.07 Downloading pyopenssl-26.4.0-py3-none-any.whl (56 kB)
+#8 16.07    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.0/56.0 kB 252.4 MB/s eta 0:00:00
+#8 16.10 Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+#8 16.11    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 310.7/310.7 kB 42.6 MB/s eta 0:00:00
+#8 16.14 Downloading toml-0.10.2-py2.py3-none-any.whl (16 kB)
+#8 16.17 Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+#8 16.18    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.6/45.6 kB 43.3 MB/s eta 0:00:00
+#8 16.21 Downloading werkzeug-3.1.8-py3-none-any.whl (226 kB)
+#8 16.21    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 226.5/226.5 kB 55.6 MB/s eta 0:00:00
+#8 16.24 Downloading yarl-1.24.5-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (110 kB)
+#8 16.24    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 110.5/110.5 kB 73.3 MB/s eta 0:00:00
+#8 16.27 Downloading filelock-3.32.5-py3-none-any.whl (100 kB)
+#8 16.27    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100.0/100.0 kB 90.2 MB/s eta 0:00:00
+#8 16.29 Downloading license_expression-30.4.4-py3-none-any.whl (120 kB)
+#8 16.30    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 120.6/120.6 kB 12.8 MB/s eta 0:00:00
+#8 16.33 Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+#8 16.34    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 91.7/91.7 kB 93.6 MB/s eta 0:00:00
+#8 16.36 Downloading msgpack-1.2.2-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (413 kB)
+#8 16.37    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 413.3/413.3 kB 29.5 MB/s eta 0:00:00
+#8 16.40 Downloading packageurl_python-0.17.6-py3-none-any.whl (36 kB)
+#8 16.43 Downloading py_serializable-2.1.0-py3-none-any.whl (23 kB)
+#8 16.46 Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl (29 kB)
+#8 16.49 Downloading pip-26.2.1-py3-none-any.whl (1.8 MB)
+#8 16.51    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 72.1 MB/s eta 0:00:00
+#8 16.54 Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+#8 16.54    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.2/48.2 kB 79.2 MB/s eta 0:00:00
+#8 16.56 Downloading pyparsing-3.3.2-py3-none-any.whl (122 kB)
+#8 16.57    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 122.8/122.8 kB 83.1 MB/s eta 0:00:00
+#8 16.60 Downloading boolean_py-5.0-py3-none-any.whl (26 kB)
+#8 16.64 Downloading defusedxml-0.7.1-py2.py3-none-any.whl (25 kB)
+#8 16.68 Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+#8 16.90 Building wheels for collected packages: http-ece
+#8 16.91   Building wheel for http-ece (setup.py): started
+#8 17.40   Building wheel for http-ece (setup.py): finished with status 'done'
+#8 17.40   Created wheel for http-ece: filename=http_ece-1.2.1-py2.py3-none-any.whl size=4848 sha256=a38b21c0529290c25d3bd0f17f7a6f7617de5ef0f86fda75ec02870e793ca2c8
+#8 17.40   Stored in directory: /tmp/pip-ephem-wheel-cache-ubjxio5l/wheels/f6/71/2f/56e4f843a88c67685db9ddd0161a07f5bed6a8f92be2a52cf3
+#8 17.40 Successfully built http-ece
+#8 17.54 Installing collected packages: sortedcontainers, boolean.py, urllib3, typing_extensions, toml, ruff, pypdf, pyparsing, pygments, pycparser, pyasn1, propcache, pluggy, platformdirs, pip, Pillow, packageurl-python, multidict, msgpack, mdurl, markupsafe, license-expression, itsdangerous, iniconfig, idna, gunicorn, greenlet, frozenlist, filelock, defusedxml, click, charset_normalizer, certifi, cbor2, blinker, attrs, aiohappyeyeballs, yarl, werkzeug, requests, pytest, pyee, py-serializable, pip-requirements-parser, pip-api, markdown-it-py, jinja2, cffi, aiosignal, rich, playwright, flask, cyclonedx-python-lib, cryptography, CacheControl, aiohttp, pyOpenSSL, py-vapid, http-ece, flask-login, webauthn, pywebpush, pip-audit
+#8 19.21   Attempting uninstall: pip
+#8 19.21     Found existing installation: pip 24.0
+#8 19.26     Uninstalling pip-24.0:
+#8 19.49       Successfully uninstalled pip-24.0
+#8 25.73 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+#8 25.73 Successfully installed CacheControl-0.14.4 Pillow-12.3.0 aiohappyeyeballs-2.7.1 aiohttp-3.14.3 aiosignal-1.4.0 attrs-26.1.0 blinker-1.9.0 boolean.py-5.0 cbor2-6.1.4 certifi-2026.7.22 cffi-2.1.1 charset_normalizer-3.5.1 click-8.5.0 cryptography-50.0.1 cyclonedx-python-lib-9.1.0 defusedxml-0.7.1 filelock-3.32.5 flask-3.1.3 flask-login-0.6.3 frozenlist-1.8.0 greenlet-3.5.5 gunicorn-23.0.0 http-ece-1.2.1 idna-3.19 iniconfig-2.3.0 itsdangerous-2.2.0 jinja2-3.1.6 license-expression-30.4.4 markdown-it-py-4.2.0 markupsafe-3.0.3 mdurl-0.1.2 msgpack-1.2.2 multidict-6.7.1 packageurl-python-0.17.6 pip-26.2.1 pip-api-0.0.34 pip-audit-2.9.0 pip-requirements-parser-32.0.1 platformdirs-4.11.7 playwright-1.60.0 pluggy-1.6.0 propcache-0.5.2 py-serializable-2.1.0 py-vapid-1.9.4 pyOpenSSL-26.4.0 pyasn1-0.6.4 pycparser-3.0 pyee-13.0.1 pygments-2.21.0 pyparsing-3.3.2 pypdf-6.18.0 pytest-9.0.3 pywebpush-2.4.0 requests-2.34.2 rich-15.0.0 ruff-0.16.4 sortedcontainers-2.4.0 toml-0.10.2 typing_extensions-4.16.0 urllib3-2.7.0 webauthn-2.7.1 werkzeug-3.1.8 yarl-1.24.5
+#8 DONE 27.4s
+
+#9 [5/5] COPY . /app
+#9 DONE 0.2s
+
+#10 exporting to image
+#10 exporting layers
+#10 exporting layers 7.2s done
+#10 exporting manifest sha256:54aeb8ff122ae352ad38c2cd96375411d0ae3602bbc15a998e6d4b07a03922f6 done
+#10 exporting config sha256:fa0addea2c319246b6253e3cf6295cddf82513c6aeaaa09c61cb69e9a8beae81 done
+#10 exporting attestation manifest sha256:8261a0eae7fca69f10330f8b7d7fdd3a18912a10e566473e5a286694eddfcc62 done
+#10 exporting manifest list sha256:005f924d58f64cc468c8ac748156cee4b9a6c45039f3c41e239e13a5927976bb done
+#10 naming to docker.io/library/meridian-readiness:20260913 done
+#10 unpacking to docker.io/library/meridian-readiness:20260913
+#10 unpacking to docker.io/library/meridian-readiness:20260913 1.7s done
+#10 DONE 9.0s

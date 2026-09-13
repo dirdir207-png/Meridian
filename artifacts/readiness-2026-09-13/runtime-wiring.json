@@ -1,0 +1,1781 @@
+{
+  "routes": [
+    {
+      "rule": "/static/<path:filename>",
+      "endpoint": "static",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/observations",
+      "endpoint": "meridian_api.observations",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/observations/<snapshot_id>",
+      "endpoint": "meridian_api.observation_snapshot",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/observations/<snapshot_id>/simulation",
+      "endpoint": "meridian_api.observation_simulation",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/plan",
+      "endpoint": "meridian_api.plan",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/plan/scenario",
+      "endpoint": "meridian_api.plan_scenario_preview",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/paycheck",
+      "endpoint": "meridian_api.paycheck_get",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/paycheck",
+      "endpoint": "meridian_api.paycheck_set",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/icloud/status",
+      "endpoint": "meridian_api.icloud_status",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/icloud/intake",
+      "endpoint": "meridian_api.icloud_intake",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/gmail/intake",
+      "endpoint": "meridian_api.gmail_intake",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/billers/monitor",
+      "endpoint": "meridian_api.billers_monitor",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/commitments",
+      "endpoint": "meridian_api.commitments",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/funding-rules",
+      "endpoint": "meridian_api.funding_rules",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/today",
+      "endpoint": "meridian_api.today",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/dial",
+      "endpoint": "meridian_api.dial",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/weather",
+      "endpoint": "meridian_api.weather",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/sync",
+      "endpoint": "meridian_api.sync_now",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/accounts",
+      "endpoint": "meridian_api.accounts",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/settings/connections",
+      "endpoint": "meridian_api.settings_connections",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/settings/connections/<public_id>",
+      "endpoint": "meridian_api.settings_connection_detail",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/settings/connections/<kind>/authorize",
+      "endpoint": "meridian_api.settings_connection_authorize",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/connections/oauth/callback",
+      "endpoint": "meridian_api.settings_connection_oauth_callback",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/connections/oauth/<kind>/<account_email>/revoke",
+      "endpoint": "meridian_api.settings_connection_oauth_revoke",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/settings/connections/<public_id>/revoke",
+      "endpoint": "meridian_api.settings_connection_revoke",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/settings/payday",
+      "endpoint": "meridian_api.settings_payday",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/activity",
+      "endpoint": "meridian_api.activity",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/transactions/<transaction_id>",
+      "endpoint": "meridian_api.transaction_detail",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/evidence/<evidence_id>/content",
+      "endpoint": "meridian_api.evidence_content",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/memory/<workspace>",
+      "endpoint": "meridian_api.memory_workspace",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/assets",
+      "endpoint": "meridian_api.create_asset_proposal",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/assets/<asset_id>",
+      "endpoint": "meridian_api.update_asset_proposal",
+      "methods": [
+        "OPTIONS",
+        "PATCH"
+      ]
+    },
+    {
+      "rule": "/api/meridian/assets/<asset_id>",
+      "endpoint": "meridian_api.delete_asset_proposal",
+      "methods": [
+        "DELETE",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/contracts",
+      "endpoint": "meridian_api.create_contract_proposal",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/contracts/<contract_id>",
+      "endpoint": "meridian_api.update_contract_proposal",
+      "methods": [
+        "OPTIONS",
+        "PATCH"
+      ]
+    },
+    {
+      "rule": "/api/meridian/contracts/<contract_id>",
+      "endpoint": "meridian_api.delete_contract_proposal",
+      "methods": [
+        "DELETE",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/crew/bills",
+      "endpoint": "meridian_api.update_crew_bill_proposal",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/crew/bills/<bill_id>/reserve-settings",
+      "endpoint": "meridian_api.update_crew_bill_reserve_settings_proposal",
+      "methods": [
+        "OPTIONS",
+        "PATCH"
+      ]
+    },
+    {
+      "rule": "/api/meridian/crew/rules",
+      "endpoint": "meridian_api.create_crew_autopilot_rule_proposal",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/transactions/<transaction_id>/classification",
+      "endpoint": "meridian_api.correct_transaction_classification",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/classifications/batch",
+      "endpoint": "meridian_api.batch_correct_transaction_classifications",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/advisor",
+      "endpoint": "meridian_api.contextual_advisor",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials",
+      "endpoint": "meridian_api.list_trials",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials",
+      "endpoint": "meridian_api.create_trial",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials/capture",
+      "endpoint": "meridian_api.capture_trial_terms",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials/deadlines",
+      "endpoint": "meridian_api.list_trial_deadlines",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials/<int:trial_id>",
+      "endpoint": "meridian_api.get_trial",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials/<int:trial_id>",
+      "endpoint": "meridian_api.update_trial",
+      "methods": [
+        "OPTIONS",
+        "PATCH"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials/notifications",
+      "endpoint": "meridian_api.list_trial_notifications",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials/notifications/materialize",
+      "endpoint": "meridian_api.materialize_trial_notifications",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials/notifications/<int:notification_id>/mark-sent",
+      "endpoint": "meridian_api.mark_trial_notification_sent",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials/<int:trial_id>/escalation-plan",
+      "endpoint": "meridian_api.get_escalation_plan",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials/<int:trial_id>/cancellation-brief",
+      "endpoint": "meridian_api.get_cancellation_brief",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials/<int:trial_id>/cancellation-actions",
+      "endpoint": "meridian_api.list_cancellation_actions",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/trials/<int:trial_id>/cancellation-actions",
+      "endpoint": "meridian_api.create_cancellation_action",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/cancellation-actions/<int:action_id>/evidence",
+      "endpoint": "meridian_api.list_cancellation_evidence",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/cancellation-actions/<int:action_id>/evidence",
+      "endpoint": "meridian_api.attach_cancellation_evidence",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/cancellation-actions/<int:action_id>/approval-check",
+      "endpoint": "meridian_api.check_cancellation_approval",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/cancellation-actions/<int:action_id>/transition",
+      "endpoint": "meridian_api.transition_cancellation_action",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/crew/mutations-status",
+      "endpoint": "meridian_api.crew_mutations_status",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/beacon/forecast",
+      "endpoint": "api_beacon_forecast",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/beacon/reserve",
+      "endpoint": "api_beacon_reserve",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/advisor/status",
+      "endpoint": "api_advisor_status",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/advisor/chat",
+      "endpoint": "api_advisor_chat",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/meridian",
+      "endpoint": "meridian",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/meridian/settings",
+      "endpoint": "meridian_settings",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/login",
+      "endpoint": "login",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/auth/login",
+      "endpoint": "api_login",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/auth/logout",
+      "endpoint": "api_logout",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/auth/register",
+      "endpoint": "api_register",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/auth/change-password",
+      "endpoint": "api_change_password",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/auth/webauthn/register/options",
+      "endpoint": "webauthn_register_options",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/auth/webauthn/register/verify",
+      "endpoint": "webauthn_register_verify",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/auth/webauthn/authenticate/options",
+      "endpoint": "webauthn_authenticate_options",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/auth/webauthn/authenticate/verify",
+      "endpoint": "webauthn_authenticate_verify",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/auth/passkeys/available",
+      "endpoint": "api_passkeys_available",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/auth/passkeys",
+      "endpoint": "api_list_passkeys",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/auth/passkeys/<int:passkey_id>",
+      "endpoint": "api_delete_passkey",
+      "methods": [
+        "DELETE",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/auth/passkeys/<int:passkey_id>",
+      "endpoint": "api_update_passkey",
+      "methods": [
+        "OPTIONS",
+        "PATCH"
+      ]
+    },
+    {
+      "rule": "/",
+      "endpoint": "index",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/pockets",
+      "endpoint": "legacy_plan",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/goals",
+      "endpoint": "legacy_plan",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/bills",
+      "endpoint": "legacy_plan",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/expenses",
+      "endpoint": "legacy_plan",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/splitwise",
+      "endpoint": "legacy_accounts",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/credit",
+      "endpoint": "legacy_accounts",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/cards",
+      "endpoint": "legacy_accounts",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/family",
+      "endpoint": "legacy_accounts",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/account",
+      "endpoint": "legacy_accounts",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/debug",
+      "endpoint": "debug",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/health",
+      "endpoint": "health",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/meridian",
+      "endpoint": "meridian_shell",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/manifest.json",
+      "endpoint": "serve_manifest",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/sw.js",
+      "endpoint": "serve_sw",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/onboarding/status",
+      "endpoint": "api_onboarding_status",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/onboarding/crew/save-token",
+      "endpoint": "api_save_crew_token",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/onboarding/complete",
+      "endpoint": "api_complete_onboarding",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/credentials/status",
+      "endpoint": "api_get_credentials_status",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/account/crew/update-token",
+      "endpoint": "api_account_update_crew_token",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/crew/test",
+      "endpoint": "api_account_test_crew",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/crew-health",
+      "endpoint": "api_crew_health",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/account/crew/reconnect/start",
+      "endpoint": "api_crew_reconnect_start",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/crew/reconnect/status/<session_id>",
+      "endpoint": "api_crew_reconnect_status",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/actions/pending",
+      "endpoint": "api_actions_pending",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/meridian/actions",
+      "endpoint": "api_meridian_action_history",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/actions/propose/local",
+      "endpoint": "api_actions_propose_local",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/actions/propose",
+      "endpoint": "api_actions_propose",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/actions/mutate",
+      "endpoint": "api_actions_mutate",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/meridian/funding-rules/propose",
+      "endpoint": "api_meridian_funding_rule_propose",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/actions/<action_id>/approve",
+      "endpoint": "api_actions_approve",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/actions/<action_id>/reject",
+      "endpoint": "api_actions_reject",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/actions/<action_id>/execute",
+      "endpoint": "api_actions_execute",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/bank-details",
+      "endpoint": "api_account_bank_details",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/account/simplefin/update-token",
+      "endpoint": "api_account_update_simplefin_token",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/simplefin/test",
+      "endpoint": "api_account_test_simplefin",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/lunchflow/update-key",
+      "endpoint": "api_account_update_lunchflow_key",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/lunchflow/test",
+      "endpoint": "api_account_test_lunchflow",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/splitwise/update-key",
+      "endpoint": "api_account_update_splitwise_key",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/splitwise/test",
+      "endpoint": "api_account_test_splitwise",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/webauthn/config",
+      "endpoint": "api_account_get_webauthn_config",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/account/webauthn/update-config",
+      "endpoint": "api_account_update_webauthn_config",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/webauthn/test",
+      "endpoint": "api_account_test_webauthn",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/fcm/register-token",
+      "endpoint": "api_fcm_register_token",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/fcm/config",
+      "endpoint": "api_get_fcm_config",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/account/fcm/update-config",
+      "endpoint": "api_update_fcm_config",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/fcm/test",
+      "endpoint": "api_test_fcm",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/autopilot-rules",
+      "endpoint": "api_autopilot_rules",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/account/autopilot-rules/<rule_id>/details",
+      "endpoint": "api_autopilot_rule_details",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/account/autopilot-rules/update",
+      "endpoint": "api_autopilot_rule_update",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/autopilot-rules/delete",
+      "endpoint": "api_autopilot_rule_delete",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/account/autopilot-rules/create",
+      "endpoint": "api_autopilot_rule_create",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/family",
+      "endpoint": "api_family",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/cards",
+      "endpoint": "api_cards",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/cards/<card_id>/details",
+      "endpoint": "api_card_details",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/cards/<card_id>/sensitive",
+      "endpoint": "api_card_sensitive",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/groups/move-pocket",
+      "endpoint": "api_move_pocket",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/groups/manage",
+      "endpoint": "api_manage_group",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/groups/delete",
+      "endpoint": "api_delete_group",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/assign-group",
+      "endpoint": "api_assign_group",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/set-card-spend",
+      "endpoint": "api_set_card_spend",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/savings",
+      "endpoint": "api_savings",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/history",
+      "endpoint": "api_history",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/transactions",
+      "endpoint": "api_transactions",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/pocket-transactions/<path:pocket_id>",
+      "endpoint": "api_pocket_transactions",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/transaction/<path:tx_id>",
+      "endpoint": "api_transaction_detail",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/expenses",
+      "endpoint": "api_expenses",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/goals",
+      "endpoint": "api_goals",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/trends",
+      "endpoint": "api_trends",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/subaccounts",
+      "endpoint": "api_subaccounts",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/family-subaccounts",
+      "endpoint": "api_family_subaccounts",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/move-money",
+      "endpoint": "api_move_money",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/delete-pocket",
+      "endpoint": "api_delete_pocket",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/create-pocket",
+      "endpoint": "api_create_pocket",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/delete-bill",
+      "endpoint": "api_delete_bill",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/create-bill",
+      "endpoint": "api_create_bill",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/user",
+      "endpoint": "api_user",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/intercom",
+      "endpoint": "api_intercom",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/get-config",
+      "endpoint": "api_get_lunchflow_config",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/save-key",
+      "endpoint": "api_save_lunchflow_key",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/accounts",
+      "endpoint": "api_lunchflow_accounts",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/set-credit-card",
+      "endpoint": "api_set_credit_card",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/get-balance/<account_id>",
+      "endpoint": "api_get_balance",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/create-pocket-with-balance",
+      "endpoint": "api_create_pocket_with_balance",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/credit-card-status",
+      "endpoint": "api_credit_card_status",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/manual-cc/create",
+      "endpoint": "api_manual_cc_create",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/manual-cc/top-up",
+      "endpoint": "api_manual_cc_top_up",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/manual-cc/remove",
+      "endpoint": "api_manual_cc_remove",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/sync-balance",
+      "endpoint": "api_sync_balance",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/change-account",
+      "endpoint": "api_change_account",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/stop-tracking",
+      "endpoint": "api_stop_tracking",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/last-check-time",
+      "endpoint": "api_last_check_time",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/lunchflow/transactions",
+      "endpoint": "api_get_credit_card_transactions",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/get-access-url",
+      "endpoint": "api_simplefin_get_access_url",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/claim-token",
+      "endpoint": "api_simplefin_claim_token",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/accounts",
+      "endpoint": "api_simplefin_accounts",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/set-credit-card",
+      "endpoint": "api_simplefin_set_credit_card",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/get-balance",
+      "endpoint": "api_simplefin_get_balance",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/create-pocket-with-balance",
+      "endpoint": "api_simplefin_create_pocket_with_balance",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/sync-balance",
+      "endpoint": "api_simplefin_sync_balance",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/get-batch-mode",
+      "endpoint": "api_simplefin_get_batch_mode",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/set-batch-mode",
+      "endpoint": "api_simplefin_set_batch_mode",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/change-account",
+      "endpoint": "api_simplefin_change_account",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/stop-tracking",
+      "endpoint": "api_simplefin_stop_tracking",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/disconnect",
+      "endpoint": "api_simplefin_disconnect",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/sync-schedule",
+      "endpoint": "api_get_simplefin_sync_schedule",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/sync-schedule",
+      "endpoint": "api_set_simplefin_sync_schedule",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/timezone",
+      "endpoint": "api_get_simplefin_timezone",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/timezone",
+      "endpoint": "api_set_simplefin_timezone",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/simplefin/sync-now",
+      "endpoint": "api_simplefin_sync_now",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/splitwise/get-config",
+      "endpoint": "api_splitwise_get_config",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/splitwise/save-key",
+      "endpoint": "api_splitwise_save_key",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/splitwise/friends",
+      "endpoint": "api_splitwise_get_friends",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/splitwise/set-tracked-friends",
+      "endpoint": "api_splitwise_set_tracked_friends",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/splitwise/get-creditors",
+      "endpoint": "api_splitwise_get_creditors",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/splitwise/create-pockets",
+      "endpoint": "api_splitwise_create_pockets",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/splitwise/status",
+      "endpoint": "api_splitwise_status",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/splitwise/friend-balances",
+      "endpoint": "api_splitwise_friend_balances",
+      "methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    {
+      "rule": "/api/splitwise/sync-now",
+      "endpoint": "api_splitwise_sync_now",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    },
+    {
+      "rule": "/api/splitwise/disconnect",
+      "endpoint": "api_splitwise_disconnect",
+      "methods": [
+        "OPTIONS",
+        "POST"
+      ]
+    }
+  ],
+  "executors": {
+    "move_money": {
+      "verifier": true
+    },
+    "scheduled_move_money": {
+      "verifier": true
+    },
+    "update_funding_rule": {
+      "verifier": true
+    },
+    "create_commitment": {
+      "verifier": true
+    },
+    "update_crew_bill": {
+      "verifier": true
+    },
+    "update_crew_bill_reserve_settings": {
+      "verifier": true
+    },
+    "create_crew_autopilot_rule": {
+      "verifier": false
+    },
+    "create_crew_bill": {
+      "verifier": false
+    },
+    "archive_crew_bill": {
+      "verifier": false
+    },
+    "create_crew_pocket": {
+      "verifier": false
+    },
+    "delete_crew_pocket": {
+      "verifier": false
+    },
+    "crew_initiate_transfer": {
+      "verifier": false
+    },
+    "create_crew_paycheck_funding_plan": {
+      "verifier": false
+    },
+    "update_crew_paycheck_funding_plan": {
+      "verifier": false
+    },
+    "delete_crew_paycheck_funding_plan": {
+      "verifier": false
+    },
+    "top_up_crew_reserve": {
+      "verifier": false
+    },
+    "delete_crew_autopilot_rule": {
+      "verifier": false
+    },
+    "create_crew_pocket_reassignment_rule": {
+      "verifier": false
+    },
+    "delete_crew_pocket_reassignment_rule": {
+      "verifier": false
+    },
+    "set_crew_spend_pocket": {
+      "verifier": false
+    },
+    "create_crew_virtual_card": {
+      "verifier": false
+    },
+    "create_asset": {
+      "verifier": true
+    },
+    "update_asset": {
+      "verifier": true
+    },
+    "delete_asset": {
+      "verifier": true
+    },
+    "create_contract": {
+      "verifier": true
+    },
+    "update_contract": {
+      "verifier": true
+    },
+    "delete_contract": {
+      "verifier": true
+    }
+  },
+  "allowed_without_executor": [
+    "update_crew_virtual_card"
+  ],
+  "before_request_hooks": [
+    "ensure_background_thread"
+  ]
+}

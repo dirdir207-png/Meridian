@@ -1,0 +1,23 @@
+{
+  "application_tests": {
+    "passed": 953,
+    "skipped": 7,
+    "failed": 1,
+    "receipt": "pytest-isolated-03.xml"
+  },
+  "harness_tests": {
+    "passed": 236,
+    "failed": 0,
+    "receipt": "harness-tests.json"
+  },
+  "tool_tests": {
+    "passed": 3,
+    "receipt": "tool-tests.log"
+  },
+  "ruff_exit_code": 0,
+  "diff_check_exit_code": 0,
+  "guardrail_exit_code": 0,
+  "restore_receipt": "restore-02.json",
+  "live_changes": false,
+  "deployment": false
+}
