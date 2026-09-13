@@ -11,6 +11,7 @@
         "tests/test_check_guardrails.py",
         "docs/project/agent-claims.json",
         "docs/project/shipped-migrations.json",
+        "docs/project/MERIDIAN_IMPLEMENTATION_PLAN.md",
         "scripts/capture_window.py",
         "scripts/collect_crew_ops.py",
         "scripts/introspect_crew.py",
