@@ -32,6 +32,8 @@ tree on purpose: they are the record of how decisions were reached.
 
 ## Reference (consult, do not re-derive)
 
+`MERIDIAN_EXECUTION_GAMEPLAN.md` — proposed D1–D8 execution plan: named consolidation candidates, current ref inventory, owners/interfaces, bounded slices, preset migration, first Harness prompt, session architecture and acceptance. Complements the roadmap; does not approve installation, cleanup, restart or deployment.
+
 `CREW_GRAPHQL_CATALOG.md` · `crew_mutations.json` · `BILLER_CAPABILITIES.md` ·
 `CREW_SESSION_BROKER_CLI_HANDOFF.md` · `CODEX_CLI_HANDOFF.md` · `MERIDIAN_ROADMAP_COMPARISON_PROTOCOL.md`
 (how to adjudicate competing plans) · **`CONSTITUTIONAL_BUILDER_REVIEW_2026-09-12.md`** — review of the

@@ -2,6 +2,10 @@
 
 Last consolidated: 2026-09-10 (Observatory dial continuation)
 
+## Forward gameplan — 2026-09-13
+
+Planning deliverable: [MERIDIAN_EXECUTION_GAMEPLAN.md](MERIDIAN_EXECUTION_GAMEPLAN.md), sections D1–D8 plus disagreements, one first move and unknowns. Evidence in `artifacts/gameplan-2026-09-13/`. Fresh remote listing returned only `main` and `feat/meridian-implementation`; 23 local tracking entries include 17 absent-server non-ancestor tips that must be preserved/reviewed before pruning. Ruff still reports 11 findings. Two disposable Git-fixture probes demonstrate defects in the proposed guardrail script's migration check. No cleanup, application implementation, preset installation, Harness restart, deployment or live acceptance occurred. Next proposed Harness move: H0 keyless red specification for the combined authority/re-entry gate, after owner approval of D3/D4. Full economic-OS vision remains subject to the mapped product contracts and evaluation; the plan is not a completion claim.
+
 ## Dial alignment incident fixed — 2026-09-12
 
 **iPhone Air follow-up:** corrected an additional 18px horizontal overlap by keeping the enlarged dial inside its right grid boundary and adding a 12px gutter. WebKit and Chromium tests at 420×912 pass; **47 focused checks passed** and eight device-specific captures show zero overflow. Corrected CSS verified on the running local preview. Details and evidence are in the incident report below.

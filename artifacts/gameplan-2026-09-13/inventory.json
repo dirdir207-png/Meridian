@@ -1,0 +1,311 @@
+{
+  "repo_head": "9d8107ff50e61c3edd9340edb4acb9aedcecd64b",
+  "harness_head": "a834868c143f4a896840b8d08a7777df1b899f13",
+  "remote_probe_exit": 0,
+  "remote_refs": [
+    {
+      "name": "feat/meridian-implementation",
+      "oid": "448ceed94b0c6c437390c1f4f7769dfd4afbf984",
+      "local_object": true,
+      "ancestor_of_plan_head": true,
+      "candidate": false
+    },
+    {
+      "name": "main",
+      "oid": "41102887a3245c137745ae21c3793bf8b5d903d3",
+      "local_object": true,
+      "ancestor_of_plan_head": true,
+      "candidate": false
+    }
+  ],
+  "parent_candidates": [
+    {
+      "path": "/Users/stephenwest/Openrouter/app.py",
+      "exists": true,
+      "kind": "file",
+      "size": 324245,
+      "content_read": false
+    },
+    {
+      "path": "/Users/stephenwest/Openrouter/assistant.py",
+      "exists": true,
+      "kind": "file",
+      "size": 1684,
+      "content_read": false
+    },
+    {
+      "path": "/Users/stephenwest/Openrouter/crew",
+      "exists": true,
+      "kind": "directory",
+      "size": null,
+      "content_read": false
+    },
+    {
+      "path": "/Users/stephenwest/Openrouter/crew_broker.py",
+      "exists": true,
+      "kind": "file",
+      "size": 2938,
+      "content_read": false
+    },
+    {
+      "path": "/Users/stephenwest/Openrouter/run_preview.py",
+      "exists": true,
+      "kind": "file",
+      "size": 424,
+      "content_read": false
+    },
+    {
+      "path": "/Users/stephenwest/Openrouter/data",
+      "exists": true,
+      "kind": "directory",
+      "size": null,
+      "content_read": false
+    },
+    {
+      "path": "/Users/stephenwest/Openrouter/backups",
+      "exists": true,
+      "kind": "directory",
+      "size": null,
+      "content_read": false
+    },
+    {
+      "path": "/Users/stephenwest/Openrouter/cookies.txt",
+      "exists": true,
+      "kind": "file",
+      "size": 131,
+      "content_read": false
+    },
+    {
+      "path": "/Users/stephenwest/Openrouter/simplecrew-latest",
+      "exists": true,
+      "kind": "directory",
+      "size": null,
+      "content_read": false
+    }
+  ],
+  "artifact_dirs": [
+    "artifacts/product-audit-2026-09-08",
+    "artifacts/dial-refinement-2026-09-12",
+    "artifacts/gameplan-2026-09-13",
+    "artifacts/design-audit",
+    "artifacts/observatory-preview",
+    "artifacts/design-audit-2026-08-30",
+    "artifacts/design-audit-2026-08-31"
+  ],
+  "capture_scripts": [
+    "artifacts/dial-refinement-2026-09-12/capture.py",
+    "scripts/capture_meridian_matrix.py",
+    "scripts/capture_window.py",
+    "scripts/crew_mitm_capture.py"
+  ],
+  "versions": {
+    "AGENTS.md": "98c55237925fbc44f42afcfc08684ee1f8fa0b38",
+    "docs/project/README.md": "9e0dfa70d2d225f1b664b5ee0dc7fba60a957b52",
+    "docs/project/MERIDIAN_ROADMAP.md": "74c55c94342d94a33df0ff901665aa6eb3f733a5",
+    "docs/project/PRESET_GUARDRAIL_IMPLEMENTATION.md": "bf82f26984cc72142c13d7a0606494b79433a635",
+    "docs/project/CONSTITUTIONAL_BUILDER_REVIEW_2026-09-12.md": "37622d532b16eb607ced74e6af33d082debb84d4",
+    "docs/project/MERIDIAN_DECISIONS.md": "b5339f09ea54a4aadad043ff4b0ca6af37beadd3",
+    "docs/project/MERIDIAN_OS_TASKS.json": "ab38c64b3555e42c2e07d993c9bb6affcc693eef",
+    "docs/project/MERIDIAN_VISUAL_CAPTURE_SPEC.md": "acc423f70534d54b8e6e9a366e7c73ba29d300c2",
+    "docs/project/AGENT_COORDINATION.md": "f18dad6e26acc8dc22a9b26d6cf0b45a66946148",
+    "design-qa.md": "a7c883ed29df39f65542e66b73dadb2a37163d32"
+  },
+  "lint_exit": 1,
+  "lint_issues": [
+    {
+      "file": "artifacts/dial-refinement-2026-09-12/capture.py",
+      "line": 1,
+      "code": "I001"
+    },
+    {
+      "file": "artifacts/dial-refinement-2026-09-12/capture.py",
+      "line": 7,
+      "code": "I001"
+    },
+    {
+      "file": "artifacts/dial-refinement-2026-09-12/serve.py",
+      "line": 1,
+      "code": "I001"
+    },
+    {
+      "file": "artifacts/dial-refinement-2026-09-12/serve.py",
+      "line": 6,
+      "code": "I001"
+    },
+    {
+      "file": "scripts/capture_window.py",
+      "line": 17,
+      "code": "I001"
+    },
+    {
+      "file": "scripts/capture_window.py",
+      "line": 21,
+      "code": "F401"
+    },
+    {
+      "file": "scripts/collect_crew_ops.py",
+      "line": 17,
+      "code": "F401"
+    },
+    {
+      "file": "scripts/introspect_crew.py",
+      "line": 59,
+      "code": "F401"
+    },
+    {
+      "file": "scripts/introspect_crew_live.py",
+      "line": 21,
+      "code": "F401"
+    },
+    {
+      "file": "scripts/meridian_sync_live.py",
+      "line": 19,
+      "code": "I001"
+    },
+    {
+      "file": "tmp/pdfs/build_handoff.py",
+      "line": 1,
+      "code": "I001"
+    }
+  ],
+  "local_remote_tracking_refs": [
+    {
+      "name": "origin/HEAD",
+      "oid": "41102887a3245c137745ae21c3793bf8b5d903d3",
+      "still_on_server": false,
+      "ancestor_of_head": true
+    },
+    {
+      "name": "origin/docs/enhanced-simplecrew-project-control",
+      "oid": "2ecf80480ce02a06382860d4c24af3bcb675a7b4",
+      "still_on_server": false,
+      "ancestor_of_head": true
+    },
+    {
+      "name": "origin/feat/meridian-implementation",
+      "oid": "448ceed94b0c6c437390c1f4f7769dfd4afbf984",
+      "still_on_server": true,
+      "ancestor_of_head": true
+    },
+    {
+      "name": "origin/fix/review-blockers",
+      "oid": "1db3e031b81c080a317e58e758502d40e8a9da7e",
+      "still_on_server": false,
+      "ancestor_of_head": true
+    },
+    {
+      "name": "origin/main",
+      "oid": "41102887a3245c137745ae21c3793bf8b5d903d3",
+      "still_on_server": true,
+      "ancestor_of_head": true
+    },
+    {
+      "name": "origin/ref-only-test",
+      "oid": "41102887a3245c137745ae21c3793bf8b5d903d3",
+      "still_on_server": false,
+      "ancestor_of_head": true
+    },
+    {
+      "name": "origin/scratch-a",
+      "oid": "41888c1f6d2d658cec62dc3a2ff6ccf2aea954aa",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/scratch-b",
+      "oid": "86c29e1b70b85b2a4b8d6c8870f3415198990e7a",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-a30-atlas",
+      "oid": "b82ce033245d584f0707ba70f435b152f7825531",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-a30-current",
+      "oid": "852daabf435be6c2930373a6e704a59895b620c6",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-a30-iterations",
+      "oid": "24caf3619ec4c84e013a1a64eb38bb4b0192dc51",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-app",
+      "oid": "0a08cd81da9a695f9b38b85ae3130609bbdbd57a",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-audit-0831",
+      "oid": "57ee4448d39944d40b8b8d5523eec2e4893c4de4",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-chunk-folder",
+      "oid": "01fafccf8f0bcfd6b4b8f428b31c6d009a75ba46",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-chunk-output",
+      "oid": "34f1abf95411f9474d86fc086333ca4687aa6014",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-chunk-zip",
+      "oid": "cbc686be34f31cd2f5a003dd0fe0021139107af1",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-control-meridian",
+      "oid": "7b525f7dd7084e6faf94ac2431be45d800e9d930",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-crew",
+      "oid": "449aaa769222b30ab3bc732448c65123a272af97",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-docs",
+      "oid": "df8a6a64f8ec0733c0d72e946d467ee98914f74d",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-dummy30",
+      "oid": "475625e8ee388a37e4bfa6e1185d68cf1175e74a",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-meridian",
+      "oid": "0b2d10680faf7bedb18232fcb916890136179202",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-misc",
+      "oid": "eb762809b1fd4b89819f3503b56475fb7bb67546",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    },
+    {
+      "name": "origin/test-retest-atlas",
+      "oid": "bd9d7afa99dc58f04cbe8219cdc460403712c9e3",
+      "still_on_server": false,
+      "ancestor_of_head": false
+    }
+  ]
+}

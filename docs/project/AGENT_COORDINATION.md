@@ -23,6 +23,7 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Agent | Files claimed | Since | Status |
 |---|---|---|---|
+| Astra — gameplan assignment | `docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md`, `docs/project/README.md`, `docs/project/CURRENT_STATUS.md`, `artifacts/gameplan-2026-09-13/`; own coordination entry only | 2026-09-13 | Explicit new owner assignment; planning/evidence only, no application or installed-preset edits. Existing claims otherwise preserved. |
 | Astra | `static/js/meridian/dial.*`, `static/css/meridian/dial.css`, `tests/browser/test_dial_fidelity.py`, Today partial/CSS - layout refinement (right-side alignment) | 2026-09-12 | **actively editing** - uncommitted change to the fidelity test observed; do not touch these files |
 | Builder (this lane) | `docs/project/*` only — roadmap and coordination docs | 2026-09-12 | committing now; **not** touching dial/Today files |
 
