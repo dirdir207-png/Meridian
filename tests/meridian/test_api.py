@@ -15,9 +15,9 @@ if "app" not in sys.modules:
 
 import app as simplecrew
 from meridian.classify import ClassificationInput, classify_deterministic
+from meridian.commitments import CommitmentRepository, CommitmentType
 from meridian.connections import ConnectionRepository, ConnectionState
 from meridian.connectors.email import READ_ONLY_GMAIL_SCOPE
-from meridian.commitments import CommitmentRepository, CommitmentType
 from meridian.repository import FinancialRepository
 
 
