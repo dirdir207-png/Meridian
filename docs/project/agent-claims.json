@@ -21,6 +21,8 @@
         "AGENTS.md",
         "docs/project/CFO_MANDATE_QUESTIONS.md",
         "docs/project/README.md",
+        "docs/project/CONCEPT_COVERAGE.md",
+        "tests/test_concept_coverage.py",
         "docs/superpowers/specs/2026-09-09-trial-canceler-design.md"
       ],
       "base_sha": "72370de78c529f6b88afa01f79d5ac05a3874b17",
