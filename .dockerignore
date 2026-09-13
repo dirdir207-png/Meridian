@@ -3,11 +3,17 @@
 .env.*
 *.pem
 *.key
+# Cookie jars and HTTP archives carry live session credentials
+cookies.txt
+*.cookie
+cookies/
+*.har
 
 # User data and databases
 data/
 *.db
 *.sqlite*
+*.sqlite3
 
 # Git metadata
 .git
@@ -15,13 +21,21 @@ data/
 .gitattributes
 
 # Python caches and virtual environments
+# NOTE: the previous `venv/` pattern does NOT match `.venv311/`. Dotted venvs are
+# matched explicitly, because leaving one in the context ships an entire local
+# site-packages tree (234 MB here) into the image.
+.venv/
+.venv*/
 venv/
+venv*/
 env/
 ENV/
+virtualenv/
 __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+pip-wheel-metadata/
 
 # Local tooling and editor state
 .vscode/
@@ -40,6 +54,15 @@ docker-compose.yml
 docker-compose.yml.template
 Dockerfile
 .dockerignore
+
+# Capture, audit and design artifacts — never needed at runtime, and excluded for
+# size as much as hygiene: these hold screenshots, provider-contract captures and
+# generated PDFs, some captured from live traffic.
+artifacts/
+output/
+design/
+tmp/
+backups/
 
 # Downloads and scratch files
 downloads/
