@@ -17,10 +17,12 @@ def metadata(**overrides):
     return values
 
 
-def test_matrix_matches_governing_four_viewports_and_two_themes():
-    assert len(required_matrix()) == 8
+def test_matrix_matches_governing_viewports_and_two_themes():
+    assert len(required_matrix()) == 10
     assert CAPTURE_MATRIX["desktop"] == {"width": 1440, "height": 900, "dpr": 1}
     assert CAPTURE_MATRIX["mobile-small"]["dpr"] == 3
+    # The owner's device is governed, so iPhone Air alignment work is verifiable.
+    assert CAPTURE_MATRIX["mobile-air"] == {"width": 420, "height": 912, "dpr": 3}
 
 
 def test_metadata_requires_all_determinism_fields():

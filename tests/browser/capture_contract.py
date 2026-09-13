@@ -9,6 +9,11 @@ CAPTURE_MATRIX = {
     "tablet": {"width": 1024, "height": 768, "dpr": 1},
     "mobile": {"width": 430, "height": 932, "dpr": 3},
     "mobile-small": {"width": 390, "height": 844, "dpr": 3},
+    # The owner's device. Added 2026-09-12 so dial/callout alignment tuned for it
+    # is verifiable in the governed record instead of only in browser tests. The
+    # 420x912 @ DPR 3 pair is taken from the iPhone Air geometry the fidelity
+    # tests exercise (their context sets device_scale_factor=3).
+    "mobile-air": {"width": 420, "height": 912, "dpr": 3},
 }
 THEMES = ("light", "dark")
 
