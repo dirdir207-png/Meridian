@@ -19,7 +19,9 @@
         "scripts/introspect_crew_live.py",
         "scripts/meridian_sync_live.py",
         "AGENTS.md",
-        "docs/project/CFO_MANDATE_QUESTIONS.md"
+        "docs/project/CFO_MANDATE_QUESTIONS.md",
+        "docs/project/README.md",
+        "docs/superpowers/specs/2026-09-09-trial-canceler-design.md"
       ],
       "base_sha": "72370de78c529f6b88afa01f79d5ac05a3874b17",
       "since": "2026-09-13T07:29:51+00:00",

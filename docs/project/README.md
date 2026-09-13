@@ -40,7 +40,10 @@ tree on purpose: they are the record of how decisions were reached.
 installed agent preset and the proposed operational loop: the *runtime* layer of guardrails. Its changes are
 Harness-side and owner-gated, not lane-side. · **`PRESET_GUARDRAIL_IMPLEMENTATION.md`** — the concrete design for
 implementing that review: Harness-side changes with anchors and proofs, and the lane-side half (claims manifest,
-`check_guardrails.py`, re-entry packet) buildable now.
+`check_guardrails.py`, re-entry packet) buildable now. · **`../superpowers/specs/2026-09-09-trial-canceler-design.md`**
+— the design for the trial/subscription-lifecycle subsystem. Indexed here because that subsystem is already
+**built and wired** (15 modules, 9 endpoints, 19 passing tests) while going unmentioned in the roadmap narrative,
+which is how finished work comes to look forgotten.
 
 ## Superseded (history — never cite as current)
 
