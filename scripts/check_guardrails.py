@@ -293,11 +293,13 @@ def main() -> int:
         args.receipt.write_text(json.dumps(receipt, indent=2) + "\n")
         print(f"receipt written: {args.receipt}")
 
+    # Violations always print. --quiet suppresses notes only: a mode that hides the
+    # failure list would make a failing check look like a silent pass.
     if not args.quiet:
         for note in notes:
             print(f"note  {note}")
-        for violation in violations:
-            print(f"FAIL  {violation}")
+    for violation in violations:
+        print(f"FAIL  {violation}")
     print(
         f"{'FAIL' if violations else 'OK'}  guardrails for {args.agent!r} "
         f"({len(mine)} scope pattern(s), {len(entries)} changed path(s))"

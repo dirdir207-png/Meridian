@@ -12,6 +12,7 @@
         "docs/project/agent-claims.json",
         "docs/project/shipped-migrations.json",
         "docs/project/MERIDIAN_IMPLEMENTATION_PLAN.md",
+        "docs/project/MERIDIAN_DECISIONS.md",
         "scripts/capture_window.py",
         "scripts/collect_crew_ops.py",
         "scripts/introspect_crew.py",
