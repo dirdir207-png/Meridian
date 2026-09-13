@@ -46,3 +46,5 @@ Consequences: "temporary personalized tools" and "sandboxed skill generation" ar
 5. Every autonomous recommendation carries the evidence and confidence that produced it, so the owner can audit the proposal before approving it.
 
 Status: binding for planning. It authorizes development of these capabilities in-lane; it does **not** authorize financial execution, production deployment, or autonomous value movement.
+
+The constraints that will bound an autonomous CFO are being collected as open questions in `CFO_MANDATE_QUESTIONS.md`. Open questions there are not defaults and not permission; the CFO slice cannot start until they are answered and recorded.

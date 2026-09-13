@@ -18,7 +18,8 @@
         "scripts/introspect_crew.py",
         "scripts/introspect_crew_live.py",
         "scripts/meridian_sync_live.py",
-        "AGENTS.md"
+        "AGENTS.md",
+        "docs/project/CFO_MANDATE_QUESTIONS.md"
       ],
       "base_sha": "72370de78c529f6b88afa01f79d5ac05a3874b17",
       "since": "2026-09-13T07:29:51+00:00",
