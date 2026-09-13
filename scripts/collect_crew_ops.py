@@ -14,7 +14,6 @@ Never prints cookie/token values — only operation + field names.
 
 from __future__ import annotations
 
-import os
 import plistlib
 import re
 import sqlite3

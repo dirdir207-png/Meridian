@@ -17,8 +17,8 @@ DB_FILE = sys.argv[1] if len(sys.argv) > 1 else "/tmp/gate-preview/gate.db"
 def main() -> int:
     sys.path.insert(0, ".")
     from meridian.providers.crewwork import CrewWorkSnapshotAdapter
-    from meridian.sync import sync_provider
     from meridian.repository import FinancialRepository
+    from meridian.sync import sync_provider
 
     try:
         result = subprocess.run([CREW_READONLY, "snapshot"], capture_output=True, text=True, timeout=120)

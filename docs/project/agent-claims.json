@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
+  "claims": [
+    {
+      "agent": "builder",
+      "claim_id": "builder-r0-guardrails",
+      "generation": 1,
+      "files": [
+        "scripts/check_guardrails.py",
+        "tests/test_check_guardrails.py",
+        "docs/project/agent-claims.json",
+        "docs/project/shipped-migrations.json",
+        "scripts/capture_window.py",
+        "scripts/collect_crew_ops.py",
+        "scripts/introspect_crew.py",
+        "scripts/introspect_crew_live.py",
+        "scripts/meridian_sync_live.py",
+        "AGENTS.md"
+      ],
+      "base_sha": "72370de78c529f6b88afa01f79d5ac05a3874b17",
+      "since": "2026-09-13T07:29:51+00:00",
+      "note": "R0: lane checker, claims manifest, shipped-migration manifest and tests, plus import-only lint cleanup of five tracked scripts."
+    },
+    {
+      "agent": "astra",
+      "claim_id": "astra-readiness-audit",
+      "generation": 1,
+      "files": [
+        "scripts/verify_readiness.py",
+        "tests/test_readiness_tools.py",
+        "docs/project/MERIDIAN_READINESS_AUDIT.md",
+        "docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md",
+        "docs/project/README.md",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "artifacts/readiness-2026-09-13/**",
+        "artifacts/gameplan-2026-09-13/**"
+      ],
+      "base_sha": "72370de78c529f6b88afa01f79d5ac05a3874b17",
+      "since": "2026-09-13T07:29:51+00:00",
+      "note": "In-flight readiness/wiring audit and isolated synthetic restore rehearsal. Declared so their changes are not reported as another agent's undeclared drift."
+    }
+  ]
+}

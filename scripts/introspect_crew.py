@@ -56,7 +56,6 @@ def load_credential(database: Path):
 
 
 def introspect(database: Path, endpoint: str, timeout: int = 20) -> dict:
-    import requests
 
     from crew.transports import SessionCookieTransport
 

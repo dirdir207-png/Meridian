@@ -18,7 +18,6 @@ import argparse
 import subprocess
 import sys
 import tempfile
-import os
 
 try:
     import Quartz

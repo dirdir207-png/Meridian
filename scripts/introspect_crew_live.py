@@ -18,7 +18,6 @@ HTTP request in-process. It is never printed, logged, or written to disk.
 from __future__ import annotations
 
 import json
-import os
 import plistlib
 import re
 import sqlite3
