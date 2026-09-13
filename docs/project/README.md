@@ -36,7 +36,9 @@ tree on purpose: they are the record of how decisions were reached.
 `CREW_SESSION_BROKER_CLI_HANDOFF.md` · `CODEX_CLI_HANDOFF.md` · `MERIDIAN_ROADMAP_COMPARISON_PROTOCOL.md`
 (how to adjudicate competing plans) · **`CONSTITUTIONAL_BUILDER_REVIEW_2026-09-12.md`** — review of the
 installed agent preset and the proposed operational loop: the *runtime* layer of guardrails. Its changes are
-Harness-side and owner-gated, not lane-side.
+Harness-side and owner-gated, not lane-side. · **`PRESET_GUARDRAIL_IMPLEMENTATION.md`** — the concrete design for
+implementing that review: Harness-side changes with anchors and proofs, and the lane-side half (claims manifest,
+`check_guardrails.py`, re-entry packet) buildable now.
 
 ## Superseded (history — never cite as current)
 
