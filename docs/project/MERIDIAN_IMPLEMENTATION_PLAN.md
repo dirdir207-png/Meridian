@@ -166,6 +166,41 @@ model; disagreement and uncertainty displayed.
 **I3**: council only after I2 evaluation passes — bounded sequential deliberation, recorded disagreement, **never
 majority vote**, and a typed proposal that never authorizes execution.
 
+#### Design reference for I1: the evidence-batch gate
+
+`[E]` Source-inspected, not installed: `kenz1117/dsh-engram` (MIT, `@kenz1117/dsh-engram` v0.7.5, 2026-09-01) implements
+at the agent-runtime layer the discipline I1 needs at the financial layer. Two patterns are worth taking as
+*design*, with no dependency, no Harness change and no owner gate — this is in-lane Python.
+
+**1. Sufficiency is enforced by code, not claimed by the model.** In `src/retrieve/evidence.ts`, each search
+registers a *batch* of the evidence refs citable in that output, and an assessment may only cite refs from the
+same batch. `sufficient` requires the model's claim **and** at least one valid ref **and** an explicit
+`nextStrategy === 'answer'` — three conditions, two of which the model cannot satisfy by asserting confidence.
+Its own framing is the one to copy: *a retrieval hit means relevant, not sufficient*. Bounds are explicit
+(8 refs maximum "so the whole result set cannot be treated as evidence", 20 batches per session, session-isolated,
+in-process only, expiring on restart).
+
+Applied to I1: an advisory result renders only when it cites refs from the current batch; the envelope's
+confidence field is *advisory*, never the gate. This is the same rule as `H3` ("confident prose fails completion")
+and concept 3.
+
+**2. Redaction belongs at the storage boundary, and that plugin gets it half right — instructive.** It redacts
+credentials on ingest (`src/security/redact.ts`: PEM blocks first so the assignment rule cannot truncate them, then
+Bearer, `sk-`, GitHub, AWS, and generic `key=value` assignments, each replaced by
+`[REDACTED:<kind>]` with the type preserved for later audit). But `src/store/sqlite.ts` contains **no redaction call
+and no import from `security/`** — it only *observes* the marker, filtering and counting `content LIKE
+'%[REDACTED:%'`. So the guarantee holds only while every writer routes through one ingest function.
+
+That is the failure mode this project already hit: my first migration checker enforced at an entry point keyed on
+HEAD drift, and a second path walked straight past it. The correct placement is inside the store's insert, so no
+future caller can bypass it. Meridian's rule — enforce at the effect boundary — outranks the reference here.
+
+**Boundary:** this is a design source, not a candidate dependency. The plugin is 11 days old, single-author, 2 stars,
+18 releases in 11 days, pins all `@deepseek-ai/dsh-*` peers at `*`, ships native binaries
+(`onnxruntime-node`, `sharp`, `protobufjs`), and its bundle patch **enables auto-ingest by default** where the
+published default is off. Its embedder is verified local (one model download to a `0o700` cache, then offline, data
+does not leave the machine). Verdict: take the thinking, not the package.
+
 ### V8 — release gates
 Applied to **every** releasable capability, never a terminal phase: exact source/dependency/preset identity,
 executed gates, matched restore rehearsal (owner-operated where data is real), runtime checks.
