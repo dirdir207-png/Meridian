@@ -7,7 +7,11 @@
 `MERIDIAN_SECOND_ROADMAP_REVIEW_2026-09-11.md` (second roadmap) · and, for planning purposes,
 `MERIDIAN_CONSOLIDATED_HANDOFF_2026-09-08.md` (the audit — its findings stay authoritative as findings).
 
-**Provenance:** merged from two independently produced roadmaps. The execution spine, release boundary,
+**Provenance:** merged from two separately authored roadmaps. The second is an **informed review** of the
+first - it read the first roadmap before writing - so it is *not* a blind independent sample and their
+agreement is weak evidence. The execution spine, release boundary, architecture position and command contract
+come from the second. The safety-boundary-per-slice discipline, non-goals, adequacy conditions and
+operational-hazards section come from the first.
 architecture position and command contract come from the second roadmap. The safety-boundary-per-slice
 discipline, the non-goals, the adequacy conditions and the operational-hazards section come from the first.
 The merge record is §11.
@@ -30,17 +34,21 @@ The current confusion is real and measurable `[E]`:
 
 **Target state:**
 
-1. **One tree:** `simplecrew-latest` is canonical (the only git repo). The unversioned parent becomes an
-   archive outside the working path. Before moving: confirm nothing unique is needed from its `data/` and
-   `backups/`, and handle `cookies.txt` as a credential — never opened, never printed, moved to secure storage
-   or destroyed after review. *Owner approval required for the destructive half.*
+1. **One tree:** `simplecrew-latest` is canonical (the only git repo). **The parent directory must not be
+   archived wholesale: the canonical project lives *inside* it** (`/Users/stephenwest/Openrouter/simplecrew-latest`).
+   Identify and archive *only* duplicate material by name (parent `app.py`, `assistant.py`, `crew/`,
+   `crew_broker.py`, `run_preview.py`, `data/`, `backups/`), each with a verified backup and an explicit,
+   reviewed list - never a directory move. `cookies.txt` is a credential: never opened, never printed,
+   relocated to secure storage or destroyed after review. *Owner approval for every destructive step.*
 2. **One branch:** `feat/meridian-implementation`. Stale `test-*`/`scratch-*` remote refs listed for owner
    approval, then pruned. No new branches for experiments.
 3. **One harness:** `scripts/preview_observatory_dial.py` (isolated synthetic preview) + one capture script.
    Private per-agent harnesses are retired; a harness that only its author can run is not evidence.
-4. **One doc set:** this document (trajectory), `CURRENT_STATUS.md` (status log),
-   `MERIDIAN_SUBSTRATE_INVENTORY.md` (what exists), `AGENT_COORDINATION.md` (who is doing what),
-   `design-qa.md` (visual acceptance). Everything else is history.
+4. **One entry point - not one file.** An index (this document's opening block plus
+   `docs/project/README.md`) links the *active authorities*: the builder prompt, `MERIDIAN_DECISIONS.md`, the
+   22-concept mapping, `MERIDIAN_VISUAL_CAPTURE_SPEC.md`, this roadmap, the task ledger, the substrate
+   inventory, `AGENT_COORDINATION.md` and `design-qa.md`. Superseded narratives move to
+   `docs/project/archive/`. Governing requirements are **never** demoted to "history".
 5. **One trajectory:** the three tracks in §5.
 
 ---
@@ -72,9 +80,17 @@ No committing another agent's work | inspect `git status` for foreign uncommitte
 No whitespace/lint debt | `git diff --check`, Ruff | exists |
 Simulation cannot reach real state | a test proving isolation, not a convention | **to build** |
 
-**Proposed first slice:** one `scripts/check_guardrails.py` that fails loudly on the mechanical set above
-(red suite, foreign uncommitted files, browser tests run under the wrong interpreter, a modified shipped
-migration, a new private harness dir). Small, testable, and it makes §1 real instead of aspirational.
+**Proposed first slice:** a small `scripts/check_guardrails.py`, limited to what can actually be enforced:
+a **declared file scope** (claims manifest), **baseline hashes** for files the agent has not declared, a
+**staged-diff check** (nothing staged outside the declared scope), a modified-shipped-migration check, and
+**executed tests**. It must *not* try to attribute uncommitted changes to an agent - `git status` cannot
+identify authorship. Keep it small: guardrail work must not become another open-ended prerequisite.
+
+**Runtime guardrails (the build loop itself).** The agent preset is part of the guardrail surface: it decides
+whether project instructions survive, what survives compaction, and which tools may write. A live instance of
+this preset has produced unverified claims that nothing stopped (see §7). `CONSTITUTIONAL_BUILDER_REVIEW_2026-09-12.md`
+reviews the installed preset and proposes an enforced loop - a re-entry gate before the first mutation, and
+completion bound to observed evidence. Those changes are Harness-side and owner-gated, not lane-side.
 
 **Process guardrails:** one bounded slice at a time · test-first · never claim completion because a schema,
 endpoint, button, prompt or placeholder exists · when blocked, do safe read-only, testing, documentation or
@@ -159,7 +175,14 @@ Fixtures only — never live bank data for fidelity captures.
 No blueprint existed for this. The risk is building a "council" as a vibe rather than an interface. Blueprint,
 in order:
 
-**I.1 — The envelope (the missing piece).** One typed task/result contract every role uses:
+**I.1 - Envelope *and permissions* (the missing piece).** One typed task/result contract every role uses:
+*input* - the question, an evidence bundle (references with provenance, freshness, confidence), the requester's
+authority context, and a budget (time/tokens). *output* - claims each cited to evidence IDs, explicit
+assumptions, a confidence, what would change the answer, and an unavailable/failed state. *run record* - model
+and provider, prompt version, evidence used, timing, outcome, persisted so a proposal can be audited back to
+the reasoning that produced it. **Permissions ship with the envelope, not after it:** per-role tool
+restrictions, evidence scope, budgets and failure behaviour are enforced in code, with a test per role proving
+it cannot reach a provider write path. No role ever receives a provider write tool.
 *input* — the question, an evidence bundle (references with provenance, freshness, confidence), the requester's
 authority context, and a budget (time/tokens). *output* — claims each cited to evidence IDs, explicit
 assumptions, a confidence, what would change the answer, and an unavailable/failed state. *run record* — model
@@ -176,18 +199,9 @@ Teacher explains. **Disagreement is recorded and shown, never settled by majorit
 escalate to source or calculation checks; value disputes return to the owner. Output is **one validated plan**
 for the executor — never a debate transcript.
 
-**I.4 — Guardrails.** An authority matrix in code (per role: allowed tools, data scope, budget). A test per
-role asserting it cannot reach a provider write path. Policy evaluation stays separate from proposal. Every
-advisory result carries freshness, confidence and assumptions.
-
-**I.5 — Evaluation.** Measured usefulness on a real journey, refusal correctness when evidence is missing,
-citation accuracy, cost per useful proposal. Only after that, consider multi-model routing — recording
+**I.4 - Evaluation.** Measured usefulness on a real journey, refusal correctness when evidence is missing,
+citation accuracy, cost per useful proposal. Only after that, consider multi-model routing - recording
 provider/model metadata per run.
-
-**I.6 — Non-goals.** No bank tools for any role. No autonomous external action. No eight processes before the
-envelope is proven. No majority-vote settling of financial judgment. The Operator is *not* an agent with bank
-tools; the deterministic executor alone holds write capability.
-
 ### Track C — Capability spine (adopted from the second roadmap)
 
 | Slice | Outcome |
@@ -199,7 +213,7 @@ tools; the deterministic executor alone holds write capability.
 **V5** | Explain, investigate and recover value (evidence, refunds, subscriptions, warranties) |
 **V6** | Inspectable advisory roles and constitution (couples to Track I) |
 **V7** | Optional expansion: crisis planning, household rehearsal, temporary tools, Builder proposals |
-**V8** | Release gates: executed suites, responsive journey acceptance, matched restore, exact running identity |
+**V8** | Release gates - applied to **every** releasable capability, never a terminal phase |
 
 **Three repairs to the adopted spine:**
 
@@ -222,16 +236,21 @@ tools; the deterministic executor alone holds write capability.
 ```
 Track D (Today → Plan → Activity → Accounts → Settings)   ─┐
                                                             ├─► owner-visible acceptance
-Track I (envelope → one role → council → eval)            ─┘
-Track C (V1 ─► V2 ─► V3 ─► V4 ─► V5 ─► V6 ─► V7 ─► V8)
+Track I (envelope+permissions → one role → council → eval)          ┘
+Track C (V1 ─► V2 ─► V3 ─► V4 ─► V5 ─► V6 ─► V7)   V8 gates apply to EVERY releasable slice
 ```
 
-- **Parallelism is safe** because the tracks touch different files: D is templates/CSS/JS, I is new agent
-  modules, C is services and repositories. **Claim files in `AGENT_COORDINATION.md` before editing.**
+- **Parallel tracks are not automatically safe.** D, I and C share contracts and templates, so "different
+  files" is not a lock. Use **one integrator**, give **explicit interface ownership** to one agent per shared
+  contract, and make write claims **mutually exclusive**. The claims table aids communication; it is not
+  exclusion.
 - **The keystone** is V1/V2's dated-occurrence model: the dial, Today, Plan, Beacon and funding all read it,
   and it is currently drifting `[T]`.
-- **Do not** wire the dial to live data before that model lands — it would inherit the defects and be rebuilt.
-
+- **The dial is already connected to live data** `[E]` - the earlier instruction not to wire it is stale. The
+  dated-occurrence defects therefore already reach the rendered surface, which raises the priority of Track C V1/V2.
+- **Next move (agreed with the cross-review):** finish Today's device acceptance, then develop the shared
+  dated-event model alongside the guarded agent interface, then one useful, evidence-backed intelligence role.
+  The council stays high priority, with each added role proving its value on a real user task.
 ---
 
 ## 7. Verification strategy and operational hazards
@@ -248,10 +267,15 @@ and a precise commit. Never claim completion because a schema, endpoint, button 
    `pkill -9 -f 'chromiumdev_[p]rofile'` — bracket a character so the pattern cannot match your own command line.
 3. **Migration immutability.** Once any database has applied a migration file its checksum is frozen; editing
    it 503s every financial endpoint. The preview uses `/tmp/gate-preview/gate.db`. Ship a new migration.
-4. **Committed ≠ served.** The preview does not reload code and dies with the harness; restarting is required
+4. **Committed is not served.** Template refresh no longer needs a restart (fixed 2026-09-12), but Python
+   changes and a dead preview process still require restarting it.
    for a change to take effect.
 5. **Verification latency.** `update_crew_bill` now shells out synchronously to `crew-readonly` (120 s timeout)
    before it can be verified.
+6. **No clean-lint baseline.** `ruff check .` reports **11 pre-existing errors** `[E]` — five in `scripts/`,
+   two in the untracked capture harness, one in `tmp/`, plus import sorts. A lint gate added today would fail
+   immediately. Scope the config (exclude `artifacts/`, `tmp/`) and clear the tracked files before making
+   lint a gate.
 
 ---
 
