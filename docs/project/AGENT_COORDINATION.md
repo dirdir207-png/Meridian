@@ -23,10 +23,11 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Agent | Files claimed | Since | Status |
 |---|---|---|---|
-| Astra — readiness audit | `scripts/verify_readiness.py`, `tests/test_readiness_tools.py`, `docs/project/MERIDIAN_READINESS_AUDIT.md`, `docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md`, `docs/project/README.md`, `docs/project/CURRENT_STATUS.md`, `artifacts/readiness-2026-09-13/`; own coordination entry only | 2026-09-13 | Owner authorized expanded wiring/prerequisite audit and isolated synthetic restore rehearsal. No live data, installed preset, runtime restart or deployment changes. |
 | Builder (this lane) | `docs/project/*` only — roadmap and coordination docs | 2026-09-12 | committing now; **not** touching dial/Today files |
 
 ## Log (append only — newest first)
+
+- 2026-09-13 — Astra released the readiness-audit claim after commit `648be9f`. Added audit tooling, report, installation order and retained test/restore receipts. Application: 953 passed, 7 skipped, 1 CLI-dependent failure; Harness: 236 passed; helper: 3 passed. Synthetic restore passed. No live changes or deployment. The machine claim remains a declared scope record, not an active work lock. Next: H0 negative preset tests and C4 verification repair.
 
 ### 2026-09-13 — Astra
 - Released completed gameplan claim at `70fef64`; the gameplan and planning evidence are committed.
