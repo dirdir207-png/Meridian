@@ -88,6 +88,45 @@ def test_create_bill_missing_readback_is_unresolved_and_non_retryable(tmp_path, 
     assert calls == ["create_bill"]
 
 
+def test_delete_pocket_readback_confirms_absence(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_pocket_snapshot("Other:1", "Other"))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("delete_crew_pocket",))
+    request = store.propose("delete_crew_pocket", {"id": "Pocket:old"}, "Delete pocket", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["delete_crew_pocket"]
+    outcome = execute_approved_action(store, request["id"], {"delete_crew_pocket": ExecutorSpec(execute=execute, verifier=verifier)})
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == ["delete_subaccount"]
+
+
+def test_delete_pocket_partial_readback_stays_unresolved_without_resubmit(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_pocket_snapshot("Other:1", "Other", complete=False))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("delete_crew_pocket",))
+    request = store.propose("delete_crew_pocket", {"id": "Pocket:old"}, "Delete pocket", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["delete_crew_pocket"]
+    spec = {"delete_crew_pocket": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["delete_subaccount"]
+
+
 def test_create_pocket_readback_confirms_provider_state(tmp_path, monkeypatch):
     from crew.executors import execute_approved_action
     from meridian import crew_write_actions, live

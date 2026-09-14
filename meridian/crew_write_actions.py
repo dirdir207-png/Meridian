@@ -272,6 +272,28 @@ def _verify_created_crew_pocket():
     return verify
 
 
+def _verify_deleted_crew_pocket():
+    """Confirm pocket deletion only from a fresh, complete provider snapshot."""
+    def verify(params: Dict[str, Any], _result: Dict[str, Any]) -> Dict[str, Any]:
+        from .live import capture_crew_snapshot
+        from .providers.crewwork import CrewWorkSnapshotAdapter
+        pocket_id = str(params.get("id") or params.get("subaccountId") or params.get("subaccount_id") or "")
+        try:
+            snapshot = CrewWorkSnapshotAdapter(capture_crew_snapshot()).fetch_snapshot()
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": None, "check": "crew-pocket-delete-readback", "provider_truth": False,
+                    "reason": f"readback unavailable: {exc}", "requested": {"id": pocket_id}}
+        if not snapshot.is_complete or not pocket_id:
+            return {"ok": None, "check": "crew-pocket-delete-readback", "provider_truth": False,
+                    "reason": "provider readback is incomplete or has no pocket identity",
+                    "requested": {"id": pocket_id}}
+        present = any(account.external_id == pocket_id for account in snapshot.accounts)
+        return {"ok": not present, "check": "crew-pocket-delete-readback", "provider_truth": True,
+                "reason": "pocket absent from complete provider readback" if not present else "pocket remains present after deletion",
+                "requested": {"id": pocket_id}, "observed": {"present": present}}
+    return verify
+
+
 def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Callable]]]:
     """Register the Crew write executor specs (params-dict adapters)."""
     def _exec(op: str):
@@ -288,7 +310,7 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
         "create_crew_bill": (_exec("create_bill"), _verify_created_crew_bill()),
         "archive_crew_bill": (_exec("archive_bill"), _verify_archived_crew_bill()),
         "create_crew_pocket": (_exec("create_subaccount"), _verify_created_crew_pocket()),
-        "delete_crew_pocket": (_exec("delete_subaccount"), no_verify),
+        "delete_crew_pocket": (_exec("delete_subaccount"), _verify_deleted_crew_pocket()),
         "crew_initiate_transfer": (_exec("initiate_transfer"), no_verify),
         "create_crew_paycheck_funding_plan": (
             _exec("create_paycheck_funding_plan"),

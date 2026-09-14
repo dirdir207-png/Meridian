@@ -1,6 +1,14 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-13 (C4 pocket readback repair)
+Last consolidated: 2026-09-13 (C4 pocket deletion readback repair)
+
+## C4 pocket deletion readback repair — 2026-09-13
+
+Implemented: `delete_crew_pocket` now verifies absence from a fresh, complete Crew snapshot. Complete absence is verified; presence is provider-confirmed failure; missing, partial, stale, malformed, timeout, or exception readback remains unresolved and non-retryable. No accepted deletion is resubmitted, including after restart. Proposal → owner approval → single-attempt execution → provider verification remains intact.
+
+Tested: focused C4/routing suites **69 passed**; `tests/meridian` **673 passed**; changed-path Ruff, `git diff --check`, and guardrail receipt passed. Synthetic fake-provider coverage proves complete absence, partial readback, and no resubmission. No live provider, credentials, deployment, preset, migration, or unrelated path was touched.
+
+Deployed: nothing. Verified: synthetic provider readback and isolated tests only. Remaining gaps: verifier-less financial operations, full mutation reachability, and live owner acceptance. Next: continue to the next low-risk operation-specific readback slice.
 
 ## C4 pocket readback repair — 2026-09-13
 
