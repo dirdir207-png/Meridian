@@ -1,6 +1,14 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-10 (Observatory dial continuation)
+Last consolidated: 2026-09-13 (C4 provider-verification repair)
+
+## C4 post-execution financial verification repair — 2026-09-13
+
+Implemented: reserve-setting writes now verify against a fresh, complete Crew snapshot rather than local commitments; missing, partial, stale, malformed, mismatched, timed-out, and exception readbacks remain explicitly unresolved (`executed`, `ok: null`, `provider_truth: false`, `retry_allowed: false`). A missing bill is no longer reported as confirmed deletion for bill updates. Verifier exceptions after provider acceptance no longer become false terminal failures. The existing proposal → owner approval → single claim/execution → provider verification pipeline remains unchanged; unresolved actions are non-claimable and never resubmitted.
+
+Tested: RED reproduction from `scripts/verify_readiness.py probes` recorded the reserve verifier's no-local-ID false success, local-ID `AttributeError`, and partial-readback false deletion. RED→GREEN focused suite `tests/meridian/test_crew_write_actions.py tests/crew/test_executors.py` — **48 passed**; `tests/meridian` — **664 passed**; Ruff on changed paths, `git diff --check`, and `scripts/check_guardrails.py --agent builder --receipt <temp>` — clean. Synthetic cases cover complete match, missing/partial/stale/malformed/mismatched readback, timeout, verifier exception, and fresh-process restart; each asserts one provider submission and no retry. Preset identity/guard check: installed `Meridian Constitutional Builder` files at `/Users/stephenwest/.dsh/.agent-presets/meridian-constitutional-builder`, `verify_preset.py` — **33 invariants passed**. No live provider, credentials, deployment, preset modification, or migration change.
+
+Deployed: nothing. Verified: synthetic provider/readback and isolated application tests only; no live financial acceptance or production deployment. Remaining gaps: other verifier-less operations still require future operation-specific readbacks; C4-wide mutation reachability and owner/live acceptance remain open. Next: perform one bounded operation-specific readback expansion after review.
 
 ## Expanded readiness audit — 2026-09-13
 

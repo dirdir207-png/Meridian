@@ -124,6 +124,26 @@ def test_error_contract_lands_in_failed_without_verification(store):
     assert calls == []
 
 
+def test_verifier_exception_stays_unresolved_without_retry(store):
+    calls = {"executor": 0}
+
+    def executor(params):
+        calls["executor"] += 1
+        return {"success": True, "result": {"id": "tx-1"}}
+
+    def verifier(params, result):
+        raise RuntimeError("readback boom")
+
+    action_id = seed_approved_action(store)
+    final = execute_approved_action(store, action_id, make_executors(fn=executor, verifier=verifier))
+    assert final["state"] == ActionState.EXECUTED.value
+    assert final["result"]["verification"]["ok"] is None
+    assert final["result"]["verification"]["retry_allowed"] is False
+    with pytest.raises(IllegalTransitionError):
+        execute_approved_action(store, action_id, make_executors(fn=executor, verifier=verifier))
+    assert calls["executor"] == 1
+
+
 def test_executor_exception_persists_uncertain_outcome_without_retry_or_verification(store):
     calls = {"executor": 0, "verifier": 0}
 

@@ -52,24 +52,52 @@ def _crew_write_executor(operation: str):
     return execute
 
 
-def _verify_stored(db_path: str, check_field: str):
-    """Returns a verifier that re-reads the commitment for an expected value.
+def _verify_crew_bill_reserve_readback():
+    """Verify reserve-setting writes against a fresh, complete Crew snapshot.
 
-    The Crew write acceptance is the authoritative result; the local re-read is
-    advisory (records may not be created locally yet, or the refresh hasn't
-    repulled the change). Never fail an accepted Crew write over local state.
+    Local commitments are not provider truth. Any unreadable, incomplete,
+    stale, malformed, or non-matching readback remains unresolved after the
+    provider accepted the write; it must never authorize a retry.
     """
-    repo = CommitmentRepository(db_path)
 
-    def verify(params: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
-        commitment_id = params.get("commitment_id")
-        if commitment_id is None:
-            return {"ok": True, "check": "crew-write-accepted", "note": "no local record to re-read"}
-        record = repo.get_commitment(int(commitment_id))
-        expected = params.get(check_field)
-        actual = getattr(record, check_field) if record else None
-        local_ok = record is not None and (expected is None or actual == expected)
-        return {"ok": local_ok or bool(result.get("ok")), "check": f"commitment-{check_field}"}
+    def verify(params: Dict[str, Any], _result: Dict[str, Any]) -> Dict[str, Any]:
+        from .live import capture_crew_snapshot
+        from .providers.crewwork import CrewWorkSnapshotAdapter
+
+        bill_id = str(params.get("billReserveId") or params.get("billId") or "")
+        requested = {key: params[key] for key in ("name", "amount", "reservedAmount") if key in params}
+        try:
+            dashboard = capture_crew_snapshot()
+            if not isinstance(dashboard, dict) or dashboard.get("freshness") in {"stale", "expired"}:
+                raise ValueError("provider snapshot is stale or malformed")
+            snapshot = CrewWorkSnapshotAdapter(dashboard).fetch_snapshot()
+        except Exception as exc:  # noqa: BLE001 - accepted writes stay unresolved
+            return {"ok": None, "check": "crew-bill-reserve-readback", "provider_truth": False,
+                    "reason": f"readback unavailable: {exc}", "requested": requested}
+
+        if not snapshot.is_complete or not bill_id:
+            return {"ok": None, "check": "crew-bill-reserve-readback", "provider_truth": False,
+                    "reason": "provider readback is incomplete or has no bill identity",
+                    "requested": requested}
+        candidate = next((c for c in snapshot.commitment_candidates if c.external_id == bill_id), None)
+        if candidate is None:
+            return {"ok": None, "check": "crew-bill-reserve-readback", "provider_truth": False,
+                    "reason": "the requested bill was not present in the readback",
+                    "requested": requested}
+        observed = {"name": candidate.name, "amount": round(candidate.amount * 100),
+                    "reservedAmount": (round(candidate.funded_amount * 100)
+                                       if candidate.funded_amount is not None else None)}
+        mismatches = [key for key, expected in requested.items()
+                      if expected is not None and observed.get(key) != expected]
+        if mismatches:
+            return {"ok": None, "check": "crew-bill-reserve-readback", "provider_truth": False,
+                    "reason": f"readback fields differ: {', '.join(mismatches)}",
+                    "requested": requested, "observed": observed}
+        if not requested:
+            return {"ok": None, "check": "crew-bill-reserve-readback", "provider_truth": False,
+                    "reason": "readback contained no requested fields to verify", "observed": observed}
+        return {"ok": True, "check": "crew-bill-reserve-readback", "provider_truth": True,
+                "requested": requested, "observed": observed}
 
     return verify
 
@@ -113,10 +141,10 @@ def _verify_crew_bill_readback():
         )
         if candidate is None:
             return {
-                "ok": False,
+                "ok": None,
                 "check": "crew-bill-readback",
-                "provider_truth": True,
-                "reason": "the bill is no longer present in Crew",
+                "provider_truth": False,
+                "reason": "the requested bill was not present in the readback; deletion is unconfirmed",
                 "requested": requested,
                 "observed": None,
             }
@@ -163,7 +191,7 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
         "update_crew_bill": (_exec("update_bill"), _verify_crew_bill_readback()),
         "update_crew_bill_reserve_settings": (
             _exec("update_bill_reserve_settings"),
-            _verify_stored(db_path, "name"),
+            _verify_crew_bill_reserve_readback(),
         ),
         "create_crew_autopilot_rule": (_exec("create_autopilot_rule"), no_verify),
         "create_crew_bill": (_exec("create_bill"), no_verify),

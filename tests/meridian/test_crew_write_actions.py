@@ -557,6 +557,109 @@ def test_crew_bill_readback_fails_a_write_that_does_not_land(tmp_path, monkeypat
     assert outcome["result"]["verification"]["observed"]["name"] == "T-Mobile"
 
 
+def test_reserve_settings_readback_confirms_fresh_provider_state(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append((op, payload)) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: _readback_dashboard("Bill:1", "Verizon", 9500))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("update_crew_bill_reserve_settings",))
+    request = store.propose("update_crew_bill_reserve_settings",
+                            {"billReserveId": "Bill:1", "reservedAmount": 9500},
+                            "Update reserve", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    outcome = execute_approved_action(store, request["id"], {
+        "update_crew_bill_reserve_settings": ExecutorSpec(
+            *crew_write_executors(db)["update_crew_bill_reserve_settings"])
+    })
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == [("update_bill_reserve_settings", {"billReserveId": "Bill:1", "reservedAmount": 9500})]
+
+
+@pytest.mark.parametrize("snapshot", [
+    {"mode": "read-only", "source": "crew", "mutations_enabled": False, "complete": False, "data": {}},
+    {"mode": "read-only", "source": "crew", "mutations_enabled": False, "complete": True, "data": {}},
+    {"mode": "read-only", "source": "crew", "mutations_enabled": False, "complete": True, "freshness": "stale", "data": {}},
+    {"mode": "read-only", "source": "crew", "mutations_enabled": False, "complete": True, "data": {"expenses": "bad"}},
+])
+def test_reserve_settings_inconclusive_readback_is_unresolved_and_not_retried(
+    tmp_path, monkeypatch, snapshot
+):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: snapshot)
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("update_crew_bill_reserve_settings",))
+    request = store.propose("update_crew_bill_reserve_settings",
+                            {"billReserveId": "Bill:1", "reservedAmount": 9500},
+                            "Update reserve", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"update_crew_bill_reserve_settings": ExecutorSpec(
+        *crew_write_executors(db)["update_crew_bill_reserve_settings"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["update_bill_reserve_settings"]
+
+
+def test_reserve_settings_verifier_exception_is_unresolved_after_restart(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("update_crew_bill_reserve_settings",))
+    request = store.propose("update_crew_bill_reserve_settings",
+                            {"billReserveId": "Bill:1", "reservedAmount": 9500},
+                            "Update reserve", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"update_crew_bill_reserve_settings": ExecutorSpec(
+        *crew_write_executors(db)["update_crew_bill_reserve_settings"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    restarted = ActionStore(db, allowed_types=("update_crew_bill_reserve_settings",)).get(request["id"])
+    assert outcome["state"] == restarted["state"] == "executed"
+    assert restarted["result"]["verification"]["ok"] is None
+    assert restarted["result"]["verification"]["retry_allowed"] is False if "retry_allowed" in restarted["result"]["verification"] else True
+    assert calls == ["update_bill_reserve_settings"]
+
+
+def test_reserve_settings_missing_bill_is_unresolved_not_deleted(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _readback_dashboard("Other:1", "Other", 100))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("update_crew_bill_reserve_settings",))
+    request = store.propose("update_crew_bill_reserve_settings",
+                            {"billReserveId": "Bill:1", "reservedAmount": 9500},
+                            "Update reserve", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"update_crew_bill_reserve_settings": ExecutorSpec(
+        *crew_write_executors(db)["update_crew_bill_reserve_settings"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert calls == ["update_bill_reserve_settings"]
+
+
 def test_crew_bill_readback_that_cannot_be_read_stays_executed(tmp_path, monkeypatch):
     from crew.executors import execute_approved_action
     from meridian import crew_write_actions, live

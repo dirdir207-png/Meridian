@@ -191,13 +191,17 @@ def execute_approved_action(
         verification = spec.verifier(request["params"] or {}, result)
         ok = verification.get("ok")
     except Exception as exc:
-        return store.mark_failed(
+        # The provider accepted the write; a verifier failure cannot prove that
+        # it failed. Preserve an unresolved, terminally non-retryable receipt.
+        return store.record_verification_pending(
             request_id,
-            _failure(
-                {"verification": {"ok": False}},
-                f"Verification raised: {exc}" if str(exc) else "Verification raised",
-                "verifier_exception",
-            ),
+            {
+                "ok": None,
+                "check": "verifier-exception",
+                "provider_truth": False,
+                "reason": f"Verification raised: {exc}" if str(exc) else "Verification raised",
+                "retry_allowed": False,
+            },
         )
 
     if ok is None:
@@ -210,10 +214,12 @@ def execute_approved_action(
             {
                 "ok": None,
                 "check": verification.get("check") if isinstance(verification, dict) else None,
+                "provider_truth": bool(verification.get("provider_truth")) if isinstance(verification, dict) else False,
                 "reason": (
                     verification.get("reason") if isinstance(verification, dict) else None
                 )
                 or "The resulting state could not be confirmed.",
+                "retry_allowed": False,
             },
         )
 
