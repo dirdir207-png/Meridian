@@ -25,6 +25,7 @@ would have reverted three commits had it been applied. This file is the channel.
 |---|---|---|---|
 | Builder (this lane) | `docs/project/*` (roadmap, plans, decisions, claims, coordination), `scripts/check_guardrails.py`, `tests/test_check_guardrails.py`, `tests/test_concept_coverage.py`, `AGENTS.md`, `.dockerignore` | 2026-09-13 | active; **not** touching dial/Today or `meridian/cancellation/` |
 | Astra | `scripts/verify_readiness.py`, `tests/test_readiness_tools.py`, `docs/project/MERIDIAN_READINESS_AUDIT.md`, `docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md`, `artifacts/readiness-2026-09-13/**` | 2026-09-13 | **released** at `648be9f`; retained as a declared-scope record, not a work lock (Astra's own wording) |
+| Astra-H (Harness-side, gameplan H) | `tools/agent-presets/meridian-constitutional-builder/**` (new canonical preset source), a claim row + log entry in this file | see log | active. Harness code lives in the Harness repo and is **not** claimed here. Does **not** write `agent-claims.json` — the plugin only reads filesystem/git facts, so the two-writer hazard flagged in the log below stays open but unreachable from this side. |
 
 ## Log (append only — newest first)
 
