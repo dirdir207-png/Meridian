@@ -256,6 +256,18 @@
       - docs/project/MERIDIAN_DECISIONS.md
       - docs/project/MERIDIAN_ROADMAP.md
 
+# Evidence-bound completion. `update_goal` with `action: complete` accepts no
+# evidence of its own, so a confident sentence was enough to close an objective.
+# This denies the completion unless the current turn actually ran a command tool
+# and that call did not fail — correlated by callId, so a neighbouring success
+# cannot cover a failed one.
+#
+# Narrow on purpose: it proves no executed command, no completion. It does NOT
+# prove the evidence supports the claim. No reading of a session log can say
+# whether a passing command tested what the objective asked for.
+- id: completion-evidence
+  name: '@deepseek-ai/dsh-completion-evidence'
+
 # ── filesystem ──────────────────────────────────────────────────────────────
 
 # Both register into the host `tools` registry and provide nothing, so
