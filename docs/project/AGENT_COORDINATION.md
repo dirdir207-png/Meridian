@@ -23,9 +23,47 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Agent | Files claimed | Since | Status |
 |---|---|---|---|
-| Builder (this lane) | `docs/project/*` only — roadmap and coordination docs | 2026-09-12 | committing now; **not** touching dial/Today files |
+| Builder (this lane) | `docs/project/*` (roadmap, plans, decisions, claims, coordination), `scripts/check_guardrails.py`, `tests/test_check_guardrails.py`, `tests/test_concept_coverage.py`, `AGENTS.md`, `.dockerignore` | 2026-09-13 | active; **not** touching dial/Today or `meridian/cancellation/` |
+| Astra | `scripts/verify_readiness.py`, `tests/test_readiness_tools.py`, `docs/project/MERIDIAN_READINESS_AUDIT.md`, `docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md`, `artifacts/readiness-2026-09-13/**` | 2026-09-13 | **released** at `648be9f`; retained as a declared-scope record, not a work lock (Astra's own wording) |
 
 ## Log (append only — newest first)
+
+### 2026-09-13 — Builder (owner-authorized edit of this file)
+
+**The Harness side is building the preset now.** That makes two items urgent, and one of them was a live hazard.
+
+- **A hazard closed.** `docs/project/PRESET_GUARDRAIL_IMPLEMENTATION.md` still carried the migration check that
+  Astra's E5 probe **disproved in both directions** — with `HEAD == base_sha` it never fires, so a shipped
+  migration could be edited (the 503 outage); once HEAD advances it wrongly rejects a legitimate new migration.
+  Committed `53ca8fc` marks it `SUPERSEDED — DO NOT IMPLEMENT` in place and adds a top banner. **Do not implement
+  that document's Part B from the document.** The lane-side half is already built and tested:
+  `docs/project/agent-claims.json` (claims), `docs/project/shipped-migrations.json` (path → sha256, independent of
+  HEAD), `scripts/check_guardrails.py` (enforcement), `tests/test_check_guardrails.py` (16 cases).
+
+- **Interface contract the Harness-side work must match.** Astra's gameplan stop condition — *"stop if the schema
+  is not agreed with H"* — is now active. What exists (`[E]`, tested):
+  - **Claims**: `docs/project/agent-claims.json` — `agent`, `claim_id`, `generation`, `files[]`, `base_sha`,
+    `since`, optional `expires_at`.
+  - **Receipt**: `schema_version`, `agent`, `claim_id`, `claim_generation`, `repo_root`, `branch`, `base_head`,
+    `current_head`, `constraints_digest` (hashes of `AGENTS.md`, `MERIDIAN_DECISIONS.md`, `MERIDIAN_ROADMAP.md`),
+    `authorized_scope`, `changed_paths` (classified `in-scope` / `claimed-by:<agent>` / `untracked` / `undeclared`),
+    `result`, `violations`, `notes`, and the session-only fields left **explicitly null** rather than guessed.
+  - **Semantics that must not drift**: fail closed on absent/ambiguous claims · declared scope, **not**
+    authorship · untracked files noted, not policed · migrations frozen by path→hash, **never** by HEAD ·
+    whole-repo claims rejected · expired claims stale, not valid.
+  - **OPEN — needs a decision:** who *writes* `agent-claims.json`? The Builder maintains it; if the Harness-side
+    admission plugin also writes it there are two writers on one authority. Either the plugin reads it, or one
+    writer is named.
+
+- **Correction to the figures in Astra's entry below.** The same suite measured differently:
+  Astra 953 passed / 7 skipped / 1 failed; Builder **987 passed / 64 skipped / 0 failed**. Cause is selection and
+  environment — 45 of the 64 skips are `tests/browser/*`, and the `crew-readiness` test skips here where it fails
+  there. **Do not rely on either count without its command and environment**; the CLI-dependent test failing in
+  one environment and skipping in another is itself a small test-design defect worth fixing.
+
+- **Corrected my own earlier statement.** I claimed the guardrail blocked edits to this file. It would not have:
+  a path in another agent's claim is reported as `claimed-by:<agent>` and passes. The real constraints were
+  coordination rule 3 and this file being dirty with uncommitted work — both now resolved.
 
 - 2026-09-13 — Astra released the readiness-audit claim after commit `648be9f`. Added audit tooling, report, installation order and retained test/restore receipts. Application: 953 passed, 7 skipped, 1 CLI-dependent failure; Harness: 236 passed; helper: 3 passed. Synthetic restore passed. No live changes or deployment. The machine claim remains a declared scope record, not an active work lock. Next: H0 negative preset tests and C4 verification repair.
 

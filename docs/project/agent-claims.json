@@ -23,11 +23,12 @@
         "docs/project/README.md",
         "docs/project/CONCEPT_COVERAGE.md",
         "tests/test_concept_coverage.py",
-        "docs/superpowers/specs/2026-09-09-trial-canceler-design.md"
+        "docs/superpowers/specs/2026-09-09-trial-canceler-design.md",
+        "docs/project/AGENT_COORDINATION.md"
       ],
       "base_sha": "72370de78c529f6b88afa01f79d5ac05a3874b17",
       "since": "2026-09-13T07:29:51+00:00",
-      "note": "R0: lane checker, claims manifest, shipped-migration manifest and tests, plus import-only lint cleanup of five tracked scripts."
+      "note": "R0 guardrails, implementation plan, coverage matrix, D-007, CFO mandate questions, preset-interface coordination and the disproven-snippet warning."
     },
     {
       "agent": "astra",
