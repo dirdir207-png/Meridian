@@ -1,6 +1,14 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-13 (C4 archive readback repair)
+Last consolidated: 2026-09-13 (C4 create-bill readback repair)
+
+## C4 create-bill readback repair — 2026-09-13
+
+Implemented: `create_crew_bill` now verifies the provider-generated bill ID and requested name/amount against a fresh, complete Crew snapshot. Missing, partial, stale, malformed, timeout, exception, or mismatched readback is unresolved (`executed`, `ok: null`) unless provider truth proves a mismatch; the accepted create is never resubmitted, including after restart. The existing proposal → owner approval → single-attempt execution → provider verification pipeline is preserved.
+
+Tested: focused C4 suite (`tests/meridian/test_crew_write_actions.py tests/crew/test_executors.py`) **53 passed**; `tests/meridian` **669 passed**; changed-path Ruff, `git diff --check`, and guardrail receipt passed. Synthetic fake-provider coverage proves complete confirmation and incomplete readback/no-resubmit. No live provider, credentials, deployment, preset, migration, or unrelated path was touched.
+
+Deployed: nothing. Verified: synthetic provider readback and isolated tests only. Remaining gaps: other verifier-less operations, full mutation reachability, and live owner acceptance. Next: review this commit.
 
 ## C4 archive readback repair — 2026-09-13
 

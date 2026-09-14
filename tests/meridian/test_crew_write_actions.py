@@ -33,6 +33,51 @@ def test_executors_register_all_verified_write_types(tmp_path):
         assert callable(spec[0])
 
 
+def _created_bill_snapshot(bill_id="Bill:created", name="Rent", amount_cents=12500, complete=True):
+    snapshot = _readback_dashboard(bill_id, name, amount_cents)
+    snapshot["complete"] = complete
+    return snapshot
+
+
+def test_create_bill_readback_confirms_complete_provider_state(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "Bill:created"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_bill_snapshot())
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_bill",))
+    request = store.propose("create_crew_bill", {"name": "Rent", "amount": 12500}, "Create bill", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_bill"]
+    outcome = execute_approved_action(store, request["id"], {"create_crew_bill": ExecutorSpec(execute=execute, verifier=verifier)})
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == ["create_bill"]
+
+
+def test_create_bill_missing_readback_is_unresolved_and_non_retryable(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "Bill:created"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_bill_snapshot("Other:1", complete=False))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_bill",))
+    request = store.propose("create_crew_bill", {"name": "Rent", "amount": 12500}, "Create bill", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_bill"]
+    spec = {"create_crew_bill": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["create_bill"]
+
+
 def test_propose_approve_execute_roundtrip(tmp_path, monkeypatch):
     db = str(tmp_path / "m.db")
     store = ActionStore(db, allowed_types=set(crew_write_executors(db)))
