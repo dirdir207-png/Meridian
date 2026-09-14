@@ -14,6 +14,13 @@ data/
 *.db
 *.sqlite*
 *.sqlite3
+# SQLite sidecars: `*.db` does NOT match `app.db-wal`, and a WAL file carries
+# committed rows that have not yet been checkpointed into the main database.
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite-wal
+*.sqlite-shm
 
 # Git metadata
 .git
