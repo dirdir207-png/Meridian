@@ -1,7 +1,18 @@
 # Preset guardrails — implementation design
 
-**Status:** design only. Nothing in the Harness or the installed preset has been changed. This document exists so
-the change can be reviewed, versioned and tested *before* anyone touches a live preset.
+**Status:** partly superseded. **The lane-side half (Part B) is now implemented and tested** — do not
+re-implement it from this document. Read the code instead:
+
+| This document's Part B | The implemented contract |
+|---|---|
+declared claims | `docs/project/agent-claims.json` (schema, with all active claims) |
+frozen migrations | `docs/project/shipped-migrations.json` (path → sha256, **independent of HEAD**) |
+the checker | `scripts/check_guardrails.py` — tested by `tests/test_check_guardrails.py` (16 cases) |
+
+**One snippet below is disproven and marked in place: the migration check at §Part B step 2.** It was falsified
+in both directions by executed probes, so implementing it as written reproduces the outage it was meant to
+prevent. Part A (Harness-side) remains design only — nothing in the Harness or the installed preset is changed
+by this repository.
 
 **Source:** `CONSTITUTIONAL_BUILDER_REVIEW_2026-09-12.md` (the review). This document says what implementing its
 recommendations actually looks like.
@@ -120,6 +131,18 @@ def main() -> int:
             failures.append(f"modified outside declared scope: {path}")
 
     # 2. migrations are frozen once shipped
+    #
+    # ⚠️ SUPERSEDED — DO NOT IMPLEMENT THIS BLOCK. It was disproven in both directions by
+    # executed probes (gameplan E5):
+    #   * with HEAD == base_sha the condition below never fires, so editing an already-shipped
+    #     migration PASSES — the exact violation that caused a 503 outage;
+    #   * once HEAD advances, a legitimate NEW migration is wrongly rejected.
+    # The cause is keying migration immutability on HEAD drift instead of on the artifact itself.
+    #
+    # The shipped contract now lives in docs/project/shipped-migrations.json (path -> sha256,
+    # independent of any claim's HEAD) and is enforced by the tested implementation in
+    # scripts/check_guardrails.py, with acceptance in tests/test_check_guardrails.py.
+    # Read those two files, not this snippet.
     if git("rev-parse", "HEAD").strip() != base_sha:
         for path in changed():
             if path.startswith(MIGRATIONS) and Path(path).suffix == ".sql":
