@@ -2,6 +2,10 @@
 
 Last consolidated: 2026-09-13 (C4 pocket deletion readback repair)
 
+## C4 funding-plan readback — blocked pending provider contract
+
+The next low-risk registered operations are paycheck funding-plan create/update/delete, but the application has no normalized funding-plan fields or provider adapter/readback contract (`grep` found no `fundingPlan`/`fundingPlans`/`PaycheckFunding` implementation outside the write registry and catalog documentation). Implementing a verifier now would invent provider semantics and could misreport financial state. No code changes were made in this round; the claim was released. Safe next action: capture or otherwise establish the read-only funding-plan provider shape, then resume one operation-specific verifier.
+
 ## C4 pocket deletion readback repair — 2026-09-13
 
 Implemented: `delete_crew_pocket` now verifies absence from a fresh, complete Crew snapshot. Complete absence is verified; presence is provider-confirmed failure; missing, partial, stale, malformed, timeout, or exception readback remains unresolved and non-retryable. No accepted deletion is resubmitted, including after restart. Proposal → owner approval → single-attempt execution → provider verification remains intact.
