@@ -26,9 +26,14 @@ would have reverted three commits had it been applied. This file is the channel.
 | Builder (this lane) | `docs/project/*` (roadmap, plans, decisions, claims, coordination), `scripts/check_guardrails.py`, `tests/test_check_guardrails.py`, `tests/test_concept_coverage.py`, `AGENTS.md`, `.dockerignore` | 2026-09-13 | active; **not** touching dial/Today or `meridian/cancellation/` |
 | Astra | `scripts/verify_readiness.py`, `tests/test_readiness_tools.py`, `docs/project/MERIDIAN_READINESS_AUDIT.md`, `docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md`, `artifacts/readiness-2026-09-13/**` | 2026-09-13 | **released** at `648be9f`; retained as a declared-scope record, not a work lock (Astra's own wording) |
 | Builder (C4 create readback) | `meridian/crew_write_actions.py`, `tests/meridian/test_crew_write_actions.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-13 | active; create_crew_bill only; no live provider, UI, schema, migration, or deployment work |
+| Builder (C4 pocket readback) | `meridian/crew_write_actions.py`, `tests/meridian/test_crew_write_actions.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-13 | active; create_crew_pocket only; no live provider, UI, schema, migration, or deployment work |
 | Astra-H (Harness-side, gameplan H) | `tools/agent-presets/meridian-constitutional-builder/**` (new canonical preset source), a claim row + log entry in this file | see log | active. Harness code lives in the Harness repo and is **not** claimed here. Does **not** write `agent-claims.json` — the plugin only reads filesystem/git facts, so the two-writer hazard flagged in the log below stays open but unreachable from this side. |
 
 ## Log (append only — newest first)
+
+### 2026-09-13 — Builder — C4 pocket readback repair
+
+Claimed create-pocket executor/tests and coordination/status paths. Implemented fresh provider readback using the provider-generated pocket ID; incomplete/exception cases remain unresolved and non-retryable. Focused 67 passed, Meridian 671 passed, Ruff/diff/guardrail checks passed. Claim released with commit; no live provider or unrelated paths touched.
 
 ### 2026-09-13 — Builder — C4 create-bill readback repair
 

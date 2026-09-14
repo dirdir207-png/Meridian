@@ -33,6 +33,16 @@ def test_executors_register_all_verified_write_types(tmp_path):
         assert callable(spec[0])
 
 
+def _created_pocket_snapshot(pocket_id="Pocket:created", name="Emergency Fund", complete=True):
+    snapshot = {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+                "complete": complete, "captured_at": "2026-09-13T21:00:00Z",
+                "data": {"pockets": {"data": {"currentUser": {"accounts": [
+                    {"id": "Account:1", "subaccounts": [{"id": pocket_id,
+                     "displayName": name, "isPrimary": False, "overallBalance": 0,
+                     "clearedBalance": 0}]}]}}}}}
+    return snapshot
+
+
 def _created_bill_snapshot(bill_id="Bill:created", name="Rent", amount_cents=12500, complete=True):
     snapshot = _readback_dashboard(bill_id, name, amount_cents)
     snapshot["complete"] = complete
@@ -76,6 +86,45 @@ def test_create_bill_missing_readback_is_unresolved_and_non_retryable(tmp_path, 
     with pytest.raises(Exception):
         execute_approved_action(store, request["id"], spec)
     assert calls == ["create_bill"]
+
+
+def test_create_pocket_readback_confirms_provider_state(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "Pocket:created"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_pocket_snapshot())
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_pocket",))
+    request = store.propose("create_crew_pocket", {"name": "Emergency Fund"}, "Create pocket", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_pocket"]
+    outcome = execute_approved_action(store, request["id"], {"create_crew_pocket": ExecutorSpec(execute=execute, verifier=verifier)})
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == ["create_subaccount"]
+
+
+def test_create_pocket_incomplete_readback_stays_unresolved_without_resubmit(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "Pocket:created"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_pocket_snapshot(complete=False))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_pocket",))
+    request = store.propose("create_crew_pocket", {"name": "Emergency Fund"}, "Create pocket", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_pocket"]
+    spec = {"create_crew_pocket": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["create_subaccount"]
 
 
 def test_propose_approve_execute_roundtrip(tmp_path, monkeypatch):

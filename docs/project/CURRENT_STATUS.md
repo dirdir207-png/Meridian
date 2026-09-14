@@ -1,6 +1,14 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-13 (C4 create-bill readback repair)
+Last consolidated: 2026-09-13 (C4 pocket readback repair)
+
+## C4 pocket readback repair — 2026-09-13
+
+Implemented: `create_crew_pocket` now verifies the provider-generated pocket ID and returned identity fields against a fresh, complete Crew snapshot. Incomplete, missing, malformed, timeout, exception, or mismatched readback remains unresolved or provider-confirmed failure as appropriate; the accepted operation is non-retryable and never resubmitted. Proposal → owner approval → single-attempt execution → provider verification remains intact.
+
+Tested: focused C4/routing suites **67 passed**; `tests/meridian` **671 passed**; changed-path Ruff, `git diff --check`, and guardrail receipt passed. Synthetic fake-provider cases cover complete confirmation, incomplete readback, and no resubmission. No live provider, credentials, deployment, preset, migration, or unrelated path was touched.
+
+Deployed: nothing. Verified: synthetic provider readback and isolated tests only. Remaining gaps: other verifier-less operations, full mutation reachability, and live owner acceptance. Next: continue to the next low-risk operation-specific readback slice.
 
 ## C4 create-bill readback repair — 2026-09-13
 

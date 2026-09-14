@@ -239,6 +239,39 @@ def _verify_created_crew_bill():
     return verify
 
 
+def _verify_created_crew_pocket():
+    """Confirm a created pocket by provider-generated identity and fields."""
+    def verify(params: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
+        from .live import capture_crew_snapshot
+        from .providers.crewwork import CrewWorkSnapshotAdapter
+        provider_result = ((result.get("crew") or {}).get("result") or {}) if isinstance(result, dict) else {}
+        pocket_id = str(provider_result.get("id") or "")
+        requested = {key: params.get(key) for key in ("name", "type", "targetAmount") if params.get(key) is not None}
+        try:
+            snapshot = CrewWorkSnapshotAdapter(capture_crew_snapshot()).fetch_snapshot()
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": None, "check": "crew-pocket-create-readback", "provider_truth": False,
+                    "reason": f"readback unavailable: {exc}", "requested": requested}
+        if not snapshot.is_complete or not pocket_id:
+            return {"ok": None, "check": "crew-pocket-create-readback", "provider_truth": False,
+                    "reason": "provider readback is incomplete or has no created pocket identity",
+                    "requested": requested}
+        accounts = {a.external_id: a for a in snapshot.accounts}
+        candidate = accounts.get(pocket_id)
+        if candidate is None:
+            return {"ok": None, "check": "crew-pocket-create-readback", "provider_truth": False,
+                    "reason": "created pocket was not present in the readback", "requested": requested}
+        observed = {"id": pocket_id, "name": candidate.name, "type": candidate.account_type}
+        mismatches = [key for key, expected in requested.items() if observed.get(key) != expected]
+        if mismatches:
+            return {"ok": False, "check": "crew-pocket-create-readback", "provider_truth": True,
+                    "reason": f"created pocket fields differ: {', '.join(mismatches)}",
+                    "requested": requested, "observed": observed}
+        return {"ok": True, "check": "crew-pocket-create-readback", "provider_truth": True,
+                "requested": requested, "observed": observed}
+    return verify
+
+
 def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Callable]]]:
     """Register the Crew write executor specs (params-dict adapters)."""
     def _exec(op: str):
@@ -254,7 +287,7 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
         "create_crew_autopilot_rule": (_exec("create_autopilot_rule"), no_verify),
         "create_crew_bill": (_exec("create_bill"), _verify_created_crew_bill()),
         "archive_crew_bill": (_exec("archive_bill"), _verify_archived_crew_bill()),
-        "create_crew_pocket": (_exec("create_subaccount"), no_verify),
+        "create_crew_pocket": (_exec("create_subaccount"), _verify_created_crew_pocket()),
         "delete_crew_pocket": (_exec("delete_subaccount"), no_verify),
         "crew_initiate_transfer": (_exec("initiate_transfer"), no_verify),
         "create_crew_paycheck_funding_plan": (
