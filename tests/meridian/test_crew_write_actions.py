@@ -3,7 +3,7 @@
 import pytest
 
 from crew.actions import ActionStore
-from crew.executors import ExecutorSpec
+from crew.executors import ExecutorSpec, IllegalTransitionError
 from meridian.crew_write_actions import crew_write_executors
 
 
@@ -243,6 +243,83 @@ def test_verifier_less_crew_write_stays_executed_and_is_never_claimed_verified(
         assert outcome["result"]["verification"]["check"] == "no-verifier-registered"
 
     assert calls == ["initiate_transfer", "top_up_reserve"]
+
+
+def test_archive_crew_bill_readback_confirms_provider_state(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    def readback_always_matches(params, result):
+        calls.append(("readback", params.get("billReserveId")))
+        return {"ok": True, "check": "crew-bill-readback", "provider_truth": True,
+                "requested": {"name": params.get("name"), "amount": params.get("amount")}}
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append((op, payload)) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: {**_readback_dashboard("Bill:1", "Verizon", 9500),
+                                 "data": {"expenses": {"data": {"currentUser": {"accounts": []}}}}})
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("archive_crew_bill",))
+    request = store.propose("archive_crew_bill",
+                            {"billReserveId": "Bill:1"},
+                            "Archive the bill", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"archive_crew_bill": ExecutorSpec(
+        *crew_write_executors(db)["archive_crew_bill"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == [("archive_bill", {"billReserveId": "Bill:1"})]
+
+
+def test_archive_crew_bill_readback_missing_bill_is_unresolved(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: {**_readback_dashboard("Other:1", "Other", 100), "complete": False})
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("archive_crew_bill",))
+    request = store.propose("archive_crew_bill",
+                            {"billReserveId": "Bill:1"},
+                            "Archive the bill", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"archive_crew_bill": ExecutorSpec(
+        *crew_write_executors(db)["archive_crew_bill"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    assert calls == ["archive_bill"]
+
+
+def test_archive_crew_bill_verifier_exception_is_unresolved_after_restart(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("archive_crew_bill",))
+    request = store.propose("archive_crew_bill",
+                            {"billReserveId": "Bill:1"},
+                            "Archive the bill", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"archive_crew_bill": ExecutorSpec(
+        *crew_write_executors(db)["archive_crew_bill"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["retry_allowed"] is False
+    with pytest.raises(IllegalTransitionError):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["archive_bill"]
 
 
 def test_autopilot_rule_executor_enriches_formula_before_write(tmp_path, monkeypatch):

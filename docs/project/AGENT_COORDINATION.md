@@ -29,6 +29,10 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-13 — Builder — C4 archive readback repair
+
+Claimed `meridian/crew_write_actions.py`, `tests/meridian/test_crew_write_actions.py`, and status/claims coordination paths. Reproduced verifier-less archive behavior with synthetic provider records and added complete-present, partial-absence, exception, restart, and no-resubmission coverage. Implemented operation-specific archive readback: complete absence confirms, presence fails with provider truth, and inconclusive readback remains unresolved. Focused suite 51 passed; Meridian suite 667 passed; Ruff, diff check, and guardrail receipt passed. Committed as a bounded slice; claim released. No live provider, deployment, credential, preset, migration, or unrelated path was touched.
+
 ### 2026-09-13 — Builder — C4 provider verification repair
 
 Claimed `meridian/crew_write_actions.py`, `crew/executors.py`, their focused tests, and this status record. Reproduced the reserve verifier's false local acceptance/`AttributeError` and partial-readback false deletion with synthetic records and fake providers. Implemented fresh complete provider readback for reserve settings, unresolved handling for absent/partial/stale/malformed/mismatched/timeout/exception results, and non-retryable durable receipts. Focused 48 passed; `tests/meridian` 664 passed; changed-path Ruff, diff check, preset invariants (33), and guardrail receipt passed. Committed as the bounded C4 slice; claim released. No live provider, deployment, credential, preset, migration, or unrelated path was touched.

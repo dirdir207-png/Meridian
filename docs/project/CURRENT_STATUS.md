@@ -1,6 +1,14 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-13 (C4 provider-verification repair)
+Last consolidated: 2026-09-13 (C4 archive readback repair)
+
+## C4 archive readback repair — 2026-09-13
+
+Implemented: `archive_crew_bill` now uses a fresh complete Crew snapshot verifier. A complete readback proving the bill is absent is verified; a still-present bill is a provider-confirmed failure; missing, partial, stale, malformed, timeout, exception, or otherwise inconclusive readback remains `executed` with `ok: null`, `provider_truth: false`, and `retry_allowed: false`. The accepted operation is never resubmitted, including after restart.
+
+Tested: focused C4 suite (`tests/meridian/test_crew_write_actions.py tests/crew/test_executors.py`) **51 passed**; changed-path Ruff and `git diff --check` passed. Synthetic fake-provider coverage includes complete present/absent, partial, exception and restart/no-retry cases. No live provider, credentials, deployment, preset, migration, or unrelated path was touched.
+
+Deployed: nothing. Verified: synthetic provider readback and isolated tests only. Remaining gaps: other verifier-less operations and full mutation reachability/live owner acceptance. Next: review and then select one further operation-specific readback.
 
 ## C4 post-execution financial verification repair — 2026-09-13
 

@@ -181,6 +181,29 @@ def _verify_crew_bill_readback():
     return verify
 
 
+def _verify_archived_crew_bill():
+    """Confirm an archive only from a fresh, complete provider snapshot."""
+    def verify(params: Dict[str, Any], _result: Dict[str, Any]) -> Dict[str, Any]:
+        from .live import capture_crew_snapshot
+        from .providers.crewwork import CrewWorkSnapshotAdapter
+        bill_id = str(params.get("billId") or params.get("billReserveId") or "")
+        try:
+            snapshot = CrewWorkSnapshotAdapter(capture_crew_snapshot()).fetch_snapshot()
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": None, "check": "crew-bill-archive-readback", "provider_truth": False,
+                    "reason": f"readback unavailable: {exc}", "requested": {"billId": bill_id}}
+        if not snapshot.is_complete or not bill_id:
+            return {"ok": None, "check": "crew-bill-archive-readback", "provider_truth": False,
+                    "reason": "provider readback is incomplete or has no bill identity",
+                    "requested": {"billId": bill_id}}
+        present = any(c.external_id == bill_id for c in snapshot.commitment_candidates)
+        return {"ok": not present, "check": "crew-bill-archive-readback",
+                "provider_truth": True, "reason": "bill absent from complete provider readback" if not present else "bill remains present after archive",
+                "requested": {"billId": bill_id}, "observed": {"present": present}}
+
+    return verify
+
+
 def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Callable]]]:
     """Register the Crew write executor specs (params-dict adapters)."""
     def _exec(op: str):
@@ -195,7 +218,7 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
         ),
         "create_crew_autopilot_rule": (_exec("create_autopilot_rule"), no_verify),
         "create_crew_bill": (_exec("create_bill"), no_verify),
-        "archive_crew_bill": (_exec("archive_bill"), no_verify),
+        "archive_crew_bill": (_exec("archive_bill"), _verify_archived_crew_bill()),
         "create_crew_pocket": (_exec("create_subaccount"), no_verify),
         "delete_crew_pocket": (_exec("delete_subaccount"), no_verify),
         "crew_initiate_transfer": (_exec("initiate_transfer"), no_verify),
