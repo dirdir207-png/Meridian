@@ -90,11 +90,11 @@ def main(preset: Path) -> int:
             if record.get("type") != "user/message":
                 continue
             source = record["data"].get("source", {})
-            text = "".join(b.get("text", "") for b in record["data"].get("content", []))
+            record_text = "".join(b.get("text", "") for b in record["data"].get("content", []))
             if source.get("kind") == "agent-instructions":
                 for marker in foreign_markers:
                     check(
-                        marker not in text,
+                        marker not in record_text,
                         f"template.jsonl record {index} seeds a foreign instruction block "
                         f"(contains {marker!r})",
                     )
@@ -105,11 +105,43 @@ def main(preset: Path) -> int:
                     f"{len(source.get('entries') or [])} entries from an unrelated registry",
                 )
 
-    # 5. Identity and inventory: the preset declares a name and every file it
+    # 5. The operating packet must name real files by their real paths. The
+    #    revision this replaces told the model to re-read `CURRENT_STATUS.md`
+    #    and `MERIDIAN_OS_TASKS.json`, neither of which is at the root: the
+    #    second lives in `docs/project/`, and an instruction naming a path that
+    #    does not resolve is an instruction the model cannot follow.
+    #    Re-read the composition here rather than reusing `text`: the seed loop
+    #    above reassigns that name, and the stale binding silently turned this
+    #    check and the composed-hook inventory below into no-ops the first time
+    #    they were written.
+    composition = cordis.read_text()
+    cited = set(re.findall(
+        r"(?:docs/[\w./-]+\.(?:md|json)|(?<![\w/])AGENTS\.md|(?<![\w/])design-qa\.md)",
+        composition,
+    ))
+    for required in (
+        "AGENTS.md",
+        "design-qa.md",
+        "docs/project/MERIDIAN_ROADMAP.md",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/MERIDIAN_VISUAL_CAPTURE_SPEC.md",
+    ):
+        check(required in cited, f"the operating packet no longer names {required} by its full path")
+    lane = next((parent for parent in [preset, *preset.parents] if (parent / "AGENTS.md").exists()), None)
+    if lane is None:
+        print(f"note: no lane root above {preset}; cited paths were named but not resolved")
+    else:
+        for path in sorted(cited):
+            check((lane / path).exists(), f"the operating packet cites {path}, which does not exist in the lane")
+
+    # 6. Identity and inventory: the preset declares a name and every file it
     #    references exists.
     meta = preset / "preset.yml"
     check(meta.exists(), "preset.yml missing")
-    referenced = set(re.findall(r"name:\s*\./([\w.-]+\.mjs)", text))
+    referenced = set(re.findall(r"name:\s*\./([\w.-]+\.mjs)", composition))
     for rel in sorted(referenced):
         check((preset / rel).exists(), f"composed hook {rel} is missing from the preset")
 

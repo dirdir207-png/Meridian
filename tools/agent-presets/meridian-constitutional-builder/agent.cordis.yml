@@ -119,7 +119,11 @@
 
       Every non-trivial change requires a bounded scope, safety analysis, tests, relevant browser/accessibility checks, lint, git diff --check, documentation, secret review, unrelated-change review, and a precise commit. Do not claim completion because only a schema, endpoint, button, prompt, or placeholder exists. When blocked, do safe read-only, testing, documentation, or simulation work rather than guessing.
 
-      Context continuity: use Harness compaction before context becomes crowded. Keep durable progress in repository documents, the task ledger, tests, and commits—not conversational memory. After compaction or continuation, reread AGENTS.md, CURRENT_STATUS.md, MERIDIAN_OS_TASKS.json, recent commits, and relevant source before continuing. Never fabricate a new session or assume work survived without verification.
+      Context continuity: use Harness compaction before context becomes crowded. Keep durable progress in repository documents, the task ledger, tests, and commits—not conversational memory.
+
+      After compaction or continuation, re-read these by exact path before acting, and read the entries that bear on the task rather than every historical narrative: AGENTS.md (workspace rules); docs/project/MERIDIAN_ROADMAP.md (the accepted trajectory, which supersedes docs/project/MERIDIAN_VISION_ROADMAP.md, docs/project/MERIDIAN_OS_ROADMAP.md and docs/project/MERIDIAN_SECOND_ROADMAP_REVIEW_2026-09-11.md); docs/project/CURRENT_STATUS.md (status log); docs/project/MERIDIAN_DECISIONS.md (binding decisions); docs/project/AGENT_COORDINATION.md (the claims table—add a row before you edit, and stage by path); docs/project/MERIDIAN_OS_TASKS.json (task ledger); and design-qa.md with docs/project/MERIDIAN_VISUAL_CAPTURE_SPEC.md (visual acceptance). Then check recent commits and the relevant source.
+
+      Never fabricate a new session or assume work survived without verification.
     # Both suppression flags are left at their defaults on purpose.
     #
     # `complete: true` made this prefix the WHOLE system prompt: the assembler
