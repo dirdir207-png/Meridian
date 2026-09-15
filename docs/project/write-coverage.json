@@ -46,8 +46,9 @@
     },
     {
       "type": "crew_initiate_transfer",
-      "verification": "none",
-      "reason": "No transfer readback shape exists. Matching an amount and account against general transactions would be weak evidence and could report a FALSE confirmed transfer, which is worse than an honest unresolved receipt."
+      "verification": "readback",
+      "check": "crew-transfer-readback",
+      "note": "Fresh complete provider snapshot; confirms the provider-returned transfer id appears on an observed transaction. Absence from a single read cannot confirm failure — only presence confirms success. Pagination may hide the transfer on an unobserved page, so the receipt stays unresolved when the transfer is not seen in the fetched page."
     },
     {
       "type": "top_up_crew_reserve",

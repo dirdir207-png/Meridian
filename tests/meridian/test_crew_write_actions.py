@@ -342,10 +342,12 @@ def test_uncertain_connector_outcome_is_persisted_without_retry(tmp_path, monkey
 def test_verifier_less_crew_write_stays_executed_and_is_never_claimed_verified(
     tmp_path, monkeypatch
 ):
-    """Real verifier-less Crew ops (transfer, reserve top-up, pocket create).
+    """The remaining verifier-less Crew write (reserve top-up).
 
-    Fifteen of the registered action types register no verifier. A provider
-    acceptance must not be reported as a verified outcome.
+    `crew_initiate_transfer` gained a readback verifier on 2026-09-14 (matched on
+    the provider-returned transfer id), so `top_up_crew_reserve` is the last
+    registered type with no verifier. A provider acceptance must not be reported
+    as a verified outcome.
     """
     from crew.executors import execute_approved_action
     from meridian import crew_write_actions
@@ -359,7 +361,7 @@ def test_verifier_less_crew_write_stays_executed_and_is_never_claimed_verified(
     monkeypatch.setattr(crew_write_actions, "execute_crew_write", accepted)
     db = str(tmp_path / "m.db")
     specs = crew_write_actions.crew_write_executors(db)
-    for action_type in ("crew_initiate_transfer", "top_up_crew_reserve"):
+    for action_type in ("top_up_crew_reserve",):
         assert specs[action_type][1] is None, f"{action_type} unexpectedly has a verifier"
 
         store = ActionStore(db, allowed_types=(action_type,))
@@ -375,7 +377,7 @@ def test_verifier_less_crew_write_stays_executed_and_is_never_claimed_verified(
         assert outcome["verification"] is None, action_type
         assert outcome["result"]["verification"]["check"] == "no-verifier-registered"
 
-    assert calls == ["initiate_transfer", "top_up_reserve"]
+    assert calls == ["top_up_reserve"]
 
 
 def test_archive_crew_bill_readback_confirms_provider_state(tmp_path, monkeypatch):
@@ -1409,3 +1411,119 @@ def test_new_plan_and_rule_verifiers_never_resubmit_after_an_exception(tmp_path,
     with pytest.raises(Exception):
         execute_approved_action(store, request["id"], spec)
     assert calls == ["create_paycheck_funding_plan"]
+
+
+# --- C4: crew_initiate_transfer verified by the provider's transfer id ---------
+# The connector returns the transfer id (`initiateTransfer { result { id } }`) and
+# the transactions facet already selects `transfer { id type status }`. Identity is
+# the only honest match: presence confirms, absence from a single page cannot.
+
+
+def _transfer_dashboard(transfer_ids=(), complete=True, with_facet=True):
+    edges = [
+        {"node": {
+            "id": f"txn:{index}",
+            "occurredAt": "2026-09-14T12:00:00Z",
+            "subaccount": {"id": "sub:from", "displayName": "Checking"},
+            "transfer": {"id": tid, "type": "INTERNAL", "status": "COMPLETED"},
+        }}
+        for index, tid in enumerate(transfer_ids)
+    ]
+    data = {}
+    if with_facet:
+        data["transactions"] = {"data": {"account": {
+            "id": "acct:1",
+            "cashTransactions": {"edges": edges, "pageInfo": {"hasNextPage": False}},
+        }}}
+    return {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+            "complete": complete, "captured_at": "2026-09-14T12:00:00Z", "data": data}
+
+
+def test_transfer_readback_confirms_the_provider_transfer_id(tmp_path, monkeypatch):
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "crew_initiate_transfer",
+        {"accountFromId": "sub:from", "accountToId": "sub:to", "amount": 2500, "memo": ""},
+        _transfer_dashboard(transfer_ids=("xfer:9",)), {"id": "xfer:9"},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-transfer-readback"
+    assert outcome["verification"]["provider_truth"] is True
+    assert outcome["verification"]["observed"]["transfer_id"] == "xfer:9"
+    assert calls == ["initiate_transfer"]
+
+
+def test_transfer_readback_absence_is_unresolved_never_failed(tmp_path, monkeypatch):
+    """The core rule: one page cannot prove absence, so absence is unresolved.
+
+    A false FAILED here would tell the owner a transfer did not happen when it may
+    simply be on a page that was never fetched — the failure mode this design
+    refuses.
+    """
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "crew_initiate_transfer",
+        {"accountFromId": "sub:from", "accountToId": "sub:to", "amount": 2500, "memo": ""},
+        _transfer_dashboard(transfer_ids=("xfer:other",)), {"id": "xfer:9"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    assert outcome["result"]["verification"]["retry_allowed"] is False
+    assert "cannot prove" in outcome["result"]["verification"]["reason"]
+    assert calls == ["initiate_transfer"]
+
+
+def test_transfer_readback_without_a_write_transfer_id_is_unresolved(tmp_path, monkeypatch):
+    """No transfer id in the write result means nothing to match on — never a guess."""
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "crew_initiate_transfer",
+        {"accountFromId": "sub:from", "accountToId": "sub:to", "amount": 2500, "memo": ""},
+        _transfer_dashboard(transfer_ids=("xfer:9",)), {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert "no transfer identity" in outcome["result"]["verification"]["reason"]
+
+
+def test_transfer_readback_with_an_unobserved_transactions_facet_is_unresolved(tmp_path, monkeypatch):
+    """An unread transactions facet can never confirm a transfer."""
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "crew_initiate_transfer",
+        {"accountFromId": "sub:from", "accountToId": "sub:to", "amount": 2500, "memo": ""},
+        _transfer_dashboard(with_facet=False), {"id": "xfer:9"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert "not observed" in outcome["result"]["verification"]["reason"]
+
+
+def test_transfer_readback_never_resubmits_after_a_snapshot_exception(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "xfer:9"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("crew_initiate_transfer",))
+    request = store.propose("crew_initiate_transfer",
+                            {"accountFromId": "sub:from", "accountToId": "sub:to",
+                             "amount": 2500, "memo": ""},
+                            "Transfer", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["crew_initiate_transfer"]
+    spec = {"crew_initiate_transfer": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+
+    restarted = ActionStore(db, allowed_types=("crew_initiate_transfer",)).get(request["id"])
+    assert outcome["state"] == restarted["state"] == "executed"
+    assert restarted["result"]["verification"]["ok"] is None
+    assert restarted["result"]["verification"]["retry_allowed"] is False
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["initiate_transfer"]

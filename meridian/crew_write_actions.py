@@ -578,6 +578,81 @@ def _verify_crew_reassignment_rule(*, expect_absent: bool):
     return verify
 
 
+def _verify_crew_transfer():
+    """Confirm crew_initiate_transfer from the provider-returned transfer id.
+
+    Identity, not similarity: the write result carries a transfer id (the
+    connector's ``initiate_transfer.graphql`` selects ``result { id }``), and the
+    transactions facet already selects ``transfer { id type status }``. An observed
+    transaction whose transfer id equals the write's is provider truth for the
+    write. Matching on amount and account instead would be weak evidence capable of
+    reporting a false confirmed transfer, so it is not done.
+
+    The asymmetry is deliberate and is the whole design:
+
+      * PRESENCE confirms. The provider showed the exact transfer id.
+      * ABSENCE is UNRESOLVED, never failed. The connector reads a single page of
+        transactions (pageSize 100, null cursor), so an id that is not in this read
+        may simply be on a page that was never fetched. A single read cannot
+        distinguish "not yet visible / not on this page" from "the write failed",
+        so it must not claim failure.
+      * An unobserved transactions facet, an incomplete snapshot, an unreadable
+        snapshot, or a write result with no transfer id are all UNRESOLVED rather
+        than confirmations or failures.
+    """
+    check = "crew-transfer-readback"
+
+    def verify(params: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
+        from .live import capture_crew_snapshot
+        from .providers.crewwork import CrewWorkSnapshotAdapter
+
+        provider_result = ((result.get("crew") or {}).get("result") or {}) if isinstance(result, dict) else {}
+        transfer_id = str(provider_result.get("id") or "")
+        requested = {"transfer_id": transfer_id} if transfer_id else {}
+
+        try:
+            adapter = CrewWorkSnapshotAdapter(capture_crew_snapshot())
+            snapshot = adapter.fetch_snapshot()
+        except Exception as exc:  # noqa: BLE001 - an unreadable snapshot cannot confirm
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": f"readback unavailable: {exc}", "requested": requested}
+
+        if not snapshot.is_complete:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": "provider readback is incomplete", "requested": requested}
+
+        transfers = adapter.readback_transfers()
+        if transfers is None:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": "transactions facet was not observed in the readback",
+                    "requested": requested}
+
+        if not transfer_id:
+            # The write returned no transfer identity, so there is nothing to match
+            # on. Stay unresolved rather than falling back to amount or account.
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": "the write result carried no transfer identity to match on",
+                    "requested": requested}
+
+        matched = next((t for t in transfers if t.get("transfer_id") == transfer_id), None)
+        if matched is None:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": ("the write's transfer id was not present in the observed "
+                               "transactions; a single page cannot prove it is absent"),
+                    "requested": requested,
+                    "observed": {"observed_transfer_ids": [t.get("transfer_id") for t in transfers]}}
+
+        return {"ok": True, "check": check, "provider_truth": True,
+                "requested": requested,
+                "observed": {"id": matched.get("external_id"),
+                             "transfer_id": matched.get("transfer_id"),
+                             "type": matched.get("transfer_type"),
+                             "status": matched.get("status"),
+                             "subaccount_id": matched.get("subaccount_id")}}
+
+    return verify
+
+
 def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Callable]]]:
     """Register the Crew write executor specs (params-dict adapters)."""
     def _exec(op: str):
@@ -595,7 +670,7 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
         "archive_crew_bill": (_exec("archive_bill"), _verify_archived_crew_bill()),
         "create_crew_pocket": (_exec("create_subaccount"), _verify_created_crew_pocket()),
         "delete_crew_pocket": (_exec("delete_subaccount"), _verify_deleted_crew_pocket()),
-        "crew_initiate_transfer": (_exec("initiate_transfer"), no_verify),
+        "crew_initiate_transfer": (_exec("initiate_transfer"), _verify_crew_transfer()),
         "create_crew_paycheck_funding_plan": (
             _exec("create_paycheck_funding_plan"),
             _verify_crew_funding_plan(expect_absent=False, expect_created=True),

@@ -3,25 +3,6 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
-      "agent": "builder-c4-transfer",
-      "claim_id": "builder-c4-transfer-readback",
-      "generation": 1,
-      "files": [
-        "meridian/providers/crewwork.py",
-        "meridian/crew_write_actions.py",
-        "tests/meridian/providers/test_crewwork.py",
-        "tests/meridian/test_crew_write_actions.py",
-        "docs/project/write-coverage.json",
-        "tests/meridian/test_write_coverage.py",
-        "docs/project/CURRENT_STATUS.md",
-        "docs/project/AGENT_COORDINATION.md",
-        "docs/project/agent-claims.json"
-      ],
-      "base_sha": "daf8d332e810ba79458df8519cd3bb594fd746b3",
-      "since": "2026-09-14T00:00:00+00:00",
-      "note": "C4: verify crew_initiate_transfer by matching the provider-returned transfer id against the transfer ids already selected by transactions.graphql. No provider call, migration or authority change."
-    },
-    {
       "agent": "builder",
       "claim_id": "builder-r0-guardrails",
       "generation": 1,
@@ -43,11 +24,18 @@
         "docs/project/CONCEPT_COVERAGE.md",
         "tests/test_concept_coverage.py",
         "docs/superpowers/specs/2026-09-09-trial-canceler-design.md",
-        "docs/project/AGENT_COORDINATION.md"
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/write-coverage.json",
+        "tests/meridian/test_write_coverage.py",
+        "meridian/crew_write_actions.py",
+        "meridian/providers/crewwork.py",
+        "tests/meridian/test_crew_write_actions.py",
+        "tests/meridian/providers/test_crewwork.py"
       ],
       "base_sha": "72370de78c529f6b88afa01f79d5ac05a3874b17",
       "since": "2026-09-13T07:29:51+00:00",
-      "note": "R0 guardrails, implementation plan, coverage matrix, D-007, CFO mandate questions, preset-interface coordination and the disproven-snippet warning."
+      "note": "R0 guardrails, implementation plan, coverage matrix, D-007, CFO mandate questions, preset-interface coordination and the disproven-snippet warning. Extended 2026-09-14 with the C4 transfer-readback slice (crew_initiate_transfer verifier, its accessor, the coverage manifest and guard, and the status/coordination records) after the dedicated builder-c4-transfer claim was released. Two-writer warning: Astra also declares docs/project/CURRENT_STATUS.md and AGENT_COORDINATION.md; a change by one invalidates the other's admission rather than authorising an overwrite."
     },
     {
       "agent": "astra",

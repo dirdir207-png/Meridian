@@ -309,6 +309,53 @@ class CrewWorkSnapshotAdapter:
         family = _as_dict(_as_dict(payload.get("currentUser")).get("family"))
         return [rule for rule in _as_list(family.get("reassignmentRules")) if isinstance(rule, dict)]
 
+    def readback_transfers(self) -> Optional[list]:
+        """The observed transfer links in the transactions facet, or None if unobserved.
+
+        Each entry is a dict: ``external_id`` (the cash transaction), ``transfer_id``,
+        ``transfer_type``, ``status``, and ``subaccount_id``.
+
+        The distinction that matters: ``None`` means the transactions facet was not
+        returned at all (the connector records the failure and omits it), while ``[]``
+        means it was observed but no transaction carried a transfer link. Collapsing
+        the two would let a failed read masquerade as a provider statement that no
+        transfer exists.
+
+        IMPORTANT — this is deliberately a *presence* read. The connector fetches a
+        single page of transactions (``pageSize`` 100, null cursor), so an id that is
+        absent here may simply be on an unobserved page. Callers must therefore never
+        treat absence from this list as proof that a transfer failed; only presence
+        is evidence.
+        """
+        payload = self._facet_payload("transactions")
+        if payload is None:
+            return None
+        account_node = _as_dict(_as_dict(payload).get("account"))
+        edges = _as_list(_as_dict(_as_dict(account_node).get("cashTransactions")).get("edges"))
+        transfers = []
+        for edge in edges:
+            node = _as_dict(_as_dict(edge).get("node"))
+            external_id = str(node.get("id") or "")
+            if not external_id:
+                continue
+            transfer = _as_dict(node.get("transfer"))
+            transfer_id = str(transfer.get("id") or "")
+            if not transfer_id:
+                # An id-less link cannot identify a transfer; skip it rather than
+                # reporting an entry no verifier could ever match.
+                continue
+            subaccount = _as_dict(node.get("subaccount"))
+            transfers.append(
+                {
+                    "external_id": external_id,
+                    "transfer_id": transfer_id,
+                    "transfer_type": str(transfer.get("type") or ""),
+                    "status": str(transfer.get("status") or ""),
+                    "subaccount_id": str(subaccount.get("id") or ""),
+                }
+            )
+        return transfers
+
     def _collect_accounts(self, captured_at: str = "") -> list[NormalizedAccount]:
         data = _as_dict(self._snapshot.get("data"))
         # The snapshot keeps account identity in data.accounts (id/name only)

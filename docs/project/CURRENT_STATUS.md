@@ -1,6 +1,29 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-14 (C4: funding plans and reassignment rules verified — 15 of 17)
+Last consolidated: 2026-09-14 (C4: `crew_initiate_transfer` verified by readback — 16 of 17)
+
+## C4 — `crew_initiate_transfer` verified by readback; coverage now 16 of 17 — 2026-09-14
+
+The `builder-c4-transfer` claim was released by **doing the work it reserved**. The previous session claimed nine files for it and wrote no code, because one edit failed a read-freshness check and was never retried — so the reservation sat over the tree with nothing behind it.
+
+**The recorded blocker was wrong, and in this lane's favour.** Two entries in `AGENT_COORDINATION.md` and one in the section below state that the transfer stayed unimplemented because "the write's transfer id is uncaptured". Reading the connector source settles it: `write_operations/initiate_transfer.graphql` is `initiateTransfer(input: $input) { result { id __typename } }`, and `crewwrite.py::_result` returns exactly that object — so the write's result **does** carry the transfer id. `transactions.graphql` already selects `transfer { id type status }`. Both halves of an identity match were already present; nothing was ever waiting on a capture.
+
+Implemented:
+
+- `CrewWorkSnapshotAdapter.readback_transfers()` — the observed transfer links from the transactions facet. `None` when the facet was not returned (unobserved), `[]` when it was observed with no transfer links. Never collapsed, per the standing facet rule.
+- `_verify_crew_transfer()` — check `crew-transfer-readback`. Presence of the write's transfer id on an observed transaction is provider truth for the write.
+
+The asymmetry is the whole design: **presence confirms, absence is unresolved — never failed.** The connector reads a single page of transactions (`pageSize` 100, `cursor: null`), so an id that is absent from this read may simply be on a page that was never fetched. A single read cannot tell "not yet visible / not on this page" from "the write failed", so it must not claim failure. An unread facet, an incomplete snapshot, and a write result carrying no transfer id are all unresolved. Matching on amount and account was refused, as before: it can report a **false confirmed transfer**.
+
+One design choice recorded rather than buried: the verifier gates on `snapshot.is_complete`, the convention already used by all fifteen prior verifiers here. That is conservative — an unrelated facet's failure keeps a present transfer unresolved. Tightening it to the transactions facet alone would change every verifier, so it was not slipped into this slice.
+
+**Scope limit, stated plainly (this is the honest part):** the transfer is structurally proposable through the generic `POST /api/actions/propose`, which accepts any allowed type, but **no UI control and no automated proposer calls it** — a grep finds only `app.py`'s allowed list and the registry. So this verifies the **engine path**, not an owner-reachable feature. It must not be described as a live capability. For the same reason `top_up_crew_reserve` stays last: it is the only type with no verifier. Also noted: `artifacts/readiness-2026-09-13/runtime-wiring.json` recorded this executor as `"verifier": false`; that field is now stale.
+
+Tested: 5 verifier tests + 3 accessor tests added. The verifier-less test was narrowed to `top_up_crew_reserve` (it previously asserted the transfer had no verifier, which is no longer true), and the coverage guard moved from fifteen pinned readback types to sixteen. `tests/meridian` **746 passed** (was 737); full non-browser suite **1053 passed, 1 skipped**; Ruff, `git diff --check`, and `scripts/check_guardrails.py --agent builder-c4-transfer` clean.
+
+Mutation checks: four deliberate breaks, each caught by its intended test — absence-made-failed, inverted match, empty-read-as-unobserved, and removed no-id guard. Anchors were asserted to match **exactly once** before applying, which is the specific failure the previous slice hit twice; a helper under `tmp/mutcheck/` did the replacement and refused on a non-unique anchor. All mutations reverted from file backups and verified byte-identical — `git checkout` was not used.
+
+Deployed: nothing. No provider call, no connector change, no migration, no authority change. Remaining unverified: **1 of 17** — `top_up_crew_reserve`.
 
 ## C4 — five more operations verified; coverage now 15 of 17 — 2026-09-14
 
@@ -19,7 +42,9 @@ Tested: 14 new tests (5 accessor + 9 verifier) plus the coverage guard updated f
 
 Mutation checks — and one correction about them: five deliberate breaks were attempted. Three were caught (`absence confirms a funding-plan create`, `unobserved family facet reads as empty rules`, and a changed reassignment delete check name). **Two of the five did not test what I intended**: the anchor string `the rule is still present after the delete` appears **twice** in the file (autopilot and reassignment verifiers), so `replace(..., 1)` hit the *autopilot* verifier both times and failed the autopilot test rather than the new one. A fifth attempt using the reassignment verifier's unique check-name anchor did fail `test_reassignment_rule_delete_readback_confirms_absence_and_flags_presence` as intended. Recorded because a mutation check that silently targets the wrong function is worse than no check — it produces false confidence. All mutations were reverted from file backups and verified byte-identical, never via `git checkout`.
 
-Deployed: nothing. Verified: synthetic payloads and isolated unit tests only — **no live provider call was made from this lane**, and the newly composed queries have not been run against the live server by me. The owner's live connector is the only place that can confirm the composed selections return data. Remaining unverified: **2 of 17** — `crew_initiate_transfer` (needs the transfer id from the write result, which is still uncaptured) and `top_up_crew_reserve` (needs base-state capture plus a precondition, because the handoff is explicit that a changed reserve amount is not proof of a particular top-up; the sequence is its own slice).
+Deployed: nothing. Verified: synthetic payloads and isolated unit tests only — **no live provider call was made from this lane**, and the newly composed queries have not been run against the live server by me. The owner's live connector is the only place that can confirm the composed selections return data. Remaining unverified: **1 of 17** — `top_up_crew_reserve` (needs base-state capture plus a precondition; the handoff is explicit that a changed reserve amount is not proof of a particular top-up; the sequence is its own slice). *(This paragraph originally said 2 of 17 and named `crew_initiate_transfer` as blocked on "the transfer id from the write result, which is still uncaptured" — that reason was wrong and the gap is closed in the section above.)*
+
+All readback types except `top_up_crew_reserve` now have a readback verifier registered in `write-coverage.json`; the `crew_initiate_transfer` gap has been closed with a readback verifier that confirms the provider-returned transfer id appears on an observed transaction. Absence from a single fetched page cannot confirm failure — only presence confirms success — so the receipt stays unresolved, never failed.
 
 ## Connector readback fields — verified patch handed to the owner, not applied — 2026-09-14
 

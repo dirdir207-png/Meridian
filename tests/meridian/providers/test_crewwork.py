@@ -429,3 +429,80 @@ def test_reassignment_rules_readback_distinguishes_empty_from_unobserved():
 
     assert CrewWorkSnapshotAdapter(_family_rules_facet(rules=[])).readback_reassignment_rules() == []
     assert CrewWorkSnapshotAdapter(_family_rules_facet(with_facet=False)).readback_reassignment_rules() is None
+
+
+# --- C4: transfer identity from the transactions facet (`transfer { id type status }`) ---
+
+
+def _transactions_facet(transfers=None, with_facet=True, with_transfer_field=True):
+    """A snapshot whose transactions facet carries transfer links.
+
+    `transfers` is a list of (transfer_id, type, status) tuples; None entries mean
+    a transaction without a transfer (an ordinary purchase).
+    """
+    data = {}
+    if with_facet:
+        edges = []
+        for index, entry in enumerate(transfers or []):
+            node = {
+                "id": f"txn:{index}",
+                "occurredAt": "2026-09-14T12:00:00Z",
+                "subaccount": {"id": "sub:1", "displayName": "Checking"},
+            }
+            if entry is not None:
+                tid, ttype, tstatus = entry
+                if with_transfer_field:
+                    node["transfer"] = {"id": tid, "type": ttype, "status": tstatus}
+            edges.append({"node": node})
+        data["transactions"] = {"data": {
+            "account": {
+                "id": "acct:1",
+                "cashTransactions": {"edges": edges, "pageInfo": {"hasNextPage": True}},
+            }
+        }}
+    return {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+            "complete": True, "captured_at": "2026-09-14T12:00:00Z", "data": data}
+
+
+def test_transfer_readback_returns_the_observed_transfer_identity():
+    adapter = CrewWorkSnapshotAdapter(_transactions_facet(
+        transfers=[None, ("xfer:9", "INTERNAL", "COMPLETED")]))
+
+    transfers = adapter.readback_transfers()
+
+    # Only the transaction carrying a transfer link is reported; the ordinary
+    # purchase is not.
+    assert [t["transfer_id"] for t in transfers] == ["xfer:9"]
+    assert transfers[0]["transfer_type"] == "INTERNAL"
+    assert transfers[0]["status"] == "COMPLETED"
+    assert transfers[0]["external_id"] == "txn:1"
+    assert transfers[0]["subaccount_id"] == "sub:1"
+
+
+def test_an_unobserved_transactions_facet_is_none_not_an_empty_list():
+    """A facet the connector could not read is unobserved, never 'no transfers'."""
+    adapter = CrewWorkSnapshotAdapter(_transactions_facet(with_facet=False))
+
+    assert adapter.readback_transfers() is None
+
+
+def test_an_observed_facet_with_no_transfer_links_is_an_empty_list():
+    """Observed transactions with no transfer link is a real observation of zero.
+
+    Empty is distinct from unobserved: the read succeeded and found no transfer, so
+    the caller may state that fact — it still may not conclude the write failed,
+    because only one page was fetched.
+    """
+    adapter = CrewWorkSnapshotAdapter(_transactions_facet(transfers=[None, None]))
+
+    assert adapter.readback_transfers() == []
+
+
+def test_a_transfer_link_without_an_id_is_not_reported():
+    """An id-less transfer link cannot identify anything, so it is skipped."""
+    adapter = CrewWorkSnapshotAdapter(_transactions_facet(
+        transfers=[("", "INTERNAL", "COMPLETED"), ("xfer:2", "INTERNAL", "PENDING")]))
+
+    transfers = adapter.readback_transfers()
+
+    assert [t["transfer_id"] for t in transfers] == ["xfer:2"]
