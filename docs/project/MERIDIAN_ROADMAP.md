@@ -133,6 +133,50 @@ any compaction or handover, re-read `AGENTS.md`, this document, `CURRENT_STATUS.
 commits and the relevant source before continuing. Never assume work survived without verifying it. A
 documented claim is not a verified claim: mark `[E]` only what you read or ran.
 
+### 3.1 Advisory model recommendations
+
+These recommendations help the owner choose a model when a governed section starts. They are **advisory**:
+they do not change a session, bind an agent, modify a preset, or grant authority. Direct selection remains an
+owner choice. A fallback is the next sensible manual choice, not an automatic promise.
+
+`rotation/auto` is capacity- and failure-aware, **not task-aware**. Its current chain begins with subscription
+Luna, selects the first route whose advertised context envelope fits, and escalates only on a hard failure.
+When it is recommended, omit explicit reasoning effort because the alias is a dispatcher rather than a
+concrete reasoning model. If a particular section needs Astra or Sol, select that model directly.
+
+| Roadmap section | Recommended model / effort | Fallback | Why |
+|---|---|---|---|
+| **D — Today** | Sol / high | `rotation/auto` | Governing-concept reconciliation plus implementation judgment |
+| **D — Plan** | Sol / high | `rotation/auto` | Financial presentation and interaction fidelity |
+| **D — Activity** | Sol / high | `rotation/auto` | Evidence clarity across dense transaction states |
+| **D — Accounts** | Sol / high | `rotation/auto` | Financial-state semantics must survive the visual pass |
+| **D — Settings** | Sol / medium | `rotation/auto` | Broad but comparatively routine surface integration |
+| **D — login and Virgil visual pass** | Sol / high | `rotation/auto` | Identity, authentication, mobile layout, and capability cues meet |
+| **I.1 — envelope and permissions** | Astra / xhigh | Sol / high | Cross-system contract and least-authority design |
+| **I.2 — one role end to end** | Sol / high | Astra / high for a blocked design review | Deep implementation with a bounded interface already established |
+| **I.3 — council mechanics** | Astra / xhigh | Sol / high | Multi-role evidence, disagreement, and authority architecture |
+| **I.4 — evaluation and routing evidence** | Sol / high | Astra / high for final policy review | Measurement and implementation precede any router-policy change |
+| **C-V1 — trustworthy Today** | Sol / high | `rotation/auto` | Evidence, freshness, date semantics, and owner-visible behavior |
+| **C-V2 — paycheck planning** | Astra / high | Sol / high | Financial-model semantics and double-counting risk |
+| **C-V3 — authorized intervention** | Astra / xhigh | Sol / high | Approval, execution, readback, and uncertain-write boundaries |
+| **C-V4 — proactive closed loop** | Sol / high | Astra / high for policy review | Suppression, feedback, and bounded proactivity |
+| **C-V5 — explain and recover value** | Sol / high | `rotation/auto` | Evidence-heavy investigation and workflow integration |
+| **C-V6 — advisory roles and constitution** | Astra / xhigh | Sol / high | Role permissions and constitutional boundaries |
+| **C-V7 — optional expansion** | Sol / high | Astra / high when a new authority boundary appears | Capability-by-capability implementation under existing gates |
+| **C-V8 — release gates** | Sol / high | `rotation/auto` for mechanical reruns only | Release judgment stays on a stable direct model |
+| **VIRGIL-A0 — contracts and toolchain** | Astra / xhigh | Sol / high | North-star, threat model, and Meridian-Harness-iOS seams |
+| **VIRGIL-A1 — read-only voice slice** | Sol / high | Astra / high for contract conflict | First end-to-end implementation on accepted contracts |
+| **VIRGIL-A2 — typed device actions** | Sol / high | Astra / high for capability-boundary review | Deterministic native action implementation and validation |
+| **VIRGIL-A3 — proposal bridge** | Astra / xhigh | Sol / high | Voice/model intent reaches a consequential proposal boundary |
+| **VIRGIL-A4 — proactive and long-running tasks** | Astra / high | Sol / high | Cross-runtime lifecycle, privacy, expiry, and interruption behavior |
+| **VIRGIL-A5 — rich client expansion** | Sol / high | Astra / high when a new authority boundary appears | Incremental client/capability delivery after the spine is proven |
+| **Harness router, provider, or preset infrastructure** | Sol / high | Astra / high only for a routing-policy redesign | Infrastructure stays in `Deepseek-Harness`, outside the Meridian product lane |
+
+Two modifiers keep the matrix economical: use Luna / medium for a truly mechanical, already-specified edit or
+test/capture rerun; use `rotation/auto` for long, low-risk inspection where context capacity and fallback
+continuity matter more than holding one model constant. Neither modifier applies to owner decisions, threat
+models, financial semantics, authority changes, or release acceptance.
+
 ---
 
 ## 4. Release boundary (adopted from the second roadmap)
