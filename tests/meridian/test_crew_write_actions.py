@@ -890,3 +890,201 @@ def test_crew_bill_readback_that_cannot_be_read_stays_executed(tmp_path, monkeyp
     assert outcome["state"] == "executed"
     assert outcome["result"]["verification"]["ok"] is None
     assert outcome["result"]["verification"]["check"] == "crew-bill-readback"
+
+
+# --- C4: virtual-card and autopilot-rule readback ----------------------------
+# Both facets were already returned by the connector and discarded by Meridian.
+# Absence confirms a deletion but never a creation.
+
+
+def _facet_dashboard(cards=None, rules=None, complete=True, with_cards=None, with_rules=None):
+    data = {}
+    if with_cards is not False:
+        data["virtual_cards"] = {"data": {"currentUser": {"family": {
+            "children": [{"id": "user:1", "virtualDebitCards": cards or []}], "parents": []}}}}
+    if with_rules is not False:
+        data["autopilot"] = {"data": {"currentUser": {"family": {"rules": rules or []}}}}
+    return {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+            "complete": complete, "captured_at": "2026-09-13T12:00:00Z", "data": data}
+
+
+def _run_crew_action(tmp_path, monkeypatch, action_type, params, dashboard, result):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": result})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: dashboard)
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=(action_type,))
+    request = store.propose(action_type, params, "C4 readback", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)[action_type]
+    spec = {action_type: ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+    return db, store, spec, outcome, calls
+
+
+def test_virtual_card_readback_confirms_the_provider_card(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[{"id": "card:1", "name": "Zz Card", "color": "TEAL"}])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_virtual_card",
+        {"user_id": "user:1", "name": "Zz Card", "subaccount_id": "Sub:2", "card_color": "TEAL"},
+        dashboard, {"id": "card:1"},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert outcome["verification"]["check"] == "crew-card-create-readback"
+    assert calls == ["create_virtual_card"]
+
+
+def test_virtual_card_not_yet_visible_is_unresolved_and_never_resubmitted(tmp_path, monkeypatch):
+    """A card absent from one read is unresolved: propagation is indistinguishable
+    from failure, so it must not be reported as a confirmed failure."""
+    dashboard = _facet_dashboard(cards=[])
+
+    db, store, spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_virtual_card",
+        {"user_id": "user:1", "name": "Zz Card", "card_color": "TEAL"},
+        dashboard, {"id": "card:1"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    with pytest.raises(Exception):
+        from crew.executors import execute_approved_action
+        execute_approved_action(store, outcome["id"], spec)
+    assert calls == ["create_virtual_card"]
+    assert ActionStore(db, allowed_types=("create_crew_virtual_card",)).get(outcome["id"])["state"] == "executed"
+
+
+def test_virtual_card_with_a_different_colour_is_a_provider_contradiction(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[{"id": "card:1", "name": "Zz Card", "color": "PINK"}])
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_virtual_card",
+        {"user_id": "user:1", "name": "Zz Card", "card_color": "TEAL"},
+        dashboard, {"id": "card:1"},
+    )
+
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["error_code"] == "verification_failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert "card_color" in outcome["result"]["verification"]["reason"]
+
+
+def test_an_unobserved_card_facet_never_confirms_a_creation(tmp_path, monkeypatch):
+    """The facet the connector could not read must not read as 'no card exists'."""
+    dashboard = _facet_dashboard(cards=[{"id": "card:1", "name": "Zz Card"}], with_cards=False)
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_virtual_card",
+        {"user_id": "user:1", "name": "Zz Card", "card_color": "TEAL"},
+        dashboard, {"id": "card:1"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+
+
+def test_autopilot_rule_create_readback_confirms_the_provider_rule(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(rules=[{"id": "rule:1", "name": "Zz Diag", "isPaused": False}])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_autopilot_rule",
+        {"name": "Zz Diag", "account_id": "Acct:1", "subaccount_id": "Sub:1"},
+        dashboard, {"id": "rule:1"},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-autopilot-rule-create-readback"
+    assert calls == ["create_autopilot_rule"]
+
+
+def test_autopilot_rule_not_yet_visible_is_unresolved(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(rules=[])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_autopilot_rule",
+        {"name": "Zz Diag", "account_id": "Acct:1"},
+        dashboard, {"id": "rule:1"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert calls == ["create_autopilot_rule"]
+
+
+def test_autopilot_rule_delete_readback_confirms_absence(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(rules=[{"id": "rule:other", "name": "Other"}])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_autopilot_rule",
+        {"rule_id": "rule:1"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-autopilot-rule-delete-readback"
+    assert calls == ["delete_rule"]
+
+
+def test_a_rule_still_present_after_delete_is_a_provider_contradiction(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(rules=[{"id": "rule:1", "name": "Zz Diag"}])
+
+    db, store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_autopilot_rule",
+        {"rule_id": "rule:1"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert "still present" in outcome["result"]["verification"]["reason"]
+    assert calls == ["delete_rule"]
+
+
+def test_autopilot_delete_with_an_unreadable_facet_stays_unresolved(tmp_path, monkeypatch):
+    """An unread facet cannot confirm a  absence must never be assumed."""
+    dashboard = _facet_dashboard(with_rules=False)
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_autopilot_rule",
+        {"rule_id": "rule:1"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    assert calls == ["delete_rule"]
+
+
+def test_new_readback_verifiers_survive_an_exception_and_restart(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "rule:1"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_autopilot_rule",))
+    request = store.propose("create_crew_autopilot_rule",
+                            {"name": "Zz Diag", "account_id": "Acct:checking",
+                             "subaccount_id": "Sub:fts"},
+                            "r", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_autopilot_rule"]
+    spec = {"create_crew_autopilot_rule": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+
+    restarted = ActionStore(db, allowed_types=("create_crew_autopilot_rule",)).get(request["id"])
+    assert outcome["state"] == restarted["state"] == "executed"
+    assert restarted["result"]["verification"]["ok"] is None
+    assert restarted["result"]["verification"]["retry_allowed"] is False
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["create_autopilot_rule"]

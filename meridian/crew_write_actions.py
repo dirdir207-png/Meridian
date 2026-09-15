@@ -294,6 +294,115 @@ def _verify_deleted_crew_pocket():
     return verify
 
 
+def _verify_created_crew_virtual_card():
+    """Confirm a created virtual card from the connector's card facet.
+
+    The facet has always been fetched and Meridian used to discard it, so this
+    needs no connector change. A card that is not yet visible is UNRESOLVED, not
+    a failure: a single read cannot tell propagation delay from a failed write.
+    """
+    check = "crew-card-create-readback"
+
+    def verify(params: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
+        from .live import capture_crew_snapshot
+        from .providers.crewwork import CrewWorkSnapshotAdapter
+
+        provider_result = ((result.get("crew") or {}).get("result") or {}) if isinstance(result, dict) else {}
+        card_id = str(provider_result.get("id") or "")
+        requested = {key: params.get(key) for key in ("name", "card_color") if params.get(key) is not None}
+        try:
+            adapter = CrewWorkSnapshotAdapter(capture_crew_snapshot())
+            snapshot = adapter.fetch_snapshot()
+            cards = adapter.readback_virtual_cards()
+        except Exception as exc:  # noqa: BLE001 - an unreadable snapshot cannot confirm
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": f"readback unavailable: {exc}", "requested": requested}
+
+        if not snapshot.is_complete or cards is None or not card_id:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": ("provider readback is incomplete, did not include the card facet, "
+                               "or the write returned no card identity"),
+                    "requested": requested}
+
+        candidate = next((c for c in cards if str(c.get("id") or "") == card_id), None)
+        if candidate is None:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": "the created card was not present in the readback",
+                    "requested": requested, "observed": None}
+
+        observed = {"id": card_id, "name": candidate.get("name"), "card_color": candidate.get("color")}
+        mismatches = []
+        if requested.get("name") is not None and observed["name"] != requested["name"]:
+            mismatches.append("name")
+        if requested.get("card_color") is not None and observed["card_color"] != requested["card_color"]:
+            mismatches.append("card_color")
+        if mismatches:
+            return {"ok": False, "check": check, "provider_truth": True,
+                    "reason": f"created card fields differ: {', '.join(mismatches)}",
+                    "requested": requested, "observed": observed}
+        return {"ok": True, "check": check, "provider_truth": True,
+                "requested": requested, "observed": observed}
+
+    return verify
+
+
+def _verify_autopilot_rule(*, expect_absent: bool):
+    """Confirm an autopilot-rule create or delete from the rules facet.
+
+    Absence confirms a deletion but NEVER a creation: a created rule that is not
+    yet visible is unresolved, because one read cannot distinguish propagation
+    from failure. Presence after a deletion is a provider-confirmed contradiction
+    — the safe direction, since it can never falsely claim a rule is gone.
+    """
+    check = ("crew-autopilot-rule-delete-readback" if expect_absent
+             else "crew-autopilot-rule-create-readback")
+
+    def verify(params: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
+        from .live import capture_crew_snapshot
+        from .providers.crewwork import CrewWorkSnapshotAdapter
+
+        provider_result = ((result.get("crew") or {}).get("result") or {}) if isinstance(result, dict) else {}
+        if expect_absent:
+            # A deletion is identified by the approved proposal's own rule id.
+            rule_id = str(params.get("rule_id") or params.get("ruleId") or "")
+        else:
+            rule_id = str(provider_result.get("id") or "")
+        requested = {"name": params.get("name")} if params.get("name") is not None else {}
+        try:
+            adapter = CrewWorkSnapshotAdapter(capture_crew_snapshot())
+            snapshot = adapter.fetch_snapshot()
+            rules = adapter.readback_autopilot_rules()
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": f"readback unavailable: {exc}", "requested": requested}
+
+        if not snapshot.is_complete or rules is None or not rule_id:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": ("provider readback is incomplete, did not include the rule facet, "
+                               "or the rule identity is unavailable"),
+                    "requested": requested}
+
+        present = next((r for r in rules if str(r.get("id") or "") == rule_id), None)
+        if expect_absent:
+            return {"ok": present is None, "check": check, "provider_truth": True,
+                    "reason": ("rule absent from the provider readback" if present is None
+                               else "the rule is still present after the delete"),
+                    "requested": requested, "observed": {"present": present is not None}}
+        if present is None:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": "the created rule was not present in the readback",
+                    "requested": requested, "observed": None}
+        observed = {"id": rule_id, "name": present.get("name")}
+        if requested.get("name") is not None and observed["name"] != requested["name"]:
+            return {"ok": False, "check": check, "provider_truth": True,
+                    "reason": "created rule fields differ: name",
+                    "requested": requested, "observed": observed}
+        return {"ok": True, "check": check, "provider_truth": True,
+                "requested": requested, "observed": observed}
+
+    return verify
+
+
 def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Callable]]]:
     """Register the Crew write executor specs (params-dict adapters)."""
     def _exec(op: str):
@@ -306,7 +415,7 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
             _exec("update_bill_reserve_settings"),
             _verify_crew_bill_reserve_readback(),
         ),
-        "create_crew_autopilot_rule": (_exec("create_autopilot_rule"), no_verify),
+        "create_crew_autopilot_rule": (_exec("create_autopilot_rule"), _verify_autopilot_rule(expect_absent=False)),
         "create_crew_bill": (_exec("create_bill"), _verify_created_crew_bill()),
         "archive_crew_bill": (_exec("archive_bill"), _verify_archived_crew_bill()),
         "create_crew_pocket": (_exec("create_subaccount"), _verify_created_crew_pocket()),
@@ -325,7 +434,7 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
             no_verify,
         ),
         "top_up_crew_reserve": (_exec("top_up_reserve"), no_verify),
-        "delete_crew_autopilot_rule": (_exec("delete_rule"), no_verify),
+        "delete_crew_autopilot_rule": (_exec("delete_rule"), _verify_autopilot_rule(expect_absent=True)),
         "create_crew_pocket_reassignment_rule": (
             _exec("create_pocket_reassignment_rule"),
             no_verify,
@@ -340,7 +449,7 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
         ),
         "create_crew_virtual_card": (
             _exec("create_virtual_card"),
-            no_verify,
+            _verify_created_crew_virtual_card(),
         ),
     }
     return base

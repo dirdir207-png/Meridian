@@ -242,3 +242,86 @@ def test_adapter_emits_live_bills_as_commitment_candidates():
     assert rent.amount == 1442.00
     assert rent.due_date == "2026-09-16"
     assert rent.funded_amount == 0.0
+
+
+# --- C4: the virtual_cards and autopilot facets were always fetched -----------
+# The connector's snapshot() has always requested eight facets; Meridian read
+# only four and discarded these. Reading them needs no connector change, and the
+# distinction that matters is unobserved (None) vs observed-empty ([]).
+
+
+def _facets(cards=None, rules=None, complete=True, with_cards=True, with_rules=True):
+    data = {}
+    if with_cards:
+        data["virtual_cards"] = {
+            "data": {
+                "currentUser": {
+                    "family": {
+                        "children": [
+                            {"id": "user:1", "virtualDebitCards": cards or []}
+                        ],
+                        "parents": [],
+                    }
+                }
+            }
+        }
+    if with_rules:
+        data["autopilot"] = {
+            "data": {"currentUser": {"family": {"rules": rules or []}}}
+        }
+    return {
+        "mode": "read-only",
+        "source": "crew",
+        "captured_at": "2026-09-13T12:00:00Z",
+        "complete": complete,
+        "mutations_enabled": False,
+        "data": data,
+    }
+
+
+def test_virtual_cards_readback_returns_observed_cards():
+    adapter = CrewWorkSnapshotAdapter(
+        _facets(cards=[{"id": "card:1", "name": "Zz Card", "color": "TEAL"}])
+    )
+
+    cards = adapter.readback_virtual_cards()
+
+    assert [c["id"] for c in cards] == ["card:1"]
+    assert cards[0]["color"] == "TEAL"
+
+
+def test_an_unobserved_card_facet_is_none_not_an_empty_list():
+    """A facet the connector could not read is unobserved, never 'no cards'.
+
+    Collapsing the two would let a failed read masquerade as a provider statement
+    that no card  the same error class as an unreported reserve read as 0.
+    """
+    adapter = CrewWorkSnapshotAdapter(_facets(with_cards=False))
+
+    assert adapter.readback_virtual_cards() is None
+
+
+def test_an_observed_but_empty_card_facet_is_an_empty_list():
+    adapter = CrewWorkSnapshotAdapter(_facets(cards=[]))
+
+    assert adapter.readback_virtual_cards() == []
+
+
+def test_autopilot_rules_readback_returns_observed_rules_and_none_when_unobserved():
+    adapter = CrewWorkSnapshotAdapter(
+        _facets(rules=[{"id": "rule:1", "name": "Round Up", "isPaused": False}])
+    )
+    assert [r["id"] for r in adapter.readback_autopilot_rules()] == ["rule:1"]
+
+    assert CrewWorkSnapshotAdapter(_facets(with_rules=False)).readback_autopilot_rules() is None
+    assert CrewWorkSnapshotAdapter(_facets(rules=[])).readback_autopilot_rules() == []
+
+
+def test_card_readback_deduplicates_a_card_listed_under_two_family_members():
+    payload = _facets(cards=[{"id": "card:1", "name": "Zz Card"}])
+    family = payload["data"]["virtual_cards"]["data"]["currentUser"]["family"]
+    family["parents"] = [{"id": "user:2", "virtualDebitCards": [{"id": "card:1", "name": "Zz Card"}]}]
+
+    cards = CrewWorkSnapshotAdapter(payload).readback_virtual_cards()
+
+    assert [c["id"] for c in cards] == ["card:1"]

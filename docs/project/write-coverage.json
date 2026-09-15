@@ -71,13 +71,15 @@
     },
     {
       "type": "create_crew_autopilot_rule",
-      "verification": "none",
-      "reason": "No normalized rule model or rule readback shape exists in the provider adapter."
+      "verification": "readback",
+      "check": "crew-autopilot-rule-create-readback",
+      "note": "Rules facet, previously discarded. Requires the provider-returned rule id plus the requested name; a rule not yet visible stays unresolved."
     },
     {
       "type": "delete_crew_autopilot_rule",
-      "verification": "none",
-      "reason": "No rule readback shape exists yet."
+      "verification": "readback",
+      "check": "crew-autopilot-rule-delete-readback",
+      "note": "Rules facet. Identified by the approved proposal's own rule id; absence from a complete read confirms, presence is a provider-confirmed contradiction."
     },
     {
       "type": "create_crew_pocket_reassignment_rule",
@@ -92,12 +94,13 @@
     {
       "type": "set_crew_spend_pocket",
       "verification": "none",
-      "reason": "The selected spend pocket is readable in the card/pocket selector surface, but that surface is not exposed by the current snapshot adapter."
+      "reason": "The selected spend pocket is carried on each virtual card as user.userSpendConfig.selectedSpendSubaccount. The facet is available, but the selection is user-level and repeated per card, so ambiguity handling is its own slice."
     },
     {
       "type": "create_crew_virtual_card",
-      "verification": "none",
-      "reason": "No virtual-card readback shape exists in the provider adapter."
+      "verification": "readback",
+      "check": "crew-card-create-readback",
+      "note": "Cards facet, which the connector always fetched and Meridian discarded. Requires the provider-returned card id; a card not yet visible stays unresolved, never a failure."
     }
   ],
   "allowed_without_executor": [

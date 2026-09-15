@@ -1,6 +1,25 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-13 (C4 remaining readback blocked, evidenced)
+Last consolidated: 2026-09-13 (C4: previously-discarded facets now verify)
+
+## C4 — three more operations verified from facets that were already being fetched — 2026-09-13
+
+**This corrects the blocker recorded below.** I had reported the remaining readback work as needing a capture or a connector change. For three of those operations that was wrong, and the error was mine: I read Meridian's adapter instead of the connector's actual output. `CrewReadClient.snapshot()` (`client.py:113–122`) has always fetched **eight** facets — `accounts, pockets, transactions, expenses, family, physical_cards, virtual_cards, autopilot` — and Meridian's adapter read only four, silently discarding `virtual_cards` and `autopilot` along with the data needed to verify card and rule writes.
+
+Implemented: `CrewWorkSnapshotAdapter` gained three read-only accessors (`_facet_payload`, `readback_virtual_cards`, `readback_autopilot_rules`) and three operations gained provider readback verifiers — **`create_crew_virtual_card`** (cards facet, provider-returned card id, compared on name and colour), **`create_crew_autopilot_rule`** (rules facet, provider-returned rule id, compared on name), and **`delete_crew_autopilot_rule`** (rules facet, identified by the approved proposal's own `rule_id`). Verified coverage rises from **6 to 9** of the 17 Crew write types.
+
+Two design rules were applied deliberately, and both are pinned by tests:
+
+- **An unobserved facet is not an empty facet.** The connector omits a facet it could not read and records the failure in `errors`; a facet that returns no records is a different fact. The accessors return `None` for unobserved and `[]` for observed-empty, so a failed read can never masquerade as "the provider says no card exists" — the same error class as an unreported reserve read as zero (C01).
+- **Absence confirms a deletion, never a creation.** A card or rule absent from one read is `ok: null` (unresolved), because propagation delay is indistinguishable from failure in a single read. Presence after a delete is a provider-confirmed contradiction — the direction that can never falsely claim something is gone. `ok: null` remains non-resubmittable, including across restart.
+
+Scope and safety: no endpoint, schema, migration, authority, routing, retry or provider-call change; the connector itself was **not** modified. The one provider interaction added is the existing read-only `capture_crew_snapshot` call the other verifiers already use.
+
+Tested: 4 new adapter tests and 10 new verifier tests (including a facet-absent case for both facets and a fresh-process restart case), and the coverage guard was updated from six pinned readback types to nine. Focused suite **55 passed**; `tests/meridian` **706 passed** (was 691); full non-browser suite **1013 passed, 1 skipped**. Ruff on all five changed files, `git diff --check`, and `scripts/check_guardrails.py --agent builder-c4-facets` clean. Mutation checks: four deliberate breaks were each caught — unobserved-facet-returns-empty (1 failure), absence-confirms-creation (1), present-rule-confirms-deletion (1), and the rule-facet counterpart of the first (2). All were reverted and the files verified byte-identical to their backups.
+
+**Process failure in this slice, recorded because it destroyed work:** a mutation check used `git checkout -- meridian/crew_write_actions.py` to revert a deliberate break — which discarded the *uncommitted* verifiers themselves, not just the mutation, because `git checkout` restores from `HEAD` and this file's work was not yet committed. The file dropped back to six verifiers and 8 tests failed. Caught immediately by re-running the suite, re-applied from the recorded source, and the remaining mutation checks were redone with file backups instead. Lesson: for a mutation check on uncommitted work, back up the file and restore from the copy — never `git checkout`.
+
+Deployed: nothing. Verified: synthetic facet payloads and isolated unit tests only; **no live provider call was made**, so the assumed nesting inside `data` is inferred from the connector's query specs rather than observed. That is the main open risk in this slice: if the real nesting differs, each accessor returns `None` and every new verifier stays unresolved — honest, but not useful. Confirming it needs one credential-free captured payload, which is the next step. Remaining unverified: 8 Crew write types. Next: confirm the two facet shapes against a captured payload, then resume the `--variables` connector change for targeted reads.
 
 ## C4 remaining readback — blocked on the provider read surface (evidenced) — 2026-09-13
 

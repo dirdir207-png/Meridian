@@ -29,10 +29,24 @@ would have reverted three commits had it been applied. This file is the channel.
 | Builder (C4 pocket readback) | `meridian/crew_write_actions.py`, `tests/meridian/test_crew_write_actions.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-13 | **released** at `c027d1d`; retained as a declared-scope record |
 | Builder (C4 delete-pocket readback) | `meridian/crew_write_actions.py`, `tests/meridian/test_crew_write_actions.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-13 | **released** at `a96182a`; retained as a declared-scope record |
 | Builder (C4 verification receipt) | `static/js/meridian/action-verification.js`, `static/js/meridian/actions.js`, `static/css/meridian/action-review.css`, `tests/meridian/test_action_verification_js.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-13 | **released** at `4bf6c86`; retained as a declared-scope record |
-| Builder (C4 write coverage) | `docs/project/write-coverage.json`, `tests/meridian/test_write_coverage.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-13 | active; documentation + guard tests for verification coverage; no provider, authority, schema or runtime change |
+| Builder (C4 write coverage) | `docs/project/write-coverage.json`, `tests/meridian/test_write_coverage.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-13 | **released** at `131a337`; retained as a declared-scope record |
+| Builder (C4 existing-facet readback) | `meridian/providers/crewwork.py`, `meridian/crew_write_actions.py`, `tests/meridian/providers/test_crewwork.py`, `tests/meridian/test_crew_write_actions.py`, `docs/project/write-coverage.json`, `tests/meridian/test_write_coverage.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-13 | active; read the already-fetched `virtual_cards`/`autopilot` facets and verify 3 more operations; no connector change, provider call, migration or authority change |
 | Astra-H (Harness-side, gameplan H) | `tools/agent-presets/meridian-constitutional-builder/**` (new canonical preset source), a claim row + log entry in this file | see log | active. Harness code lives in the Harness repo and is **not** claimed here. Does **not** write `agent-claims.json` — the plugin only reads filesystem/git facts, so the two-writer hazard flagged in the log below stays open but unreachable from this side. |
 
 ## Log (append only — newest first)
+
+### 2026-09-13 — Builder — C4: three more operations verified from facets already being fetched
+
+**Corrects my own blocker report.** The connector's `snapshot()` has always fetched eight facets (`client.py:113–122`); Meridian's adapter read four and discarded `virtual_cards` and `autopilot`. I had reported this work as needing a capture or connector change — that was wrong, and it was wrong because I read Meridian's adapter instead of the connector's output.
+
+Claimed `meridian/providers/crewwork.py`, `meridian/crew_write_actions.py`, their tests, the coverage manifest/guard and the status paths. Added three read-only accessors plus verifiers for `create_crew_virtual_card`, `create_crew_autopilot_rule` and `delete_crew_autopilot_rule`. **Verified coverage 6 → 9** of 17 Crew write types. Two rules pinned by test: an unobserved facet is `None`, never `[]`; and absence confirms a deletion but never a creation.
+
+Focused 55 passed, `tests/meridian` 706 passed, full non-browser suite 1013 passed / 1 skipped, Ruff + `git diff --check` + guardrail receipt clean. Four mutations each caught and reverted, files verified byte-identical.
+
+**Work destroyed and recovered, recorded:** a mutation check used `git checkout -- meridian/crew_write_actions.py` to revert a deliberate break, which also discarded the *uncommitted* verifiers (git restores from `HEAD`). The file fell back to six verifiers and 8 tests failed; it was re-applied from the recorded source and the remaining mutation checks were redone using file backups. Never use `git checkout` to revert a mutation in uncommitted work.
+
+Open risk, stated plainly: the nesting inside `data` is inferred from the connector's query specs, **not** observed from a live payload, because no live call was made. If it differs, every new verifier returns unresolved — honest but useless. Confirming it is the next step, and it is also what the planned capture would settle.
+
 
 ### 2026-09-13 — Builder — C4 write-coverage manifest enforced
 

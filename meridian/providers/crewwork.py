@@ -176,6 +176,53 @@ class CrewWorkSnapshotAdapter:
             values.append(f"{key}: {message}" if isinstance(message, str) else str(key))
         return values
 
+    def _facet_payload(self, name: str) -> Optional[Dict[str, Any]]:
+        """One facet's GraphQL ``data``, or None when the facet was not returned.
+
+        The connector records a facet it could not read in ``errors`` and omits it
+        from ``data`` entirely, so an absent facet means "not observed". That is
+        NOT the same as a facet that returned no records, and the two must never
+        be collapsed — the C01 unreported-reserve rule applies to every facet.
+        """
+        data = _as_dict(self._snapshot.get("data"))
+        facet = data.get(name)
+        if not isinstance(facet, dict):
+            return None
+        payload = facet.get("data")
+        return payload if isinstance(payload, dict) else None
+
+    def readback_virtual_cards(self) -> Optional[list]:
+        """The virtual debit cards this snapshot observed, or None if unobserved.
+
+        Read-only view of the ``virtual_cards`` facet, which the connector has
+        always fetched and Meridian previously discarded.
+        """
+        payload = self._facet_payload("virtual_cards")
+        if payload is None:
+            return None
+        family = _as_dict(_as_dict(payload.get("currentUser")).get("family"))
+        cards = []
+        seen = set()
+        for group in ("children", "parents"):
+            for member in _as_list(family.get(group)):
+                for card in _as_list(_as_dict(member).get("virtualDebitCards")):
+                    if not isinstance(card, dict):
+                        continue
+                    card_id = str(card.get("id") or "")
+                    if not card_id or card_id in seen:
+                        continue
+                    seen.add(card_id)
+                    cards.append(card)
+        return cards
+
+    def readback_autopilot_rules(self) -> Optional[list]:
+        """The autopilot rules this snapshot observed, or None if unobserved."""
+        payload = self._facet_payload("autopilot")
+        if payload is None:
+            return None
+        family = _as_dict(_as_dict(payload.get("currentUser")).get("family"))
+        return [rule for rule in _as_list(family.get("rules")) if isinstance(rule, dict)]
+
     def _collect_accounts(self, captured_at: str = "") -> list[NormalizedAccount]:
         data = _as_dict(self._snapshot.get("data"))
         # The snapshot keeps account identity in data.accounts (id/name only)
