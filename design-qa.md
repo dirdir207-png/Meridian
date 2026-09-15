@@ -1,5 +1,42 @@
 # Observatory / Today visual QA
 
+## Plan — preliminary analysis, capture-gated (Track D, 2026-09-15)
+
+Recorded so Plan parity can start immediately once its capture path exists. **This is source inspection, not
+capture evidence**, and it is explicitly weaker: it can establish what markup and controllers exist, and nothing
+about how the surface renders.
+
+Reading the governing concept `02-plan.png`: tall portrait composition — wordmark and Settings; a "Plan" heading
+with the subtitle *"Give every dollar a destination."*; a three-tab segmented control (Plan | Rules | Crew); a
+central **unfolded-map allocation diagram** with three destinations (Bills $1,320 Reserved · Goals $200 Reserved ·
+Available $248.50 Available to plan); an **Upcoming bills** panel with three reserved rows; a ticket-shaped **Next
+income** card; a large orange **Add a bill or goal** button; and the four-item dock with Plan selected.
+
+What the current implementation actually contains:
+
+- the segmented control **exists and matches** — `plan.js` `setupPlanSegs()` drives
+  `data-plan-seg` / `data-plan-view` / `data-plan-view-pane`, and the template renders exactly `Plan`, `Rules`,
+  `Crew`;
+- a "New commitment" primary action with a `+` icon where the concept has "Add a bill or goal" with `→`;
+- an editorial headline **"Every dollar has a next job."** where the concept has "Give every dollar a
+  destination.";
+- twelve labelled sections (Coverage, Funding schedule, Commitments, Where the money sits, Next 30 days,
+  Scenario preview, Document review, No longer returned, Crew capabilities, Crew actions, Crew mutation coverage,
+  Plan memory) against the concept's focused four-block composition.
+
+**A false-gap trap worth recording, because I fell into it first.** Grepping the concept's labels against the
+template, `plan.js` and `plan.css` returned zero hits for "Give every dollar a destination", "Upcoming bills",
+"Next income", "Add a bill or goal", "Available to plan" and "Reserved" — which reads as six missing elements. It
+is not. The segmented control, which the same method reported absent, **exists** but lives in JavaScript rather
+than the template; and the concept's "Upcoming bills" and "Next income" may well be the implementation's
+"Commitments" and "Next 30 days" under different names. **Label-level absence is not feature absence**, so this
+records the shape of the difference and nothing more. Whether it is a parity gap is a capture-and-compare
+question, and it stays open until Plan can be captured.
+
+That also sets the scope expectation honestly: Plan's differences look like **naming and presentation** across a
+much denser layout, not a missing architecture — but that claim is exactly the kind this project refuses to make
+without a capture, so it is recorded as the hypothesis to test, not as a finding.
+
 ## Today — acceptance summary (Track D, 2026-09-15)
 
 **Status: awaiting owner acceptance.** Everything below is measured from the live DOM or captured under the
