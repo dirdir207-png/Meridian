@@ -37,12 +37,35 @@ That also sets the scope expectation honestly: Plan's differences look like **na
 much denser layout, not a missing architecture — but that claim is exactly the kind this project refuses to make
 without a capture, so it is recorded as the hypothesis to test, not as a finding.
 
-**Plan can now be captured, so the hypothesis is testable.** `artifacts/plan-activity-parity-2026-09-15/` holds the
-governed Plan matrix (10 combinations, concept `02-plan.png`, zero overflow, zero console errors), captured by
-running the harness with `--workspaces plan`. The next Plan step is therefore the same one Today went through:
-compare the capture against the concept, list gaps, and take them one at a time — starting with the headline
-wording, which is the one difference already confirmed from source ("Every dollar has a next job." against the
-concept's "Give every dollar a destination.").
+**Plan can now be captured, so the hypothesis is testable — but the capture is not yet INFORMATIVE, and that is
+the next prerequisite.** `artifacts/plan-activity-parity-2026-09-15/` holds the governed Plan matrix (10
+combinations, concept `02-plan.png`, zero overflow, zero console errors), captured with `--workspaces plan`.
+
+Reading the mobile capture against the concept exposed a trap of the same family as the label-grep: the capture
+shows **COVERAGE**, **FUNDING SCHEDULE**, **COMMITMENTS** and **WHERE THE MONEY SITS**, all rendering *empty*
+states ("Nothing funded yet.", "No funding scheduled yet."), because the preview serves no data for Plan. The
+concept's unfolded-map allocation diagram, its bills panel and its next-income card therefore look absent, when
+in fact `templates/meridian/partials/plan.html` **has** the allocation element (`m-allocation-bar` +
+`m-allocation-legend`) and the timeline — they are simply unpopulated. **Absence in a no-data capture is not
+absence of a feature**, exactly as a label miss is not a missing feature. Any gap list read off these captures
+today would send the work at things that already exist.
+
+So Plan's real prerequisite is fixture data in the isolated preview. The shape is small and derivable from the
+consumer rather than invented — `plan.js` requires `/api/meridian/plan` and treats
+`/api/meridian/funding-rules` as optional, and reads exactly these top-level keys:
+
+`summary` (`headline`, `total`, `total_target`, `total_funded`, `unfunded`, `coverage_ratio`, `captured`,
+`missing`, `next_due`, `first_shortfall`) · `allocation` (`cash_total`, `segments: [{label, amount}]`) ·
+`commitments: [{id, name, type, target, funded, unfunded, due_date, target_date, backing, biller_status,
+crew_bill_id, invoice_evidence}]` · `next_paycheck` · `timeline` · `absent_bills` · `document_discrepancies`.
+
+Two endpoints, not the eight-to-ten previously estimated — that estimate was for every workspace at once. Note
+also that only the Plan capture is affected this way; Today's captures are unaffected because the preview serves
+Today data.
+
+The construction rule for those fixtures: derive every field from what the consumer reads, never invent a shape
+the UI does not consume, and keep the values clearly synthetic. A fixture that satisfies the consumer is
+evidence; a fixture that guesses is a new source of false gaps.
 
 ## Today — acceptance summary (Track D, 2026-09-15)
 
