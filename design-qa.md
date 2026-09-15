@@ -1,5 +1,36 @@
 # Observatory / Today visual QA
 
+## Accounts — the comparison is CONTENT-confounded (Track D, 2026-09-15)
+
+Reading `comparison-accounts-mobile-dark.png`, several apparent gaps turn out to be **the fixture's content, not the
+product's**, and this is a distinct failure mode from the label-grep and state-mismatch ones already recorded.
+
+The concept shows three account rows — Free to Spend $248.50, Bill Reserve $1,320.00, Emergency Fund $2,200.00 —
+and an "Assets & documents" ticket reading "2 warranties · 1 contract". The capture shows two accounts (Checking,
+Emergency fund) and no asset counts. The obvious reading is "the product lacks Bill Reserve and asset counts".
+
+That reading is false. The Accounts fixture supplies **two** accounts and **no** assets, so the number and names of
+rows, and any asset count, are determined by the fixture rather than by the product. Verified directly against the
+served payload: `groups` = Cash[Checking], Savings[Emergency fund]; no assets. **A fixture's content sets the
+ceiling on what a comparison may claim**, and row counts and item labels are exactly the things it controls.
+
+Fixture-independent differences, which are the only ones this comparison can legitimately support:
+
+| Concept | Current |
+|---|---|
+| "Accounts" · "Your financial constellation." | "Structure without provider clutter." · longer explanatory subline |
+| One paper-ticket summary — "Cash across accounts $3,768.50" | Two separate cards — AVAILABLE CASH $248.50 and LIABILITIES $0.00 |
+| Per-row chevron and illustrated circular icon | Per-row "Activity" action |
+| A status strip: Crew · Connected · Updated 9:42 AM · Refresh | CONNECTION HEALTH card with Refresh now and View connections |
+
+Both sides do carry account rows with provider and balance, a refresh affordance, and an assets/documents section,
+so the structures correspond; the differences above are composition and affordance, not missing capability.
+
+**To compare content at all, the fixture must be authored to mirror the concept's data** — the same accounts and the
+same asset/contract counts. Doing that with values that are obviously synthetic is legitimate; using them to claim
+product parity without that alignment is not. Until then, Accounts parity is assessable for structure and styling
+only, and the honest statement is narrower than "the concept has three rows and the product has two".
+
 ## Activity — the captured comparison is state-mismatched, so it is INVALID (Track D, 2026-09-15)
 
 Reading `comparison-activity-mobile-dark.png`, the concept and the current implementation looked
