@@ -47,11 +47,14 @@ Verifying it exposed two traps worth keeping:
    pixels settled it: in the label region, cream pixels went **27 → 0** and dark-ink pixels **466 → 529** between
    baseline and after-fix captures. The cream glyph is genuinely gone.
 
-The vision reading still described "8 TUE" as washed out *after* the fix, and the pixel data says the cream text
-is gone — so the most likely explanation is that the dial **artwork plate carries its own baked day marker**, and
-the model was describing that rather than the HTML label. That is unfixed and is the next thing to check: if the
-art plate contains baked day text, no CSS change will remove it, and it must be corrected in the artwork or
-masked. Recorded as an open question rather than a conclusion.
+The vision reading still described "8 TUE" as washed out *after* the fix, so the obvious explanation was that the
+dial artwork plate carries its own baked day marker. **That was tested and disproven:** `.obs-dial-art` is
+`static/img/meridian/observatory/dial-plate.png` (1254×1254), and it contains no text, numerals or weekday
+abbreviations at all — only decorative celestial texture and tick marks. So the residual reading is almost
+certainly a limitation of reading 10px type from a raster (the model itself recorded that it could not
+confidently transcribe the characters), not an outstanding defect. The measured state is: the cream glyph is
+gone, dark ink sits on parchment, and the label region has no cream pixels left. Left as a low-confidence item
+for the owner's eye rather than reclassified as fixed or as still-broken.
 
 Evidence: `artifacts/today-labels-fix-2026-09-15/` (10 captures, zero overflow, zero console errors).
 
