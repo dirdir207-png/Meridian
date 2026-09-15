@@ -35,7 +35,7 @@
       ],
       "base_sha": "72370de78c529f6b88afa01f79d5ac05a3874b17",
       "since": "2026-09-13T07:29:51+00:00",
-      "note": "R0 guardrails, implementation plan, coverage matrix, D-007, CFO mandate questions, preset-interface coordination and the disproven-snippet warning. Extended 2026-09-14 with the C4 transfer-readback slice (crew_initiate_transfer verifier, its accessor, the coverage manifest and guard, and the status/coordination records) after the dedicated builder-c4-transfer claim was released. Two-writer warning: Astra also declares docs/project/CURRENT_STATUS.md and AGENT_COORDINATION.md; a change by one invalidates the other's admission rather than authorising an overwrite."
+      "note": "R0 guardrails, implementation plan, coverage matrix, D-007, CFO mandate questions, preset-interface coordination and the disproven-snippet warning. Extended 2026-09-14 with the C4 transfer-readback slice (crew_initiate_transfer verifier, its accessor, the coverage manifest and guard, and the status/coordination records) after the dedicated builder-c4-transfer claim was released by doing its work at 81892eb. Two-writer warning: Astra also declares docs/project/CURRENT_STATUS.md and AGENT_COORDINATION.md; a change by one invalidates the other's admission rather than authorising an overwrite."
     },
     {
       "agent": "astra",
