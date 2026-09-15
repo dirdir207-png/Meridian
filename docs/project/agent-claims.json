@@ -3,6 +3,19 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
+      "agent": "codex-model-routing",
+      "claim_id": "roadmap-model-recommendations",
+      "generation": 1,
+      "files": [
+        "docs/project/MERIDIAN_ROADMAP.md",
+        "docs/project/PROJECT_INSTRUCTIONS.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "8fca02664721854a0297737f5cc8fe0c295e00bf",
+      "since": "2026-09-15T15:51:36Z",
+      "note": "Advisory model and effort recommendations for each governed roadmap section, plus a mandatory start-of-section display rule. No Harness settings, provider catalog, rotation chain, preset, automatic selection, or authority change."
+    },
+    {
       "agent": "builder-cadence",
       "claim_id": "builder-cadence-consolidation",
       "generation": 1,
