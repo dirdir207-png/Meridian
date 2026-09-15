@@ -1,0 +1,59 @@
+{
+  "mobile-air": {
+    "scroller": "document",
+    "control": {
+      "y": 844,
+      "bottom": 888,
+      "h": 44
+    },
+    "painted_px": 7046,
+    "painted": {
+      "top": 844,
+      "bottom": 888
+    },
+    "sample": {
+      "x": 324,
+      "y": 866
+    },
+    "topElement": "m-nav-item",
+    "verdict": "OCCLUDED (painted then covered)"
+  },
+  "mobile": {
+    "scroller": "document",
+    "control": {
+      "y": 846,
+      "bottom": 890,
+      "h": 44
+    },
+    "painted_px": 7046,
+    "painted": {
+      "top": 846,
+      "bottom": 890
+    },
+    "sample": {
+      "x": 334,
+      "y": 868
+    },
+    "topElement": "m-nav",
+    "verdict": "OCCLUDED (painted then covered)"
+  },
+  "mobile-small": {
+    "scroller": "document",
+    "control": {
+      "y": 814,
+      "bottom": 858,
+      "h": 44
+    },
+    "painted_px": 4869,
+    "painted": {
+      "top": 814,
+      "bottom": 844
+    },
+    "sample": {
+      "x": 294,
+      "y": 829
+    },
+    "topElement": "design-preview-banner",
+    "verdict": "OCCLUDED (painted then covered)"
+  }
+}

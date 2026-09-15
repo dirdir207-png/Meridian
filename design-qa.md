@@ -53,23 +53,45 @@ kept growing after the measurement, so two runs of the same probe disagreed by ~
 that gate the collision reproduces reliably — **−41px at 420, −23px at 430, −79px at 390**, `stable: true`,
 3 events rendered — and is recorded in `measurements-nav-overlap-settled.json`.
 
-**Fix (a) was attempted and reverted — but the honest reason is narrower than "it did not work".** The change
-made the mobile shell `height: 100svh` (instead of `min-height`) with `overflow: hidden`, gave `.m-main`
-`overflow-y: auto`, and dropped the dock's `position: sticky` to `static`. The measured overlap did not move
-(−41/−23/−79, identical) — because a bounding-box probe cannot see clipping: occlusion behind an opaque bar and
-clipping at the same coordinate produce identical rects. So the correct statement is that **the fix's effect is
-unverified, not that it was ineffective**; the revert decision was also taken on the racy measurement above,
-which weakens it further.
+**The occlusion question is now settled definitively, and it is a real defect.** `probes/probe_visibility.py`
+computes the control's *painted* portion (its rect ∩ the scrolling container's visible box) and hit-tests only
+that portion with `document.elementFromPoint`. Baseline verdict at all three viewports is
+**`OCCLUDED (painted then covered)`** — the element returned at the painted centre is the dock, not the control:
 
-To settle it properly, the next attempt must be visibility-aware: intersect the control's rect with the
-scrolling container's visible box and hit-test (`document.elementFromPoint`) only that intersection. If the
-intersection is empty after the change, the control is simply below the fold and nothing is occluded.
+| Viewport | control y | painted | element actually on top |
+|---|---|---|---|
+| 420 | 844–888 | 7046 px² | `m-nav-item` |
+| 430 | 846–890 | 7046 px² | `m-nav` |
+| 390 | 814–858 | 4869 px² | `design-preview-banner` |
 
-What IS established independently of the fix question: after `scrollIntoView({block:'center'})` the control is
-fully clear of the dock (`clearsDock: true`) and hit-tests to itself (`hitsSelf: true`) at 420, 430 and 390. So
-the defect is an **at-rest** occlusion of one control in the initial viewport — the control is reachable, just
-partly hidden on first paint. That is a cosmetic/UX judgement, which is why it is raised for owner acceptance
-rather than fixed unilaterally, especially as the concept contains no inline advisory control in that position.
+Two traps were hit and are recorded so they are not repeated. First, `.obs-control` is **not unique**: the dial
+renders three more of them ("Previous day", "Next day", "Back to today") at y=596, so an early
+`querySelector('.obs-control')` measured the wrong element and produced a false "not occluded". The advisor
+control must be selected as `[data-open-advisor].obs-control`. Second, at 390 the occluder is the
+`design-preview-banner` — a harness artefact, not the product — so only the 420 and 430 results describe real
+product behaviour.
+
+**Fix (a) demonstrably removes the occlusion on Today, and is still not shipped.** Re-applied and re-measured
+with the visibility probe, the verdict changes from `OCCLUDED` to `PAINTED_AND_HITTABLE (not occluded)` at 420
+(painted 545 px², scroller now `m-main`, top element `obs-control`) and at 430 (3415 px²), and to
+`NOT_PAINTED (below fold)` at 390. So the earlier "no measurable improvement" reading was an artefact of a
+rect-only probe, exactly as suspected.
+
+It is nevertheless reverted, for a reason that is itself a Track D finding: **the change is cross-cutting and
+cannot be verified on the other three workspaces.** `scripts/preview_observatory_dial.py` serves only
+`/api/meridian/today`; `plan`, `activity` and `accounts` return **404**, so those workspace sections never clear
+`aria-busy` and the governed capture harness times out on them (`Page.wait_for_function: Timeout 12000ms
+exceeded`). Altering the mobile scroll container for every workspace while being able to test only one of them
+is not a defensible trade for a cosmetic at-rest occlusion, so the fix is recorded as validated-on-Today and
+pending verification elsewhere.
+
+What remains true regardless: after `scrollIntoView({block:'center'})` the control clears the dock
+(`clearsDock: true`) and hit-tests to itself, so it is **reachable** — the defect is at-rest occlusion on first
+paint, not a dead control.
+
+**Blocker for the rest of Track D, recorded now:** Plan, Activity and Accounts cannot produce governed capture
+evidence from the isolated synthetic preview until that preview serves their data (or a different
+fixture-only target is built). Today is the only workspace currently capturable.
 
 ## September 12 phone alignment correction
 
