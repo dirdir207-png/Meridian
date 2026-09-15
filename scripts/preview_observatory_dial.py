@@ -84,6 +84,36 @@ PLAN = {
 
 FUNDING_RULES = {"funding_rules": []}
 
+# Activity and accounts fixtures, again derived from what the controller reads.
+# activity.js calls /api/meridian/activity (with query params, which the handler
+# strips) and /api/meridian/accounts for its filter options.
+ACCOUNTS = {
+    "accounts": [
+        {"id": 1, "name": "Checking", "provider": "crew"},
+        {"id": 2, "name": "Emergency fund", "provider": "crew"},
+    ]
+}
+
+ACTIVITY = {
+    "transactions": [
+        {"id": "synthetic-tx-1", "amount": -84.00, "currency": "USD",
+         "description": "Electric", "merchant": "Electric", "provider": "crew",
+         "occurred_at": "2026-09-11T12:00:00Z", "classification": "bill",
+         "suggested_category": "Utilities", "category_options": ["Utilities", "Home"]},
+        {"id": "synthetic-tx-2", "amount": -65.00, "currency": "USD",
+         "description": "Internet", "merchant": "Internet", "provider": "crew",
+         "occurred_at": "2026-09-14T12:00:00Z", "classification": "bill",
+         "suggested_category": "Utilities", "category_options": ["Utilities", "Home"]},
+        {"id": "synthetic-tx-3", "amount": 1660.00, "currency": "USD",
+         "description": "Paycheck", "merchant": "Paycheck", "provider": "crew",
+         "occurred_at": "2026-09-16T12:00:00Z", "classification": "income",
+         "suggested_category": "Income", "category_options": ["Income"]},
+    ],
+    "patterns": [],
+    "next_cursor": None,
+    "data_freshness": {"status": "fresh", "last_updated_at": "2026-09-08T13:42:00Z"},
+}
+
 
 def preview_html():
     env = Environment(loader=FileSystemLoader(ROOT / "templates"), autoescape=True)
@@ -98,7 +128,7 @@ def preview_html():
     # Plan captures showed empty states and every content difference read as a
     # missing feature. plan.js pulls its own imports (api, format, absent-bills,
     # action-outcome) through ES module resolution.
-    for name in ("shell", "today", "dial", "plan"):
+    for name in ("shell", "today", "dial", "plan", "activity"):
         scripts += f'<script type="module" src="/static/js/meridian/{name}.js"></script>'
     scripts += '<script src="/static/js/meridian/theme.js"></script><script src="/static/js/ui/advisor_fab.js"></script>'
     banner = '<div class="design-preview-banner">Synthetic Today preview · no bank connection</div>'
@@ -123,6 +153,10 @@ class Handler(BaseHTTPRequestHandler):
             body, mime = json.dumps(PLAN).encode(), "application/json"
         elif path == "/api/meridian/funding-rules":
             body, mime = json.dumps(FUNDING_RULES).encode(), "application/json"
+        elif path == "/api/meridian/activity":
+            body, mime = json.dumps(ACTIVITY).encode(), "application/json"
+        elif path == "/api/meridian/accounts":
+            body, mime = json.dumps(ACCOUNTS).encode(), "application/json"
         elif path == "/api/advisor/status":
             body, mime = b'{"configured":false}', "application/json"
         elif path.startswith("/static/"):
