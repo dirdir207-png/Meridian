@@ -44,6 +44,21 @@ container so the dock reserves its own row and never overlays, or (b) drop the i
 mobile. (a) touches the shell and therefore every workspace; (b) is small but removes a control. Both are
 owner-visible choices, so the measurement is recorded rather than a fix improvised.
 
+**Fix (a) was attempted and reverted — recorded so it is not repeated.** The change made the mobile shell
+`height: 100svh` (instead of `min-height`) with `overflow: hidden`, gave `.m-main` `overflow-y: auto`, and
+dropped the dock's `position: sticky` to `static`. The measured overlap did **not move at all** (−41/−23/−79,
+identical). The reason is that the probe compares bounding boxes, and clipping does not change a rect: the dock
+was hiding the control behind an opaque bar, and after the change the canvas clips it at the same coordinate.
+The user-visible outcome is therefore roughly equivalent — the control sits below the fold either way and is
+reached by scrolling — so the change bought no demonstrated improvement while altering the scroll container for
+all four workspaces. It was reverted rather than shipped on that evidence.
+
+What that implies for the next attempt: distinguishing occlusion from clipping needs a hit-test
+(`document.elementFromPoint` at the visible portion of the control), not a rect intersection, because both
+states produce identical geometry. And the concept contains no inline advisory control in that position, so
+removing or relocating it is the smaller change — but it is a product decision, which is why it is raised here
+rather than made here.
+
 ## September 12 phone alignment correction
 
 The three-event baseline below missed the tall-list case. The owner's reported blank space was reproduced with twelve invented events and corrected: dial top alignment, bounded keyboard-scrollable callouts, full-width mobile text/amounts, and controls in a separate row. Regression and preview-template refresh checks pass within a **71-test** focused run. `artifacts/dial-refinement-2026-09-12/alignment-dense-final/` contains the fresh 16-image matrix, with zero page overflow/errors; mobile images were inspected. The local preview was reloaded and its served assets verified. See `docs/project/DIAL_ALIGNMENT_FIX_2026-09-12.md` for scope and runtime evidence. Older broad-fidelity observations below are retained, not silently treated as fixed by this incident correction.
