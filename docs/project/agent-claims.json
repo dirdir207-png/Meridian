@@ -3,22 +3,6 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
-      "agent": "builder-c4-retire-uvc",
-      "claim_id": "builder-c4-retire-update-virtual-card",
-      "generation": 1,
-      "files": [
-        "app.py",
-        "docs/project/write-coverage.json",
-        "tests/meridian/test_write_coverage.py",
-        "docs/project/CURRENT_STATUS.md",
-        "docs/project/AGENT_COORDINATION.md",
-        "docs/project/agent-claims.json"
-      ],
-      "base_sha": "09e09d6b04f44aafd47cfa4d247bf65438ec30aa",
-      "since": "2026-09-14T00:00:00+00:00",
-      "note": "C4: retire update_crew_virtual_card from ActionStore.allowed_types, owner-authorized 2026-09-14. It has no executor and no crew-write operation, so it can only fail with no_executor. Capability removed, not expanded."
-    },
-    {
       "agent": "builder",
       "claim_id": "builder-r0-guardrails",
       "generation": 1,
