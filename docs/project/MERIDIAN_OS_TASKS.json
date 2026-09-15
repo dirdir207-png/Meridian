@@ -497,7 +497,19 @@
       "evidence": {
         "north_star": "docs/virgil/VIRGIL_IOS_NORTH_STAR.md",
         "roadmap": "docs/virgil/VIRGIL_ROADMAP_ADDENDUM.md",
-        "reconciliation": "docs/virgil/VIRGIL_IOS_RECONCILIATION.md"
+        "reconciliation": "docs/virgil/VIRGIL_IOS_RECONCILIATION.md",
+        "toolchain_verified_at": "2026-09-15",
+        "toolchain": {
+          "macos": "26.4.1 (25E253)",
+          "xcode": "26.6 (17F113)",
+          "developer_directory": "/Applications/Xcode.app/Contents/Developer",
+          "iphoneos_sdk": "26.5",
+          "iphonesimulator_sdk": "26.5",
+          "simulator_runtime": "iOS 26.5 (23F77)",
+          "simulator_smoke_test": "iPhone Air booted, reported runtime 26.5, and simctl captured a 1260 x 2736 display image; clean terminal boot remains to be recorded after first-boot migration",
+          "first_launch_status": "complete",
+          "signing": "0 valid identities; account, certificate, profile, App ID, and device enrollment remain owner-gated"
+        }
       }
     },
     {

@@ -156,29 +156,52 @@ Before endpoint implementation, decide and record:
 
 ## Xcode preflight result
 
-The Mac currently selects `/Library/Developer/CommandLineTools`, not full Xcode. `xcodebuild` cannot run an Xcode
-project and `xcrun simctl` is unavailable. macOS is 26.4.1 (25E253), for which Apple's
-[Xcode system requirements](https://developer.apple.com/xcode/system-requirements) list Xcode 26.4.1 as
-compatible with the iOS 26.4 SDK. The App Store currently offers Xcode 27, which requires a newer macOS, while
-the machine has about 27 GB free and no usable external development volume. Installing an archived compatible
-Xcode plus an iOS Simulator is therefore blocked on deliberate storage reclamation (or a suitable external
-APFS volume); deleting user data or caches was not assumed.
+**Verified 2026-09-15:** the storage/install blocker is resolved. The owner authorized pruning Docker build
+cache and unused images; containers and volumes were preserved, and free space rose from about 27 GB to about
+50 GB before installation. The signed Apple-silicon Xcode archive passed `codesign --verify --deep --strict`
+and Gatekeeper assessment before installation at `/Applications/Xcode.app`.
 
-After space is available, verification is not complete until all of these pass and are recorded:
+The selected toolchain now reports:
+
+| Check | Verified result |
+|---|---|
+| macOS | 26.4.1 (25E253) |
+| Full Xcode | 26.6 (17F113) |
+| Selected developer directory | `/Applications/Xcode.app/Contents/Developer` |
+| iPhoneOS SDK | 26.5 |
+| iPhoneSimulator SDK | 26.5 |
+| Simulator runtime | iOS 26.5 (23F77) |
+| Available phone profiles | iPhone 17 Pro/Pro Max/17e/17, and iPhone Air |
+| `simctl` | `/Applications/Xcode.app/Contents/Developer/usr/bin/simctl` |
+| First-launch components | `xcodebuild -checkFirstLaunchStatus` exit 0 |
+| Code signing | verified state is **0 valid signing identities** |
+
+Apple's [Xcode system requirements](https://developer.apple.com/xcode/system-requirements) list Xcode 26.6 as
+compatible with macOS 26.2-26.x; Xcode 27 requires macOS 26.6 or later, so 26.6 is the newest compatible choice
+for this Mac's current OS. The iPhone Air simulator booted and reported runtime 26.5, and `simctl io` captured a
+real 1260 x 2736 display image. Its first `bootstatus -b` remained in Apple's one-time LaunchServices data
+migration when the monitor was stopped after more than five minutes; the booted runtime and display are usable,
+but a later acceptance run should still record a clean terminal boot after migration completes.
+
+The verification commands were:
 
 ```bash
-sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
-sudo xcodebuild -license accept
 xcodebuild -version
+xcode-select -p
 xcrun --sdk iphoneos --show-sdk-version
 xcrun --sdk iphonesimulator --show-sdk-version
+xcrun --find simctl
 xcrun simctl list runtimes
 xcrun simctl list devices available
+xcrun simctl boot 'iPhone Air'
+xcrun simctl getenv booted SIMULATOR_RUNTIME_VERSION
+xcrun simctl io booted screenshot <temporary-path>/iphone-air.png
+xcodebuild -checkFirstLaunchStatus
 security find-identity -v -p codesigning
 ```
 
-Signing may legitimately report no usable identity until the owner's Apple developer account/team is enrolled;
-that is a verified prerequisite, not a reason to create credentials without approval.
+Signing is inspected but not configured: the Apple developer account/team is not enrolled in Xcode and no
+usable identity exists. Creating a certificate, profile, App ID, or device enrollment remains owner-gated.
 
 ## Recommended first implementation packet
 
@@ -198,7 +221,6 @@ packet can add the authenticated HTTP adapter and Shortcut client without changi
 ## Open owner decisions
 
 - Minimum supported iPhone model/iOS and whether Action button acceptance is mandatory or optional.
-- Preferred storage reclamation or external-volume route for full Xcode and simulator installation.
 - Device enrollment and revocation experience.
 - Whether A1 begins as Shortcut-only or includes a thin native app immediately.
 - Conversation retention and whether transcripts may sync across devices.
