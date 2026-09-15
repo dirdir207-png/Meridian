@@ -1,0 +1,194 @@
+{
+  "captures": [
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/plan-parity-fixtured-2026-09-15/plan-desktop-light-full.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "5f73600373f3e92dc4717666f6bfd1a167506722",
+      "captured_at": "2026-09-15T17:24:48.701068Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-desktop-light-viewport.png",
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-desktop-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/plan-parity-fixtured-2026-09-15/plan-desktop-dark-full.png",
+      "viewport": "desktop",
+      "theme": "dark",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "5f73600373f3e92dc4717666f6bfd1a167506722",
+      "captured_at": "2026-09-15T17:24:49.894902Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-desktop-dark-viewport.png",
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-desktop-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/plan-parity-fixtured-2026-09-15/plan-tablet-light-full.png",
+      "viewport": "tablet",
+      "theme": "light",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "5f73600373f3e92dc4717666f6bfd1a167506722",
+      "captured_at": "2026-09-15T17:24:50.958385Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-tablet-light-viewport.png",
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-tablet-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/plan-parity-fixtured-2026-09-15/plan-tablet-dark-full.png",
+      "viewport": "tablet",
+      "theme": "dark",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "5f73600373f3e92dc4717666f6bfd1a167506722",
+      "captured_at": "2026-09-15T17:24:52.021898Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-tablet-dark-viewport.png",
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-tablet-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-light-full.png",
+      "viewport": "mobile",
+      "theme": "light",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "5f73600373f3e92dc4717666f6bfd1a167506722",
+      "captured_at": "2026-09-15T17:24:53.466915Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-light-viewport.png",
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-dark-full.png",
+      "viewport": "mobile",
+      "theme": "dark",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "5f73600373f3e92dc4717666f6bfd1a167506722",
+      "captured_at": "2026-09-15T17:24:54.871047Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-dark-viewport.png",
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-small-light-full.png",
+      "viewport": "mobile-small",
+      "theme": "light",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "5f73600373f3e92dc4717666f6bfd1a167506722",
+      "captured_at": "2026-09-15T17:24:56.169953Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-small-light-viewport.png",
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-small-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-small-dark-full.png",
+      "viewport": "mobile-small",
+      "theme": "dark",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "5f73600373f3e92dc4717666f6bfd1a167506722",
+      "captured_at": "2026-09-15T17:24:57.473311Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-small-dark-viewport.png",
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-small-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-air-light-full.png",
+      "viewport": "mobile-air",
+      "theme": "light",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "5f73600373f3e92dc4717666f6bfd1a167506722",
+      "captured_at": "2026-09-15T17:24:58.888215Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-air-light-viewport.png",
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-air-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-air-dark-full.png",
+      "viewport": "mobile-air",
+      "theme": "dark",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "5f73600373f3e92dc4717666f6bfd1a167506722",
+      "captured_at": "2026-09-15T17:25:00.285732Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-air-dark-viewport.png",
+        "artifacts/plan-parity-fixtured-2026-09-15/plan-mobile-air-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    }
+  ]
+}

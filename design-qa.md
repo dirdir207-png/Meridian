@@ -37,9 +37,29 @@ That also sets the scope expectation honestly: Plan's differences look like **na
 much denser layout, not a missing architecture — but that claim is exactly the kind this project refuses to make
 without a capture, so it is recorded as the hypothesis to test, not as a finding.
 
-**Plan can now be captured, so the hypothesis is testable — but the capture is not yet INFORMATIVE, and that is
-the next prerequisite.** `artifacts/plan-activity-parity-2026-09-15/` holds the governed Plan matrix (10
-combinations, concept `02-plan.png`, zero overflow, zero console errors), captured with `--workspaces plan`.
+**Plan captures are now informative — the fixture prerequisite is DONE.** The isolated preview gained a Plan
+fixture and, critically, loads `plan.js`. Both halves were needed and the second was the one that mattered: the
+endpoints alone changed nothing, because a workspace renders only if its controller is loaded, and the preview
+had been injecting only `shell`, `today` and `dial`. With `plan` added, the previously-empty capture now shows
+real rendered content:
+
+```
+SEPTEMBER COVERAGE 86% · $1,520 of $1,769 funded · Projected complete by Sep 16
+FUNDING SCHEDULE · Next paycheck · September 16 · $1,660
+COMMITMENTS · Electric BILL · ...
+```
+
+"Nothing funded yet." and "No funding scheduled yet." are gone. Evidence:
+`artifacts/plan-parity-fixtured-2026-09-15/` — 10 combinations, zero overflow, zero console errors.
+
+So Plan parity analysis can now run against rendered content rather than empty states, which is what the previous
+round established was necessary. The fixture is derived field-by-field from what `plan.js` reads (see the shape
+recorded below), and its values echo the governing concept's own figures so a capture can be compared to
+`02-plan.png` directly.
+
+The generalisable lesson, now demonstrated twice: **a workspace capture is evidence only if the workspace's
+controller is loaded and its data is served.** Empty states in a capture are indistinguishable from missing
+features, and both are indistinguishable from an unloaded controller.
 
 Reading the mobile capture against the concept exposed a trap of the same family as the label-grep: the capture
 shows **COVERAGE**, **FUNDING SCHEDULE**, **COMMITMENTS** and **WHERE THE MONEY SITS**, all rendering *empty*
