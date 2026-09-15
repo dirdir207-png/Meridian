@@ -1,6 +1,38 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-15 (dated-occurrence math consolidated onto one calendar-aware rule)
+## ORSC sanitized Meridian status emitter — 2026-09-15
+
+Implemented the bounded read-only ORSC status emitter for a separate Harness handoff. `meridian/status_emitter.py` projects only Git metadata, `MERIDIAN_OS_TASKS.json`, `AGENT_COORDINATION.md`, `CURRENT_STATUS.md`, `MERIDIAN_ROADMAP.md`, and `MERIDIAN_DECISIONS.md` into schema version 1. `scripts/emit_meridian_status.py` emits one canonical JSON event to stdout and fails closed to a minimal degraded event without echoing unsafe source or exception content.
+
+The contract defines stable source-derived `event_id`, producer/observation timestamps, bounded queues, Track D/I/C state, task counts, release gate, evidence, blockers and safest next slice. Missing, malformed, stale, out-of-order or conflicting input is unknown/degraded, never guessed success. Secrets, tokens, cookies, OTPs, prompts, transcripts, tool output, reasoning, absolute paths, unrestricted URLs, balances and unnecessary financial detail are rejected. No database, provider, network, webhook, financial mutation, agent-control, Harness or scheduling path is connected.
+
+Tests: `tests/meridian/test_status_emitter.py` 17 passed; changed-path Ruff and `git diff --check` passed. No browser check was applicable. Harness must independently validate, filter, deduplicate, freshness-check and render; live Harness mode is not claimed until it integrates and verifies the contract. Commit SHA will be added after final review.
+
+Last consolidated: 2026-09-15 (dated occurrences: chained stepping made drift-free by construction)
+
+## Dated occurrences — the drift is now unreachable by chaining, not just by convention — 2026-09-15
+
+Follow-on to the consolidation below. Converting the callers fixed the **indexed** path (`advance(anchor, rec, n)`), but a caller that *held* an intermediate date and fed it back in still drifted: `advance(advance(2026-01-31, "monthly"), "monthly")` returned `2026-03-28`, not `2026-03-31`. That is not hypothetical — `scripts/verify_readiness.py`'s calendar probe does exactly that, and the recorded baseline in `artifacts/readiness-2026-09-13/contract-probes.json` **encodes the drift as the expected value** (`monthly_second: "2026-03-28"`, `semimonthly_next: "2026-01-30"`).
+
+Root cause: `datetime.date` is immutable with no `__dict__`, so the intended day cannot be attached to a returned date. The first attempt used `object.__setattr__`, which **silently failed** and left chaining still drifting — caught only by checking the returned value rather than trusting the change.
+
+Fix: `_Occurrence`, a `date` subclass carrying `intended_day` in a `__slots__` slot. Every step remembers the day it is keeping, so a clamp is temporary even across held dates:
+
+```
+chained monthly      2026-01-31 → 02-28 → 03-31 → 04-30 → 05-31 → 06-30
+chained annually     2024-02-29 → 2025-02-28 → 2026-02-28 → 2027-02-28 → 2028-02-29
+chained semimonthly  2026-01-15 → 01-31 → 02-15 → 02-28 → 03-15 → 03-31
+```
+
+Verified the carrier is transparent everywhere it could leak: `==` and `hash` match a plain `date` (so dict/set membership and sorting are unaffected), `isoformat`, `str` and JSON behave as before, SQLite round-trips it, and `.replace(day=…)` deliberately **discards** the carried day because replacing the day is an explicit override.
+
+Consequence for the readiness record, stated rather than silently edited: the probe would now write `2026-03-31` and `2026-01-31`. The `2026-09-13` artifact is left as-is (it is a dated snapshot of what was measured then, and the audit's own claim is "do not silently treat old observations as fixed"), but it is now **known stale on two fields**. Two further defects in that same file were found and are **not** mine to fix: `scripts/verify_readiness.py` imports `_verify_stored`, removed back in `708e201`, so the `probes` command raises `ImportError` and has not run since; and it imports `next_occurrence_with_index`'s predecessor shape. That script is Astra's declared scope, so this is recorded for that lane rather than edited here. `artifacts/readiness-2026-09-13/runtime-wiring.json` also still reports `crew_initiate_transfer` as `"verifier": false`, stale since the transfer slice.
+
+Tested: 7 more cadence tests pin the chained contract, chained-equals-indexed agreement, the cross-cadence non-leak, date-transparency, and the `.replace` override. `tests/meridian` **794 passed** (was 787); full non-browser **1101 passed, 1 skipped** (was 1094). Ruff, `git diff --check` clean.
+
+Mutation checks: eight deliberate breaks, each caught. **Three mutants were retired as equivalent, not counted as caught** — `annual-never-recovers`, `walk-refeeds-previous` and `semimonthly-can-stall` are all repaired by the carried day on the following step, so they can no longer fail a test. That is a robustness gain (the drift is now unreachable by construction), and recording it is the same discipline applied to the earlier equivalent mutant. Replaced with mutants that do change behaviour: months-ignoring-the-period-count (12 failures), period-index off-by-one (1), sticky-day dropped (4), annual forced to the 28th (2), unknown defaulting to weekly (5), walk not accumulating (6), semimonthly skipping the 15th (1), semimonthly flat +15 (9). Reverted from a byte-identical backup; `git checkout` was not used.
+
+Deployed: nothing. Pure date arithmetic — no provider call, migration, endpoint, authority or money movement.
 
 ## Dated occurrences — seven implementations replaced by one rule — 2026-09-15
 
