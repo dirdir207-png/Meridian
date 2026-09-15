@@ -1,5 +1,47 @@
 # Observatory / Today visual QA
 
+## Plan — gap assessment against `02-plan.png`, decision-ready (Track D, 2026-09-15)
+
+Plan evidence is now valid on both axes that were missing: **informative** (fixtures serve data and the
+controller loads) and **complete** (full-page capture works, mobile full page 1290×8427). The gap list below is
+therefore read from rendered content, not from empty states or a truncated page.
+
+Three apparent defects found in the capture were investigated and **none is a product defect**:
+
+| Apparent defect | Verdict |
+|---|---|
+| "backed by **undefined**" on all four commitment cards | **My fixture's bug.** `plan.js:484` renders `commitment.backing.name`, so `backing` is an object; the fixture passed a string. Fixed. |
+| "**undefined**" as the destination on every NEXT 30 DAYS row | **My fixture's bug.** `plan.js:226` renders `event.commitment`; the fixture supplied `commitment_id` and `detail`. Fixed. |
+| "Next funding Sep 11" footer | **Intended.** `plan.js:616` renders `summary.next_due`. Not a defect. |
+| "The scenario preview could not be loaded" | **Harness gap.** `plan.js` posts to `/api/meridian/plan/scenario`, which the isolated preview does not serve. Needs a scenario fixture before that section can be assessed. |
+
+After the fixture fix the full-page capture contains the literal text "undefined" **nowhere**, which is the check
+that confirms the first two.
+
+What remains is a set of **design differences, not defects**:
+
+| Concept (art direction) | Current implementation |
+|---|---|
+| "Give every dollar a destination." | "Every dollar has a next job." |
+| Orange "Add a bill or goal →" | "+ New commitment" (plus a secondary "New autopilot rule") |
+| **Unfolded-map** allocation diagram | Horizontal allocation **bar** + text legend — labels and amounts match exactly (Bills $1,320 · Goals $200 · Available $248.50) |
+| "Upcoming bills" panel | "COMMITMENTS" cards with FUNDED/NEXT columns and row actions |
+| "Next income" ticket | "FUNDING SCHEDULE · Next paycheck" |
+| — | Extra sections: September coverage, Scenario preview, Plan memory |
+
+**Why these need a direction rather than a fix.** The build specification says of the drafts: *"Treat images as
+art direction, not executable financial specifications. Mock amounts, dates, status labels, arbitrary icon
+choices, chart geometry, and generated text may be inconsistent."* Headline copy, button labels and diagram
+geometry are named in that list. So "make the headline match" or "replace the bar with a map" is a **product and
+design decision**, not a fidelity defect — and doing it unilaterally would be inventing product language from art
+direction, which is the same class of error as the false gaps recorded above.
+
+What is actionable without that direction, in the review order, is the **allocation presentation**: the concept
+makes the allocation the centrepiece directly under the tabs, while the implementation places "Where the money
+sits" fifth, after coverage, funding schedule and four commitment cards (roughly 5,000px down at mobile). Its
+labels and amounts already match the concept exactly, so the remaining difference is prominence and placement —
+layout, the first item in the review order, with no copy change and no data change.
+
 ## Plan — preliminary analysis, capture-gated (Track D, 2026-09-15)
 
 Recorded so Plan parity can start immediately once its capture path exists. **This is source inspection, not
