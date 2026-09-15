@@ -76,3 +76,22 @@ def test_capture_script_maps_workspaces_to_governing_concept_files():
     source = __import__("pathlib").Path("scripts/capture_meridian_matrix.py").read_text()
     for concept in ("01-today.png", "02-plan.png", "03-activity.png", "04-accounts.png"):
         assert concept in source
+
+
+def test_full_page_capture_unpins_the_viewport_height_shell():
+    """Guard a regression that silently shrank every mobile full-page artifact.
+
+    The mobile shell pins itself to one viewport and scrolls an inner canvas, so
+    the document is only viewport-tall and Playwright's full_page captured no more
+    than the viewport. Every mobile "full-page" artifact was byte-identical to its
+    viewport artifact as a result, and nothing in the manifest recorded a height,
+    so the breakage was invisible to the contract validator.
+
+    This asserts the unpin/remove cycle is present, because a source assertion is
+    the cheapest guard that survives a future edit.
+    """
+    source = __import__("pathlib").Path("scripts/capture_meridian_matrix.py").read_text()
+
+    assert "height:auto !important" in source, "the shell must be unpinned for full-page capture"
+    assert "overflow:visible !important" in source
+    assert "el => el.remove()" in source, "the unpin override must be removed after the shot"

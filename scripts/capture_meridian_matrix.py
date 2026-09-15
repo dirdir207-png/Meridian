@@ -153,7 +153,21 @@ def capture_matrix(
                         artifacts = [viewport_capture]
                         if full_page:
                             full_capture = base.with_name(base.name + "-full.png")
+                            # The mobile shell pins itself to one viewport and scrolls
+                            # an inner canvas, so the DOCUMENT is only viewport-tall and
+                            # Playwright's full_page would capture no more than the
+                            # viewport. Unpin it for the full shot, then remove the
+                            # override so the captured runtime CSS is untouched.
+                            unpin = page.add_style_tag(
+                                content=(
+                                    "[data-meridian-shell]{height:auto !important;"
+                                    "min-height:0 !important;overflow:visible !important}"
+                                    ".m-main{overflow:visible !important}"
+                                )
+                            )
+                            page.wait_for_timeout(120)
                             page.screenshot(path=str(full_capture), full_page=True)
+                            unpin.evaluate("el => el.remove()")
                             current = full_capture
                             artifacts.append(full_capture)
                         metadata = CaptureMetadata(
