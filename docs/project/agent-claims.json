@@ -9,6 +9,7 @@
       "files": [
         "scripts/capture_meridian_matrix.py",
         "scripts/preview_observatory_dial.py",
+        "scripts/compare_meridian_capture.py",
         "tests/test_capture_contract.py",
         "artifacts/today-parity-2026-09-15/**",
         "templates/meridian/index.html",
