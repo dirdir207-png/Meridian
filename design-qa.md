@@ -1,5 +1,35 @@
 # Observatory / Today visual QA
 
+## Activity — the captured comparison is state-mismatched, so it is INVALID (Track D, 2026-09-15)
+
+Reading `comparison-activity-mobile-dark.png`, the concept and the current implementation looked
+structurally different: the concept shows category review (per-row "Suggested category: Groceries",
+"Confirm category", "Change"), the capture shows a plain ledger with "Unassigned" and no actions. Two
+apparent gaps were checked against source, and **both dissolved**:
+
+- **"The current has four tabs, the concept three."** False. The segmented control is exactly
+  `Timeline | Review | Patterns` — the concept's three. "Filter" is a separate toggle button
+  (`data-filter-toggle`) that happens to sit beside the segmented control, and the reading conflated them.
+- **"The current has no category review."** False. `activity.js` renders review rows with
+  `m-review-category`, an orange attention dot, the suggested category, ranked `category_options` and a
+  classification confidence — the concept's exact content. It is reachable via
+  `data-activity-mode="review"`.
+
+**The real problem is the comparison itself.** `activity.js` defaults to `mode: "timeline"`, and the
+capture harness records a fixed `ui_state` of `"<workspace>:default"` and never drives a workspace's own
+modes or tabs. So every Activity capture is the Timeline mode while the governing concept depicts the
+**Review** mode. The two columns are different states of the same product, and the specification is
+explicit that only matching state may be compared.
+
+That makes the Activity comparison **evidence of nothing** — not evidence of a gap, and not evidence of
+parity. The same risk applies to any workspace whose concept depicts a non-default mode, so this is a
+pipeline defect rather than an Activity defect.
+
+The fix is bounded: let the harness drive a named UI state before capture (for Activity, select
+`[data-activity-mode="review"]`), and record the state actually captured instead of the constant
+`"<workspace>:default"`. Until that exists, Activity parity cannot be assessed at all, and the honest
+statement is "not yet measurable" rather than "gaps found".
+
 ## Plan — gap assessment against `02-plan.png`, decision-ready (Track D, 2026-09-15)
 
 Plan evidence is now valid on both axes that were missing: **informative** (fixtures serve data and the
