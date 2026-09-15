@@ -2,6 +2,7 @@
 
 import { MeridianApiError, meridianFetch } from "./api.js";
 import { renderActionReviewDetails } from "./action-review.js";
+import { renderActionVerification } from "./action-verification.js";
 
 const root = document.querySelector("[data-actions-root]");
 
@@ -76,7 +77,13 @@ function render(actions) {
     const decided = action.decided_at ? ` · decided ${formatTimestamp(action.decided_at)}` : "";
     meta.textContent = `${requested} · ${created}${decided}`;
 
-    card.append(head, rationale, meta, renderActionReviewDetails(action));
+    card.append(
+      head,
+      rationale,
+      meta,
+      renderActionVerification(action),
+      renderActionReviewDetails(action),
+    );
     history.appendChild(card);
   }
 }

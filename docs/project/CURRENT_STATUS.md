@@ -1,6 +1,18 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-13 (C4 pocket deletion readback repair)
+Last consolidated: 2026-09-13 (C4 verification receipt rendered)
+
+## C4 verification receipt is now visible — 2026-09-13
+
+Implemented (honest-receipt half of C4, concept "single constrained executor"): the read-only Settings action history now renders the durable post-execution verification receipt instead of hiding it in the stored JSON. New presentational module `static/js/meridian/action-verification.js` reads the receipt from **both** places the pipeline writes it — `action.verification` (`mark_verified`) and `action.result.verification` (`mark_executed`, `record_verification_pending`, `mark_failed`) — and classifies it tri-state: `confirmed` (ok true), `contradicted` (ok false, provider truth), `unresolved` (ok null, or no verifier registered at all). An unresolved receipt renders as "the provider accepted this change, but the readback could not confirm it. Do not resubmit it."; an action with no receipt renders as no verifier registered and unconfirmed. **`ok: null` can no longer be read as success or as failure.** Reasons, requested and observed values are shown verbatim; nothing is inferred.
+
+Scope and safety: presentation only. No endpoint, schema, migration, authority, routing, retry or provider call changed; the surface still exposes no approve/execute/reject control, and `actions.js` remains read-only. Styles were appended to the existing shared `static/css/meridian/action-review.css` (reusing its grid tokens) so no new stylesheet or script tag was added. The success tone is applied only to `confirmed`.
+
+Tested: new `tests/meridian/test_action_verification_js.py` executes the module under Node against the exact payload shapes `crew/executors.py` stores — confirmed, unresolved/timed-out, verifier-exception, provider-contradicted, no-verifier, and absent-field cases — and asserts the renderer builds a read-only receipt without `innerHTML`. Focused suite (receipt + review + history + outcome) **15 passed**; `tests/meridian` **677 passed** (was 673); Ruff on the changed test file, `node --check` on both JS files, `git diff --check`, and `scripts/check_guardrails.py --agent builder-c4-receipt-ui` all clean. No live provider, credentials, deployment, preset or migration change.
+
+Discipline note (`[D]`, recorded because it is a real defect in this slice's process): the first attempt at this change truncated `static/js/meridian/actions.js` from 108 to 59 lines with a shell heredoc, deleting `render()`, `load()` and the refresh wiring. It was caught by `git diff --stat` before any test run, restored from `HEAD`, and redone with targeted edits; the final diff is +8/−1 on that file. The claim was also recorded in the same round as the edits rather than before them. Both are recorded rather than hidden: a slice that damages a file and repairs it is not a clean slice, even when the end state is correct.
+
+Deployed: nothing. Verified: synthetic payloads and isolated unit tests only; **no browser check was run**, so "renders correctly in the running Settings page" is not claimed. Remaining gaps: funding-plan/autopilot-rule/reassignment-rule/virtual-card/reserve readback still need a provider contract; full C4 reachability and live owner acceptance remain open. Next: review, then one further operation-specific readback once a readback shape exists.
 
 ## C4 funding-plan readback — blocked pending provider contract
 

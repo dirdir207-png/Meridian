@@ -42,3 +42,33 @@
   color: var(--m-caution, #8a5c12);
   overflow-wrap: anywhere;
 }
+
+/* Post-execution verification receipt.
+   `confirmed` is the only success tone; unresolved and contradicted outcomes
+   stay on the caution/muted tones so a pending readback never reads as done. */
+
+.m-action-verification {
+  min-width: 0;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--m-border, var(--border-color, #d8d8d8));
+  color: var(--m-ink-muted, var(--text-muted, #5f6368));
+  font-size: var(--m-text-xs, 0.75rem);
+}
+
+.m-action-verification h4 {
+  margin: 0.5rem 0 0.25rem;
+  color: var(--m-ink, var(--text-dark, #202124));
+  font: inherit;
+  font-weight: 600;
+}
+
+.m-action-verification-headline {
+  margin: 0.25rem 0;
+  color: var(--m-caution, #8a5c12);
+  overflow-wrap: anywhere;
+}
+
+.m-action-verification[data-verification-outcome="confirmed"] .m-action-verification-headline {
+  color: var(--m-positive, var(--accent-color, #1a6b47));
+}
