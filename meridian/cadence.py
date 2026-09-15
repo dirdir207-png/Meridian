@@ -93,22 +93,56 @@ def _days_in_month(year: int, month: int) -> int:
     return calendar.monthrange(year, month)[1]
 
 
-def _shift_months(anchor: date, months: int) -> date:
-    """Move ``anchor`` by whole months, keeping its day where the month allows.
+class _Occurrence(date):
+    """A date that remembers the day it is trying to keep across a clamp.
 
-    The day comes from ``anchor`` on every call, so a February clamp does not
-    rewrite the anchor: 2026-01-31 -> 2026-02-28 -> 2026-03-31.
+    ``date`` is immutable and has no ``__dict__``, so the intended day cannot be
+    attached to a plain date. This subclass carries it as a slot. It behaves as a
+    ``date`` for every practical purpose (comparison, arithmetic, ``isoformat``,
+    ``str``) and JSON/protocol encoders fall back to the ``date`` representation.
+
+    Why it is needed: chained stepping (`advance(advance(a))`) holds an
+    intermediate date, and without a remembered day the February clamp becomes the
+    permanent anchor — the exact bug this module exists to remove.
     """
+
+    __slots__ = ("intended_day",)
+
+    def __new__(cls, year: int, month: int, day: int, intended_day: Optional[int] = None):
+        self = super().__new__(cls, year, month, day)
+        self.intended_day = day if intended_day is None else intended_day
+        return self
+
+
+def _intended_day(anchor: date) -> int:
+    """The day this occurrence is trying to keep.
+
+    Normally the occurrence's own day. When the date came out of a clamp — Jan 31
+    walked into February and became Feb 28 — this is the 31st, so a later step can
+    restore it.
+    """
+    return getattr(anchor, "intended_day", anchor.day)
+
+
+def _shift_months(anchor: date, months: int) -> date:
+    """Move ``anchor`` by whole months, keeping its intended day where allowed.
+
+    The intended day survives a clamp, so 2026-01-31 -> 2026-02-28 (February has
+    no 31st) -> 2026-03-31, whether the caller steps by period index or feeds each
+    result back in.
+    """
+    day = _intended_day(anchor)
     total = (anchor.year * 12 + (anchor.month - 1)) + months
     year, month_index = divmod(total, 12)
     month = month_index + 1
-    return date(year, month, min(anchor.day, _days_in_month(year, month)))
+    return _Occurrence(year, month, min(day, _days_in_month(year, month)), day)
 
 
 def _shift_years(anchor: date, years: int) -> date:
-    """Move by whole years, keeping the day — so Feb 29 recovers in a leap year."""
+    """Move by whole years, keeping the intended day — so Feb 29 recovers."""
+    day = _intended_day(anchor)
     year = anchor.year + years
-    return date(year, anchor.month, min(anchor.day, _days_in_month(year, anchor.month)))
+    return _Occurrence(year, anchor.month, min(day, _days_in_month(year, anchor.month)), day)
 
 
 def _next_semimonthly(anchor: date) -> date:
@@ -119,15 +153,20 @@ def _next_semimonthly(anchor: date) -> date:
     the next slot is that month's last day, and from a month's last day it is the
     following month's 15th. Non-strict behaviour would return its own input and
     spin the callers' roll-forward loops.
+
+    The slot day is NOT carried as the intended day: a month-end slot is a
+    position in the semimonthly schedule, not a request to keep the 31st. Carrying
+    it would make a later monthly step jump from the 28th to the 31st.
     """
+    intended = _intended_day(anchor)
     last = _days_in_month(anchor.year, anchor.month)
     if anchor.day < 15:
-        return date(anchor.year, anchor.month, 15)
+        return _Occurrence(anchor.year, anchor.month, 15, intended)
     if anchor.day < last:
-        return date(anchor.year, anchor.month, last)
+        return _Occurrence(anchor.year, anchor.month, last, intended)
     year = anchor.year + (1 if anchor.month == 12 else 0)
     month = 1 if anchor.month == 12 else anchor.month + 1
-    return date(year, month, 15)
+    return _Occurrence(year, month, 15, intended)
 
 
 def advance(anchor: date, recurrence: Optional[str], periods: int = 1) -> Optional[date]:

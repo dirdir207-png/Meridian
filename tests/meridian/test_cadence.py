@@ -209,6 +209,90 @@ def test_next_occurrence_handles_a_long_dormant_anchor():
     assert rolled == date(2026, 5, 31)
 
 
+# --- chained stepping must not drift either ----------------------------------
+# Chained stepping is the ORIGINAL failure mode: the callers held each result and
+# fed it back in. Row 1 below is what the old code produced. The rule now survives
+# chaining too, so a caller cannot reintroduce the drift by holding the date.
+
+
+def _chained(anchor, recurrence, steps=5):
+    current = anchor
+    out = [current]
+    for _ in range(steps):
+        current = advance(current, recurrence)
+        out.append(current)
+    return out
+
+
+def test_chained_monthly_stepping_does_not_drift():
+    assert _chained(date(2026, 1, 31), MONTHLY) == [
+        date(2026, 1, 31),
+        date(2026, 2, 28),
+        date(2026, 3, 31),  # the old code stayed on the 28th from here on
+        date(2026, 4, 30),
+        date(2026, 5, 31),
+        date(2026, 6, 30),
+    ]
+
+
+def test_chained_annual_stepping_recovers_feb_29():
+    assert _chained(date(2024, 2, 29), "annually", 4) == [
+        date(2024, 2, 29),
+        date(2025, 2, 28),
+        date(2026, 2, 28),
+        date(2027, 2, 28),
+        date(2028, 2, 29),
+    ]
+
+
+def test_chained_semimonthly_stepping_stays_on_slots():
+    assert _chained(date(2026, 1, 15), SEMIMONTHLY) == [
+        date(2026, 1, 15),
+        date(2026, 1, 31),
+        date(2026, 2, 15),
+        date(2026, 2, 28),
+        date(2026, 3, 15),
+        date(2026, 3, 31),
+    ]
+
+
+def test_chained_and_indexed_stepping_agree():
+    """Two ways to ask the same question must not disagree at any step."""
+    anchor = date(2026, 1, 31)
+    chained = _chained(anchor, MONTHLY, 6)[1:]
+    indexed = [advance(anchor, MONTHLY, n) for n in range(1, 7)]
+    assert chained == indexed
+
+
+def test_a_carried_day_does_not_leak_into_a_different_cadence():
+    """A month-end semimonthly slot must not later behave like a 31st anchor."""
+    slot = advance(date(2026, 1, 15), SEMIMONTHLY)  # Jan 31, intended day 15
+    # Stepping monthly from that slot keeps the 15th, not the 31st.
+    assert advance(slot, MONTHLY) == date(2026, 2, 15)
+
+
+def test_occurrences_still_behave_as_dates():
+    """The sticky-day carrier must be transparent to everything else."""
+    import json
+
+    feb = advance(date(2026, 1, 31), MONTHLY)
+    assert isinstance(feb, date)
+    assert feb == date(2026, 2, 28)
+    assert hash(feb) == hash(date(2026, 2, 28))
+    assert feb.isoformat() == "2026-02-28"
+    assert str(feb) == "2026-02-28"
+    assert sorted([feb, date(2026, 1, 1)])[0] == date(2026, 1, 1)
+    assert json.dumps({"d": feb.isoformat()}) == '{"d": "2026-02-28"}'
+
+
+def test_an_explicit_replace_clears_the_carried_day():
+    """replacing the day is a deliberate override, so the intent is discarded."""
+    feb = advance(date(2026, 1, 31), MONTHLY)
+    assert feb.replace(day=27) == date(2026, 2, 27)
+    # Starting a fresh monthly walk from an explicit 27th stays on the 27th.
+    assert advance(date(2026, 2, 27), MONTHLY) == date(2026, 3, 27)
+
+
 # --- advance_by_periods: the interval-multiplier form -----------------------
 
 
