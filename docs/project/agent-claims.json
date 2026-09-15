@@ -3,19 +3,6 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
-      "agent": "codex-xcode-preflight",
-      "claim_id": "virgil-xcode-verification",
-      "generation": 1,
-      "files": [
-        "docs/virgil/VIRGIL_IOS_RECONCILIATION.md",
-        "docs/project/MERIDIAN_OS_TASKS.json",
-        "docs/project/agent-claims.json"
-      ],
-      "base_sha": "2e5263cc1e81556349a207f7804f655ce63bf5e1",
-      "since": "2026-09-15T16:01:28Z",
-      "note": "Replace the resolved Xcode storage/install blocker with verified Xcode, SDK, simulator, simctl, first-launch, signing, and remaining physical-device evidence. Documentation and task evidence only; no app implementation or authority change."
-    },
-    {
       "agent": "builder-cadence",
       "claim_id": "builder-cadence-consolidation",
       "generation": 1,
