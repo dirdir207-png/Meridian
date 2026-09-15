@@ -1,5 +1,13 @@
 # Enhanced SimpleCrew — Current Status
 
+## Readiness contract probe repair — 2026-09-15
+
+Implemented the bounded Astra-lane follow-up in `scripts/verify_readiness.py`: replaced the removed `_verify_stored` import and call with the current `_verify_crew_bill_reserve_readback()` verifier factory. Added a regression test in `tests/test_readiness_tools.py` covering successful probe execution and the corrected anchor-preserving calendar values. Refreshed `artifacts/readiness-2026-09-13/contract-probes.json`; it is synthetic-only, records zero provider calls, and now reports `monthly_second: "2026-03-31"` and `semimonthly_next: "2026-01-31"`.
+
+Tested: `./.venv311/bin/python -m pytest -q tests/test_readiness_tools.py` — **4 passed**; `./.venv311/bin/ruff check scripts/verify_readiness.py tests/test_readiness_tools.py` — clean; `./.venv311/bin/python scripts/verify_readiness.py probes --output <fresh-temp-file>` — exit 0; fresh output matched the refreshed artifact before commit; `git diff --check` — clean. No provider call, credential access, deployment, financial mutation, or live data use.
+
+Deployed: nothing. Implementation and verification remain local/synthetic only. Next: review and integrate this bounded patch as part of the readiness evidence chain; no external-provider acceptance is claimed.
+
 ## ORSC sanitized Meridian status emitter — 2026-09-15
 
 Implemented the bounded read-only ORSC status emitter for a separate Harness handoff. `meridian/status_emitter.py` projects only Git metadata, `MERIDIAN_OS_TASKS.json`, `AGENT_COORDINATION.md`, `CURRENT_STATUS.md`, `MERIDIAN_ROADMAP.md`, and `MERIDIAN_DECISIONS.md` into schema version 1. `scripts/emit_meridian_status.py` emits one canonical JSON event to stdout and fails closed to a minimal degraded event without echoing unsafe source or exception content.

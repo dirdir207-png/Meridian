@@ -42,3 +42,13 @@ def test_restore_requires_explicit_isolated_environment(monkeypatch):
     monkeypatch.delenv("READINESS_NETWORK_NONE", raising=False)
     with pytest.raises(RuntimeError, match="network-isolated"):
         readiness.restore_rehearsal()
+
+
+def test_contract_probes_run_after_write_verifier_rename():
+    result = readiness.contract_probes()
+
+    assert result["synthetic_only"] is True
+    assert result["calendar"] == {
+        "monthly_second": "2026-03-31",
+        "semimonthly_next": "2026-01-31",
+    }

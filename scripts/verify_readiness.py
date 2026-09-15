@@ -229,7 +229,10 @@ def contract_probes() -> dict:
 
     from meridian.beacon import Forecast
     from meridian.commitments import CommitmentRepository, CommitmentType
-    from meridian.crew_write_actions import _verify_crew_bill_readback, _verify_stored
+    from meridian.crew_write_actions import (
+        _verify_crew_bill_readback,
+        _verify_crew_bill_reserve_readback,
+    )
     from meridian.evidence import EvidenceRepository
     from meridian.ingest import IntakeRecord, QuarantineError, ingest_record
     from meridian.live import sync_live_crew
@@ -260,7 +263,7 @@ def contract_probes() -> dict:
 
         intake = ingest_record(IntakeRecord("upload", "synthetic-text", b"Synthetic bill: $20.00", "text/plain"), evidence_repo=evidence, blob_store=FailedBlobStore())
         results["blob_write_failure"] = {"returned_quarantined": intake.quarantined, "metadata_persisted": evidence.get_item(intake.item_id) is not None}
-        verifier = _verify_stored(db, "name")
+        verifier = _verify_crew_bill_reserve_readback()
         results["reserve_settings_no_local_id"] = verifier({"name": "Synthetic"}, {"success": True})
         commitments = CommitmentRepository(db)
         bill = commitments.create(type=CommitmentType.BILL, name="Synthetic bill", amount=20, recurrence="monthly", legacy_source="crew", legacy_id="synthetic-bill")

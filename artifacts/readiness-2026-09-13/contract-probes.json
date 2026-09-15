@@ -1,5 +1,5 @@
 {
-  "source_sha": "f1e4d0a6c9d48767a9795cc03bb00bfc8bd8dfe2",
+  "source_sha": "fddc229faa576b0ae5cebccc7a9282e5e681ba3a",
   "synthetic_only": true,
   "provider_calls": 0,
   "unencrypted_pdf": {
@@ -11,19 +11,19 @@
     "metadata_persisted": true
   },
   "reserve_settings_no_local_id": {
-    "ok": true,
-    "check": "crew-write-accepted",
-    "note": "no local record to re-read"
-  },
-  "reserve_settings_with_local_id": {
-    "exception": "AttributeError",
-    "message": "'CommitmentRepository' object has no attribute 'get_commitment'"
+    "ok": null,
+    "check": "crew-bill-reserve-readback",
+    "provider_truth": false,
+    "reason": "provider readback is incomplete or has no bill identity",
+    "requested": {
+      "name": "Synthetic"
+    }
   },
   "partial_readback_missing_bill": {
-    "ok": false,
+    "ok": null,
     "check": "crew-bill-readback",
-    "provider_truth": true,
-    "reason": "the bill is no longer present in Crew",
+    "provider_truth": false,
+    "reason": "the requested bill was not present in the readback; deletion is unconfirmed",
     "requested": {
       "name": "Synthetic bill",
       "amount": null
@@ -35,8 +35,8 @@
     "existing_bill_marked_absent": false
   },
   "calendar": {
-    "monthly_second": "2026-03-28",
-    "semimonthly_next": "2026-01-30"
+    "monthly_second": "2026-03-31",
+    "semimonthly_next": "2026-01-31"
   },
   "scenario": {
     "starting_cash_changed": true,
