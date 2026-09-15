@@ -146,32 +146,90 @@ def test_readback_types_are_the_ten_that_were_hardened():
     }
 
 
-def test_allowed_but_unexecutable_types_are_recorded(tmp_path):
-    """An allowed type with no executor must be a recorded gap, not a surprise.
+def test_every_manifest_crew_write_type_registers_an_executor(tmp_path):
+    """Every recorded Crew write type must have a real executor.
 
-    `update_crew_virtual_card` is in `ActionStore.allowed_types` and has no
-    executor, so an approved action fails closed with `no_executor`. That is
-    safe but it is an owner-visible dead end, and it must stay documented until
-    it is either implemented or removed from the allowed set.
+    `update_crew_virtual_card` used to violate the underlying rule — allowed with
+    no executor, so an approved action could only fail with `no_executor`. It was
+    retired on 2026-09-14 rather than left as an owner-visible dead end. This test
+    covers the recorded Crew write registry; the app-level allowed set is checked
+    separately in `test_manifest_covers_every_allowed_action_type`.
     """
     registry = _registry(tmp_path)
     manifest = _manifest()
-    recorded_gaps = {entry["type"] for entry in manifest["allowed_without_executor"]}
 
-    app_source = APP_SOURCE.read_text(encoding="utf-8")
-    assert '"update_crew_virtual_card"' in app_source, (
-        "update_crew_virtual_card is no longer listed in app.py; reconcile the "
-        "recorded gap in docs/project/write-coverage.json"
+    for entry in manifest["allowed_without_executor"]:
+        assert entry.get("reason"), f"{entry['type']} must record why it is a gap"
+        assert entry.get("next_action"), f"{entry['type']} must record what would close it"
+
+    for entry in manifest["entries"]:
+        assert entry["type"] in registry, (
+            f"{entry['type']} is recorded as a Crew write type but registers no executor"
+        )
+
+
+def test_retired_update_virtual_card_cannot_silently_return():
+    """The retirement is deliberate and pinned in both directions.
+
+    It was removed from `ActionStore.allowed_types` because the connector has no
+    write operation for it, so no verifier could ever make it work. It must not
+    reappear as allowed, and it must not vanish from the record either.
+    """
+    manifest = _manifest()
+    retired = {entry["type"]: entry for entry in manifest["retired_action_types"]}
+
+    assert "update_crew_virtual_card" in retired, (
+        "the retirement of update_crew_virtual_card is no longer recorded; it "
+        "must stay documented so it reads as deliberate, not forgotten"
+    )
+    entry = retired["update_crew_virtual_card"]
+    assert entry.get("reason"), "a retirement must record why"
+    assert entry.get("resolution"), "a retirement must record what was done"
+    assert entry.get("would_reinstate_on"), "a retirement must record what would reverse it"
+
+    # The allowed set must not list it again.
+    allowed = _allowed_types_from_source()
+    assert "update_crew_virtual_card" not in allowed, (
+        "update_crew_virtual_card is allowed again; that needs a connector write "
+        "operation, a readback verifier and an owner decision"
     )
 
-    # The gap is real: allowed, but absent from the Crew write registry.
-    assert "update_crew_virtual_card" not in registry, (
-        "an executor now exists for update_crew_virtual_card; remove it from "
-        "allowed_without_executor and record its verification decision instead"
+    # And it must not be left in the allowed-without-executor gap list.
+    gaps = {entry["type"] for entry in manifest["allowed_without_executor"]}
+    assert "update_crew_virtual_card" not in gaps, (
+        "the type is retired; it must not also be recorded as an open gap"
     )
-    assert "update_crew_virtual_card" in recorded_gaps, (
-        "the allowed-without-executor gap is no longer documented"
+
+    # A retired type is not part of the coverage picture either way.
+    recorded = (
+        {e["type"] for e in manifest["entries"]}
+        | {e["type"] for e in manifest["engine_level_verifiers"]}
+        | {e["type"] for e in manifest["memory_action_types"]}
+        | gaps
     )
+    assert "update_crew_virtual_card" not in recorded
+
+
+def test_create_virtual_card_is_unaffected_by_the_retirement(tmp_path):
+    """Retiring the update must not disturb the verified create."""
+    registry = _registry(tmp_path)
+    manifest = _manifest()
+    entries = {entry["type"]: entry for entry in manifest["entries"]}
+
+    assert entries["create_crew_virtual_card"]["verification"] == "readback"
+    execute, verifier = registry["create_crew_virtual_card"]
+    assert verifier is not None, "create_crew_virtual_card lost its readback verifier"
+
+
+def test_allowed_but_unexecutable_types_are_recorded():
+    """Legacy guard: any *new* allowed-without-executor gap must be documented.
+
+    The list is currently empty because `update_crew_virtual_card` was retired
+    (see `test_retired_update_virtual_card_cannot_silently_return`). If a future
+    change reintroduces an allowed-but-unexecutable type, it must be recorded
+    here with a reason, a status and a next action.
+    """
+    manifest = _manifest()
 
     for gap in manifest["allowed_without_executor"]:
         assert gap.get("reason"), f"{gap['type']} must record why it is a gap"

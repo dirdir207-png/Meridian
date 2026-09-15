@@ -104,12 +104,15 @@
       "note": "Cards facet, which the connector always fetched and Meridian discarded. Requires the provider-returned card id; a card not yet visible stays unresolved, never a failure."
     }
   ],
-  "allowed_without_executor": [
+  "allowed_without_executor": [],
+  "retired_action_types": [
     {
       "type": "update_crew_virtual_card",
-      "reason": "Listed in ActionStore.allowed_types in app.py but no executor is registered for it, so an approved action fails closed with error_code 'no_executor'. It cannot mutate anything, but it is an allowed-but-unexecutable type that the owner can approve and watch fail.",
-      "status": "open-gap",
-      "next_action": "Either register an executor with a card readback verifier, or remove it from allowed_types so the surface cannot offer an action that can never complete."
+      "retired_at": "2026-09-14",
+      "reason": "It was listed in ActionStore.allowed_types with no executor, so an approved action could only fail with error_code 'no_executor'. The root cause is that the connector exposes no write operation for it: src/crew_work_assistant/crew_write_cli.py and write_operations/ contain 18 write specs and no update_virtual_card. The capability to perform the write did not exist, so no readback verifier could have made it work.",
+      "resolution": "Removed from ActionStore.allowed_types in app.py, owner-authorized 2026-09-14. Recorded here rather than deleted so a future reader sees a deliberate retirement and not an omission.",
+      "not_affected": "create_crew_virtual_card is unaffected and remains verified by readback from the virtual_cards facet.",
+      "would_reinstate_on": "A connector write operation for the card update, plus a readback verifier and an owner decision."
     }
   ],
   "engine_level_verifiers": [

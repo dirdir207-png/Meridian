@@ -1,6 +1,24 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-14 (C4 readback reconciled against the Crew discovery capture)
+Last consolidated: 2026-09-14 (C4: `update_crew_virtual_card` retired)
+
+## `update_crew_virtual_card` retired from the allowed set — 2026-09-14
+
+Owner-authorized on 2026-09-14. This closes the last known allowed-but-unexecutable gap, and it is the **one** resolution this lane could take without a connector change.
+
+Why it could never work: the type was listed in `ActionStore.allowed_types` in `app.py` but no executor was registered for it, so an approved action could only fail with `error_code: "no_executor"`. The cause was upstream — the connector exposes **no write operation** for a card update: `src/crew_work_assistant/crew_write_cli.py` and its 18 `write_operations/*.graphql` specs contain no `update_virtual_card` (verified by grep; `create_virtual_card` exists, `update_virtual_card` does not). No readback verifier could have made the action work, because the capability to perform the write did not exist.
+
+Change: the type was removed from `allowed_types` in `app.py` with an explanatory comment pointing at the manifest. This **removes a capability** rather than adding one, and removes nothing that functioned — nothing in ORSC proposed it (grep found only `app.py`, `write-coverage.json` and the guard test; no JS/API caller).
+
+Recorded rather than erased: `docs/project/write-coverage.json` gains a `retired_action_types` section carrying the reason, the resolution, the note that `create_crew_virtual_card` is unaffected, and what would reinstate it (a connector write operation, a readback verifier, and an owner decision). `allowed_without_executor` is now empty. A new guard, `test_retired_update_virtual_card_cannot_silently_return`, pins it in **both** directions — it must not reappear as allowed, and it must not vanish from the record either.
+
+**Clarification worth keeping** (this caused a moment of confusion): `create_crew_virtual_card` is a *different* action type and is fully verified by readback from the `virtual_cards` facet, including `user.userSpendConfig.selectedSpendSubaccount`. Retiring the *update* does not touch card readback. `test_create_virtual_card_is_unaffected_by_the_retirement` asserts that explicitly.
+
+Tested: 15 coverage tests pass, including three new ones (no-executor check on all recorded crew types, the retirement pin, and the create-unaffected check). One test of mine was renamed because its name claimed more than it checked: `test_no_allowed_type_lacks_an_executor` → `test_every_manifest_crew_write_type_registers_an_executor`, since it verifies the recorded Crew write registry and not the app-level allowed set (which the AST-based test covers). `tests/meridian` **721 passed** (was 718); full non-browser suite **1028 passed, 1 skipped**; Ruff on `app.py` and the guard clean (three dead variables from the edit were removed); `git diff --check` and `scripts/check_guardrails.py --agent builder-c4-retire-uvc` clean.
+
+Still unaddressed in ORSC: `meridian/crew_commands.py` carries an `UPDATE_VIRTUAL_CARD_MUTATION` constant (via `crew.operations`) that is now unreachable. It is left in place deliberately — removing it risks an import elsewhere and is a separate cleanup — so it is recorded here rather than silently deleted.
+
+Deployed: nothing. Verified: source inspection, AST read of `allowed_types`, and isolated tests only. Next: the authorized connector edit adding `billReserve.id` + `fundingPlans` to `expenses.graphql` and `reassignmentRules` to `family.graphql`, which unblocks 6 of the 7 remaining readback types.
 
 ## C4 readback — reconciled against `CREW_DISCOVERY_HANDOFF.md` (2026-09-14)
 

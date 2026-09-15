@@ -35,6 +35,19 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-14 — Builder — `update_crew_virtual_card` retired (owner-authorized)
+
+Removed the last allowed-but-unexecutable type. It was in `ActionStore.allowed_types` with no executor, so an approved action could only fail with `no_executor`; the cause is upstream — the connector has **no `update_virtual_card` write operation** (grep over `crew_write_cli.py` and its 18 `write_operations/*.graphql` specs). No verifier could have fixed it, so the capability is removed rather than left as an owner-visible dead end. Nothing proposed it (no JS/API caller); this removes a capability and breaks nothing that worked.
+
+`create_crew_virtual_card` is unaffected and stays verified by readback — worth stating because the two are easy to conflate. Recorded in the manifest's new `retired_action_types` section with what would reinstate it, and pinned in both directions by `test_retired_update_virtual_card_cannot_silently_return` so it can neither silently return nor be forgotten.
+
+Coverage tests 15 passed; `tests/meridian` 721 passed; full non-browser suite 1028 passed / 1 skipped; Ruff, `git diff --check` and the guardrail receipt clean. One of my own test names was corrected for overclaiming (`test_no_allowed_type_lacks_an_executor` → `test_every_manifest_crew_write_type_registers_an_executor`), and three dead variables from the edit were removed after Ruff flagged them.
+
+Left in place deliberately and recorded: `meridian/crew_commands.py`'s now-unreachable `UPDATE_VIRTUAL_CARD_MUTATION` constant — removing it is a separate cleanup with import risk.
+
+Next: the owner-authorized connector edit (`expenses.graphql`: `billReserve.id` + `fundingPlans`; `family.graphql`: `reassignmentRules`), which unblocks 6 of the 7 remaining readback types.
+
+
 ### 2026-09-14 — Builder — C4 readback reconciled against the Crew discovery capture
 
 Reconciled this lane's gap list against `CREW_DISCOVERY_HANDOFF.md` (Astra, 2026-09-14) and separated **not implemented** from **not captured**. Full table in `CURRENT_STATUS.md`; the load-bearing results:

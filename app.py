@@ -1023,7 +1023,11 @@ action_store = ActionStore(
         "delete_crew_autopilot_rule",
         "create_crew_pocket_reassignment_rule",
         "delete_crew_pocket_reassignment_rule",
-        "update_crew_virtual_card",
+        # update_crew_virtual_card is deliberately absent: no crew-write operation
+        # exists for it, so it had no executor and could only fail with
+        # no_executor. Retired from the allowed set on 2026-09-14 rather than
+        # offering the owner an action that can never complete. See
+        # docs/project/write-coverage.json ("retired_action_types").
         "set_crew_spend_pocket",
         "create_crew_virtual_card",
     ) + MEMORY_ACTION_TYPES,
