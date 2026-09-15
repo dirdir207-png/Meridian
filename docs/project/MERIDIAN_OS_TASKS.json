@@ -454,6 +454,27 @@
           "An absent bill amount still conflates to 0.0 and aborts the whole refresh tick via local validation"
         ]
       }
+    },
+    {
+      "id": "OS-021",
+      "title": "Emit sanitized deterministic Meridian status event for Harness handoff",
+      "phase": "integration-boundary",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": ["OS-001"],
+      "authority_impact": "none; read-only projection and no transport",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Known versioned schema and deterministic event identity",
+        "Approved sources only with degraded handling for missing, malformed, stale, or conflicting data",
+        "Credential-free bounded CLI output with no mutation or provider/control calls",
+        "Contract and Harness handoff documentation committed"
+      ],
+      "evidence": {
+        "implementation": "meridian/status_emitter.py and scripts/emit_meridian_status.py",
+        "tests": "tests/meridian/test_status_emitter.py",
+        "docs": "docs/project/MERIDIAN_STATUS_EMITTER_CONTRACT.md and MERIDIAN_STATUS_EMITTER.md"
+      }
     }
   ]
 }

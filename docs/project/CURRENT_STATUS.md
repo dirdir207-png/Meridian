@@ -6,7 +6,7 @@ Implemented the bounded read-only ORSC status emitter for a separate Harness han
 
 The contract defines stable source-derived `event_id`, producer/observation timestamps, bounded queues, Track D/I/C state, task counts, release gate, evidence, blockers and safest next slice. Missing, malformed, stale, out-of-order or conflicting input is unknown/degraded, never guessed success. Secrets, tokens, cookies, OTPs, prompts, transcripts, tool output, reasoning, absolute paths, unrestricted URLs, balances and unnecessary financial detail are rejected. No database, provider, network, webhook, financial mutation, agent-control, Harness or scheduling path is connected.
 
-Tests: `tests/meridian/test_status_emitter.py` 17 passed; changed-path Ruff and `git diff --check` passed. No browser check was applicable. Harness must independently validate, filter, deduplicate, freshness-check and render; live Harness mode is not claimed until it integrates and verifies the contract. Commit SHA will be added after final review.
+Tests: `tests/meridian/test_status_emitter.py` 17 passed; changed-path Ruff and `git diff --check` passed. No browser check was applicable. Harness must independently validate, filter, deduplicate, freshness-check and render; live Harness mode is not claimed until it integrates and verifies the contract. Committed as `b98e6994748739eb1accae17e5834931878e9fc8` after final review.
 
 Last consolidated: 2026-09-15 (dated occurrences: chained stepping made drift-free by construction)
 
