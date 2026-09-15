@@ -1,5 +1,49 @@
 # Observatory / Today visual QA
 
+## September 15 governed regeneration and measurement pass (Track D)
+
+The previous matrix (`artifacts/dial-refinement-2026-09-12/today-final-2/`) was captured at `5ed361e`. The
+capture specification says existing screenshots are historical unless regenerated, and the tree has since
+gained the cadence consolidation, the transfer-readback verifier and the status emitter, so the evidence was
+regenerated rather than reused.
+
+**Fresh governed matrix: `artifacts/today-parity-2026-09-15/`** — 10 captures (all five governed viewports ×
+light and dark), 20 screenshots, recorded at `commit 2c7af918` with `concept_path` `01-today.png`, fixture
+`synthetic-electric-internet-payday` and frozen clock `2026-09-08T13:42:00Z`. **Zero horizontal overflow and
+zero console errors in every one of the ten combinations.** Capture now also records `overflow` and
+`console_errors` per capture, because horizontal overflow is the primary responsive defect signal and should
+be measured rather than inferred from an image.
+
+Producing this required a tooling fix, recorded because it was a real blocker: the governed capture script
+called `login()`, but the isolated synthetic preview deliberately has no `/login` route, and it always
+captured all four workspaces while that preview renders Today only. The only target that has a login is
+`run_preview.py`, which loads `.env` and starts a Crew sync loop — unusable for fidelity work, because the
+specification requires fixtures only and forbids live bank data. The script now takes `--skip-login`
+(isolated synthetic preview: no auth, no credentials, no provider call) and `--workspaces`.
+
+### Measured gaps (probes in `artifacts/today-parity-2026-09-15/probes/`)
+
+Geometry was measured from the live DOM rather than estimated from pixels, because the pixel estimate
+disagreed with the DOM.
+
+| Roadmap gap | Measurement | Status |
+|---|---|---|
+| Right-side alignment on Today | Layout box 251–1339 in a 1440 viewport: **101px each side, symmetric**. The single-column desktop stage is deliberate (`observatory.css` documents it: "Today becomes a single Observatory stage on wide screens"). Each event card is 384px and its body reaches the right edge (326px). | **Not reproducible as a gross defect.** The residual is that the card's compact left-aligned stack (which matches the concept) leaves unused width inside a 384px card. |
+| Payday amount tight fit at mobile | `+$1,660.00` measures `clientWidth 110 / scrollWidth 110` — **no overflow** — at 420, 430 and 390. | **Not reproducible.** |
+| Inline Virgil control overlaps bottom nav at mobile | `obs-control` bottom vs sticky `nav.m-nav` top: **−41px at 420**, **−23px at 430**, **−79px at 390**. | **Reproduced.** The control sits behind the dock on first paint at every mobile viewport. |
+
+A caution recorded for the next pass: the concept's callouts stack date/name/amount/status **left-aligned**,
+and the vision reading of `01-today.png` confirms the amounts are deliberately *not* right-aligned. So
+"fixing" the unused card width by right-aligning amounts would move the implementation **away** from the
+governing concept — the trap Track D's review order exists to avoid.
+
+Outstanding decision, not taken unilaterally: the dock overlap is structural. The dock is a `position: sticky`
+grid row pinned to the viewport bottom, so mid-scroll content passes beneath it by design; the inline advisory
+control is an addition the concept does not contain. Candidate fixes are (a) make the canvas the scroll
+container so the dock reserves its own row and never overlays, or (b) drop the inline advisory control at
+mobile. (a) touches the shell and therefore every workspace; (b) is small but removes a control. Both are
+owner-visible choices, so the measurement is recorded rather than a fix improvised.
+
 ## September 12 phone alignment correction
 
 The three-event baseline below missed the tall-list case. The owner's reported blank space was reproduced with twelve invented events and corrected: dial top alignment, bounded keyboard-scrollable callouts, full-width mobile text/amounts, and controls in a separate row. Regression and preview-template refresh checks pass within a **71-test** focused run. `artifacts/dial-refinement-2026-09-12/alignment-dense-final/` contains the fresh 16-image matrix, with zero page overflow/errors; mobile images were inspected. The local preview was reloaded and its served assets verified. See `docs/project/DIAL_ALIGNMENT_FIX_2026-09-12.md` for scope and runtime evidence. Older broad-fidelity observations below are retained, not silently treated as fixed by this incident correction.
