@@ -1,5 +1,58 @@
 # Observatory / Today visual QA
 
+## Today — acceptance summary (Track D, 2026-09-15)
+
+**Status: awaiting owner acceptance.** Everything below is measured from the live DOM or captured under the
+governed matrix; nothing here is inferred from an image.
+
+**Captured evidence.** `artifacts/today-parity-2026-09-15/` — 10 captures, all five governed viewports (1440×900
+DPR 1, 1024×768 DPR 1, 430×932 DPR 3, 390×844 DPR 3, 420×912 DPR 3) × light and dark, 20 screenshots, at
+`commit 2c7af918`, concept `01-today.png`, fixture `synthetic-electric-internet-payday`, frozen clock
+`2026-09-08T13:42:00Z`. **Zero horizontal overflow and zero console errors in all ten combinations.**
+
+**Gaps from the roadmap, re-tested:**
+
+| Roadmap item | Verdict |
+|---|---|
+| Right-side alignment | **Not reproducible.** Layout box 251–1339 in 1440 → 101px each side, symmetric. The single-column desktop stage is deliberate and documented in `observatory.css`. |
+| Payday amount tight at mobile | **Not reproducible.** clientWidth 110 / scrollWidth 110 at 420, 430 and 390. |
+| Inline Virgil control vs bottom nav | **Real, cosmetic, at rest.** `OCCLUDED` at 420 (`m-nav-item`) and 430 (`m-nav`); reachable by scrolling. |
+| Light-theme foregrounds | **Inspected; one new finding.** Primary text is legible. But in the light theme the small grey dial labels have marginal contrast, and the lower dial rim labels (`8 / TUE` and `16 / WED`) are partially obscured by the observatory artwork and the bottom viewport crop. See below. |
+
+**The one open defect.** The "Ask Virgil about this plan" control is painted and then covered by the dock in the
+initial mobile viewport. Measured occlusion: 7046 px² covered at 420, 7046 px² at 430. It is **not** a dead
+control — after scrolling it clears the dock and hit-tests to itself — so this is an at-rest occlusion of one
+control, and the governing concept contains no inline advisory control in that position at all.
+
+**A second finding, from inspecting the light-theme capture directly** (which the roadmap requires, because a
+computed-ratio probe is not valid over gradient and parchment backgrounds). Primary light-theme text is legible,
+but two things are marginal: the small grey dial labels sit at low contrast against the parchment, and the lower
+dial rim labels (`8 / TUE`, `16 / WED`) are partially obscured by the observatory artwork and by the bottom
+viewport crop. This is distinct from the dock overlap and was not previously on the roadmap's list.
+
+A process note worth keeping: the light-theme row of this table first read "verified, no problems" before the
+capture had actually been inspected. It was rewritten only after reading the image. That is the exact failure
+mode the roadmap warns about — a clean-looking row that was never looked at.
+
+**A validated fix exists but is not shipped, and the reason is a decision only you can make.** Making the mobile
+shell `height: 100svh` with the canvas as its own scroll container flips the measured verdict from `OCCLUDED` to
+`PAINTED_AND_HITTABLE` at 420 and 430 and `NOT_PAINTED` at 390 — it demonstrably works on Today. It is withheld
+because it changes the scroll container for **every** workspace while only Today can currently be captured (see
+the blocker below), so it cannot be verified across the app. Options: (a) accept the change and let the other
+workspaces be verified as their capture support lands, (b) relocate or drop the inline advisory control at
+mobile — smaller, and raises fidelity since the concept has no such control, but it removes a control, or
+(c) accept Today as-is with the defect recorded.
+
+**Track D capture blocker for the remaining workspaces.** `scripts/preview_observatory_dial.py` serves only
+`/api/meridian/today`; `plan`, `activity` and `accounts` return 404, their sections never clear `aria-busy`, and
+the governed capture harness times out on them (`Page.wait_for_function: Timeout 12000ms exceeded`). **Today is
+the only workspace currently able to produce governed capture evidence.** The alternatives were checked and
+neither is a small step: extending the isolated preview needs synthetic fixtures for roughly eight to ten
+endpoints (accounts, crew/bills, contracts, assets, trials/deadlines, plan, plan/scenario, crew/rules, actions)
+and inventing conformant shapes risks producing misleading parity evidence; and `run_preview.py` loads `.env` and
+starts a Crew sync loop, which the capture specification forbids for fidelity work. So Plan, Activity and
+Accounts need an explicit owner decision on capture infrastructure before their parity work can start.
+
 ## September 15 governed regeneration and measurement pass (Track D)
 
 The previous matrix (`artifacts/dial-refinement-2026-09-12/today-final-2/`) was captured at `5ed361e`. The
