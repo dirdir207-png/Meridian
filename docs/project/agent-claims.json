@@ -3,20 +3,6 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
-      "agent": "codex-virgil-routing",
-      "claim_id": "codex-virgil-natural-roadmap-routing",
-      "generation": 1,
-      "files": [
-        "docs/project/PROJECT_INSTRUCTIONS.md",
-        "docs/project/MERIDIAN_ROADMAP.md",
-        "docs/project/MERIDIAN_OS_TASKS.json",
-        "docs/project/agent-claims.json"
-      ],
-      "base_sha": "74bc37456dd8d53a6754161c797b6401068685b9",
-      "since": "2026-09-15T15:32:58+00:00",
-      "note": "Owner-authorized documentation routing only. Make the accepted Virgil addendum discoverable from the mandatory project entry point, map its dependency gates into the consolidated roadmap, and add A0-A5 task-ledger records. No product, Harness, provider, financial, deployment, branch, worktree, or runtime mutation."
-    },
-    {
       "agent": "builder-cadence",
       "claim_id": "builder-cadence-consolidation",
       "generation": 1,
