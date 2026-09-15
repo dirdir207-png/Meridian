@@ -3,6 +3,36 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
+      "agent": "builder-cadence",
+      "claim_id": "builder-cadence-consolidation",
+      "generation": 1,
+      "files": [
+        "meridian/cadence.py",
+        "meridian/billers.py",
+        "meridian/payday.py",
+        "meridian/paycheck.py",
+        "meridian/paycheck_learning.py",
+        "meridian/services/dial.py",
+        "meridian/services/plan.py",
+        "meridian/services/today.py",
+        "tests/meridian/test_cadence.py",
+        "tests/meridian/test_payday.py",
+        "tests/meridian/test_paycheck.py",
+        "tests/meridian/test_paycheck_learning.py",
+        "tests/meridian/test_biller_monitor.py",
+        "tests/meridian/test_absent_bills.py",
+        "tests/meridian/test_bill_absence_reconciliation.py",
+        "tests/meridian/test_dial_js.py",
+        "tests/meridian/test_plan_observatory.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "03d0dfb04a32d12305141c71ce94569bf094b944",
+      "since": "2026-09-14T00:00:00+00:00",
+      "note": "V1 keystone: consolidate the six divergent dated-occurrence implementations onto one calendar-aware rule so a monthly anchor on the 31st returns to the 31st and semimonthly means the 15th and the last day of the month. Pure date arithmetic: no authority, endpoint, migration, provider call or money movement. Value-only; no schema or storage change."
+    },
+    {
       "agent": "builder",
       "claim_id": "builder-r0-guardrails",
       "generation": 1,

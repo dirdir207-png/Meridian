@@ -1,6 +1,37 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-14 (C4: `crew_initiate_transfer` verified by readback — 16 of 17)
+Last consolidated: 2026-09-15 (dated-occurrence math consolidated onto one calendar-aware rule)
+
+## Dated occurrences — seven implementations replaced by one rule — 2026-09-15
+
+The roadmap's keystone defect ("the dial's own recurrence engine drifts") is fixed, and it was **wider than recorded**: not three implementations but **seven**, in six modules, and they disagreed in three separate ways. Measured before the change:
+
+| Defect | Evidence (before) |
+|---|---|
+| Monthly drifted **permanently** after any clamp | `dial`/`billers`/`paycheck` on a Jan 31 anchor: Jan 31 → Feb 28 → **Mar 28 → Apr 28 → May 28**. The clamped February value became the new anchor. |
+| Semimonthly meant **two different things** | `paycheck`, `paycheck_learning`, `dial`, `plan`, `today` used a flat `+15 days` (Jan 15 → Jan 30 → Feb 14 → **Mar 1** — off the calendar); only `payday` used "the 15th and month-end". |
+| Annual Feb 29 collapsed and **never recovered** | `date(year+1, 2, 29)` raised, the handler fell back to Feb 28, and no later leap year restored the 29th. |
+| `payday`'s semimonthly branch was **unreachable** | A semimonthly schedule has 13–18 day gaps, a superset of the biweekly 13–15 window, and the biweekly test ran first — so semimonthly was reported as biweekly. |
+
+**New module: `meridian/cadence.py`.** One rule with the single constraint that fixes the whole class: **month positions are derived from the anchor's day, never from the previous occurrence's day.** A clamp is therefore temporary — Feb 29 clamps to Feb 28 during the walk and still returns on Feb 29 four years later.
+
+Converted to it (`billers`, `paycheck`, `paycheck_learning`, `payday`, `services/dial`, `services/plan`, `services/today`). Verified sequences:
+
+```
+monthly     2026-01-31 anchor → 02-28, 03-31, 04-30, 05-31, 06-30, 07-31
+semimonthly 2026-01-15 anchor → 01-31, 02-15, 02-28, 03-15, 03-31, 04-15
+annually    2024-02-29 anchor → 2025-02-28, 2026-02-28, 2027-02-28, 2028-02-29
+```
+
+**A second bug found while fixing the first, in my own new code.** `advance(anchor, rec, n)` is correct, but the *iterating* callers fed each result back in as the new anchor, which reintroduced the drift through the other door (Jan 31 → Feb 28 → Mar 28). `next_occurrence_with_index()` now performs the anchor-preserving walk and returns the period index, so callers enumerate without guessing where the walk stands. That index was itself wrong on the first attempt — it reported k=1 for an occurrence that is k=0 when the anchor already satisfies `as_of`, which silently **skipped every second paycheck** (Sep → Nov → Jan). Caught by the existing `test_future_paycheck_events_generates_from_next_date` expecting three monthly paychecks in 90 days and receiving two.
+
+Not consolidated, deliberately: `funding._monthly_dates` holds `day_of_month` fixed while iterating, so it is already anchor-preserving and correct; it returns a list, so folding it in would be a shape change with no defect to fix.
+
+Tested: new `tests/meridian/test_cadence.py` (37 tests) pinning every defect above plus the vocabulary, unknown-recurrence and index contracts; plus consumer-level regressions in `test_biller_monitor.py` (31st anchor returns to the 31st; semimonthly uses month-end) and `test_payday.py` (semimonthly reachable; an all-equal 14-day gap stays biweekly). `tests/meridian` **787 passed** (was 746); full non-browser suite **1094 passed, 1 skipped** (was 1053). Ruff, `git diff --check` and the guardrail receipt clean.
+
+Mutation checks: seven deliberate breaks, **each caught** — month-shift ignoring the period count (11 failures), period-index off-by-one (1), semimonthly flat +15 (7), annual never recovering (1), unknown recurrence defaulting to weekly (5), the walk re-feeding itself (3), semimonthly able to stall (7). **One earlier mutant was equivalent, not caught, and that is recorded rather than hidden:** re-clamping an already-clamped day is idempotent, so it could never fail a test. It was replaced. All mutations reverted from a file backup verified byte-identical; `git checkout` was not used.
+
+Deployed: nothing. No provider call, migration, endpoint, authority or money movement — pure date arithmetic. Verified: synthetic dates and isolated unit tests only; no live bank data was used.
 
 ## C4 — `crew_initiate_transfer` verified by readback; coverage now 16 of 17 — 2026-09-14
 
