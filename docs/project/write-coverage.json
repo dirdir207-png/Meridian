@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "note": "Verification coverage for the Crew write registry. THIS FILE IS ENFORCED, not descriptive: tests/meridian/test_write_coverage.py fails if a registered action type is missing here, if an entry no longer matches the registry, or if a readback entry's `check` string is not present in meridian/crew_write_actions.py. Adding a write operation therefore requires recording a verification decision, and no operation can silently lose or gain a verifier.",
+  "source_of_truth": "meridian.crew_write_actions.crew_write_executors",
+  "status_vocabulary": {
+    "readback": "a verifier re-reads fresh provider state after execution; the receipt is confirmed / contradicted / unresolved",
+    "none": "no verifier is registered; a provider-accepted write ends EXECUTED with ok=null and provider_truth=false, and is never reported as verified"
+  },
+  "unresolved_receipt_rule": "An accepted write whose readback is missing, partial, stale, malformed, timed-out or raising stays EXECUTED (ok=null, provider_truth=false, retry_allowed=false). It is never resubmitted, including after restart.",
+  "entries": [
+    {
+      "type": "update_crew_bill",
+      "verification": "readback",
+      "check": "crew-bill-readback",
+      "note": "Fresh complete provider snapshot; matched fields confirm, differing fields are a provider-confirmed contradiction, an absent bill is unresolved (never a confirmed deletion)."
+    },
+    {
+      "type": "update_crew_bill_reserve_settings",
+      "verification": "readback",
+      "check": "crew-bill-reserve-readback",
+      "note": "Fresh complete provider snapshot; compares requested name/amount/reservedAmount. Local commitments are no longer consulted."
+    },
+    {
+      "type": "create_crew_bill",
+      "verification": "readback",
+      "check": "crew-bill-create-readback",
+      "note": "Confirms the provider-generated bill id and the requested name/amount in a fresh complete snapshot."
+    },
+    {
+      "type": "create_crew_pocket",
+      "verification": "readback",
+      "check": "crew-pocket-create-readback",
+      "note": "Confirms the provider-generated pocket id and returned identity fields in a fresh complete snapshot."
+    },
+    {
+      "type": "delete_crew_pocket",
+      "verification": "readback",
+      "check": "crew-pocket-delete-readback",
+      "note": "Complete readback proving absence verifies; presence is a provider-confirmed failure; an incomplete readback never concludes a deletion."
+    },
+    {
+      "type": "archive_crew_bill",
+      "verification": "readback",
+      "check": "crew-bill-archive-readback",
+      "note": "Complete readback proving the bill is absent verifies; a still-present bill is a provider-confirmed failure."
+    },
+    {
+      "type": "crew_initiate_transfer",
+      "verification": "none",
+      "reason": "No transfer readback shape exists. Matching an amount and account against general transactions would be weak evidence and could report a FALSE confirmed transfer, which is worse than an honest unresolved receipt."
+    },
+    {
+      "type": "top_up_crew_reserve",
+      "verification": "none",
+      "reason": "The provider snapshot exposes per-bill reservedAmount but no billReserveId, so a top-up cannot yet be attributed to the reserve it targeted."
+    },
+    {
+      "type": "create_crew_paycheck_funding_plan",
+      "verification": "none",
+      "reason": "Mutation input is captured, but no credential-free funding-plan readback shape exists in the provider adapter."
+    },
+    {
+      "type": "update_crew_paycheck_funding_plan",
+      "verification": "none",
+      "reason": "Same as create: no funding-plan readback shape exists yet."
+    },
+    {
+      "type": "delete_crew_paycheck_funding_plan",
+      "verification": "none",
+      "reason": "Same as create: no funding-plan readback shape exists yet."
+    },
+    {
+      "type": "create_crew_autopilot_rule",
+      "verification": "none",
+      "reason": "No normalized rule model or rule readback shape exists in the provider adapter."
+    },
+    {
+      "type": "delete_crew_autopilot_rule",
+      "verification": "none",
+      "reason": "No rule readback shape exists yet."
+    },
+    {
+      "type": "create_crew_pocket_reassignment_rule",
+      "verification": "none",
+      "reason": "No reassignment-rule readback shape exists yet."
+    },
+    {
+      "type": "delete_crew_pocket_reassignment_rule",
+      "verification": "none",
+      "reason": "No reassignment-rule readback shape exists yet."
+    },
+    {
+      "type": "set_crew_spend_pocket",
+      "verification": "none",
+      "reason": "The selected spend pocket is readable in the card/pocket selector surface, but that surface is not exposed by the current snapshot adapter."
+    },
+    {
+      "type": "create_crew_virtual_card",
+      "verification": "none",
+      "reason": "No virtual-card readback shape exists in the provider adapter."
+    }
+  ],
+  "allowed_without_executor": [
+    {
+      "type": "update_crew_virtual_card",
+      "reason": "Listed in ActionStore.allowed_types in app.py but no executor is registered for it, so an approved action fails closed with error_code 'no_executor'. It cannot mutate anything, but it is an allowed-but-unexecutable type that the owner can approve and watch fail.",
+      "status": "open-gap",
+      "next_action": "Either register an executor with a card readback verifier, or remove it from allowed_types so the surface cannot offer an action that can never complete."
+    }
+  ],
+  "engine_level_verifiers": [
+    {
+      "type": "move_money",
+      "verification": "readback",
+      "check": "confirmed-transfer-id",
+      "note": "Registered in app.py (verify_transfer_action), not in the Crew write registry; listed here so the coverage picture is complete."
+    },
+    {
+      "type": "scheduled_move_money",
+      "verification": "readback",
+      "check": "confirmed-transfer-id",
+      "note": "Shares the move_money executor and verifier."
+    },
+    {
+      "type": "update_funding_rule",
+      "verification": "readback",
+      "check": "funding-rule-state-reread",
+      "note": "Local planning metadata only; never contacts Crew. A missing rule id records check 'missing-rule-id' with ok=false instead."
+    },
+    {
+      "type": "create_commitment",
+      "verification": "readback",
+      "check": "commitment-state-reread",
+      "note": "Local re-read of the created commitment."
+    }
+  ],
+  "memory_action_types": [
+    {
+      "type": "create_asset",
+      "verification": "readback",
+      "check": "asset-reread",
+      "note": "Local re-read of the created asset record."
+    },
+    {
+      "type": "update_asset",
+      "verification": "readback",
+      "check": "asset-reread",
+      "note": "Local re-read; a per-field mismatch records check 'asset-<field>' with ok=false."
+    },
+    {
+      "type": "delete_asset",
+      "verification": "readback",
+      "check": "asset-gone",
+      "note": "Local re-read proving the asset record is gone."
+    },
+    {
+      "type": "create_contract",
+      "verification": "readback",
+      "check": "contract-reread",
+      "note": "Local re-read of the created contract record."
+    },
+    {
+      "type": "update_contract",
+      "verification": "readback",
+      "check": "contract-reread",
+      "note": "Local re-read; a per-field mismatch records check 'contract-<field>' with ok=false."
+    },
+    {
+      "type": "delete_contract",
+      "verification": "readback",
+      "check": "contract-gone",
+      "note": "Local re-read proving the contract record is gone."
+    }
+  ]
+}
