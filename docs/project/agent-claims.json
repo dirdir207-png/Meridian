@@ -3,21 +3,6 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
-      "agent": "builder-c4-connector-patch",
-      "claim_id": "builder-c4-connector-readback-fields",
-      "generation": 1,
-      "files": [
-        "docs/project/CONNECTOR_READBACK_FIELDS_PATCH.md",
-        "docs/project/connector-readback-fields.patch",
-        "docs/project/CURRENT_STATUS.md",
-        "docs/project/AGENT_COORDINATION.md",
-        "docs/project/agent-claims.json"
-      ],
-      "base_sha": "7fbb7823b49c0d1444d9b9b8faf944d6e092e5ab",
-      "since": "2026-09-14T00:00:00+00:00",
-      "note": "C4: the owner-authorized connector field additions cannot be written from this lane (admission guard refuses path-escape). Recording the verified patch in-lane for the owner to apply."
-    },
-    {
       "agent": "builder",
       "claim_id": "builder-r0-guardrails",
       "generation": 1,
