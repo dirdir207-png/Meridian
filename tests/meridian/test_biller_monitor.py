@@ -90,6 +90,37 @@ def test_monitor_rolls_past_due_forward_by_recurrence():
     assert bills[0].next_due == "2026-09-22"
 
 
+def test_a_bill_anchored_on_the_31st_returns_to_the_31st_after_february():
+    """The dated-occurrence drift, caught at the consumer.
+
+    A bill due on the 31st used to clamp to Feb 28 and then treat that as its new
+    anchor, so it reported the 28th for every later month. The clamp must apply
+    only to the short month.
+    """
+    bill = _bill(due_date="2026-01-31", recurrence="monthly")
+
+    # Viewed on March 1, the next occurrence is March 31 — not March 28.
+    march = build_biller_monitor([bill], [], today=date(2026, 3, 1))
+    assert march[0].next_due == "2026-03-31"
+
+    # April has no 31st, so it clamps to the 30th...
+    april = build_biller_monitor([bill], [], today=date(2026, 4, 1))
+    assert april[0].next_due == "2026-04-30"
+
+    # ...and May returns to the 31st, proving the anchor was never rewritten.
+    may = build_biller_monitor([bill], [], today=date(2026, 5, 1))
+    assert may[0].next_due == "2026-05-31"
+
+
+def test_a_semimonthly_bill_uses_month_end_not_a_fifteen_day_step():
+    bill = _bill(due_date="2026-01-15", recurrence="semimonthly")
+
+    # The next slot after Jan 15 is Jan 31, not Jan 30 (the old flat +15 days).
+    assert build_biller_monitor([bill], [], today=date(2026, 1, 16))[0].next_due == "2026-01-31"
+    # And from the month end it moves to the next 15th.
+    assert build_biller_monitor([bill], [], today=date(2026, 2, 1))[0].next_due == "2026-02-15"
+
+
 def test_monitor_matches_last_paid_and_reports_amount_change():
     bill = _bill(name="Verizon", amount=101.57)
     # A charge at 99.0 last month -> amount change +2.57 (below threshold).

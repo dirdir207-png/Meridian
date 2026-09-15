@@ -11,6 +11,7 @@ from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Optional, Sequence
 
+from meridian.cadence import advance, next_occurrence, next_occurrence_with_index
 from meridian.commitments import Commitment, CommitmentType
 from meridian.services.today import data_freshness
 
@@ -46,44 +47,24 @@ def _date_of(value) -> Optional[date]:
 
 
 def _advance(anchor: date, recurrence: str) -> Optional[date]:
-    """Advance a date by one recurrence period, preserving calendar intent."""
-    rec = (recurrence or "").strip().lower()
-    if rec in ("monthly", "month"):
-        import calendar
+    """Advance a date by one recurrence period, preserving calendar intent.
 
-        year = anchor.year + (1 if anchor.month == 12 else 0)
-        month = 1 if anchor.month == 12 else anchor.month + 1
-        day = min(anchor.day, calendar.monthrange(year, month)[1])
-        return date(year, month, day)
-    if rec in ("weekly", "week"):
-        return anchor + timedelta(days=7)
-    if rec in ("biweekly", "bi-weekly", "fortnight"):
-        return anchor + timedelta(days=14)
-    if rec in ("semimonthly", "twice-monthly"):
-        return anchor + timedelta(days=15)
-    if rec in ("annually", "yearly", "annual", "year"):
-        try:
-            return date(anchor.year + 1, anchor.month, anchor.day)
-        except ValueError:
-            return date(anchor.year + 1, 2, 28)
-    return None
+    Delegates to the shared cadence rule so the dial cannot disagree with Plan,
+    Today or the biller monitor about when a recurring date next occurs. The old
+    local version drifted two ways: a monthly clamp became the new anchor
+    (Jan 31 -> Feb 28 -> Mar 28 forever) and semimonthly was a flat +15 days.
+    """
+    return advance(anchor, recurrence)
 
 
 def _next_occurrence(anchor: date, recurrence: str, as_of: date) -> date:
     """Return the first occurrence on or after ``as_of``.
 
-    A non-recurring or unknown anchor is returned unchanged. Guarded to avoid
-    an infinite loop from malformed recurrence strings.
+    A non-recurring or unknown anchor is returned unchanged. The walk is
+    anchor-preserving, so an intervening month-end clamp does not become the
+    permanent day.
     """
-    current = anchor
-    guard = 0
-    while current < as_of and guard < 400:
-        advanced = _advance(current, recurrence)
-        if advanced is None or advanced <= current:
-            break
-        current = advanced
-        guard += 1
-    return current
+    return next_occurrence(anchor, recurrence, as_of)
 
 
 def _spend_source_account(accounts):
@@ -162,7 +143,7 @@ def _commitment_events(
             recurrence = getattr(commitment, "recurrence", "") or ""
             if amount is None or anchor is None:
                 continue
-            current = _next_occurrence(anchor, recurrence, as_of)
+            current, period = next_occurrence_with_index(anchor, recurrence, as_of)
             guard = 0
             while current <= horizon_end and guard < 200:
                 events.append(
@@ -189,10 +170,14 @@ def _commitment_events(
                         "detailHref": "/meridian?workspace=plan",
                     }
                 )
-                advanced = _advance(current, recurrence)
-                if advanced is None or advanced <= current:
+                # Anchor-preserving step: measured from the original anchor and
+                # tracked by period index, so a February clamp does not become the
+                # permanent day and no occurrence is skipped or repeated.
+                following = advance(anchor, recurrence, period + 1)
+                if following is None or following <= current:
                     break
-                current = advanced
+                period += 1
+                current = following
                 guard += 1
 
         # Goals with an explicit target date: surface as dated local planning

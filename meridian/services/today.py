@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, Sequence
 
 from meridian.beacon import forecast
+from meridian.cadence import next_occurrence
 from meridian.commitments import CommitmentType
 from meridian.repository import FinancialRepository, ProviderConnectionFreshness
 
@@ -164,23 +165,15 @@ def _next_paycheck_inflow(paycheck, *, now=None):
         from datetime import date as _date
 
         as_of = (now or datetime.now(timezone.utc)).date()
-        import calendar
 
         next_date = _date.fromisoformat(getattr(paycheck, "next_date", ""))
         cadence = getattr(paycheck, "cadence", "monthly")
-        # Roll forward if the configured next date has passed.
-        while next_date < as_of:
-            if cadence == "weekly":
-                next_date = next_date + timedelta(days=7)
-            elif cadence == "biweekly":
-                next_date = next_date + timedelta(days=14)
-            elif cadence == "semimonthly":
-                next_date = next_date + timedelta(days=15)
-            else:  # monthly
-                year = next_date.year + (1 if next_date.month == 12 else 0)
-                month = 1 if next_date.month == 12 else next_date.month + 1
-                day = min(next_date.day, calendar.monthrange(year, month)[1])
-                next_date = _date(year, month, day)
+        # Roll forward if the configured next date has passed. Anchor-preserving:
+        # the shared rule measures each step from the ORIGINAL next_date, so a
+        # monthly paycheck configured on the 31st returns to the 31st after
+        # February instead of sticking to the 28th, and semimonthly means the
+        # 15th and month-end rather than a flat +15 days.
+        next_date = next_occurrence(next_date, cadence, as_of)
     except (TypeError, ValueError):
         return None
     return {

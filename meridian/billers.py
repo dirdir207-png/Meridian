@@ -18,13 +18,13 @@ came from a live provider when it was computed locally.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from typing import Optional
+
+from meridian.cadence import advance, next_occurrence
 
 from .commitments import Commitment, CommitmentType
 from .models import TransactionRecord
-
-_FIELD_RECURRENCE = ("monthly", "weekly", "biweekly", "annually", "yearly")
 
 # Amount-change threshold (dollars) — a bill whose latest charge or current
 # amount moved by more than this is flagged as changed for review.
@@ -62,43 +62,27 @@ def _next_due(commitment: Commitment, today: date) -> Optional[str]:
     """Project the next due date from due_date or its recurrence.
 
     If ``due_date`` has not yet passed, it is the next due. If it is already
-    past, roll forward by the recurrence interval (calendar month/week/etc.)
-    until it is >= today, so the monitor reports the next real occurrence.
+    past, roll forward to the next real occurrence >= today.
+
+    The roll-forward is anchor-preserving (see meridian.cadence): every step is
+    measured from the ORIGINAL due_date, so a bill anchored on the 31st clamps in
+    February and returns to the 31st afterwards. Stepping by feeding each result
+    back in would have made the February clamp permanent.
     """
     base = _date_of(commitment.due_date)
     if base is None:
         return None
-    seed = base
-    guard = 0
-    while seed < today and guard < 400:
-        added = _advance(seed, commitment.recurrence)
-        if added is None or added <= seed:
-            break
-        seed = added
-        guard += 1
-    return seed.isoformat()
+    return next_occurrence(base, commitment.recurrence, today).isoformat()
 
 
 def _advance(anchor: date, recurrence: Optional[str]) -> Optional[date]:
-    """Advance ``anchor`` by one recurrence period without stretching a month."""
-    rec = (recurrence or "").strip().lower()
-    if rec in ("monthly", "month"):
-        year = anchor.year + (anchor.month // 12)
-        month = anchor.month % 12 + 1
-        # Clamp the day to the last day of the target month.
-        import calendar
-        day = min(anchor.day, calendar.monthrange(year, month)[1])
-        return date(year, month, day)
-    if rec in ("weekly", "week"):
-        return anchor + timedelta(days=7)
-    if rec in ("biweekly", "bi-weekly", "fortnight"):
-        return anchor + timedelta(days=14)
-    if rec in ("annually", "yearly", "annual", "year"):
-        try:
-            return date(anchor.year + 1, anchor.month, anchor.day)
-        except ValueError:
-            return date(anchor.year + 1, 2, 28)
-    return None
+    """Advance ``anchor`` by one recurrence period without stretching a month.
+
+    Retained as a named seam for callers/tests that step one period at a time.
+    Note that chaining it loses the anchor day across a clamp; an iterating
+    caller should use ``cadence.next_occurrence`` instead.
+    """
+    return advance(anchor, recurrence)
 
 
 def _merchant_match(bill_name: str, merchant: Optional[str]) -> bool:

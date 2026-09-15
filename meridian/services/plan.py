@@ -6,6 +6,7 @@ from decimal import Decimal
 from typing import Optional, Sequence
 
 from meridian.beacon import forecast
+from meridian.cadence import next_occurrence
 from meridian.funding import project_funding
 from meridian.funding_repo import FundingRuleRepository
 
@@ -520,21 +521,8 @@ def _next_paycheck_event(paycheck, as_of):
     if amount <= 0 or not next_date:
         return None
     try:
-        import calendar
-
         anchor = date.fromisoformat(next_date)
-        while anchor < as_of:
-            if cadence == "weekly":
-                anchor = anchor + timedelta(days=7)
-            elif cadence == "biweekly":
-                anchor = anchor + timedelta(days=14)
-            elif cadence == "semimonthly":
-                anchor = anchor + timedelta(days=15)
-            else:
-                year = anchor.year + (1 if anchor.month == 12 else 0)
-                month = 1 if anchor.month == 12 else anchor.month + 1
-                day = min(anchor.day, calendar.monthrange(year, month)[1])
-                anchor = date(year, month, day)
+        anchor = next_occurrence(anchor, cadence, as_of)
     except (TypeError, ValueError):
         return None
     return {"date": anchor.isoformat(), "amount": round(float(amount), 2), "cadence": cadence}
@@ -589,22 +577,10 @@ def _next_occurrence(anchor: date, recurrence: str, as_of: date) -> date:
         return None
     if rec not in ("weekly", "biweekly", "monthly", "semimonthly"):
         return anchor
-    import calendar
-
-    candidate = anchor
-    while candidate < as_of:
-        if rec == "weekly":
-            candidate = candidate + timedelta(days=7)
-        elif rec == "biweekly":
-            candidate = candidate + timedelta(days=14)
-        elif rec == "semimonthly":
-            candidate = candidate + timedelta(days=15)
-        else:  # monthly
-            year = candidate.year + (1 if candidate.month == 12 else 0)
-            month = 1 if candidate.month == 12 else candidate.month + 1
-            day = min(candidate.day, calendar.monthrange(year, month)[1])
-            candidate = date(year, month, day)
-    return candidate
+    # Anchor-preserving: the walk measures each step from the ORIGINAL anchor, so
+    # a monthly bill on the 31st clamps in February and returns to the 31st in
+    # March instead of staying on the 28th forever.
+    return next_occurrence(anchor, rec, as_of)
 
 
 def _cash_events_from_graph(graph_repository, as_of: date, paycheck=None) -> list[tuple[date, Decimal]]:

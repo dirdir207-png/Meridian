@@ -18,6 +18,9 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Optional
 
+from .cadence import advance as cadence_advance
+from .cadence import next_occurrence_with_index
+
 _PAYCHECK_KEY = "meridian_paycheck_config"
 _VALID_CADENCE = ("weekly", "biweekly", "monthly", "semimonthly")
 
@@ -91,21 +94,17 @@ class PaycheckRepository:
 
 
 def _next_after(anchor: date, cadence: str) -> date:
-    """Advance ``anchor`` one cadence period."""
-    if cadence == "weekly":
-        return anchor + timedelta(days=7)
-    if cadence == "biweekly":
-        return anchor + timedelta(days=14)
-    if cadence == "monthly":
-        import calendar
+    """Advance ``anchor`` one cadence period.
 
-        year = anchor.year + (1 if anchor.month == 12 else 0)
-        month = 1 if anchor.month == 12 else anchor.month + 1
-        day = min(anchor.day, calendar.monthrange(year, month)[1])
-        return date(year, month, day)
-    if cadence == "semimonthly":
-        return anchor + timedelta(days=15)
-    return anchor + timedelta(days=7)  # conservative default
+    Delegates to the shared calendar-aware rule so a monthly paycheck anchored on
+    the 31st stays on the 31st and semimonthly means the 15th and month-end,
+    rather than drifting under a flat +15 days. An unrecognised cadence keeps the
+    previous conservative default (one week).
+    """
+    advanced = cadence_advance(anchor, cadence)
+    if advanced is None:
+        return anchor + timedelta(days=7)
+    return advanced
 
 
 def future_paycheck_events(
@@ -124,12 +123,22 @@ def future_paycheck_events(
     events: list[tuple[date, float]] = []
     horizon = as_of + timedelta(days=horizon_days)
     anchor = date.fromisoformat(config.next_date)
-    # Roll forward if the configured next date has already passed.
-    while anchor < as_of:
-        anchor = _next_after(anchor, config.cadence)
-    while anchor <= horizon:
-        events.append((anchor, config.amount))
-        anchor = _next_after(anchor, config.cadence)
+    events: list[tuple[date, float]] = []
+    horizon = as_of + timedelta(days=horizon_days)
+    anchor = date.fromisoformat(config.next_date)
+    # Anchor-preserving, index-correct walk. Occurrence number k is
+    # ``advance(anchor, cadence, k)``, and the walk reports which k it landed on,
+    # so every following step is simply the next k. Deriving the next occurrence
+    # from ``current`` instead would let a February clamp become the permanent day;
+    # guessing the index would skip or repeat a paycheck.
+    current, period = next_occurrence_with_index(anchor, config.cadence, as_of)
+    while current <= horizon and period <= 400:
+        events.append((current, config.amount))
+        following = cadence_advance(anchor, config.cadence, period + 1)
+        if following is None or following <= current:
+            break
+        period += 1
+        current = following
     return events
 
 

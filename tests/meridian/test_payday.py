@@ -52,3 +52,31 @@ def test_recognize_payday_refuses_irregular_or_insufficient_evidence():
     assert (
         recognize_payday(irregular[:2], as_of=date(2026, 8, 31)) is None
     )
+
+
+def test_semimonthly_payday_is_reachable_and_lands_on_the_next_slot():
+    """The semimonthly branch used to be unreachable.
+
+    Semimonthly gaps are 13-18 days, which is a SUPERSET of the biweekly 13-15
+    window, and the biweekly test ran first — so a semimonthly schedule was
+    reported as biweekly. Its next date was then computed as +14 days rather than
+    the next 15th-or-month-end slot.
+    """
+    # Paid on the 1st and the 15th: gaps are 14/16/15-ish and are NOT all equal.
+    dates = ["2026-05-15", "2026-06-01", "2026-06-15", "2026-07-01", "2026-07-15"]
+
+    pattern = recognize_payday(income_transactions(dates), as_of=date(2026, 7, 31))
+
+    assert pattern.cadence == "semimonthly"
+    # Next slot after 2026-07-15 is that month's end, not +14 days (07-29).
+    assert pattern.next_date == date(2026, 7, 31)
+
+
+def test_an_all_equal_fourteen_day_gap_stays_biweekly():
+    """The narrower biweekly rule must still win for a true two-week cadence."""
+    dates = ["2026-06-05", "2026-06-19", "2026-07-03", "2026-07-17"]
+
+    pattern = recognize_payday(income_transactions(dates), as_of=date(2026, 7, 31))
+
+    assert pattern.cadence == "biweekly"
+    assert pattern.next_date == date(2026, 7, 31)

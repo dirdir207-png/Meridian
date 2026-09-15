@@ -15,8 +15,10 @@ app keeps the owner's explicit config (or no paycheck).
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Optional
+
+from .cadence import advance_by_periods
 
 # The recurring cluster must appear at least this many times / span this many
 # weeks to be trusted as a paycheck rather than a one-off transfer.
@@ -133,7 +135,9 @@ def learn_paycheck(transactions) -> dict | None:
     if gaps and max(gaps) > _MAX_DAILY_RANGE_DAYS * 2:
         return None
     cadence, cadence_interval = _cadence_guess(gaps)
-    next_date = period_dates[-1] + _period_delta(cadence, cadence_interval)
+    next_date = _next_period_date(period_dates[-1], cadence, cadence_interval)
+    if next_date is None:
+        return None
     return {
         "amount": median_total,
         "min_amount": min(period_totals),
@@ -148,18 +152,14 @@ def learn_paycheck(transactions) -> dict | None:
     }
 
 
-def _period_delta(cadence: str, interval: int) -> timedelta:
-    if cadence == "weekly":
-        return timedelta(days=7 * interval)
-    if cadence == "biweekly":
-        return timedelta(days=14 * interval)
-    if cadence == "semimonthly":
-        return timedelta(days=15 * interval)
-    # monthly
-    import calendar
+def _next_period_date(anchor: date, cadence: str, interval: int) -> Optional[date]:
+    """The date of the next pay period after ``anchor``.
 
-    anchor = date.today()
-    year = anchor.year + (1 if anchor.month == 12 else 0)
-    month = 1 if anchor.month == 12 else anchor.month + 1
-    day = min(anchor.day, calendar.monthrange(year, month)[1])
-    return date(year, month, day) - anchor
+    Returns a DATE, not a day-count, because a day-count cannot express
+    semimonthly: "the 15th and the last day of the month" is 13-18 days
+    depending on the month, so any fixed +15 walked off the calendar
+    (Jan 15 -> Jan 30 -> Feb 14 -> Mar 1). The previous implementation also
+    anchored monthly on ``date.today()`` rather than on the observed period
+    date, which made the answer depend on when it was asked.
+    """
+    return advance_by_periods(anchor, cadence, max(1, interval))

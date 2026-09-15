@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import calendar
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date
 from statistics import median
+
+from .cadence import advance
 
 
 @dataclass(frozen=True)
@@ -25,21 +26,6 @@ def _transaction_date(transaction) -> date | None:
         return date.fromisoformat(value[:10])
     except ValueError:
         return None
-
-
-def _next_monthly(last: date) -> date:
-    year = last.year + (1 if last.month == 12 else 0)
-    month = 1 if last.month == 12 else last.month + 1
-    day = min(last.day, calendar.monthrange(year, month)[1])
-    return date(year, month, day)
-
-
-def _next_semimonthly(last: date) -> date:
-    if last.day <= 15:
-        return last.replace(day=calendar.monthrange(last.year, last.month)[1])
-    year = last.year + (1 if last.month == 12 else 0)
-    month = 1 if last.month == 12 else last.month + 1
-    return date(year, month, 15)
 
 
 def recognize_payday(transactions, *, as_of: date) -> PaydayPattern | None:
@@ -64,20 +50,23 @@ def recognize_payday(transactions, *, as_of: date) -> PaydayPattern | None:
         for prior, current in zip(evidence, evidence[1:])
     ]
     cadence = None
-    next_date = None
+    # Order matters: a semimonthly schedule produces 13-18 day gaps, which is a
+    # SUPERSET of the biweekly 13-15 window. Testing biweekly first therefore made
+    # the semimonthly branch unreachable — a 15/13/16-day pattern was reported as
+    # biweekly. The narrower weekly and biweekly windows are tested first here,
+    # and a pattern whose gaps are not all equal resolves to semimonthly.
     if all(6 <= value <= 8 for value in intervals):
         cadence = "weekly"
-        next_date = evidence[-1][0] + timedelta(days=7)
-    elif all(13 <= value <= 15 for value in intervals):
+    elif all(13 <= value <= 15 for value in intervals) and len(set(intervals)) == 1:
         cadence = "biweekly"
-        next_date = evidence[-1][0] + timedelta(days=14)
     elif all(27 <= value <= 33 for value in intervals):
         cadence = "monthly"
-        next_date = _next_monthly(evidence[-1][0])
     elif all(13 <= value <= 18 for value in intervals):
         cadence = "semimonthly"
-        next_date = _next_semimonthly(evidence[-1][0])
-    if cadence is None or next_date is None:
+    if cadence is None:
+        return None
+    next_date = advance(evidence[-1][0], cadence)
+    if next_date is None:
         return None
 
     expected_interval = {
