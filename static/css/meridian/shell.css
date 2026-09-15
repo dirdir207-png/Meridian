@@ -303,14 +303,29 @@
       "canvas"
       "dock";
     row-gap: 0;
-    min-height: 100svh;
+    /* The shell is exactly one viewport tall and the canvas owns scrolling, so
+       the dock keeps its own grid row and cannot overlay content. With
+       min-height the shell grew past the viewport, the dock's in-flow position
+       moved to the document end, and sticky pinned it over the canvas — which
+       measurably occluded the inline advisor control on first paint. */
+    height: 100svh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .m-main {
+    /* Owns the scrolling now that the dock reserves its own row. Nothing in the
+       Meridian client listens for window scroll, and scrollIntoView() walks up to
+       the nearest scrollable ancestor, so this is the whole behavioural change. */
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
   }
 
   .m-nav {
     grid-area: dock;
-    position: sticky;
+    position: static;
     top: auto;
-    bottom: 0;
+    bottom: auto;
     z-index: 30;
     height: auto;
     flex-direction: row;

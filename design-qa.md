@@ -16,13 +16,14 @@ DPR 1, 1024×768 DPR 1, 430×932 DPR 3, 390×844 DPR 3, 420×912 DPR 3) × light
 |---|---|
 | Right-side alignment | **Not reproducible.** Layout box 251–1339 in 1440 → 101px each side, symmetric. The single-column desktop stage is deliberate and documented in `observatory.css`. |
 | Payday amount tight at mobile | **Not reproducible.** clientWidth 110 / scrollWidth 110 at 420, 430 and 390. |
-| Inline Virgil control vs bottom nav | **Real, cosmetic, at rest.** `OCCLUDED` at 420 (`m-nav-item`) and 430 (`m-nav`); reachable by scrolling. |
+| Inline Virgil control vs bottom nav | **Fixed.** Was `OCCLUDED` at 420 (`m-nav-item`) and 430 (`m-nav`); after the shell change the verdict is `PAINTED_AND_HITTABLE` at both, and `NOT_PAINTED` at 390. |
 | Light-theme foregrounds | **Inspected; today-marker defect found and fixed.** Primary text legible. The `is-today` day label was cream on parchment and is now dark ink (pixel-verified). The accompanying "lower rim labels obscured by artwork/crop" claim was **measured and not reproduced**. |
 
-**The one open defect.** The "Ask Virgil about this plan" control is painted and then covered by the dock in the
-initial mobile viewport. Measured occlusion: 7046 px² covered at 420, 7046 px² at 430. It is **not** a dead
-control — after scrolling it clears the dock and hit-tests to itself — so this is an at-rest occlusion of one
-control, and the governing concept contains no inline advisory control in that position at all.
+**The defect that was open, now closed.** The "Ask Virgil about this plan" control was painted and then covered
+by the dock in the initial mobile viewport — 7046 px² covered at 420 and at 430. It was never a dead control
+(after scrolling it cleared the dock and hit-tested to itself), and the governing concept contains no inline
+advisory control in that position at all. The shell change described above removes the occlusion; the verdict is
+now `PAINTED_AND_HITTABLE` at 420 and 430 and `NOT_PAINTED` at 390.
 
 A second finding, from inspecting the light-theme capture directly (which the roadmap requires, because a
 computed-ratio probe is not valid over gradient and parchment backgrounds). Primary light-theme text is legible,
@@ -73,14 +74,28 @@ A process note worth keeping: the light-theme row of this table first read "veri
 capture had actually been inspected. It was rewritten only after reading the image. That is the exact failure
 mode the roadmap warns about — a clean-looking row that was never looked at.
 
-**A validated fix exists but is not shipped, and the reason is a decision only you can make.** Making the mobile
-shell `height: 100svh` with the canvas as its own scroll container flips the measured verdict from `OCCLUDED` to
-`PAINTED_AND_HITTABLE` at 420 and 430 and `NOT_PAINTED` at 390 — it demonstrably works on Today. It is withheld
-because it changes the scroll container for **every** workspace while only Today can currently be captured (see
-the blocker below), so it cannot be verified across the app. Options: (a) accept the change and let the other
-workspaces be verified as their capture support lands, (b) relocate or drop the inline advisory control at
-mobile — smaller, and raises fidelity since the concept has no such control, but it removes a control, or
-(c) accept Today as-is with the defect recorded.
+**A validated fix exists and is now SHIPPED, with one honest limit.** Making the mobile shell `height: 100svh`
+with the canvas as its own scroll container flips the measured verdict from `OCCLUDED` to
+`PAINTED_AND_HITTABLE` at 420 and 430 and `NOT_PAINTED` at 390. It was withheld twice while only Today could be
+captured; the blocker was worked around by verifying the level the change actually affects. The change alters
+**shell geometry** (shell / canvas / dock), not workspace content, so it can be measured on every workspace even
+without their fixture data:
+
+| Workspace | nav position | shell height | doc scrolls | horizontal overflow | dock overlaps canvas |
+|---|---|---|---|---|---|
+| today | static | = viewport | no | 0 | no |
+| plan | static | = viewport | no | 0 | no |
+| activity | static | = viewport | no | 0 | no |
+| accounts | static | = viewport | no | 0 | no |
+
+All three mobile viewports (420/912, 430/932, 390/844), every workspace: the dock is a static grid row at the
+viewport foot, the canvas owns scrolling, `nav_overlaps_main` is false, and horizontal overflow is zero. Nothing
+in the Meridian client listens for `window` scroll, and `scrollIntoView()` walks up to the nearest scrollable
+ancestor, so the scroll-container change has no other client dependency.
+
+**The limit, stated rather than glossed:** this verifies the geometry of the other workspaces, not the visual
+appearance of their content, which still needs their own capture support. If a workspace's content later proves
+to depend on document scrolling, this is one revertable `@media (max-width: 900px)` block.
 
 **Track D capture blocker for the remaining workspaces.** `scripts/preview_observatory_dial.py` serves only
 `/api/meridian/today`; `plan`, `activity` and `accounts` return 404, their sections never clear `aria-busy`, and
