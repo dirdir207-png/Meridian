@@ -1,5 +1,61 @@
 # Observatory / Today visual QA
 
+## Track D — consolidated position and the decisions it needs (2026-09-15)
+
+All four workspaces now have valid, informative, complete evidence, and all four have been assessed against their
+governing concepts. This section states the whole position in one place, because the detail below is per-workspace
+and the decisions are cross-cutting.
+
+### Evidence infrastructure (all four workspaces)
+
+| Capability | Status |
+|---|---|
+| Fixtures serving each workspace's real endpoint shapes | ✅ all four |
+| Controllers loaded so a workspace actually renders | ✅ all four |
+| Governed capture: 5 viewports × 2 themes, DPR-correct | ✅ 10 combinations each |
+| Full-page capture | ✅ (fixed — had silently degraded to viewport-height at mobile) |
+| Side-by-side concept/capture artifacts | ✅ 16 in total |
+| Non-default UI state drivable and recorded | ✅ `--ui-state` / `--ui-state-selector` |
+| Overflow and console errors recorded per capture | ✅ zero across every combination |
+
+### Findings per workspace
+
+| Workspace | Apparent gaps investigated | Real defects found | Outcome |
+|---|---|---|---|
+| **Today** | right-side alignment; payday amount at mobile; rim-label crop; dock occlusion; dial label contrast | **2** — dial `is-today` ink was cream-on-parchment; the dock occluded the inline advisor control | Both fixed and verified. Today has no outstanding measured defect. |
+| **Plan** | "backed by undefined"; "undefined" timeline; missing allocation diagram; missing bills/income | **0** — the two `undefined` texts were my fixture's shape bugs; the allocation and bills elements exist and render | Differences are wording and diagram geometry, which the build spec classes as art direction. |
+| **Activity** | four tabs vs three; no category review | **0** — the segmented control matches exactly and review rows exist; the comparison was state-mismatched | Valid comparison shows the sides correspond; differences are wording. |
+| **Accounts** | missing Bill Reserve row; missing asset counts | **0** — both were the fixture's content, not the product's | Structures correspond; content comparison is limited by fixture authorship. |
+
+**Consolidated result: two real defects, both on Today, both fixed — and no missing capability in any workspace.**
+Every other apparent gap dissolved as one of four artifact classes, each of which is a way a comparison can lie:
+
+1. **Label-grep absence** — the segmented control that "didn't exist" lived in JavaScript.
+2. **State mismatch** — Activity's concept depicts the Review mode; the capture was the default Timeline mode.
+3. **Fixture-shape bug** — three separate instances (`backing` as a string not an object; `commitment` vs
+   `commitment_id`; `classification` as a string not an object). Each rendered literal "undefined" in a capture.
+4. **Fixture-content limitation** — a fixture's accounts and assets set the ceiling on what a comparison may claim.
+
+Rules now recorded so the remaining work does not re-learn them: read the **render site** for every fixture field
+(names are not shapes); check the **state** before comparing; verify an apparent gap is not a fixture artifact
+before reporting it; and never compare content the fixture itself supplied.
+
+### What still needs you
+
+1. **Today acceptance.** Track D's gate is owner-visible acceptance. The record is above; comparison images are in
+   `artifacts/today-dock-fix-2026-09-15/`. On sign-off, Track D advances to Plan.
+2. **Which art-direction differences to match.** Across Plan, Activity and Accounts the remaining differences are
+   copy (headlines, button labels), diagram geometry (map vs bar), and composition — all named by the build
+   specification as art direction that "may be inconsistent". Matching them is a product decision, not a fidelity
+   fix, and doing it unilaterally would be inventing product language from a mock.
+3. **Accounts content comparison** — aligning the fixture to the concept's accounts and asset counts would make the
+   comparison show a match, but only because I authored the fixture to match. That is circular and is deliberately
+   not done. Structure and styling are what this comparison can legitimately support.
+4. **Emitter semantics** (separate thread, not Track D): deviations 2–3 in
+   `MERIDIAN_STATUS_EMITTER_VERIFICATION.md` — whether `queues`/`phase`/`tracks` should carry real values or the
+   contract doc should be narrowed to what the emitter does.
+
+
 ## Accounts — the comparison is CONTENT-confounded (Track D, 2026-09-15)
 
 Reading `comparison-accounts-mobile-dark.png`, several apparent gaps turn out to be **the fixture's content, not the
