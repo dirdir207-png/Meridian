@@ -27,8 +27,35 @@ pipeline defect rather than an Activity defect.
 
 The fix is bounded: let the harness drive a named UI state before capture (for Activity, select
 `[data-activity-mode="review"]`), and record the state actually captured instead of the constant
-`"<workspace>:default"`. Until that exists, Activity parity cannot be assessed at all, and the honest
-statement is "not yet measurable" rather than "gaps found".
+`"<workspace>:default"`.
+
+**That fix is now implemented and the valid comparison exists.** `capture_meridian_matrix.py` takes
+`--ui-state` (the label recorded) and `--ui-state-selector` (a selector clicked before capture, which raises
+if it matches nothing), and it records `ui_state` and `ui_state_selector` per capture. Activity re-captured as
+`activity:review` into `artifacts/activity-review-parity-2026-09-15/` with
+`comparison-activity-review-mobile-dark.png`.
+
+Reading the matched comparison, **the two sides correspond**: both show a review card per transaction carrying
+merchant, amount, the category suggestion, a confidence figure, and an approve/change action pair. The
+remaining differences are wording and density, not structure:
+
+| Concept | Current |
+|---|---|
+| "Suggested category: Groceries" as an explicit line | "Income · 95% confidence" on one line |
+| "Crew • Free to Spend" account/budget meta per row | not shown in the review row |
+| "Confirm category" · "Change" | "Approve category" · "Correct" |
+| "3 categories to review" count header | no count; batch checkbox instead |
+
+So Activity is **not** missing the review capability, and the earlier apparent gap was entirely an artifact of
+comparing two different states. The remaining differences are again wording, which the build specification
+classes as art direction.
+
+**A third fixture-shape bug was found and fixed in the process.** The first Review capture showed "0%
+confidence" and no category because the fixture set `classification` as a string while `activity.js` reads
+`transaction.classification?.category` and `?.confidence` — an object. After the fix the capture reads
+"Income · 95% confidence". That is the same mistake, in the same session, after I had already written the rule
+against it, which is a fair measure of how easy the mistake is: **read the render site, not a sample of names.**
+
 
 ## Plan — gap assessment against `02-plan.png`, decision-ready (Track D, 2026-09-15)
 

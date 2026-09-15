@@ -91,6 +91,8 @@ def capture_matrix(
     full_page: bool = True,
     workspaces: Sequence[str] | None = None,
     skip_login: bool = False,
+    ui_state: str = "default",
+    ui_state_selector: str | None = None,
 ) -> list[dict]:
     """Capture the governed matrix.
 
@@ -141,6 +143,20 @@ def capture_matrix(
                             arg=workspace,
                             timeout=12000,
                         )
+                        # A concept may depict a non-default UI state, and comparing
+                        # one state against another is meaningless. Drive the state
+                        # explicitly and record what was actually captured, rather
+                        # than recording a constant ":default" that can silently
+                        # misdescribe the image.
+                        if ui_state_selector:
+                            target = page.query_selector(ui_state_selector)
+                            if target is None:
+                                raise ValueError(
+                                    f"ui_state_selector matched nothing: {ui_state_selector}"
+                                )
+                            target.click()
+                            page.wait_for_load_state("networkidle", timeout=15000)
+                            page.wait_for_timeout(150)
                         # Horizontal overflow is the primary responsive defect signal,
                         # so it is recorded rather than inferred from the image.
                         overflow = page.evaluate(
@@ -177,7 +193,7 @@ def capture_matrix(
                             theme=theme,
                             fixture=fixture,
                             frozen_clock=frozen_clock,
-                            ui_state=f"{workspace}:default",
+                            ui_state=f"{workspace}:{ui_state}",
                             full_page=full_page,
                             commit=commit,
                             captured_at=datetime.now(timezone.utc)
@@ -189,6 +205,7 @@ def capture_matrix(
                         metadata["artifacts"] = [str(path) for path in artifacts]
                         metadata["overflow"] = overflow
                         metadata["console_errors"] = list(console_errors)
+                        metadata["ui_state_selector"] = ui_state_selector
                         records.append(metadata)
                     context.close()
         finally:
@@ -210,6 +227,16 @@ def main() -> None:
         nargs="+",
         default=None,
         help="workspaces to capture (default: all governed workspaces)",
+    )
+    parser.add_argument(
+        "--ui-state",
+        default="default",
+        help="label recorded as the captured UI state",
+    )
+    parser.add_argument(
+        "--ui-state-selector",
+        default=None,
+        help="CSS selector clicked before capture to reach a non-default state",
     )
     parser.add_argument(
         "--skip-login",
