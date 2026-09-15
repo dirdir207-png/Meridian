@@ -787,7 +787,14 @@ html[data-theme="light"] .obs-dial-range-label { color: #655d6c; }
 .obs-dial-svg { position: relative; z-index: 1; }
 .obs-dial-overlay { z-index: 2; }
 .obs-dial-caption--bottom { left: 58%; bottom: 29%; width: 26%; }
-.obs-dial-day-label.is-today { color: #eee4cf; text-shadow: 0 1px 3px #101a28; }
+/* The today marker keeps the dark engraved ink its neighbours use. It was set to
+   cream (#eee4cf) with a dark text-shadow by a later concept-fidelity pass, but
+   the dial rim is parchment in BOTH themes, so cream on parchment is washed out
+   — measured as rgb(238, 228, 207) while its neighbours were
+   rgba(32, 38, 59, 0.82), and independently reported as unreadable by capture
+   inspection (8 / TUE). Dark brown preserves the emphasis the marker is meant to
+   carry without depending on the theme. */
+.obs-dial-day-label.is-today { color: #5b3d16; text-shadow: none; }
 .obs-dial-caption--bottom { top: 68%; bottom: auto; left: 60%; width: 32%; font-size: 11px; }
 .obs-event-kind img { width: 22px; height: 22px; opacity: .85; }
 .obs-event-list--orbit .obs-event-kind { background: #c1a9e2; color: #20263b; border: 3px double #20263b; box-shadow: 0 0 0 1px #c6aa71; }

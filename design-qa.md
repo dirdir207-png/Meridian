@@ -24,11 +24,36 @@ initial mobile viewport. Measured occlusion: 7046 px² covered at 420, 7046 px²
 control — after scrolling it clears the dock and hit-tests to itself — so this is an at-rest occlusion of one
 control, and the governing concept contains no inline advisory control in that position at all.
 
-**A second finding, from inspecting the light-theme capture directly** (which the roadmap requires, because a
+A second finding, from inspecting the light-theme capture directly (which the roadmap requires, because a
 computed-ratio probe is not valid over gradient and parchment backgrounds). Primary light-theme text is legible,
 but two things are marginal: the small grey dial labels sit at low contrast against the parchment, and the lower
 dial rim labels (`8 / TUE`, `16 / WED`) are partially obscured by the observatory artwork and by the bottom
 viewport crop. This is distinct from the dock overlap and was not previously on the roadmap's list.
+
+**Fix applied for the today marker, and the verification disagreed with itself — recorded as such.** The
+`is-today` day label was cream (`#eee4cf`) with a dark text-shadow, set by a later concept-fidelity pass, while
+its neighbours were `rgba(32,38,59,0.82)`. The dial rim is parchment in *both* themes, so cream was wrong in
+both. It now uses the dark engraved ink `#5b3d16`, which also restores the emphasis the earlier rule
+(`color: #5b3d16`, size 13px) had intended.
+
+Verifying it exposed two traps worth keeping:
+
+1. **A theme selector that never applies.** The first attempt used
+   `html[data-theme="light"] .obs-dial-day-label.is-today`, which verified clean in a probe because the probe set
+   `document.documentElement.dataset.theme` by hand. At capture time the attribute is whatever `theme.js` derives
+   from `prefers-color-scheme`, so the rule silently did nothing. Verified fixing the *base* rule instead, which
+   is theme-independent because the rim is parchment either way.
+2. **The vision reading and the computed style contradicted each other**, so neither was treated as truth. The
+   pixels settled it: in the label region, cream pixels went **27 → 0** and dark-ink pixels **466 → 529** between
+   baseline and after-fix captures. The cream glyph is genuinely gone.
+
+The vision reading still described "8 TUE" as washed out *after* the fix, and the pixel data says the cream text
+is gone — so the most likely explanation is that the dial **artwork plate carries its own baked day marker**, and
+the model was describing that rather than the HTML label. That is unfixed and is the next thing to check: if the
+art plate contains baked day text, no CSS change will remove it, and it must be corrected in the artwork or
+masked. Recorded as an open question rather than a conclusion.
+
+Evidence: `artifacts/today-labels-fix-2026-09-15/` (10 captures, zero overflow, zero console errors).
 
 A process note worth keeping: the light-theme row of this table first read "verified, no problems" before the
 capture had actually been inspected. It was rewritten only after reading the image. That is the exact failure
