@@ -23,16 +23,23 @@ below, because a verification that only lists failures is as misleading as one t
 
 ## Deviations (claims the implementation does not meet)
 
-**1. An unknown tasks `schema_version` raises instead of degrading — and this contradicts the contract's own
-rule.** The contract states: *"Missing, malformed, stale, conflicting, or out-of-order data produces
-`health: degraded`, explicit unknowns, and bounded errors; the emitter never guesses success."* Fed
-`schema_version: 2`, the emitter raises `StatusEmitterError: unknown or malformed tasks version` instead of
-producing a degraded event. `_tasks` catches `JSONDecodeError` and `TypeError` but re-raises its own
-`StatusEmitterError` (`except StatusEmitterError: raise`), so the version check escapes the degradation path.
+**1. An unknown tasks `schema_version` raised instead of degrading — FIXED.** The contract states: *"Missing,
+malformed, stale, conflicting, or out-of-order data produces `health: degraded`, explicit unknowns, and bounded
+errors; the emitter never guesses success."* Fed `schema_version: 2`, the emitter raised `StatusEmitterError`
+instead of producing a degraded event, because `_tasks` re-raised its own error so the version check escaped the
+degradation path. This is the forward-compatibility case — the most likely future input was what aborted the
+producer.
 
-This is the forward-compatibility case, which is the one that matters most for a contract intended to evolve:
-the grammar most likely to arrive from a future source is exactly what currently aborts the producer rather than
-degrading it. Unambiguous contract violation, bounded fix.
+`_tasks` now converts structural failures into a degraded return carrying the fixed internal phrase, and the
+regression test that had **pinned the raising behaviour** (`test_oversized_and_unknown_versions_rejected`) was
+split: oversized input still raises, because rejecting it is correct, while unknown version and missing source
+now assert `health: degraded` with a bounded reason and an explicit unknown count rather than a fabricated
+zero-task success. Re-measured after the change: unknown version → `degraded`; malformed → `degraded`; secret
+rejection, stable `event_id`, bounded size and out-of-order degradation all unchanged. That last point matters,
+because the fix sits directly beside the safety path it must not weaken.
+
+Worth recording: a test asserting the wrong behaviour is stronger evidence of a contract gap than a missing test,
+because it looks like coverage. This one passed for as long as the deviation existed.
 
 **2. `queues.claims` and `queues.ready` are always empty.** Contract source precedence #3: *"`AGENT_COORDINATION.md`
 establishes bounded claims/queues."* The implementation passes that document through `_source_text` for safety

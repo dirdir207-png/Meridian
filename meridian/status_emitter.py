@@ -66,8 +66,14 @@ def _tasks(value: Any) -> tuple[list[dict[str, Any]], list[str]]:
         return [r for r in records if isinstance(r, dict)], errors
     except (json.JSONDecodeError, TypeError):
         return [{"status": "unknown"}], ["tasks source is malformed"]
-    except StatusEmitterError:
-        raise
+    except StatusEmitterError as exc:
+        # The contract is explicit that missing, malformed or unknown-version input
+        # produces `health: degraded` with bounded errors, and that the emitter
+        # "never guesses success". Re-raising here aborted the producer on exactly
+        # the forward-compatibility case — a future schema version, which is the
+        # input most likely to arrive from an evolving source. The message carries
+        # only a fixed internal phrase, never source content.
+        return [{"status": "unknown"}], [f"tasks source cannot be projected: {exc}"]
 
 
 def _counts(records: list[dict[str, Any]]) -> dict[str, int]:

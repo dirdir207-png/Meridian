@@ -68,11 +68,38 @@ def test_unsafe_source_content_is_rejected(bad):
         build_status_event(sources=sources(current_status=bad), git={"repository": "ORSC", "branch": "main", "revision": "f" * 40})
 
 
-def test_oversized_and_unknown_versions_rejected():
+def test_oversized_source_is_rejected():
     with pytest.raises(StatusEmitterError):
         build_status_event(sources=sources(current_status="x" * 10_001), git={"repository": "ORSC", "branch": "main", "revision": "1" * 40})
-    with pytest.raises(StatusEmitterError):
-        build_status_event(sources=sources(tasks={"schema_version": 99, "tasks": []}), git={"repository": "ORSC", "branch": "main", "revision": "2" * 40})
+
+
+def test_unknown_tasks_version_degrades_instead_of_raising():
+    """The contract requires degraded, not an exception, for unusable input.
+
+    An unknown schema version is the forward-compatibility case: a future source
+    is the input most likely to arrive, and it must produce a bounded degraded
+    event rather than aborting the producer. This assertion previously pinned the
+    raising behaviour, which contradicted the contract it was meant to protect.
+    """
+    event = build_status_event(
+        sources=sources(tasks={"schema_version": 99, "tasks": []}),
+        git={"repository": "ORSC", "branch": "main", "revision": "2" * 40},
+    )
+
+    assert event["health"] == "degraded"
+    assert event["evidence"]["errors"], "a degraded event must carry a bounded reason"
+    # Explicit unknown, never a fabricated zero-task success.
+    assert event["task_counts"]["unknown"] >= 1
+
+
+def test_missing_tasks_source_degrades_instead_of_raising():
+    event = build_status_event(
+        sources={k: v for k, v in sources().items() if k != "tasks"},
+        git={"repository": "ORSC", "branch": "main", "revision": "2" * 40},
+    )
+
+    assert event["health"] == "degraded"
+    assert event["evidence"]["errors"]
 
 
 def test_stale_and_out_of_order_timestamps_are_unknown():
