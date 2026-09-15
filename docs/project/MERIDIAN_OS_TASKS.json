@@ -475,6 +475,123 @@
         "tests": "tests/meridian/test_status_emitter.py",
         "docs": "docs/project/MERIDIAN_STATUS_EMITTER_CONTRACT.md and MERIDIAN_STATUS_EMITTER.md"
       }
+    },
+    {
+      "id": "VIRGIL-A0",
+      "title": "Approve Virgil contracts and establish the compatible iOS toolchain",
+      "phase": "virgil-foundation",
+      "status": "ready",
+      "priority": "high",
+      "dependencies": [
+        "OS-002",
+        "OS-003"
+      ],
+      "authority_impact": "none; contracts, threat model, and local development toolchain only",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "Owner accepts or amends the Virgil north star, roadmap addendum, and threat-model reconciliation",
+        "Request, response, device-action, task, authentication, audit, and error contracts are versioned",
+        "A compatible full Xcode, iOS SDK, simulator runtime, simctl, and signing state are verified",
+        "No public endpoint, live credential issuance, provider change, deployment, or authority activation occurs"
+      ],
+      "evidence": {
+        "north_star": "docs/virgil/VIRGIL_IOS_NORTH_STAR.md",
+        "roadmap": "docs/virgil/VIRGIL_ROADMAP_ADDENDUM.md",
+        "reconciliation": "docs/virgil/VIRGIL_IOS_RECONCILIATION.md"
+      }
+    },
+    {
+      "id": "VIRGIL-A1",
+      "title": "Authenticated read-only Virgil voice vertical slice",
+      "phase": "virgil-reactive",
+      "status": "blocked",
+      "priority": "high",
+      "dependencies": [
+        "VIRGIL-A0"
+      ],
+      "authority_impact": "none; evidence-backed read and conversation continuity only",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "C-V1 trustworthy evidence and I.1 envelope/permissions are explicitly accepted as adequate",
+        "Shortcut or Vocal Shortcut reaches the authenticated Virgil client interface",
+        "One Meridian question returns a cited spoken and displayed answer",
+        "Follow-up state is server-authoritative and no proposal, mutation, arbitrary tool, or background autonomy is exposed"
+      ]
+    },
+    {
+      "id": "VIRGIL-A2",
+      "title": "Typed deterministic iPhone actions beginning with Apple Maps",
+      "phase": "virgil-device-actions",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "VIRGIL-A1"
+      ],
+      "authority_impact": "bounded local-device capability; no financial authority",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "The iOS client accepts only a versioned allowlisted device-action schema",
+        "open_maps_route@1 validates and displays the destination before invocation",
+        "Arbitrary URLs, Shortcut names, app targets, calls, sends, purchases, and security controls fail closed",
+        "Simulator and physical-device results are recorded separately"
+      ]
+    },
+    {
+      "id": "VIRGIL-A3",
+      "title": "Virgil-to-Meridian proposal bridge",
+      "phase": "virgil-controlled-operations",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "VIRGIL-A2",
+        "OS-015",
+        "OS-017"
+      ],
+      "authority_impact": "proposal initiation only; approval and execution authority remain separate",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "C-V3 command-contract and executor release gates are explicitly accepted",
+        "Voice and model output can create only ai_interpreted proposals and can never select owner_direct",
+        "Approval occurs in a separate authenticated owner surface",
+        "Execution submits once and Virgil reports provider-verified or unresolved state without automatic retry"
+      ]
+    },
+    {
+      "id": "VIRGIL-A4",
+      "title": "Proactive Virgil and bounded long-running Harness tasks",
+      "phase": "virgil-proactive",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "VIRGIL-A3",
+        "OS-005",
+        "OS-021"
+      ],
+      "authority_impact": "none beyond approved notification and read-only task scopes",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "C-V4 suppression/feedback behavior and one useful I.2 role are explicitly accepted",
+        "One meaningful Meridian event and one bounded read-only Harness investigation work end to end",
+        "Tasks capture evidence, permissions, budget, expiry, cancellation, and sanitized progress",
+        "Unchanged state stays quiet and consequential output remains a proposal"
+      ]
+    },
+    {
+      "id": "VIRGIL-A5",
+      "title": "Rich conversational Virgil client and capability expansion",
+      "phase": "virgil-expansion",
+      "status": "blocked",
+      "priority": "low",
+      "dependencies": [
+        "VIRGIL-A4"
+      ],
+      "authority_impact": "capability-specific; each new action retains its own confirmation and policy boundary",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "A1-A4 are measured and stable before streaming, persistent voice, widgets, or Live Activities expand",
+        "Each new device, communications, context, research, or Home capability is added and verified independently",
+        "Native polish, provider routing, and proactive behavior never widen authority implicitly"
+      ]
     }
   ]
 }

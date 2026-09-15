@@ -215,6 +215,13 @@ provider/model metadata per run.
 **V7** | Optional expansion: crisis planning, household rehearsal, temporary tools, Builder proposals |
 **V8** | Release gates - applied to **every** releasable capability, never a terminal phase |
 
+**Virgil dependency addendum:** before planning or closing C-V1, C-V3, C-V4, I.1, I.2, or any voice/iOS/
+Shortcuts/Harness-client capability, read `docs/virgil/VIRGIL_ROADMAP_ADDENDUM.md` and check task-ledger gates
+`VIRGIL-A0` through `VIRGIL-A5`. The key joins are A1 after trustworthy C-V1 evidence plus I.1 permissions,
+A3 only at C-V3's controlled-intervention boundary, and A4 with C-V4's closed feedback loop plus one proven I.2
+role. The linked north star and threat-model reconciliation own the detailed contract; this pointer does not
+reprioritize the current keystone or grant implementation authority.
+
 **Three repairs to the adopted spine:**
 
 1. **Pull the dated-occurrence math into V1**, or narrow V1's trustworthiness claim. Proven `[T]`: the dial's
