@@ -370,3 +370,62 @@ def test_selected_spend_pocket_ignores_a_childs_own_configuration():
     )
 
     assert adapter.readback_selected_spend_pocket() == ("Sub:parent",)
+
+
+# --- C4: fundingPlans and reassignmentRules (connector fields added bd7d8b1) ---
+
+
+def _expenses_facet(plans=None, reserve_id="res:1", total=0, with_facet=True):
+    data = {}
+    if with_facet:
+        data["expenses"] = {"data": {"currentUser": {"accounts": [
+            {"id": "acct:1", "billReserve": {"id": reserve_id,
+                                             "totalReservedAmount": total,
+                                             "fundingPlans": plans or []}}]}}}
+    return {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+            "complete": True, "captured_at": "2026-09-14T12:00:00Z", "data": data}
+
+
+def _family_rules_facet(rules=None, with_facet=True):
+    data = {}
+    if with_facet:
+        data["family"] = {"data": {"currentUser": {"family": {"reassignmentRules": rules or []}}}}
+    return {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+            "complete": True, "captured_at": "2026-09-14T12:00:00Z", "data": data}
+
+
+def test_funding_plans_readback_carries_its_reserve_identity():
+    adapter = CrewWorkSnapshotAdapter(_expenses_facet(
+        reserve_id="res:9", plans=[{"id": "plan:1", "name": "Cash App", "amount": 42720}]))
+
+    plans = adapter.readback_funding_plans()
+
+    assert [p["id"] for p in plans] == ["plan:1"]
+    # The parent reserve id travels with the plan, so a plan is attributable and
+    # not merely name-matched.
+    assert plans[0]["billReserveId"] == "res:9"
+
+
+def test_unobserved_funding_plan_facet_is_none_not_empty():
+    adapter = CrewWorkSnapshotAdapter(_expenses_facet(with_facet=False))
+    assert adapter.readback_funding_plans() is None
+
+
+def test_observed_empty_funding_plans_is_an_empty_list():
+    adapter = CrewWorkSnapshotAdapter(_expenses_facet(plans=[]))
+    assert adapter.readback_funding_plans() == []
+
+
+def test_reserve_totals_are_keyed_by_reserve_id():
+    adapter = CrewWorkSnapshotAdapter(_expenses_facet(reserve_id="res:3", total=12345))
+    assert adapter.readback_reserve_totals() == {"res:3": 12345}
+    assert CrewWorkSnapshotAdapter(_expenses_facet(with_facet=False)).readback_reserve_totals() is None
+
+
+def test_reassignment_rules_readback_distinguishes_empty_from_unobserved():
+    adapter = CrewWorkSnapshotAdapter(_family_rules_facet(
+        rules=[{"id": "rule:1", "match": "Example", "minAmount": 500}]))
+    assert [r["id"] for r in adapter.readback_reassignment_rules()] == ["rule:1"]
+
+    assert CrewWorkSnapshotAdapter(_family_rules_facet(rules=[])).readback_reassignment_rules() == []
+    assert CrewWorkSnapshotAdapter(_family_rules_facet(with_facet=False)).readback_reassignment_rules() is None

@@ -1,6 +1,25 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-14 (C4: connector patch prepared, lane boundary respected)
+Last consolidated: 2026-09-14 (C4: funding plans and reassignment rules verified — 15 of 17)
+
+## C4 — five more operations verified; coverage now 15 of 17 — 2026-09-14
+
+The owner applied the connector patch, landing as `bd7d8b1` in `CrewWorkAssistantOTP` ("Select billReserve.id, fundingPlans and family reassignmentRules"). Verified by reading the two operation files and the commit, not by assumption: `expenses.graphql` now selects `billReserve.id` and `fundingPlans { id name amount frequency frequencyInterval anchorDate reassignmentRule { id match minAmount maxAmount } }`, and `family.graphql` now selects `family.reassignmentRules { id match minAmount maxAmount assignmentSubaccount { id displayName } }`.
+
+Implemented in this lane (the half that was always in-lane):
+
+- `CrewWorkSnapshotAdapter` gained three read-only accessors: `readback_funding_plans` (each plan carries its parent `billReserveId`, so a plan is **attributable to its reserve** rather than name-matched), `readback_reserve_totals` (keyed by reserve id), and `readback_reassignment_rules`.
+- Five verifiers: `create/update/delete_crew_paycheck_funding_plan` and `create/delete_crew_pocket_reassignment_rule`, with checks `crew-funding-plan-{create,update,delete}-readback` and `crew-reassignment-rule-{create,delete}-readback`.
+
+Three of the five do **not** depend on the write result, which matters: `update` and `delete` are identified by the id in the approved proposal, and a delete's absence-of-rule is confirmed from an observed-empty list. The two `create` verifiers do depend on the connector returning the new object's id; if it returns none the receipt stays **unresolved** with that stated as the reason. It deliberately does **not** fall back to matching by name, because a same-named plan that already existed would then be reported as a confirmed new write — a false confirmation. `test_funding_plan_create_without_a_provider_id_stays_unresolved` pins that.
+
+Rules held from the previous slices: an **unobserved** facet is `None` and can never confirm (least of all a deletion), while an **observed-empty** list is a real provider statement; absence confirms a deletion but never a creation. Each of these is pinned by its own test for the new facets.
+
+Tested: 14 new tests (5 accessor + 9 verifier) plus the coverage guard updated from ten pinned readback types to fifteen. Focused suite 98 passed; `tests/meridian` **737 passed** (was 721); full non-browser suite **1044 passed, 1 skipped**; Ruff on all five changed files, `git diff --check`, and `scripts/check_guardrails.py --agent builder-c4-funding-rules` clean.
+
+Mutation checks — and one correction about them: five deliberate breaks were attempted. Three were caught (`absence confirms a funding-plan create`, `unobserved family facet reads as empty rules`, and a changed reassignment delete check name). **Two of the five did not test what I intended**: the anchor string `the rule is still present after the delete` appears **twice** in the file (autopilot and reassignment verifiers), so `replace(..., 1)` hit the *autopilot* verifier both times and failed the autopilot test rather than the new one. A fifth attempt using the reassignment verifier's unique check-name anchor did fail `test_reassignment_rule_delete_readback_confirms_absence_and_flags_presence` as intended. Recorded because a mutation check that silently targets the wrong function is worse than no check — it produces false confidence. All mutations were reverted from file backups and verified byte-identical, never via `git checkout`.
+
+Deployed: nothing. Verified: synthetic payloads and isolated unit tests only — **no live provider call was made from this lane**, and the newly composed queries have not been run against the live server by me. The owner's live connector is the only place that can confirm the composed selections return data. Remaining unverified: **2 of 17** — `crew_initiate_transfer` (needs the transfer id from the write result, which is still uncaptured) and `top_up_crew_reserve` (needs base-state capture plus a precondition, because the handoff is explicit that a changed reserve amount is not proof of a particular top-up; the sequence is its own slice).
 
 ## Connector readback fields — verified patch handed to the owner, not applied — 2026-09-14
 

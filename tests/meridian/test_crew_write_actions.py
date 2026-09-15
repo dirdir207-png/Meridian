@@ -1207,3 +1207,205 @@ def test_spend_pocket_verifier_exception_stays_unresolved_after_restart(tmp_path
     with pytest.raises(Exception):
         execute_approved_action(store, request["id"], spec)
     assert calls == ["set_spend_pocket"]
+
+
+# --- C4: funding plans and reassignment rules (connector fields added bd7d8b1) ---
+
+
+def _plan_facet(plans=None, reserve_id="res:1", complete=True, with_facet=True):
+    data = {}
+    if with_facet:
+        data["expenses"] = {"data": {"currentUser": {"accounts": [
+            {"id": "acct:1", "billReserve": {"id": reserve_id,
+                                             "totalReservedAmount": 1000,
+                                             "fundingPlans": plans or []}}]}}}
+    return {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+            "complete": complete, "captured_at": "2026-09-14T12:00:00Z", "data": data}
+
+
+def _rules_facet(rules=None, complete=True, with_facet=True):
+    data = {}
+    if with_facet:
+        data["family"] = {"data": {"currentUser": {"family": {"reassignmentRules": rules or []}}}}
+    return {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+            "complete": complete, "captured_at": "2026-09-14T12:00:00Z", "data": data}
+
+
+def test_funding_plan_create_readback_confirms_the_plan(tmp_path, monkeypatch):
+    dashboard = _plan_facet(plans=[{"id": "plan:1", "name": "Cash App", "amount": 42720}])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_paycheck_funding_plan",
+        {"billReserveId": "res:1", "name": "Cash App", "amount": 42720,
+         "frequency": "WEEKLY", "frequencyInterval": 2, "anchorDate": "2026-09-04"},
+        dashboard, {"id": "plan:1"},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-funding-plan-create-readback"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == ["create_paycheck_funding_plan"]
+
+
+def test_funding_plan_create_absent_is_unresolved_not_a_failure(tmp_path, monkeypatch):
+    dashboard = _plan_facet(plans=[])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_paycheck_funding_plan",
+        {"billReserveId": "res:1", "name": "Cash App", "amount": 42720},
+        dashboard, {"id": "plan:1"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    assert calls == ["create_paycheck_funding_plan"]
+
+
+def test_funding_plan_create_without_a_provider_id_stays_unresolved(tmp_path, monkeypatch):
+    """Create verification depends on the write returning the plan id.
+
+    If the connector returns no id there is nothing to attribute, so the receipt
+    must stay unresolved rather than fall back to guessing by name.
+    """
+    dashboard = _plan_facet(plans=[{"id": "plan:1", "name": "Cash App", "amount": 42720}])
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_paycheck_funding_plan",
+        {"billReserveId": "res:1", "name": "Cash App", "amount": 42720},
+        dashboard, {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert "identity" in outcome["result"]["verification"]["reason"]
+
+
+def test_funding_plan_update_readback_confirms_and_contradicts(tmp_path, monkeypatch):
+    matching = _plan_facet(plans=[{"id": "plan:1", "name": "Cash App", "amount": 42720}])
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "update_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan:1", "name": "Cash App", "amount": 42720}, matching, {},
+    )
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-funding-plan-update-readback"
+
+    differing = _plan_facet(plans=[{"id": "plan:1", "name": "Cash App", "amount": 99999}])
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "update_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan:1", "name": "Cash App", "amount": 42720}, differing, {},
+    )
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert "amount" in outcome["result"]["verification"]["reason"]
+
+
+def test_funding_plan_delete_readback_confirms_absence_and_flags_presence(tmp_path, monkeypatch):
+    gone = _plan_facet(plans=[{"id": "plan:other", "name": "Other", "amount": 1}])
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan:1"}, gone, {},
+    )
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-funding-plan-delete-readback"
+    assert calls == ["delete_paycheck_funding_plan"]
+
+    still_there = _plan_facet(plans=[{"id": "plan:1", "name": "Cash App", "amount": 42720}])
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan:1"}, still_there, {},
+    )
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert "still present" in outcome["result"]["verification"]["reason"]
+
+
+def test_funding_plan_delete_with_an_unobserved_facet_stays_unresolved(tmp_path, monkeypatch):
+    """An unread facet must never be allowed to confirm a deletion."""
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan:1"}, _plan_facet(with_facet=False), {},
+    )
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+
+
+def test_reassignment_rule_create_readback_uses_provider_identity(tmp_path, monkeypatch):
+    dashboard = _rules_facet(rules=[{"id": "rule:1", "match": "Example"}])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_pocket_reassignment_rule",
+        {"match": "Example", "account_id": "acct:1", "assignment_subaccount_id": "sub:1"},
+        dashboard, {"id": "rule:1"},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-reassignment-rule-create-readback"
+    assert calls == ["create_pocket_reassignment_rule"]
+
+
+def test_reassignment_rule_create_absent_is_unresolved(tmp_path, monkeypatch):
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_pocket_reassignment_rule",
+        {"match": "Example", "account_id": "acct:1", "assignment_subaccount_id": "sub:1"},
+        _rules_facet(rules=[]), {"id": "rule:1"},
+    )
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+
+
+def test_reassignment_rule_delete_readback_confirms_absence_and_flags_presence(tmp_path, monkeypatch):
+    gone = _rules_facet(rules=[{"id": "rule:other", "match": "Other"}])
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_pocket_reassignment_rule",
+        {"reassignment_rule_id": "rule:1"}, gone, {},
+    )
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-reassignment-rule-delete-readback"
+    assert calls == ["delete_pocket_reassignment_rule"]
+
+    present = _rules_facet(rules=[{"id": "rule:1", "match": "Example"}])
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_pocket_reassignment_rule",
+        {"reassignment_rule_id": "rule:1"}, present, {},
+    )
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+
+
+def test_reassignment_rule_delete_on_an_empty_observed_list_is_verified(tmp_path, monkeypatch):
+    """An observed-empty list is a real statement that no rules exist."""
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_pocket_reassignment_rule",
+        {"reassignment_rule_id": "rule:1"}, _rules_facet(rules=[]), {},
+    )
+    assert outcome["state"] == "verified"
+
+
+def test_new_plan_and_rule_verifiers_never_resubmit_after_an_exception(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "plan:1"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_paycheck_funding_plan",))
+    request = store.propose("create_crew_paycheck_funding_plan",
+                            {"billReserveId": "res:1", "name": "Cash App", "amount": 42720},
+                            "r", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_paycheck_funding_plan"]
+    spec = {"create_crew_paycheck_funding_plan": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+
+    restarted = ActionStore(db, allowed_types=("create_crew_paycheck_funding_plan",)).get(request["id"])
+    assert outcome["state"] == restarted["state"] == "executed"
+    assert restarted["result"]["verification"]["ok"] is None
+    assert restarted["result"]["verification"]["retry_allowed"] is False
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["create_paycheck_funding_plan"]

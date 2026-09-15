@@ -453,6 +453,131 @@ def _verify_set_crew_spend_pocket():
     return verify
 
 
+def _verify_crew_funding_plan(*, expect_absent: bool, expect_created: bool):
+    """Confirm a paycheck funding-plan write from the reserve's fundingPlans.
+
+    Runs on the ``expenses`` facet, whose ``billReserve.fundingPlans`` selection
+    was added to the connector for exactly this. A plan is identified by its
+    provider id — for update and delete the id comes from the approved proposal,
+    and for create from the write result. Absence confirms a deletion but never a
+    creation; a plan still present after a delete is a provider contradiction.
+    """
+    check = (
+        "crew-funding-plan-delete-readback" if expect_absent
+        else "crew-funding-plan-create-readback" if expect_created
+        else "crew-funding-plan-update-readback"
+    )
+
+    def verify(params: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
+        from .live import capture_crew_snapshot
+        from .providers.crewwork import CrewWorkSnapshotAdapter
+
+        provider_result = ((result.get("crew") or {}).get("result") or {}) if isinstance(result, dict) else {}
+        if expect_absent or not expect_created:
+            plan_id = str(params.get("fundingPlanId") or params.get("funding_plan_id") or "")
+        else:
+            plan_id = str(provider_result.get("id") or "")
+        requested = {
+            key: params[wire]
+            for wire, key in (("name", "name"), ("amount", "amount"))
+            if params.get(wire) is not None
+        }
+        try:
+            adapter = CrewWorkSnapshotAdapter(capture_crew_snapshot())
+            snapshot = adapter.fetch_snapshot()
+            plans = adapter.readback_funding_plans()
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": f"readback unavailable: {exc}", "requested": requested}
+
+        if not snapshot.is_complete or plans is None or not plan_id:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": ("provider readback is incomplete, did not include the funding-plan "
+                               "selection, or no plan identity is available"),
+                    "requested": requested}
+
+        present = next((p for p in plans if str(p.get("id") or "") == plan_id), None)
+        if expect_absent:
+            return {"ok": present is None, "check": check, "provider_truth": True,
+                    "reason": ("plan absent from the provider readback" if present is None
+                               else "the plan is still present after the delete"),
+                    "requested": requested, "observed": {"present": present is not None}}
+        if present is None:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": "the plan was not present in the readback",
+                    "requested": requested, "observed": None}
+
+        observed = {"id": plan_id, "name": present.get("name"), "amount": present.get("amount")}
+        mismatches = []
+        if requested.get("name") is not None and observed["name"] != requested["name"]:
+            mismatches.append("name")
+        if requested.get("amount") is not None and observed["amount"] != requested["amount"]:
+            mismatches.append("amount")
+        if mismatches:
+            return {"ok": False, "check": check, "provider_truth": True,
+                    "reason": f"plan fields differ from the write: {', '.join(mismatches)}",
+                    "requested": requested, "observed": observed}
+        return {"ok": True, "check": check, "provider_truth": True,
+                "requested": requested, "observed": observed}
+
+    return verify
+
+
+def _verify_crew_reassignment_rule(*, expect_absent: bool):
+    """Confirm a pocket reassignment-rule write from ``family.reassignmentRules``.
+
+    Identified by the provider rule id — from the approved proposal for a delete,
+    from the write result for a create. An unobserved facet can never confirm a
+    deletion, and a still-present rule after a delete is a provider contradiction.
+    """
+    check = ("crew-reassignment-rule-delete-readback" if expect_absent
+             else "crew-reassignment-rule-create-readback")
+
+    def verify(params: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
+        from .live import capture_crew_snapshot
+        from .providers.crewwork import CrewWorkSnapshotAdapter
+
+        provider_result = ((result.get("crew") or {}).get("result") or {}) if isinstance(result, dict) else {}
+        if expect_absent:
+            rule_id = str(params.get("reassignment_rule_id") or params.get("reassignmentRuleId") or "")
+        else:
+            rule_id = str(provider_result.get("id") or "")
+        requested = {"match": params.get("match")} if params.get("match") is not None else {}
+        try:
+            adapter = CrewWorkSnapshotAdapter(capture_crew_snapshot())
+            snapshot = adapter.fetch_snapshot()
+            rules = adapter.readback_reassignment_rules()
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": f"readback unavailable: {exc}", "requested": requested}
+
+        if not snapshot.is_complete or rules is None or not rule_id:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": ("provider readback is incomplete, did not include the reassignment-rule "
+                               "selection, or no rule identity is available"),
+                    "requested": requested}
+
+        present = next((r for r in rules if str(r.get("id") or "") == rule_id), None)
+        if expect_absent:
+            return {"ok": present is None, "check": check, "provider_truth": True,
+                    "reason": ("rule absent from the provider readback" if present is None
+                               else "the rule is still present after the delete"),
+                    "requested": requested, "observed": {"present": present is not None}}
+        if present is None:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": "the created rule was not present in the readback",
+                    "requested": requested, "observed": None}
+        observed = {"id": rule_id, "match": present.get("match")}
+        if requested.get("match") is not None and observed["match"] != requested["match"]:
+            return {"ok": False, "check": check, "provider_truth": True,
+                    "reason": "created rule fields differ: match",
+                    "requested": requested, "observed": observed}
+        return {"ok": True, "check": check, "provider_truth": True,
+                "requested": requested, "observed": observed}
+
+    return verify
+
+
 def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Callable]]]:
     """Register the Crew write executor specs (params-dict adapters)."""
     def _exec(op: str):
@@ -473,25 +598,25 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
         "crew_initiate_transfer": (_exec("initiate_transfer"), no_verify),
         "create_crew_paycheck_funding_plan": (
             _exec("create_paycheck_funding_plan"),
-            no_verify,
+            _verify_crew_funding_plan(expect_absent=False, expect_created=True),
         ),
         "update_crew_paycheck_funding_plan": (
             _exec("update_paycheck_funding_plan"),
-            no_verify,
+            _verify_crew_funding_plan(expect_absent=False, expect_created=False),
         ),
         "delete_crew_paycheck_funding_plan": (
             _exec("delete_paycheck_funding_plan"),
-            no_verify,
+            _verify_crew_funding_plan(expect_absent=True, expect_created=False),
         ),
         "top_up_crew_reserve": (_exec("top_up_reserve"), no_verify),
         "delete_crew_autopilot_rule": (_exec("delete_rule"), _verify_autopilot_rule(expect_absent=True)),
         "create_crew_pocket_reassignment_rule": (
             _exec("create_pocket_reassignment_rule"),
-            no_verify,
+            _verify_crew_reassignment_rule(expect_absent=False),
         ),
         "delete_crew_pocket_reassignment_rule": (
             _exec("delete_pocket_reassignment_rule"),
-            no_verify,
+            _verify_crew_reassignment_rule(expect_absent=True),
         ),
         "set_crew_spend_pocket": (
             _exec("set_spend_pocket"),

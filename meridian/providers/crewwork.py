@@ -254,6 +254,61 @@ class CrewWorkSnapshotAdapter:
         family = _as_dict(_as_dict(payload.get("currentUser")).get("family"))
         return [rule for rule in _as_list(family.get("rules")) if isinstance(rule, dict)]
 
+    def readback_funding_plans(self) -> Optional[list]:
+        """Every bill-reserve funding plan this snapshot observed, or None.
+
+        Read-only view of ``billReserve.fundingPlans`` on the ``expenses`` facet
+        (added to the connector so this field is actually requested). Each entry
+        carries the parent ``billReserve_id`` so a plan can be attributed to the
+        reserve it belongs to rather than matched by name alone.
+        """
+        payload = self._facet_payload("expenses")
+        if payload is None:
+            return None
+        accounts = _as_list(_as_dict(payload.get("currentUser")).get("accounts"))
+        plans = []
+        for account in accounts:
+            reserve = _as_dict(_as_dict(account).get("billReserve"))
+            reserve_id = str(reserve.get("id") or "")
+            for plan in _as_list(reserve.get("fundingPlans")):
+                if not isinstance(plan, dict):
+                    continue
+                plans.append({**plan, "billReserveId": reserve_id})
+        return plans
+
+    def readback_reserve_totals(self) -> Optional[dict]:
+        """``{billReserveId: totalReservedAmount}`` observed, or None if unobserved.
+
+        Attribution keys on the reserve id. A total on its own is not proof of a
+        particular top-up, so callers must treat this as the reserve's state and
+        not as evidence that a specific write landed.
+        """
+        payload = self._facet_payload("expenses")
+        if payload is None:
+            return None
+        accounts = _as_list(_as_dict(payload.get("currentUser")).get("accounts"))
+        totals = {}
+        for account in accounts:
+            reserve = _as_dict(_as_dict(account).get("billReserve"))
+            reserve_id = str(reserve.get("id") or "")
+            if not reserve_id:
+                continue
+            totals[reserve_id] = reserve.get("totalReservedAmount")
+        return totals
+
+    def readback_reassignment_rules(self) -> Optional[list]:
+        """The pocket reassignment rules observed, or None if unobserved.
+
+        Read-only view of ``family.reassignmentRules`` (added to the connector).
+        An empty list is a real observation that no rules exist; None means the
+        facet was not returned at all.
+        """
+        payload = self._facet_payload("family")
+        if payload is None:
+            return None
+        family = _as_dict(_as_dict(payload.get("currentUser")).get("family"))
+        return [rule for rule in _as_list(family.get("reassignmentRules")) if isinstance(rule, dict)]
+
     def _collect_accounts(self, captured_at: str = "") -> list[NormalizedAccount]:
         data = _as_dict(self._snapshot.get("data"))
         # The snapshot keeps account identity in data.accounts (id/name only)

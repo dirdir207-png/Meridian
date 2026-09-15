@@ -3,6 +3,25 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
+      "agent": "builder-c4-funding-rules",
+      "claim_id": "builder-c4-funding-plan-and-reassignment-readback",
+      "generation": 1,
+      "files": [
+        "meridian/providers/crewwork.py",
+        "meridian/crew_write_actions.py",
+        "tests/meridian/providers/test_crewwork.py",
+        "tests/meridian/test_crew_write_actions.py",
+        "docs/project/write-coverage.json",
+        "tests/meridian/test_write_coverage.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "3be4e15dcbe2c53aefd1f75f6eaa3e1c31b22ec8",
+      "since": "2026-09-14T00:00:00+00:00",
+      "note": "C4: read fundingPlans (expenses facet) and family.reassignmentRules, added to the connector by the owner at bd7d8b1, and verify 5 more action types. No provider call, migration or authority change."
+    },
+    {
       "agent": "builder",
       "claim_id": "builder-r0-guardrails",
       "generation": 1,

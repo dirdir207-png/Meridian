@@ -56,18 +56,21 @@
     },
     {
       "type": "create_crew_paycheck_funding_plan",
-      "verification": "none",
-      "reason": "Mutation input is captured, but no credential-free funding-plan readback shape exists in the provider adapter."
+      "verification": "readback",
+      "check": "crew-funding-plan-create-readback",
+      "note": "billReserve.fundingPlans on the expenses facet, added to the connector at bd7d8b1. Requires the provider-returned plan id; if the write returns none the receipt stays unresolved rather than matching by name."
     },
     {
       "type": "update_crew_paycheck_funding_plan",
-      "verification": "none",
-      "reason": "Same as create: no funding-plan readback shape exists yet."
+      "verification": "readback",
+      "check": "crew-funding-plan-update-readback",
+      "note": "Identified by the approved proposal's fundingPlanId, so it does not depend on the write result; compared on name and amount."
     },
     {
       "type": "delete_crew_paycheck_funding_plan",
-      "verification": "none",
-      "reason": "Same as create: no funding-plan readback shape exists yet."
+      "verification": "readback",
+      "check": "crew-funding-plan-delete-readback",
+      "note": "Identified by the approved proposal's fundingPlanId. Absence from a complete read confirms; presence is a provider-confirmed contradiction."
     },
     {
       "type": "create_crew_autopilot_rule",
@@ -83,13 +86,15 @@
     },
     {
       "type": "create_crew_pocket_reassignment_rule",
-      "verification": "none",
-      "reason": "No reassignment-rule readback shape exists yet."
+      "verification": "readback",
+      "check": "crew-reassignment-rule-create-readback",
+      "note": "family.reassignmentRules, added to the connector at bd7d8b1. Requires the provider-returned rule id; a rule not yet visible stays unresolved."
     },
     {
       "type": "delete_crew_pocket_reassignment_rule",
-      "verification": "none",
-      "reason": "No reassignment-rule readback shape exists yet."
+      "verification": "readback",
+      "check": "crew-reassignment-rule-delete-readback",
+      "note": "Identified by the approved proposal's reassignment_rule_id. An observed-empty list verifies; an unobserved facet never confirms a deletion."
     },
     {
       "type": "set_crew_spend_pocket",

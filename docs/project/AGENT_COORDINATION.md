@@ -35,6 +35,19 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-14 — Builder — funding plans and reassignment rules verified (15 of 17)
+
+Owner applied the connector patch as `bd7d8b1` in `CrewWorkAssistantOTP`. Confirmed by reading both operation files and the commit. Added three accessors (`readback_funding_plans` — each plan carrying its parent `billReserveId`; `readback_reserve_totals`; `readback_reassignment_rules`) and five verifiers covering funding-plan create/update/delete and pocket reassignment-rule create/delete. **Coverage 10 → 15 of 17.**
+
+Three of the five identify the object from the approved proposal (update/delete) or from an observed-empty list (delete), so they do not depend on the write result. The two `create` verifiers do, and if the connector returns no id they stay **unresolved** rather than falling back to name matching — a same-named pre-existing object would otherwise be reported as a confirmed write.
+
+14 new tests; `tests/meridian` 737 passed; full non-browser suite 1044 passed / 1 skipped; Ruff, `git diff --check` and the guardrail receipt clean.
+
+**Correction to my own mutation checking:** two of five attempted mutations used the anchor `the rule is still present after the delete`, which appears **twice** in the file — so `replace(..., 1)` silently mutated the *autopilot* verifier and failed the autopilot test, not the new one. A follow-up using the reassignment verifier's unique check-name anchor did fail the intended test. Recorded because a mutation check aimed at the wrong function yields false confidence. Reverted from file backups, verified byte-identical; `git checkout` was not used.
+
+Remaining: **2 of 17** — `crew_initiate_transfer` (needs the write's transfer id) and `top_up_crew_reserve` (needs base-state capture plus a precondition; a changed reserve total is not proof of a particular top-up). No live provider call was made from this lane.
+
+
 ### 2026-09-14 — Builder — connector patch prepared; lane boundary respected
 
 The owner authorized the connector edit. **This lane is structurally forbidden from making it** — the preset's `agent-admission` guard refused with `path-escape` ("Mutate inside the lane, or state the change and let the owner make it"). I did **not** escalate sandbox permissions to route around it; defying an installed boundary to satisfy an instruction is the wrong trade, so I took the guard's second route.

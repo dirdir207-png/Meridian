@@ -124,7 +124,7 @@ def test_readback_check_names_exist_in_the_source():
         )
 
 
-def test_readback_types_are_the_ten_that_were_hardened():
+def test_readback_types_are_the_fifteen_that_were_hardened():
     """Pin the coverage this lane actually achieved, so it cannot quietly shrink."""
     verified = {
         entry["type"]
@@ -143,6 +143,11 @@ def test_readback_types_are_the_ten_that_were_hardened():
         "delete_crew_autopilot_rule",
         "create_crew_virtual_card",
         "set_crew_spend_pocket",
+        "create_crew_paycheck_funding_plan",
+        "update_crew_paycheck_funding_plan",
+        "delete_crew_paycheck_funding_plan",
+        "create_crew_pocket_reassignment_rule",
+        "delete_crew_pocket_reassignment_rule",
     }
 
 
