@@ -7,6 +7,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Sequence
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +46,26 @@ _FREEZE_SCRIPT = r"""
 """
 
 
+def _validate_workspaces(workspaces: Sequence[str] | None) -> list[str]:
+    """Resolve the requested workspaces against the governed set.
+
+    Narrowing to one workspace is how Track D accepts a surface at a time; the
+    default remains every governed workspace, so a full run is unchanged.
+    """
+    # Distinguish "not specified" (None -> every governed workspace) from an
+    # explicitly empty list, which is a caller error rather than "all".
+    selected = list(WORKSPACES) if workspaces is None else list(workspaces)
+    unknown = [name for name in selected if name not in WORKSPACES]
+    if unknown:
+        raise ValueError(
+            f"unknown workspace(s): {', '.join(unknown)}; "
+            f"governed workspaces are {', '.join(WORKSPACES)}"
+        )
+    if not selected:
+        raise ValueError("at least one workspace is required")
+    return selected
+
+
 def _validate_capture_target(app_url: str, fixture: str, frozen_clock: str) -> None:
     parsed = urlparse(app_url)
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
@@ -68,8 +89,22 @@ def capture_matrix(
     fixture: str,
     frozen_clock: str,
     full_page: bool = True,
+    workspaces: Sequence[str] | None = None,
+    skip_login: bool = False,
 ) -> list[dict]:
+    """Capture the governed matrix.
+
+    ``workspaces`` narrows the run (Track D accepts one workspace at a time);
+    default is every governed workspace. ``skip_login`` targets the ISOLATED
+    SYNTHETIC preview (`scripts/preview_observatory_dial.py`), which
+    deliberately has no authentication, reads no .env, holds no credentials and
+    makes no provider call. That is the correct target for fidelity captures,
+    because the specification requires fixtures only and forbids live bank data:
+    the full runtime (`run_preview.py`) loads .env and starts a Crew sync loop, so
+    it must NOT be used to produce fidelity evidence.
+    """
     _validate_capture_target(app_url, fixture, frozen_clock)
+    selected = _validate_workspaces(workspaces)
     output.mkdir(parents=True, exist_ok=True)
     records = []
     commit = _git_commit()
@@ -89,8 +124,12 @@ def capture_matrix(
                     )
                     context.add_init_script(_FREEZE_SCRIPT % json.dumps(frozen_clock))
                     page = context.new_page()
-                    login(page, app_url)
-                    for workspace in WORKSPACES:
+                    console_errors: list[str] = []
+                    page.on("pageerror", lambda error: console_errors.append(str(error)))
+                    if not skip_login:
+                        login(page, app_url)
+                    for workspace in selected:
+                        console_errors.clear()
                         page.goto(f"{app_url}/meridian?workspace={workspace}")
                         page.wait_for_load_state("networkidle", timeout=15000)
                         page.evaluate("() => document.fonts && document.fonts.ready")
@@ -101,6 +140,11 @@ def capture_matrix(
                             "(ws) => !document.querySelector(`[data-workspace-section='${ws}'] [aria-busy='true']`)",
                             arg=workspace,
                             timeout=12000,
+                        )
+                        # Horizontal overflow is the primary responsive defect signal,
+                        # so it is recorded rather than inferred from the image.
+                        overflow = page.evaluate(
+                            "document.documentElement.scrollWidth - window.innerWidth"
                         )
                         base = output / f"{workspace}-{viewport_name}-{theme}"
                         viewport_capture = base.with_name(base.name + "-viewport.png")
@@ -129,6 +173,8 @@ def capture_matrix(
                         ).to_dict()
                         validate_metadata(metadata)
                         metadata["artifacts"] = [str(path) for path in artifacts]
+                        metadata["overflow"] = overflow
+                        metadata["console_errors"] = list(console_errors)
                         records.append(metadata)
                     context.close()
         finally:
@@ -145,6 +191,17 @@ def main() -> None:
     parser.add_argument("--concept-dir", type=Path, required=True)
     parser.add_argument("--fixture", required=True)
     parser.add_argument("--frozen-clock", required=True)
+    parser.add_argument(
+        "--workspaces",
+        nargs="+",
+        default=None,
+        help="workspaces to capture (default: all governed workspaces)",
+    )
+    parser.add_argument(
+        "--skip-login",
+        action="store_true",
+        help="target the isolated synthetic preview, which has no authentication",
+    )
     args = parser.parse_args()
     capture_matrix(**vars(args))
 

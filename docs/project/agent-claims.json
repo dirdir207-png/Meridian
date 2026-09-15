@@ -3,6 +3,31 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
+      "agent": "builder-trackd",
+      "claim_id": "builder-trackd-today-parity",
+      "generation": 1,
+      "files": [
+        "scripts/capture_meridian_matrix.py",
+        "tests/test_capture_contract.py",
+        "artifacts/today-parity-2026-09-15/**",
+        "templates/meridian/index.html",
+        "templates/meridian/partials/today.html",
+        "templates/meridian/partials/navigation.html",
+        "static/css/meridian/today.css",
+        "static/css/meridian/dial.css",
+        "static/css/meridian/observatory.css",
+        "static/css/meridian/shell.css",
+        "static/js/meridian/dial.js",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json",
+        "design-qa.md"
+      ],
+      "base_sha": "2c7af918fa1c2c5ab8f2d7cd40cd4dd0d71a464a",
+      "since": "2026-09-15T16:00:00+00:00",
+      "note": "Track D Today parity. Extended the single governed capture script to target the isolated synthetic preview (no login, no .env, no provider call, no credentials) and to narrow to one workspace; regenerated the governed Today matrix at current HEAD. Then one visual gap at a time against design/observatory-drafts-2026-09-08/01-today.png. No authority, endpoint, migration, provider or financial change."
+    },
+    {
       "agent": "builder-cadence",
       "claim_id": "builder-cadence-consolidation",
       "generation": 1,
