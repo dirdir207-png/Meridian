@@ -44,20 +44,32 @@ container so the dock reserves its own row and never overlays, or (b) drop the i
 mobile. (a) touches the shell and therefore every workspace; (b) is small but removes a control. Both are
 owner-visible choices, so the measurement is recorded rather than a fix improvised.
 
-**Fix (a) was attempted and reverted — recorded so it is not repeated.** The change made the mobile shell
-`height: 100svh` (instead of `min-height`) with `overflow: hidden`, gave `.m-main` `overflow-y: auto`, and
-dropped the dock's `position: sticky` to `static`. The measured overlap did **not move at all** (−41/−23/−79,
-identical). The reason is that the probe compares bounding boxes, and clipping does not change a rect: the dock
-was hiding the control behind an opaque bar, and after the change the canvas clips it at the same coordinate.
-The user-visible outcome is therefore roughly equivalent — the control sits below the fold either way and is
-reached by scrolling — so the change bought no demonstrated improvement while altering the scroll container for
-all four workspaces. It was reverted rather than shipped on that evidence.
+**A measurement error in this pass was found and corrected, and it matters.** The first overlap probe waited
+only for `.obs-dial-center-amount`, which exists *before* the dial's event rail finishes rendering. The page
+kept growing after the measurement, so two runs of the same probe disagreed by ~250px on the same element
+(y=566 vs y=814 at 390 wide). The "reproduced" figure was therefore not trustworthy when first reported.
+`probes/measure_nav_overlap_settled.py` waits for the rail to be populated (`.obs-event-item`), for
+`document.fonts.ready`, and then samples twice 600ms apart, asserting the document height is unchanged. With
+that gate the collision reproduces reliably — **−41px at 420, −23px at 430, −79px at 390**, `stable: true`,
+3 events rendered — and is recorded in `measurements-nav-overlap-settled.json`.
 
-What that implies for the next attempt: distinguishing occlusion from clipping needs a hit-test
-(`document.elementFromPoint` at the visible portion of the control), not a rect intersection, because both
-states produce identical geometry. And the concept contains no inline advisory control in that position, so
-removing or relocating it is the smaller change — but it is a product decision, which is why it is raised here
-rather than made here.
+**Fix (a) was attempted and reverted — but the honest reason is narrower than "it did not work".** The change
+made the mobile shell `height: 100svh` (instead of `min-height`) with `overflow: hidden`, gave `.m-main`
+`overflow-y: auto`, and dropped the dock's `position: sticky` to `static`. The measured overlap did not move
+(−41/−23/−79, identical) — because a bounding-box probe cannot see clipping: occlusion behind an opaque bar and
+clipping at the same coordinate produce identical rects. So the correct statement is that **the fix's effect is
+unverified, not that it was ineffective**; the revert decision was also taken on the racy measurement above,
+which weakens it further.
+
+To settle it properly, the next attempt must be visibility-aware: intersect the control's rect with the
+scrolling container's visible box and hit-test (`document.elementFromPoint`) only that intersection. If the
+intersection is empty after the change, the control is simply below the fold and nothing is occluded.
+
+What IS established independently of the fix question: after `scrollIntoView({block:'center'})` the control is
+fully clear of the dock (`clearsDock: true`) and hit-tests to itself (`hitsSelf: true`) at 420, 430 and 390. So
+the defect is an **at-rest** occlusion of one control in the initial viewport — the control is reachable, just
+partly hidden on first paint. That is a cosmetic/UX judgement, which is why it is raised for owner acceptance
+rather than fixed unilaterally, especially as the concept contains no inline advisory control in that position.
 
 ## September 12 phone alignment correction
 
