@@ -88,10 +88,26 @@ FUNDING_RULES = {"funding_rules": []}
 # activity.js calls /api/meridian/activity (with query params, which the handler
 # strips) and /api/meridian/accounts for its filter options.
 ACCOUNTS = {
-    "accounts": [
-        {"id": 1, "name": "Checking", "provider": "crew"},
-        {"id": 2, "name": "Emergency fund", "provider": "crew"},
-    ]
+    "groups": [
+        {"role": "cash", "label": "Cash", "accounts": [
+            {"id": 1, "name": "Checking", "account_type": "checking",
+             "balance": 248.50, "available_balance": 248.50, "currency": "USD",
+             "is_active": True, "provider": "crew",
+             "source_updated_at": "2026-09-08T13:42:00Z",
+             "synced_at": "2026-09-08T13:42:00Z"},
+        ]},
+        {"role": "savings", "label": "Savings", "accounts": [
+            {"id": 2, "name": "Emergency fund", "account_type": "pocket",
+             "balance": 200.00, "available_balance": 200.00, "currency": "USD",
+             "is_active": True, "provider": "crew",
+             "source_updated_at": "2026-09-08T13:42:00Z",
+             "synced_at": "2026-09-08T13:42:00Z"},
+        ]},
+    ],
+    "archived": [],
+    "reimbursements": [],
+    "connections": [],
+    "data_freshness": {"status": "fresh", "last_updated_at": "2026-09-08T13:42:00Z"},
 }
 
 ACTIVITY = {
@@ -128,7 +144,7 @@ def preview_html():
     # Plan captures showed empty states and every content difference read as a
     # missing feature. plan.js pulls its own imports (api, format, absent-bills,
     # action-outcome) through ES module resolution.
-    for name in ("shell", "today", "dial", "plan", "activity"):
+    for name in ("shell", "today", "dial", "plan", "activity", "accounts"):
         scripts += f'<script type="module" src="/static/js/meridian/{name}.js"></script>'
     scripts += '<script src="/static/js/meridian/theme.js"></script><script src="/static/js/ui/advisor_fab.js"></script>'
     banner = '<div class="design-preview-banner">Synthetic Today preview · no bank connection</div>'

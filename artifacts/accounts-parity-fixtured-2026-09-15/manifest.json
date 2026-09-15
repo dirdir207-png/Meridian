@@ -1,0 +1,194 @@
+{
+  "captures": [
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/accounts-parity-fixtured-2026-09-15/accounts-desktop-light-full.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "126f4ca0e8a791f154cfa7214828c1c38681eed5",
+      "captured_at": "2026-09-15T17:48:56.515818Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-desktop-light-viewport.png",
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-desktop-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/accounts-parity-fixtured-2026-09-15/accounts-desktop-dark-full.png",
+      "viewport": "desktop",
+      "theme": "dark",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "126f4ca0e8a791f154cfa7214828c1c38681eed5",
+      "captured_at": "2026-09-15T17:48:57.498920Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-desktop-dark-viewport.png",
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-desktop-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/accounts-parity-fixtured-2026-09-15/accounts-tablet-light-full.png",
+      "viewport": "tablet",
+      "theme": "light",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "126f4ca0e8a791f154cfa7214828c1c38681eed5",
+      "captured_at": "2026-09-15T17:48:58.413370Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-tablet-light-viewport.png",
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-tablet-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/accounts-parity-fixtured-2026-09-15/accounts-tablet-dark-full.png",
+      "viewport": "tablet",
+      "theme": "dark",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "126f4ca0e8a791f154cfa7214828c1c38681eed5",
+      "captured_at": "2026-09-15T17:48:59.345977Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-tablet-dark-viewport.png",
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-tablet-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-light-full.png",
+      "viewport": "mobile",
+      "theme": "light",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "126f4ca0e8a791f154cfa7214828c1c38681eed5",
+      "captured_at": "2026-09-15T17:49:00.642438Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-light-viewport.png",
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-dark-full.png",
+      "viewport": "mobile",
+      "theme": "dark",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "126f4ca0e8a791f154cfa7214828c1c38681eed5",
+      "captured_at": "2026-09-15T17:49:02.005137Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-dark-viewport.png",
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-small-light-full.png",
+      "viewport": "mobile-small",
+      "theme": "light",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "126f4ca0e8a791f154cfa7214828c1c38681eed5",
+      "captured_at": "2026-09-15T17:49:03.203563Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-small-light-viewport.png",
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-small-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-small-dark-full.png",
+      "viewport": "mobile-small",
+      "theme": "dark",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "126f4ca0e8a791f154cfa7214828c1c38681eed5",
+      "captured_at": "2026-09-15T17:49:04.377782Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-small-dark-viewport.png",
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-small-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-air-light-full.png",
+      "viewport": "mobile-air",
+      "theme": "light",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "126f4ca0e8a791f154cfa7214828c1c38681eed5",
+      "captured_at": "2026-09-15T17:49:05.618482Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-air-light-viewport.png",
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-air-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-air-dark-full.png",
+      "viewport": "mobile-air",
+      "theme": "dark",
+      "fixture": "synthetic-electric-internet-payday",
+      "frozen_clock": "2026-09-08T13:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "126f4ca0e8a791f154cfa7214828c1c38681eed5",
+      "captured_at": "2026-09-15T17:49:06.893494Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-air-dark-viewport.png",
+        "artifacts/accounts-parity-fixtured-2026-09-15/accounts-mobile-air-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": []
+    }
+  ]
+}
