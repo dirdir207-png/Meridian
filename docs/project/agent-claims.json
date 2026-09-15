@@ -3,8 +3,8 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
-      "agent": "builder-c4-funding-rules",
-      "claim_id": "builder-c4-funding-plan-and-reassignment-readback",
+      "agent": "builder-c4-transfer",
+      "claim_id": "builder-c4-transfer-readback",
       "generation": 1,
       "files": [
         "meridian/providers/crewwork.py",
@@ -17,9 +17,9 @@
         "docs/project/AGENT_COORDINATION.md",
         "docs/project/agent-claims.json"
       ],
-      "base_sha": "3be4e15dcbe2c53aefd1f75f6eaa3e1c31b22ec8",
+      "base_sha": "daf8d332e810ba79458df8519cd3bb594fd746b3",
       "since": "2026-09-14T00:00:00+00:00",
-      "note": "C4: read fundingPlans (expenses facet) and family.reassignmentRules, added to the connector by the owner at bd7d8b1, and verify 5 more action types. No provider call, migration or authority change."
+      "note": "C4: verify crew_initiate_transfer by matching the provider-returned transfer id against the transfer ids already selected by transactions.graphql. No provider call, migration or authority change."
     },
     {
       "agent": "builder",
