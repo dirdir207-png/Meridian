@@ -1,6 +1,28 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-13 (C4 write-coverage manifest enforced)
+Last consolidated: 2026-09-13 (C4 remaining readback blocked, evidenced)
+
+## C4 remaining readback — blocked on the provider read surface (evidenced) — 2026-09-13
+
+The 11 unverified operations cannot be given an honest readback verifier with the evidence available in this repository. This is now **evidenced from source**, not asserted: `meridian/providers/crewwork.py` has exactly three collectors (`_collect_accounts`, `_collect_transactions`, `_collect_commitment_candidates`) and reads exactly these provider fields — `data.pockets…accounts[].subaccounts[]` (`id`, `displayName`, `isPrimary`, `overallBalance`, `clearedBalance`), `data.accounts…accounts[]` (`id`, `displayName`), `data.transactions…cashTransactions.edges[]` (`id`, `occurredAt`, title/merchant/subaccount/amount), and `data.expenses…accounts[].billReserve.bills[]` (`id`, `name`, `amount`, `anchorDate`, `frequency`, `reservedAmount`). Nothing else.
+
+Per type, the specific missing field:
+
+| Operation | Missing readback evidence |
+|---|---|
+| `create/update/delete_crew_paycheck_funding_plan` | No funding-plan object is read at all — no plan id, name, amount, frequency or anchorDate readback |
+| `create/delete_crew_autopilot_rule` | No rule object is read — no rule id, name, `isPaused`, formula or triggers |
+| `create/delete_crew_pocket_reassignment_rule` | No reassignment-rule object is read — no rule id or `match` |
+| `create_crew_virtual_card` | No card surface is read — no `virtualDebitCards`/card id |
+| `top_up_crew_reserve` | `billReserve` is read **only** for its `bills[]`; there is no bill-reserve id and no reserve total, so a top-up cannot be attributed to the reserve it targeted |
+| `set_crew_spend_pocket` | The selected spend pocket lives in `userSpendConfig.selectedSpendSubaccount`, which is not read. `subaccounts[].isPrimary` is read, but it is the account's primary pocket, **not** proven to be the user's spend selection — treating it as the same signal could produce a false confirmation or a false contradiction, so it is not used |
+| `crew_initiate_transfer` | Transactions are read, but the connector's result contract (whether a usable transfer/cash-transaction id is returned) is not captured. Matching on amount plus account alone would be weak evidence capable of reporting a **false confirmed transfer** — the worst available failure — so it is refused |
+
+Closing any of these needs evidence this lane cannot obtain without an owner-approved action: either a credential-free captured read payload for the relevant surface, an extension of the read-only connector (a different repository), or a one-off owner-approved live capture. Live banking data and credentials are prohibited in this lane, so none of the 11 can be advanced here.
+
+Two things are **not** blocked and remain available: the `update_crew_virtual_card` resolution (owner decision: add a card readback verifier, or retire the type from `allowed_types`) and any further honesty work on surfaces that render outcomes.
+
+Also checked this round and found **not** a gap: the legacy account approval panel (`static/js/api/account.js`) lists only `/api/actions/pending`, which returns `proposed` actions. A proposed action has no verification receipt by definition, so there is nothing for it to render. It was inspected and correctly left unchanged.
 
 ## C4 write-coverage manifest is now enforced — 2026-09-13
 
