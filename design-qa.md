@@ -17,7 +17,7 @@ DPR 1, 1024×768 DPR 1, 430×932 DPR 3, 390×844 DPR 3, 420×912 DPR 3) × light
 | Right-side alignment | **Not reproducible.** Layout box 251–1339 in 1440 → 101px each side, symmetric. The single-column desktop stage is deliberate and documented in `observatory.css`. |
 | Payday amount tight at mobile | **Not reproducible.** clientWidth 110 / scrollWidth 110 at 420, 430 and 390. |
 | Inline Virgil control vs bottom nav | **Real, cosmetic, at rest.** `OCCLUDED` at 420 (`m-nav-item`) and 430 (`m-nav`); reachable by scrolling. |
-| Light-theme foregrounds | **Inspected; one new finding.** Primary text is legible. But in the light theme the small grey dial labels have marginal contrast, and the lower dial rim labels (`8 / TUE` and `16 / WED`) are partially obscured by the observatory artwork and the bottom viewport crop. See below. |
+| Light-theme foregrounds | **Inspected; today-marker defect found and fixed.** Primary text legible. The `is-today` day label was cream on parchment and is now dark ink (pixel-verified). The accompanying "lower rim labels obscured by artwork/crop" claim was **measured and not reproduced**. |
 
 **The one open defect.** The "Ask Virgil about this plan" control is painted and then covered by the dock in the
 initial mobile viewport. Measured occlusion: 7046 px² covered at 420, 7046 px² at 430. It is **not** a dead
@@ -57,6 +57,17 @@ gone, dark ink sits on parchment, and the label region has no cream pixels left.
 for the owner's eye rather than reclassified as fixed or as still-broken.
 
 Evidence: `artifacts/today-labels-fix-2026-09-15/` (10 captures, zero overflow, zero console errors).
+
+**The "lower rim labels are cropped" claim was measured and does not reproduce.** All four day labels are inside
+the viewport at desktop and at 420: `8 TUE` and `16 WED` sit at viewport y=771 in a 900px viewport, and every
+label reports `inViewport: true`. The page scrolls (document height 2521 at desktop, 1927 at 420), so the dial's
+lower 66px, which extends below the desktop fold, is reachable — content below the fold in a scrollable page is
+not a defect, and the build specification explicitly allows the tall compositions to scroll on real devices.
+
+This makes **two vision readings on this dial that measurement contradicted** (the "8 TUE" wash-out after the fix,
+and now the cropped rim labels). Both are recorded rather than silently dropped, and they set the working rule for
+this surface: the raster readings of 10px dial type are unreliable in both directions, so a dial-label claim
+needs pixel or computed-style confirmation before it is acted on — and equally before it is dismissed.
 
 A process note worth keeping: the light-theme row of this table first read "verified, no problems" before the
 capture had actually been inspected. It was rewritten only after reading the image. That is the exact failure
