@@ -35,6 +35,19 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-14 — Builder — connector patch prepared; lane boundary respected
+
+The owner authorized the connector edit. **This lane is structurally forbidden from making it** — the preset's `agent-admission` guard refused with `path-escape` ("Mutate inside the lane, or state the change and let the owner make it"). I did **not** escalate sandbox permissions to route around it; defying an installed boundary to satisfy an instruction is the wrong trade, so I took the guard's second route.
+
+Deliverable: `docs/project/CONNECTOR_READBACK_FIELDS_PATCH.md` + `docs/project/connector-readback-fields.patch` — a machine-applicable patch adding `billReserve.id` + `fundingPlans` to `operations/expenses.graphql` and `reassignmentRules` to `operations/family.graphql`. Both are field selections inside existing queries: no mutation, no new operation, no allowlist entry.
+
+Pre-verified in-lane and read-only: both documents pass that repository's **own** `assert_read_only` gate, carry no `CAPTURE_FROM_CREW_WEB_APP` placeholder, have balanced braces, and **`git apply --check` is clean against the live tree**. Every added field name is live-verified from `CREW_DISCOVERY_HANDOFF.md` Appendix A rather than authored.
+
+Unblocks 6 of the 7 remaining readback types. The residual risk is stated rather than hidden: the fields are individually live-accepted but the composed documents have not been sent, and that cannot be checked from this lane.
+
+Owner apply steps and the preservation requirement (`auth.py` modified, `uv.lock` untracked, no remote, stage only the two `operations/` files) are in the handoff.
+
+
 ### 2026-09-14 — Builder — `update_crew_virtual_card` retired (owner-authorized)
 
 Removed the last allowed-but-unexecutable type. It was in `ActionStore.allowed_types` with no executor, so an approved action could only fail with `no_executor`; the cause is upstream — the connector has **no `update_virtual_card` write operation** (grep over `crew_write_cli.py` and its 18 `write_operations/*.graphql` specs). No verifier could have fixed it, so the capability is removed rather than left as an owner-visible dead end. Nothing proposed it (no JS/API caller); this removes a capability and breaks nothing that worked.

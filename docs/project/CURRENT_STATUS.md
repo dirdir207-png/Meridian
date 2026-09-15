@@ -1,6 +1,36 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-14 (C4: `update_crew_virtual_card` retired)
+Last consolidated: 2026-09-14 (C4: connector patch prepared, lane boundary respected)
+
+## Connector readback fields — verified patch handed to the owner, not applied — 2026-09-14
+
+The owner authorized the connector edit on 2026-09-14 (`expenses.graphql`: `billReserve.id` + `fundingPlans`; `family.graphql`: `reassignmentRules`). **This lane could not make it**, and the reason is the guardrail rather than an oversight:
+
+```
+agent-admission: edit is denied because file_path resolves outside this lane (path-escape).
+The lane is /Users/stephenwest/Openrouter/simplecrew-latest; …resolves elsewhere.
+Mutate inside the lane, or state the change and let the owner make it.
+```
+
+That guard is a boundary the owner installed, so it was **not** bypassed with a sandbox escalation — routing around it is precisely what it exists to prevent. The guard's own second route was taken instead: the change is stated, verified and ready.
+
+Deliverable: `docs/project/CONNECTOR_READBACK_FIELDS_PATCH.md` (the patch, the resulting files, the verification and the apply steps) plus the machine-applicable `docs/project/connector-readback-fields.patch`.
+
+Verified before handing over, read-only and in-lane:
+
+- Both proposed documents pass that repository's **own** `crew_work_assistant.safety.assert_read_only` gate (no `mutation`, is a query document).
+- `operations.PLACEHOLDER_MARKER` (`CAPTURE_FROM_CREW_WEB_APP`) is absent from both, so `load_operation` will not raise.
+- Braces balanced in both.
+- **`git apply --check` against the live working tree: clean for both files.**
+- Every added field name is **live-verified**, not authored — each appears in an accepted live query in `CREW_DISCOVERY_HANDOFF.md` Appendix A.
+
+What it unblocks: **6 of the 7** remaining readback types (funding-plan create/update/delete, reserve top-up, pocket reassignment-rule create/delete). `crew_initiate_transfer` is excluded because it needs a mutation-result transfer id, which remains uncaptured.
+
+**Honest limit:** each added field is individually live-accepted, but the *composed* documents have not been sent to the server. That residual risk is small, real, and stated in the handoff. It is also unverifiable from this lane without a live call.
+
+Not a mutation: two field selections inside existing queries. No new operation file, no allowlist entry, no write path. The repository's `auth.py` modification and untracked `uv.lock` are untouched and must be preserved; the apply steps stage only the two `operations/` files.
+
+Next after it lands: the in-lane adapter accessors and the six verifiers, then the manifest moves those six types from `verification: none` to `readback`. For `top_up_crew_reserve` the discipline is fixed by the handoff — **a changed reserve amount is not proof of a particular top-up**, so attribution keys on `billReserve.id`, which is why the `id` selection is in this patch rather than a total-only comparison.
 
 ## `update_crew_virtual_card` retired from the allowed set — 2026-09-14
 
