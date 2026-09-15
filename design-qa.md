@@ -37,6 +37,13 @@ That also sets the scope expectation honestly: Plan's differences look like **na
 much denser layout, not a missing architecture — but that claim is exactly the kind this project refuses to make
 without a capture, so it is recorded as the hypothesis to test, not as a finding.
 
+**Plan can now be captured, so the hypothesis is testable.** `artifacts/plan-activity-parity-2026-09-15/` holds the
+governed Plan matrix (10 combinations, concept `02-plan.png`, zero overflow, zero console errors), captured by
+running the harness with `--workspaces plan`. The next Plan step is therefore the same one Today went through:
+compare the capture against the concept, list gaps, and take them one at a time — starting with the headline
+wording, which is the one difference already confirmed from source ("Every dollar has a next job." against the
+concept's "Give every dollar a destination.").
+
 ## Today — acceptance summary (Track D, 2026-09-15)
 
 **Status: awaiting owner acceptance.** Everything below is measured from the live DOM or captured under the
@@ -148,15 +155,29 @@ with zero overflow and zero console errors, the full non-browser suite (1119 pas
 suite's 24 runnable tests. The one suite that would gate it directly needs a live authenticated app, which is an
 environmental limitation rather than a gap in this change.
 
-**Track D capture blocker for the remaining workspaces.** `scripts/preview_observatory_dial.py` serves only
-`/api/meridian/today`; `plan`, `activity` and `accounts` return 404, their sections never clear `aria-busy`, and
-the governed capture harness times out on them (`Page.wait_for_function: Timeout 12000ms exceeded`). **Today is
-the only workspace currently able to produce governed capture evidence.** The alternatives were checked and
-neither is a small step: extending the isolated preview needs synthetic fixtures for roughly eight to ten
-endpoints (accounts, crew/bills, contracts, assets, trials/deadlines, plan, plan/scenario, crew/rules, actions)
-and inventing conformant shapes risks producing misleading parity evidence; and `run_preview.py` loads `.env` and
-starts a Crew sync loop, which the capture specification forbids for fidelity work. So Plan, Activity and
-Accounts need an explicit owner decision on capture infrastructure before their parity work can start.
+**Track D capture status — the earlier "Today only" claim was WRONG and is corrected here.** An earlier version of
+this document stated that Today was the only workspace able to produce governed capture evidence from the isolated
+preview. That was inferred from a timed-out four-workspace run and never tested per workspace. Tested individually:
+
+| Workspace | Result |
+|---|---|
+| today | captures (10 combinations) |
+| plan | **captures** — 10 combinations, `02-plan.png` |
+| activity | **captures** — 10 combinations, `03-activity.png` |
+| accounts | **does not settle** — 0 captures |
+
+The timeout came from **accounts alone**, and the cause is specific: `templates/meridian/partials/accounts.html`
+hardcodes `aria-busy="true"` on its root, and the preview injects only `shell`, `today` and `dial` modules, so the
+accounts controller that would clear it is never loaded. Plan and Activity set `aria-busy` programmatically in
+their controllers and clear it in a `finally` block, and neither depends on a template-level busy attribute, so
+they settle even though the preview serves no data for them.
+
+Governed evidence for the two newly-capturable workspaces is in `artifacts/plan-activity-parity-2026-09-15/` —
+20 captures, both concepts mapped correctly, all five viewports, **zero horizontal overflow and zero console
+errors**. The lesson is recorded rather than the fix alone: a claim about what a harness can do is itself a
+claim that needs testing, and inferring "impossible" from one aggregate timeout cost several rounds of work that
+was available all along.
+
 
 ## September 15 governed regeneration and measurement pass (Track D)
 
