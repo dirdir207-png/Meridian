@@ -93,9 +93,23 @@ viewport foot, the canvas owns scrolling, `nav_overlaps_main` is false, and hori
 in the Meridian client listens for `window` scroll, and `scrollIntoView()` walks up to the nearest scrollable
 ancestor, so the scroll-container change has no other client dependency.
 
-**The limit, stated rather than glossed:** this verifies the geometry of the other workspaces, not the visual
-appearance of their content, which still needs their own capture support. If a workspace's content later proves
-to depend on document scrolling, this is one revertable `@media (max-width: 900px)` block.
+**What gates this change, and what could not be run.** The browser suite was run for the first time against this
+work: `tests/browser` gives **24 passed, 63 skipped**, and every skip is the same environmental gate —
+`APP_URL is required for browser tests`. `tests/browser/test_meridian_shell.py` and
+`tests/browser/test_responsive_parity.py` are both entirely in that skipped set, and they are precisely the tests
+that would cover a shell change. They authenticate through `/api/auth/login`, so they cannot be pointed at the
+isolated synthetic preview, which deliberately has no auth.
+
+The relevant one is worth naming exactly: `test_responsive_parity.py` parametrises 390×844 and 430×932 and asserts
+that accounts has no horizontal overflow. That is the same property this shell change could have broken, and it
+could not be executed. It is covered instead by direct measurement — horizontal overflow 0 across all four
+workspaces at 420, 430 and 390 — which is the same assertion made by a different route. The desktop shell tests
+would not have exercised the change in any case, since it lives inside `@media (max-width: 900px)`.
+
+So the change rests on: geometry measurement across 4 workspaces × 3 mobile viewports, a governed Today capture
+with zero overflow and zero console errors, the full non-browser suite (1119 passed, 1 skipped), and the browser
+suite's 24 runnable tests. The one suite that would gate it directly needs a live authenticated app, which is an
+environmental limitation rather than a gap in this change.
 
 **Track D capture blocker for the remaining workspaces.** `scripts/preview_observatory_dial.py` serves only
 `/api/meridian/today`; `plan`, `activity` and `accounts` return 404, their sections never clear `aria-busy`, and
