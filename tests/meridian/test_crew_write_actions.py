@@ -1088,3 +1088,122 @@ def test_new_readback_verifiers_survive_an_exception_and_restart(tmp_path, monke
     with pytest.raises(Exception):
         execute_approved_action(store, request["id"], spec)
     assert calls == ["create_autopilot_rule"]
+
+
+def _spend_card(selected_id, is_child=False, card_id="card:1"):
+    config = {"id": "cfg:1"}
+    config["selectedSpendSubaccount"] = {"id": selected_id} if selected_id else None
+    return {"id": card_id, "name": "Card", "color": "TEAL",
+            "user": {"id": "user:1", "isChild": is_child, "userSpendConfig": config}}
+
+
+def test_spend_pocket_readback_confirms_the_provider_selection(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[_spend_card("Sub:spend")])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-spend-pocket-readback"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == ["set_spend_pocket"]
+
+
+def test_spend_pocket_still_pointing_elsewhere_is_a_provider_contradiction(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[_spend_card("Sub:other")])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert outcome["result"]["verification"]["observed"]["selected"] == "Sub:other"
+    assert calls == ["set_spend_pocket"]
+
+
+def test_spend_pocket_with_conflicting_cards_is_unresolved_and_not_resubmitted(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[_spend_card("Sub:a", card_id="c1"),
+                                       _spend_card("Sub:b", card_id="c2")])
+
+    db, store, spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert "conflicting" in outcome["result"]["verification"]["reason"]
+    with pytest.raises(Exception):
+        from crew.executors import execute_approved_action
+        execute_approved_action(store, outcome["id"], spec)
+    assert calls == ["set_spend_pocket"]
+    assert ActionStore(db, allowed_types=("set_crew_spend_pocket",)).get(outcome["id"])["state"] == "executed"
+
+
+def test_spend_pocket_with_an_unobserved_facet_is_unresolved(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(with_cards=False)
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+
+
+def test_spend_pocket_with_no_visible_selection_is_unresolved(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[_spend_card(None)])
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+
+
+def test_spend_pocket_ignores_a_childs_selection(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[_spend_card("Sub:spend", card_id="c1"),
+                                       _spend_card("Sub:child", is_child=True, card_id="c2")])
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "verified"
+
+
+def test_spend_pocket_verifier_exception_stays_unresolved_after_restart(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {}})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("set_crew_spend_pocket",))
+    request = store.propose("set_crew_spend_pocket",
+                            {"user_id": "acct:1", "subaccount_id": "Sub:spend"},
+                            "r", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["set_crew_spend_pocket"]
+    spec = {"set_crew_spend_pocket": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+
+    restarted = ActionStore(db, allowed_types=("set_crew_spend_pocket",)).get(request["id"])
+    assert outcome["state"] == restarted["state"] == "executed"
+    assert restarted["result"]["verification"]["ok"] is None
+    assert restarted["result"]["verification"]["retry_allowed"] is False
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["set_spend_pocket"]

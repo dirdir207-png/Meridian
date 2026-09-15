@@ -403,6 +403,56 @@ def _verify_autopilot_rule(*, expect_absent: bool):
     return verify
 
 
+def _verify_set_crew_spend_pocket():
+    """Confirm the selected spend pocket from the cards facet.
+
+    The selection is live-verified as ``user.userSpendConfig.selectedSpendSubaccount``
+    on each card, so this needs no connector change. A written but unconfirmed
+    change stays unresolved; the value is only reported as contradicted when the
+    provider clearly shows a different selection.
+    """
+    check = "crew-spend-pocket-readback"
+
+    def verify(params: Dict[str, Any], _result: Dict[str, Any]) -> Dict[str, Any]:
+        from .live import capture_crew_snapshot
+        from .providers.crewwork import CrewWorkSnapshotAdapter
+
+        target = str(params.get("subaccount_id") or params.get("subaccountId") or "")
+        requested = {"subaccount_id": target}
+        try:
+            adapter = CrewWorkSnapshotAdapter(capture_crew_snapshot())
+            snapshot = adapter.fetch_snapshot()
+            observed = adapter.readback_selected_spend_pocket()
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": f"readback unavailable: {exc}", "requested": requested}
+
+        if not snapshot.is_complete or observed is None or not target:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": ("provider readback is incomplete, did not include the cards facet, "
+                               "or the requested pocket is unknown"),
+                    "requested": requested}
+        if not observed:
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": "no card exposed a selected spend pocket to compare against",
+                    "requested": requested}
+        if len(observed) > 1:
+            # Two different selections cannot both be current; refuse to pick one.
+            return {"ok": None, "check": check, "provider_truth": False,
+                    "reason": "the provider reported conflicting selected spend pockets",
+                    "requested": requested, "observed": {"selected": list(observed)}}
+
+        selected = observed[0]
+        if selected == target:
+            return {"ok": True, "check": check, "provider_truth": True,
+                    "requested": requested, "observed": {"selected": selected}}
+        return {"ok": False, "check": check, "provider_truth": True,
+                "reason": "the provider still reports a different selected spend pocket",
+                "requested": requested, "observed": {"selected": selected}}
+
+    return verify
+
+
 def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Callable]]]:
     """Register the Crew write executor specs (params-dict adapters)."""
     def _exec(op: str):
@@ -445,7 +495,7 @@ def crew_write_executors(db_path: str) -> Dict[str, tuple[Callable, Optional[Cal
         ),
         "set_crew_spend_pocket": (
             _exec("set_spend_pocket"),
-            no_verify,
+            _verify_set_crew_spend_pocket(),
         ),
         "create_crew_virtual_card": (
             _exec("create_virtual_card"),

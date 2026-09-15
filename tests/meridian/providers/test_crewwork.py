@@ -325,3 +325,48 @@ def test_card_readback_deduplicates_a_card_listed_under_two_family_members():
     cards = CrewWorkSnapshotAdapter(payload).readback_virtual_cards()
 
     assert [c["id"] for c in cards] == ["card:1"]
+
+
+def _spend_card(selected_id, is_child=False, card_id="card:1"):
+    config = {"id": "cfg:1"}
+    config["selectedSpendSubaccount"] = {"id": selected_id} if selected_id else None
+    return {"id": card_id, "name": "Card", "color": "TEAL",
+            "user": {"id": "user:1", "isChild": is_child, "userSpendConfig": config}}
+
+
+def test_selected_spend_pocket_returns_the_single_observed_selection():
+    adapter = CrewWorkSnapshotAdapter(_facets(cards=[_spend_card("Sub:spend")]))
+
+    assert adapter.readback_selected_spend_pocket() == ("Sub:spend",)
+
+
+def test_selected_spend_pocket_is_none_when_the_facet_was_not_observed():
+    adapter = CrewWorkSnapshotAdapter(_facets(with_cards=False))
+
+    assert adapter.readback_selected_spend_pocket() is None
+
+
+def test_selected_spend_pocket_is_empty_when_no_card_exposes_a_selection():
+    adapter = CrewWorkSnapshotAdapter(_facets(cards=[_spend_card(None)]))
+
+    assert adapter.readback_selected_spend_pocket() == ()
+
+
+def test_selected_spend_pocket_reports_conflicting_selections_rather_than_picking():
+    """Two different selections cannot both be current; the caller must not guess."""
+    adapter = CrewWorkSnapshotAdapter(
+        _facets(cards=[_spend_card("Sub:a", card_id="card:1"),
+                       _spend_card("Sub:b", card_id="card:2")])
+    )
+
+    assert adapter.readback_selected_spend_pocket() == ("Sub:a", "Sub:b")
+
+
+def test_selected_spend_pocket_ignores_a_childs_own_configuration():
+    """SetSpendSubaccount sets the signed-in user's selection, not a child's."""
+    adapter = CrewWorkSnapshotAdapter(
+        _facets(cards=[_spend_card("Sub:parent", card_id="card:1"),
+                       _spend_card("Sub:child", is_child=True, card_id="card:2")])
+    )
+
+    assert adapter.readback_selected_spend_pocket() == ("Sub:parent",)

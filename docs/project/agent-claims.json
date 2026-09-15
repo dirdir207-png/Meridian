@@ -3,6 +3,25 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
+      "agent": "builder-c4-spend",
+      "claim_id": "builder-c4-spend-pocket-readback",
+      "generation": 2,
+      "files": [
+        "meridian/providers/crewwork.py",
+        "meridian/crew_write_actions.py",
+        "tests/meridian/providers/test_crewwork.py",
+        "tests/meridian/test_crew_write_actions.py",
+        "docs/project/write-coverage.json",
+        "tests/meridian/test_write_coverage.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "977eab04ac2c852429e3eb97039786965afe414e",
+      "since": "2026-09-14T00:00:00+00:00",
+      "note": "C4: verify set_crew_spend_pocket from the live-verified userSpendConfig.selectedSpendSubaccount, plus the readback reconciliation against CREW_DISCOVERY_HANDOFF.md. Generation 2 because generation 1 was released before its commit, which the guardrail correctly refused."
+    },
+    {
       "agent": "builder",
       "claim_id": "builder-r0-guardrails",
       "generation": 1,

@@ -215,6 +215,37 @@ class CrewWorkSnapshotAdapter:
                     cards.append(card)
         return cards
 
+    def readback_selected_spend_pocket(self) -> Optional[tuple]:
+        """The signed-in user's selected spend pocket, as observed, or None.
+
+        The selection is carried on every virtual card as
+        ``user.userSpendConfig.selectedSpendSubaccount`` (live-verified). It is a
+        per-user setting repeated per card, so this returns the DISTINCT observed
+        ids and lets the caller refuse to guess:
+
+          None     -> the cards facet was not observed at all
+          ()       -> observed, but no card exposed a selection
+          (one,)   -> exactly one selection; the provider's current value
+          (a, b)   -> the cards disagreed; genuinely ambiguous, never resolved
+
+        Cards belonging to a child are skipped: ``SetSpendSubaccount`` sets the
+        signed-in user's selection, and a child's own spend config is theirs.
+        """
+        cards = self.readback_virtual_cards()
+        if cards is None:
+            return None
+        observed = set()
+        for card in cards:
+            user = _as_dict(card.get("user"))
+            if user.get("isChild"):
+                continue
+            config = _as_dict(user.get("userSpendConfig"))
+            selection = _as_dict(config.get("selectedSpendSubaccount"))
+            selected_id = str(selection.get("id") or "")
+            if selected_id:
+                observed.add(selected_id)
+        return tuple(sorted(observed))
+
     def readback_autopilot_rules(self) -> Optional[list]:
         """The autopilot rules this snapshot observed, or None if unobserved."""
         payload = self._facet_payload("autopilot")

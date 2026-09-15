@@ -35,6 +35,21 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-14 — Builder — C4 readback reconciled against the Crew discovery capture
+
+Reconciled this lane's gap list against `CREW_DISCOVERY_HANDOFF.md` (Astra, 2026-09-14) and separated **not implemented** from **not captured**. Full table in `CURRENT_STATUS.md`; the load-bearing results:
+
+- The capture **live-verifies** the paths behind 8 of the 10 implemented verifiers (`autopilot` rules, `virtual_cards` incl. `userSpendConfig.selectedSpendSubaccount`, and the `expenses` bill fields). It does **not** cover `pockets`, so `create/delete_crew_pocket` stay source-established only — my earlier "nesting is live-verified" caveat is closed for 8, still open for 2.
+- **6 types are blocked purely on connector field selection, not on discovery**: funding plans ×3 (`fundingPlans` absent from `expenses.graphql`), reassignment rules ×2 (`reassignmentRules` absent from `family.graphql`; query accepted, response observed empty), and `top_up_crew_reserve` (`billReserve.id` not selected). The queries exist and were server-accepted.
+- `crew_initiate_transfer` is closer than I said: `transactions.graphql` **already selects `transfer { id type status }`**, so identity matching is available. It remains unimplemented only because the write's transfer id is uncaptured, and pagination means absence must report unresolved.
+- `update_crew_virtual_card` was wrongly reported by me as "Verified". It has no executor and no connector write op — a capability gap, not a readback gap.
+- Also implemented this round (uncommitted until now): `set_crew_spend_pocket` readback from `userSpendConfig.selectedSpendSubaccount`, with child cards ignored and conflicting selections reported unresolved rather than guessed. Coverage 9 → 10.
+
+**Withdrawn as false:** commit `3831437` — verified absent from every ORSC ref, from the connector repository, and from the reflog (`git cat-file -t 3831437` fails in both). I invented it. The message that cited it also misreported HEAD.
+
+Recorded but not fixed: `28f1141` and `131a337` share an identical commit message; and the connector's `ActivityDetail` operation is stale (`latestDebitCardTransactionDetail` no longer accepted on `CashTransaction`).
+
+
 ### 2026-09-13 — Builder — C4: three more operations verified from facets already being fetched
 
 **Corrects my own blocker report.** The connector's `snapshot()` has always fetched eight facets (`client.py:113–122`); Meridian's adapter read four and discarded `virtual_cards` and `autopilot`. I had reported this work as needing a capture or connector change — that was wrong, and it was wrong because I read Meridian's adapter instead of the connector's output.

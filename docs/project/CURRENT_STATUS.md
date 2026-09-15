@@ -1,6 +1,67 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-13 (C4: previously-discarded facets now verify)
+Last consolidated: 2026-09-14 (C4 readback reconciled against the Crew discovery capture)
+
+## C4 readback — reconciled against `CREW_DISCOVERY_HANDOFF.md` (2026-09-14)
+
+Astra's live capture (`CREW_DISCOVERY_HANDOFF.md`, 2026-09-14) was reconciled against this lane's gap list. The handoff is authoritative for live-verified shapes; this section records what it does and does not change. **"Not implemented" and "not captured" are different failures and are separated below.**
+
+### Correction of this lane's own reporting
+
+Two claims I made earlier were false and are withdrawn:
+
+- **Commit `3831437` does not exist.** It appears in no ref in ORSC, is absent from the connector repository, and has zero reflog entries (`git cat-file -t 3831437` → `Not a valid object name` in both). It was invented, along with the message that cited it.
+- **`update_crew_virtual_card` was reported as "Verified (no readback, but tested)".** That is false. It has no executor in ORSC and no operation in the connector, so it is not verified in any sense. It is a write-capability gap (section D below).
+
+Also noted: commits `28f1141` and `131a337` were both created with the identical message "Enforce verification coverage for every allowed action type". Harmless but sloppy; recorded so the history is not misread as a single commit.
+
+### A — Implemented, and the path is live-verified by the capture (8 of 17)
+
+`autopilot` (`family.rules[]`), `virtual_cards` (`family.parents[]/children[].virtualDebitCards[]`, and `user.userSpendConfig.selectedSpendSubaccount`), and `expenses` (`accounts[].billReserve.bills[]` with `reservedAmount`) are all confirmed live. So `create/delete_crew_autopilot_rule`, `create_crew_virtual_card`, `set_crew_spend_pocket`, `update_crew_bill`, `update_crew_bill_reserve_settings`, `create_crew_bill` and `archive_crew_bill` rest on observed paths, not inference.
+
+### A′ — Implemented, but NOT confirmed by this capture (2 of 17)
+
+`create_crew_pocket` and `delete_crew_pocket` read `data.pockets…subaccounts[]`. **The handoff's Appendix C lists `accounts`, `autopilot`, `virtual_cards`, `expenses` and `transactions` — not `pockets`.** These two verifiers therefore remain source-established only and must not be described as live-verified.
+
+### B — Shape captured, NOT implemented: blocked on the connector's query selections (6 of 17)
+
+Live evidence exists for every one of these; the blocker is that the connector's operations do not request the fields, so ORSC cannot read them. Verified by reading the connector source:
+
+| Operation | Live evidence in the handoff | What the connector selects today |
+|---|---|---|
+| `create/update/delete_crew_paycheck_funding_plan` | `billReserve.fundingPlans[]` with `id, name, amount, frequency, frequencyInterval, anchorDate, reassignmentRule{id, match, minAmount, maxAmount}` (Appendix A, `FundingPlanReadback`) | `expenses.graphql` selects `billReserve{nextFundingDate, totalReservedAmount, estimatedNextFundingAmount, settings.funding.subaccount, bills}` — **no `fundingPlans`** |
+| `create/delete_crew_pocket_reassignment_rule` | `family.reassignmentRules` — query **accepted**, response **observed empty** (Appendix A, `ReassignmentRead`) | `family.graphql` selects `id, children, parents` — **no `reassignmentRules`** |
+| `top_up_crew_reserve` | `billReserve.id` verified, plus `totalReservedAmount` and `settings.funding.{subaccount, surplusSubaccount}` (Appendix A, `ReserveSettingsVerified`) | `expenses.graphql` does **not** select `billReserve.id`, so a top-up cannot be attributed to the reserve it targeted |
+
+Closing these needs an additive connector change (select the captured fields, or add the captured operations). The queries already exist and were accepted by the server, so this is implementation, not discovery.
+
+Discipline the handoff requires here: **a changed reserve amount is not proof of a particular top-up** — attribution must use `billReserve.id`, not a delta.
+
+### C — Shape captured, plausibly implementable in-lane, but depends on an uncaptured write result (1 of 17)
+
+`crew_initiate_transfer`. The connector's `transactions.graphql` **already selects `transfer { id type status }`** (line 17), and the handoff found a non-null `transaction.transfer.id` plus a working `node(id) Transfer` shape (Appendix B). Identity matching on `transfer.id` is sound, and the handoff explicitly forbids the weaker alternative (*"a historical transfer's existence is not proof it matches a proposed action"*).
+
+It is not implemented because verification needs the **transfer id returned by the write**, and the handoff records that mutation result shapes are not yet established ("Establish mutation input types/defaults and success/error outcomes where source alone is insufficient"). Pagination compounds it: the connector fetched one page, and the observed non-null transfer link was on page two — so a freshly created transfer may be absent from the read and must report **unresolved**, never confirmed or failed.
+
+### D — Not a readback gap at all (1)
+
+`update_crew_virtual_card` is in ORSC's `ActionStore.allowed_types`, has no executor, and `crew-write` exposes no `update_virtual_card` operation. The capability to perform the write does not exist, so no verifier can make it work. Parked at the owner's and Astra's direction; the correct resolutions remain "add the write op + verifier" or "retire the type from `allowed_types`".
+
+### E — Genuinely uncaptured (does not block the 17)
+
+Per the handoff's own remaining work: `SweepExcessAction` destination/threshold fields, `NumericAttributeCondition` fields, auto-cancel and card-inheritance semantics, mutation input defaults, and GraphQL introspection (returned errors — so schema introspection is **not** an available route). Also `cancelDate`/`expiresAt` were rejected as `DebitCard` fields and must not be implemented as guesses.
+
+### Documentation correction carried forward
+
+The handoff corrects an earlier illustrative shape: live `formula.conditions` is an **object** (e.g. `AndCondition` with nested `conditions`), not an array. No code in this lane reads `conditions`, so nothing shipped is affected. `docs/project/CREW_GRAPHQL_CATALOG.md` describes `conditions.and.conditions` as a *create-rule input* nesting; that input claim is neither confirmed nor refuted by this read-only capture and is left as-is rather than "corrected" on inference.
+
+### One further connector defect, recorded not fixed
+
+The connector's existing `ActivityDetail` operation fails validation: `latestDebitCardTransactionDetail` is no longer accepted on `CashTransaction`. Crew suggested `relatedTransactions`, which is **not** established as equivalent. This does not affect ORSC (which reads `snapshot` only), but it is a real defect in that repository.
+
+### Status
+
+Implemented and verified coverage is **10 of 17** Crew write types; of those, **8 rest on live-verified paths and 2 (pockets) do not**. Six are blocked only on connector field selection with their shapes already captured; one needs a mutation result shape; one needs the write capability itself. No provider call, credential, migration or authority changed in this reconciliation.
 
 ## C4 — three more operations verified from facets that were already being fetched — 2026-09-13
 

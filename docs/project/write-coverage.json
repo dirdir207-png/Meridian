@@ -93,8 +93,9 @@
     },
     {
       "type": "set_crew_spend_pocket",
-      "verification": "none",
-      "reason": "The selected spend pocket is carried on each virtual card as user.userSpendConfig.selectedSpendSubaccount. The facet is available, but the selection is user-level and repeated per card, so ambiguity handling is its own slice."
+      "verification": "readback",
+      "check": "crew-spend-pocket-readback",
+      "note": "Live-verified as user.userSpendConfig.selectedSpendSubaccount on each card, so no connector change is needed. Child cards are ignored; conflicting selections are reported unresolved rather than picked between."
     },
     {
       "type": "create_crew_virtual_card",
