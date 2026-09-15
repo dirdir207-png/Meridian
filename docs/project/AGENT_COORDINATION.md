@@ -33,6 +33,12 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-13 — Builder — C4 receipt reaches Plan and Memory
+
+Claimed `static/js/meridian/action-outcome.js`, `tests/meridian/test_action_outcome_js.py` and the status/claims/coordination paths. The shared outcome interpreter now reads the recorded verification receipt, so Plan (4 call sites) and Memory report *why* an accepted action is unresolved and name a provider-confirmed contradiction, instead of a generic line. `verified` remains the only `ok` tone and the only refreshing state. Focused 44 passed, `tests/meridian` 679 passed, full non-browser suite 986 passed / 1 skipped, Ruff + `node --check` + `git diff --check` + guardrail receipt clean.
+
+Honest note: a first draft of the new test asserted stronger copy ("Do not resubmit") for the bare `executed` case than the interpreter actually produces (the pre-existing generic "verification is still pending … Do not submit it again"). The test was corrected to the real behaviour rather than changing copy to match a guess. No browser check ran, so on-screen rendering is not claimed.
+
 ### 2026-09-13 — Builder — C4 verification receipt made visible
 
 Claimed `static/js/meridian/action-verification.js` (new), `static/js/meridian/actions.js`, `static/css/meridian/action-review.css`, `tests/meridian/test_action_verification_js.py` (new) and the status/claims/coordination paths. The read-only Settings action history now renders the durable verification receipt, read from **both** storage locations the pipeline uses (`action.verification` for `mark_verified`, `action.result.verification` for `mark_executed`/`record_verification_pending`/`mark_failed`). Outcomes are tri-state: confirmed / contradicted / unresolved, so `ok: null` can no longer render as success or failure. Focused 15 passed, `tests/meridian` 677 passed, Ruff + `node --check` + `git diff --check` + guardrail receipt clean. `ok: null` rendering under the previous surfaces was the last place a pending readback could still be read as final.

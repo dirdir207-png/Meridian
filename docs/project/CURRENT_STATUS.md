@@ -1,6 +1,18 @@
 # Enhanced SimpleCrew — Current Status
 
-Last consolidated: 2026-09-13 (C4 verification receipt rendered)
+Last consolidated: 2026-09-13 (C4 receipt reaches every outcome surface)
+
+## C4 receipt reaches Plan and Memory — 2026-09-13
+
+Implemented: the shared outcome interpreter `static/js/meridian/action-outcome.js` is now receipt-aware, so every surface that interprets a durable action result — Plan (`plan.js`, 4 call sites) and Memory management (`memory-manage.js`) — renders the same recorded receipt the Settings history renders, instead of a generic line. An accepted action whose readback could not confirm it now names the recorded check and reason ("could not confirm … crew-bill-readback: readback unavailable: timed out") and still forbids resubmission; a provider-confirmed contradiction is named as a contradiction ("Provider readback contradicted this change … It was accepted once and must not be resubmitted; reconcile in Actions & Approvals"); a verifier exception stays pending, never a terminal failure invented from an exception. The `verified` path is the only `ok` tone and the only state that refreshes.
+
+Scope and safety: presentation only. No endpoint, schema, migration, authority, routing, retry or provider call changed; no surface gained an approve/execute/reject control. The surfaces still do not re-derive a receipt themselves (a test asserts neither `plan.js` nor `memory-manage.js` mentions `provider_truth` or `summarizeVerification`), so there is one interpreter and one receipt module.
+
+Tested: 2 new tests in `tests/meridian/test_action_outcome_js.py` execute the interpreter under Node with the payload shapes `crew/executors.py` stores — unresolved/timed-out, verifier-exception, no-verifier, provider-contradicted, and the preserved uncertain-write copy — and pin that Plan/Memory receive the receipt through the shared interpreter rather than re-deriving it. Focused suite (outcome + receipt + review + history + haptics) **44 passed**; `tests/meridian` **679 passed**; full non-browser suite **986 passed, 1 skipped**. Ruff on the changed test file, `node --check` on the changed JS, `git diff --check`, and `scripts/check_guardrails.py --agent builder-c4-outcome-receipt` all clean. No live provider, credentials, deployment, preset or migration change.
+
+Honest limits: no browser check ran, so on-screen rendering is not claimed; and this slice deliberately did **not** alter the pre-existing fallback copy for a bare `executed` record, which remains the generic "verification is still pending" line — a first draft of the test asserted stronger copy than the code produced, and the test was corrected rather than the copy.
+
+Deployed: nothing. Verified: synthetic payloads and isolated unit tests only. Remaining gaps: funding-plan/autopilot-rule/reassignment-rule/virtual-card/reserve readback still need a provider contract; full C4 reachability and live owner acceptance remain open. Next: one further operation-specific readback once a readback shape exists.
 
 ## C4 verification receipt is now visible — 2026-09-13
 

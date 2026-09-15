@@ -5,6 +5,8 @@
    still awaits verification, and `failed` can carry an uncertain-write marker
    that must never invite a blind resend. */
 
+import { summarizeVerification } from "./action-verification.js";
+
 function resultMessage(action) {
   const result = action && action.result;
   return result && typeof result.error === "string" && result.error.trim()
@@ -37,10 +39,13 @@ export function describeActionOutcome(response, options = {}) {
   }
 
   if (state === "executed") {
+    const receipt = summarizeVerification(action);
     return {
       state,
       tone: "pending",
-      message: "The action was sent, but verification is still pending. Do not submit it again; check Actions & Approvals for the final outcome.",
+      message: receipt.recorded
+        ? `${receipt.headline} (${receipt.check}: ${receipt.reason}) Check Actions & Approvals for the final outcome.`
+        : "The action was sent, but verification is still pending. Do not submit it again; check Actions & Approvals for the final outcome.",
       refresh: false,
     };
   }
@@ -68,6 +73,15 @@ export function describeActionOutcome(response, options = {}) {
   if (state === "failed") {
     const detail = resultMessage(action) || "Action failed.";
     const uncertain = Boolean(action.result && action.result.verify_state);
+    const receipt = summarizeVerification(action);
+    if (receipt.outcome === "contradicted") {
+      return {
+        state,
+        tone: "error",
+        message: `${detail} Provider readback contradicted this change (${receipt.check}): ${receipt.reason} It was accepted once and must not be resubmitted; reconcile in Actions & Approvals.`,
+        refresh: false,
+      };
+    }
     return {
       state,
       tone: "error",
