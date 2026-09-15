@@ -3,6 +3,20 @@
   "note": "Declared write scope per agent. The checker enforces DECLARED SCOPE, not authorship: git status cannot tell who changed a file, so this file states who may change what. A file changed by one agent is not another agent's violation -- but it invalidates the other's admission rather than authorising an overwrite.",
   "claims": [
     {
+      "agent": "codex-virgil-architecture",
+      "claim_id": "codex-virgil-north-star-reconciliation",
+      "generation": 1,
+      "files": [
+        "docs/virgil/VIRGIL_IOS_NORTH_STAR.md",
+        "docs/virgil/VIRGIL_IOS_RECONCILIATION.md",
+        "docs/virgil/VIRGIL_ROADMAP_ADDENDUM.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "a3f8370dc6007e7b0fb2facb9003a40f3a4499c9",
+      "since": "2026-09-15T15:00:00+00:00",
+      "note": "Owner-authorized architecture documentation only. Synthesize the Replace Siri With AI Agent chat into a canonical Virgil iOS north star and a read-only repository and threat-model reconciliation. Includes extensible Virgil-to-Meridian capability and action paths. No product code, provider, Harness, financial, deployment, branch, worktree, or runtime mutation."
+    },
+    {
       "agent": "builder-cadence",
       "claim_id": "builder-cadence-consolidation",
       "generation": 1,
