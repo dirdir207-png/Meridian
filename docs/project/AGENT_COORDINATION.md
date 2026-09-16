@@ -59,6 +59,8 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (Accounts: closing strip + reconciliation) | `static/css/meridian/accounts.css`, `tests/meridian/test_accounts_assets_strip.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/MERIDIAN_ROADMAP.md`, `design-qa.md` | 2026-09-16 | **released** at `ba71bce`. Track D Accounts, batch 4: the tracked-items section closes the page as the concept's parchment strip, with no invented engraving because the kit scopes the telescope to Activity/Settings. Also reconciles the roadmap's stale visual-authority sentence and releases the lane's blanket claim. **No** route, data, financial or authority change. |
 
+| Builder (capture theme fix + Activity ruled tabs) | `scripts/capture_meridian_matrix.py`, `static/css/meridian/activity.css`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md` | 2026-09-16 | **released** at `4b0e9c1`. Two fixes: the capture script pinned the theme so light captures are genuinely light (the "light" pass had been rendering dark for every workspace after the first, which invalidated part of this session's evidence and produced a wrong diagnosis of the application); and Activity's mode row became the concept's ruled-underline treatment, making green a test the other lane had left failing. **No** route, data, financial or authority change. |
+
 ## Log (append only — newest first)
 
 ### 2026-09-16 — Builder (Observatory identity slice) — claimed step 2 of the owner-directed handoff

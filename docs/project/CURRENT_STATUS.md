@@ -1,5 +1,60 @@
 # Enhanced SimpleCrew — Current Status
 
+## Capture tooling was producing wrong light-theme evidence, and the tab treatment is ruled (2026-09-16)
+
+**A tooling defect that invalidated part of this session's evidence.** The "light" capture for every workspace
+after the first was in fact a dark render. `theme.js` resolves `localStorage` before `prefers-color-scheme`, and
+`capture_meridian_matrix.py` opens one context per (viewport, theme) and then reuses a single page across *all*
+workspaces — so once the app had written `meridian-theme`, every later page load in that context kept it, and only
+the first workspace in each context got the emulated scheme. The images were labelled light and looked plausible
+side by side, which is why it survived review: comparing the two passes showed *no* difference rather than an
+obvious error.
+
+Measured on the saved captures: Today's two themes differed by 101.6 mean luminance while Plan, Activity and
+Accounts differed by **0.1** — indistinguishable. The fix pins `localStorage` to the same theme the harness passes
+as `color_scheme`, before any app script runs. Re-verified on a fresh 80-capture matrix: deltas are now 114.7
+(Today), 144.0 (Plan), 175.8 (Activity) and 159.9 (Accounts).
+
+**This corrects a claim I made to the owner and wrote into the Astra handoff package**: I reported the light theme
+as an *application* defect. It is not. Probing the live shell background returns `rgb(244, 236, 223)` for light on
+all four workspaces, and `dial.css` has carried a correct theme-aware override all along. The application was
+right and the tooling was wrong.
+
+**Activity's mode row is now ruled, not pilled.** Concept 03 puts the three labels on a brass rule with the active
+one underlined beneath its label; the pill treatment read as a generic segmented control and put a filled chip
+where the concept has a label resting on a line. That rule is also the line separating the header from the tab
+row. The scroll-through also exposed the failure honestly: a test asserting the ruled treatment had been left
+failing by the other lane's in-flight pass, so this change makes the suite green rather than adding to it.
+
+Verified: **1176 passed, 1 skipped** (full non-browser suite); `--obs-brass` (`#c6aa71`) and `--m-space-6` (32px)
+confirmed to exist rather than assumed. Capture in `artifacts/observatory-activity-tabs-2026-09-16/` — 10 files,
+zero overflow, zero console errors — inspected at 420×912 and confirmed to show the brass rule and the active
+underline.
+
+### Coordination note
+
+The working tree held 23 modified tracked files from the ChatGPT lane with `builder-trackd-today-parity`
+(generation 2) claimed over exactly this surface. Committed as one attributed commit (`63d2865`) at the owner's
+direction, recording that one test failed there. That lane's claim is left as its author wrote it.
+
+### Still open — verified against the concepts, not yet reconciled
+
+Measured, so the next pass does not have to re-derive it:
+
+- **Background is too light and too green.** The concepts average `#141b32`; ours is `#172334`. Today's dark
+  override (`#101a28`) is conversely *darker* than its concept (`#161c34`).
+- **The wavy title underline is absent.** The concepts carry a short lilac squiggle under the page title, on
+  Today, Activity and Accounts (not Plan).
+- **The date under the wordmark** is absent on the workspaces whose concepts show it.
+- **The Accounts ticket** is a rotated, notch-edged ticket with an inset dotted border, scattered brass stars and
+  a crescent; ours is axis-aligned and plain.
+- **The Accounts connectors** are curved dashed paths with a node at each end, colour-matched per row, plus
+  star-tipped dotted row separators. The straight vertical rail built here is the wrong construction.
+- **The Plan tab row** is one bordered bar divided into three cells whose top edge forms the separator line, with
+  a parchment-filled active cell and a brass star medallion at its left.
+- **The Accounts engraving differs.** The concept draws a colonnaded rotunda; the kit's `observatory-landscape.png`
+  is a different engraving. This needs art from Astra — it will not be faked.
+
 ## Accounts — the closing parchment strip, and the handoff round closed (2026-09-16)
 
 **Accounts batch 4.** Concept 04 ends the page with a compact parchment strip for tracked items, and the kit

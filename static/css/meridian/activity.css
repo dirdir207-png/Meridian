@@ -100,31 +100,50 @@
   flex-wrap: wrap;
 }
 
-.m-segmented {
-  display: inline-flex;
-  gap: var(--m-space-1);
-  padding: var(--m-space-1);
-  border: 1px solid var(--m-border);
-  border-radius: var(--m-radius-pill);
-  background: var(--m-surface);
+/* Concept 03's mode row is ruled, not pilled: the three labels sit on a brass line and
+   the active one is underlined beneath its label, with the star above it coming from the
+   ornament layer. The pill treatment read as a generic segmented control and put a
+   filled chip where the concept has a label resting on a rule -- which is also the line
+   the concept uses to separate the header from the tab row. */
+.m-activity-toolbar .m-segmented {
+  display: flex;
+  gap: var(--m-space-6);
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--obs-brass);
+  border-radius: 0;
+  background: none;
 }
 
 .m-segmented .m-button {
-  min-height: 40px;
-  padding: var(--m-space-2) var(--m-space-4);
+  position: relative;
+  min-height: 44px;
+  padding: 0 0 var(--m-space-2);
   border: 0;
-  border-radius: var(--m-radius-pill);
-  background: transparent;
+  border-radius: 0;
+  background: none;
   color: var(--m-ink-muted);
+  font-family: var(--m-font-serif);
 }
 
 .m-segmented .m-button:hover {
-  background: var(--m-surface-muted);
+  background: none;
+  color: var(--m-ink);
 }
 
 .m-segmented .m-button[aria-pressed="true"] {
-  background: var(--m-ink);
-  color: var(--m-canvas);
+  background: none;
+  color: var(--obs-brass);
+}
+
+.m-segmented .m-button[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--obs-brass);
 }
 
 .m-activity-filters {
