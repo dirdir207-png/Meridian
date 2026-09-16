@@ -26,31 +26,39 @@ Workspaces: `today` (concept `01-today.png`), `plan` (`02-plan.png`), `activity`
   `2026-09-08T09:42:00Z`, viewport 420×912 at DPR 3, no polling/animation/timers, `document.fonts.ready` awaited.
 - Builder: `tmp/build_comparisons.py` (untracked).
 
-## Finding 1 — CORRECTED: the light theme works; the capture tooling was wrong *(retracted as an app defect)*
+## Finding 1 — TWO separate theme problems, only one of them mine *(twice amended — read this version)*
 
-**This section originally reported a light-theme defect in the application. That was wrong, and it is retracted.**
+This section has been wrong twice. First it reported a light-theme defect in the application. Then it retracted
+that and blamed only our capture tooling. **Both were too simple.** There were two distinct problems, and the
+owner caught the second one:
 
-The application is correct. Probing the live shell background returns `rgb(244, 236, 223)` (cream) for the light
-scheme on **all four** workspaces, and `dial.css` has carried a correct theme-aware override all along. Anyone
-reading the earlier version of this file should disregard its table and its conclusion.
+**(a) A real defect on the theme TOGGLE path.** The owner reports that the toggle worked only on the Today page.
+That is consistent with the source: before the ChatGPT lane's pass, **no `.m-topbar .m-theme-toggle--compact`
+rule existed anywhere**, and the pass that added the `.m-topbar-date` also added that rule
+(`static/css/meridian/shell.css`). So there was something genuinely wrong with using the toggle outside Today, and
+that pass appears to have fixed it. On current HEAD the toggle now works on **all four** workspaces — verified by
+clicking the *visible* toggle and checking both the attribute and the painted colour:
 
-What actually happened is a defect in our own capture pipeline, and it is fixed:
+| workspace | before click | after click | shell repainted? |
+|---|---|---|---|
+| Today | `dark` `rgb(22,28,52)` | `light` `rgb(244,236,223)` | yes |
+| Plan | `dark` `rgb(20,27,50)` | `light` `rgb(244,236,223)` | yes |
+| Activity | `dark` `rgb(20,27,50)` | `light` `rgb(244,236,223)` | yes |
+| Accounts | `dark` `rgb(20,27,50)` | `light` `rgb(244,236,223)` | yes |
 
-- `theme.js` resolves `localStorage` **before** `prefers-color-scheme`.
-- `capture_meridian_matrix.py` opened one browser context per (viewport, theme) and then reused a **single page
-  across every workspace** in the loop, relying only on `color_scheme` emulation.
-- So once the app had written `meridian-theme`, every later page load in that context kept the stored value, and
-  only the **first** workspace captured in each context got the emulated scheme.
+`localStorage.meridian-theme` persists as `light` in every case.
 
-The result was that the "light" capture for every workspace after the first was in fact a **dark** render — which
-is why the comparison images in this package show what looks like no theme difference. Measured on the saved
-captures: Today's two themes differed by 101.6 mean luminance while Plan, Activity and Accounts differed by
-**0.1**, i.e. indistinguishable. The images were labelled light and looked plausible side by side, so comparing
-the two passes showed *no* difference rather than an obvious error; only a luminance check caught it.
+**(b) A separate defect in our capture tooling, which is mine.** The "light" capture for every workspace after the
+first was in fact a dark render, because `theme.js` resolves `localStorage` **before** `prefers-color-scheme` and
+`capture_meridian_matrix.py` opened one context per (viewport, theme) and then reused a **single page across every
+workspace**, relying only on `color_scheme` emulation. So once the app had written `meridian-theme`, every later
+page load in that context kept the stored value, and only the **first** workspace captured in each context got the
+emulated scheme.
 
-The fix pins `localStorage` to the same theme the harness passes as `color_scheme`, before any app script runs.
-Re-verified on a fresh 80-capture matrix: deltas are now 114.7 (Today), 144.0 (Plan), 175.8 (Activity) and
-159.9 (Accounts).
+What I actually verified the first time was **initial theme resolution** — the app gets that right on every
+workspace. That is a *different code path* from clicking the toggle, and I generalised from it to "the application
+is correct" without testing the interaction the owner had reported. Don't repeat that error: resolution and
+toggling are separate paths, and a passing probe of one says nothing about the other.
 
 **Consequence for this package, and please read this before using it:** the ten PNGs shipped here were produced by
 the **buggy** tooling. Their "current light" panels are dark renders for Plan, Activity and Accounts. They remain
