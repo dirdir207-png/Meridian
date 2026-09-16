@@ -864,6 +864,32 @@
         "artifacts": "design-qa.md Accounts panel section",
         "limits": "The concept's panel is full width; here it takes 2.1fr beside the Liabilities card so no figure is dropped. Coloured account medallions with their connector rail, the connection strip and the Assets & documents ticket remain open. Not deployed."
       }
+    },
+    {
+      "id": "OS-032",
+      "title": "Accounts: account medallion from the supplied frame asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-031"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Each account row carries the supplied medallion frame asset, not a redrawn approximation",
+        "The kit's stated anatomy holds: supplied frame above a code-owned coloured disk and semantic icon",
+        "The disk tint follows the concept's role colours, with no invented signal for unseen roles",
+        "The semantic role icons are preserved rather than traded for a weaker kit mapping",
+        "The glyph stays decorative alongside a visible label"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Accounts (concept 04), account medallion",
+        "tests": "tests/meridian/test_accounts_medallion.py 3 new guards, one of which fails if the treatment regresses to the previous rounded square; full non-browser suite 1159 passed / 1 skipped",
+        "capture": "artifacts/observatory-accounts-medallion-2026-09-16/ (Accounts, 5 viewports x 2 themes; zero overflow, zero console errors)",
+        "artifacts": "design-qa.md Accounts medallion section",
+        "limits": "The connector rail linking the medallions, the connection strip and the Assets & documents ticket remain open. Not deployed."
+      }
     }
   ]
 }

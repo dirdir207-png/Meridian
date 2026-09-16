@@ -1,5 +1,33 @@
 # Enhanced SimpleCrew — Current Status
 
+## Accounts — the account medallion from the supplied frame asset (2026-09-16)
+
+Accounts batch 2, and the concept's most distinctive motif: each account row carries a coloured medallion.
+The kit supplies the frame and names its contract in one sentence — `medallion-frame.png` is a *"Decorative frame
+above a code-owned colored disk and semantic SVG icon."* Opening the asset confirmed it is a brass double ring
+with four evenly-spaced rivets, so all three layers are now present: the supplied ring above a tinted disk, with
+the role's icon on top.
+
+The disk tint follows the concept's three colours — lilac for cash, mint for savings, apricot for investments —
+with a quieter slate for the roles the concept does not show. Choosing a signal colour for those would say
+something the data does not, so they stay neutral.
+
+**I deliberately did not swap the glyph set, and the reason is in the kit itself.** The kit's vocabulary
+prescribes `bank` for reserves and supplies no equivalent for liabilities, investments or reimbursements. Our
+five role line-icons already distinguish those cases accurately, so replacing them would have lost meaning rather
+than gained fidelity. The `bank`-for-reserves instruction is recorded in the code comment next to the tint map,
+and a guard asserts all five role icons survive, so a later pass cannot quietly drop them.
+
+Verified: `tests/meridian/test_accounts_medallion.py` 3 new guards — including one that would fail if the
+treatment regressed to the previous rounded square, so the guard is not satisfiable by a weaker implementation.
+Full non-browser suite `./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1159 passed, 1 skipped**;
+Ruff and `git diff --check` clean. Capture at 5 viewports × 2 themes in
+`artifacts/observatory-accounts-medallion-2026-09-16/` with zero overflow and zero console errors, inspected at
+1440×900 and 420×912.
+
+Deployed: nothing. No route, data, financial, provider or authority change. Still open in Accounts: the concept's
+connector rail linking the medallions, the connection strip, and the "Assets & documents" ticket.
+
 ## Accounts — the parchment summary panel from the supplied ticket and dome (2026-09-16)
 
 Track D reaches the fourth workspace, against concept **04**. Its dominant element is a large parchment panel

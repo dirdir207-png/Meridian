@@ -24,6 +24,23 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Accounts — account medallions (2026-09-16, batch 2)
+
+![Accounts desktop light, account medallions with the kit ring](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-medallion-2026-09-16/accounts-desktop-light-viewport.png)
+
+Read against concept **04**: each account row now carries the concept's medallion — a coloured disk inside the
+kit's brass double ring with its four rivets. **Accepted as matching** for the medallion's anatomy and the row's
+colour rhythm (lilac for cash, mint for savings).
+
+The kit states the anatomy as a contract — "Decorative frame above a code-owned colored disk and semantic SVG
+icon" — and all three layers are present: supplied ring, tinted disk, role icon. The glyphs were deliberately
+*not* swapped for the kit set: the kit prescribes `bank` for reserves and has no equivalent for liabilities,
+investments or reimbursements, so the existing role icons carry more meaning than the kit vocabulary would.
+
+Still open in Accounts, and not claimed: the concept's connector rail linking the medallions, the connection
+strip, and the "Assets & documents" ticket. Note the row beneath the preview banner in the mobile capture is
+partly covered by that fixed banner — a capture artefact, not a clipped medallion.
+
 ## Accounts — parchment summary panel (2026-09-16, batch 1)
 
 ![Accounts mobile-air light, parchment summary panel](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-ticket-2026-09-16/accounts-mobile-air-light-viewport.png)

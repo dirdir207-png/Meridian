@@ -215,16 +215,49 @@
   border-bottom: 0;
 }
 
-/* Identity icon tile (line icon set) */
+/* Account medallion (concept 04). The kit's medallion-frame.png is a brass double ring
+   with four rivets, specified as a "decorative frame above a code-owned colored disk and
+   semantic SVG icon" -- so the ring is supplied art layered above a disk whose tint we
+   own, with the role's line icon keeping its meaning on top. The frame image carries a
+   large transparent centre, so it can sit over the ink without masking it. */
 .m-account-icon {
+  position: relative;
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   display: grid;
   place-items: center;
-  border-radius: var(--m-radius-md);
-  background: var(--m-surface-muted);
-  color: var(--m-ink-muted);
+  border-radius: 50%;
+  background: var(--medallion-tint, var(--m-surface-muted));
+  color: #20263b;
+}
+
+.m-account-icon::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/medallion-frame.png") center / contain no-repeat;
+  pointer-events: none;
+}
+
+.m-account-icon[data-tint="lilac"] {
+  --medallion-tint: #c1a9e2;
+}
+
+.m-account-icon[data-tint="mint"] {
+  --medallion-tint: #a5d4bf;
+}
+
+.m-account-icon[data-tint="apricot"] {
+  --medallion-tint: #f3b272;
+}
+
+.m-account-icon[data-tint="coral"] {
+  --medallion-tint: #e8a48c;
+}
+
+.m-account-icon[data-tint="slate"] {
+  --medallion-tint: #b9c2d2;
 }
 
 .m-account-icon svg {

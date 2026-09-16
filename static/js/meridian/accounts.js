@@ -19,6 +19,29 @@ function roleIcon(role) {
   return ROLE_ICONS[role] || ROLE_ICONS.other;
 }
 
+/* Concept 04's account medallion. The kit's medallion-frame.png is a brass double ring
+   with four rivets, which the kit specifies as a "decorative frame above a code-owned
+   colored disk and semantic SVG icon" -- so the disk tint is ours to choose while the
+   frame is the supplied art. The three tints the concept shows map to cash, savings and
+   investments; the remaining roles take a quieter slate because the concept does not
+   show them and inventing a signal colour would say something the data does not.
+
+   The glyphs stay the existing role line-icons. The kit's vocabulary prescribes `bank`
+   for reserves but supplies no equivalent for liabilities or reimbursements, so
+   swapping the set would lose meaning rather than gain fidelity. */
+const ROLE_TINTS = {
+  cash: "lilac",
+  savings: "mint",
+  investments: "apricot",
+  liabilities: "coral",
+  reimbursements: "mint",
+  other: "slate",
+};
+
+function roleTint(role) {
+  return ROLE_TINTS[role] || "slate";
+}
+
 /* ---------- Formatting helpers ---------- */
 
 function textNode(tag, className, text) {
@@ -92,6 +115,7 @@ function accountRow(account, role) {
   const icon = document.createElement("span");
   icon.className = "m-account-icon";
   icon.dataset.accountIcon = role;
+  icon.dataset.tint = roleTint(role);
   icon.innerHTML = roleIcon(role);
   icon.setAttribute("aria-hidden", "true");
 

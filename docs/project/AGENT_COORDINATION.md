@@ -52,6 +52,8 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (Accounts: parchment summary panel) | `templates/meridian/partials/accounts.html`, `static/css/meridian/accounts.css`, `tests/meridian/test_accounts_ticket.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-16 | **released** at `f368ba0`. Track D Accounts, batch 1: the cash figure moves onto the kit's parchment ticket, the asset the kit names for an account summary, with the Accounts decorative vignette beside it. The capture caught a parchment contrast failure (pale label at equal specificity) now fixed and pinned. **No** route, data, financial or authority change. |
 
+| Builder (Accounts: account medallion) | `static/js/meridian/accounts.js`, `static/css/meridian/accounts.css`, `tests/meridian/test_accounts_medallion.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-16 | active. Track D Accounts, batch 2: each row carries the concept's medallion — the supplied brass ring above a code-owned tinted disk with the role icon on top, exactly the anatomy the kit specifies. The role glyph set is kept deliberately (the kit supplies no equivalent for three of five roles). **No** route, data, financial or authority change. |
+
 ## Log (append only — newest first)
 
 ### 2026-09-16 — Builder (Observatory identity slice) — claimed step 2 of the owner-directed handoff
