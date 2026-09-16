@@ -30,6 +30,9 @@ This closes the three items the handoff names for Today: shaped ticket, prominen
 real coordinates — plus the semantic badge work its `Nuances` section requires. Deployed: nothing. No route,
 data, financial, provider or authority change. **Plan (concept 02) is the next Track D workspace.**
 
+Committed as three precise batches: `7077f1e` (semantic badges, pointer, callout legibility), `4d5f0e1` (shaped
+ticket), `e028725` (connector runs and their geometry proof).
+
 ## Today — shaped evidence ticket from the supplied asset (2026-09-16)
 
 Handoff step 3, second batch. The evidence ticket was a rectangular parchment card: `ticket-corners.svg` drew
