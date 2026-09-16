@@ -111,6 +111,9 @@ function accountRow(account, role) {
   const row = document.createElement("article");
   row.className = "m-account-row";
   row.dataset.accountRow = "";
+  // The tint lives on the row as well as the medallion so the connector rail's node can
+  // inherit the same colour without the two reading from separate sources.
+  row.dataset.tint = roleTint(role);
 
   const icon = document.createElement("span");
   icon.className = "m-account-icon";

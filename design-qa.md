@@ -24,6 +24,20 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Accounts — connector rail (2026-09-16, batch 3)
+
+![Accounts desktop dark, dashed connector rail with per-row nodes](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-rail-2026-09-16/accounts-desktop-dark-viewport.png)
+
+Read against concept **04**: the account rows are now threaded on the concept's dashed rail, with a small node
+beside each medallion in that row's own tint. **Accepted as matching** for the rail's placement and the
+constellation reading — the medallions belong to one structure rather than floating as separate tiles.
+
+The rail stops at the first and last medallion centres instead of running the full row height, and rows without a
+medallion (archived) are excluded rather than given a node that marks nothing. Its 30px left gutter costs real
+width, so mobile was checked explicitly: zero overflow at all five viewports.
+
+Still open in Accounts, and not claimed: the connection strip and the "Assets & documents" ticket.
+
 ## Accounts — account medallions (2026-09-16, batch 2)
 
 ![Accounts desktop light, account medallions with the kit ring](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-medallion-2026-09-16/accounts-desktop-light-viewport.png)

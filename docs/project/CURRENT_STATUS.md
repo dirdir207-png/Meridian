@@ -1,5 +1,33 @@
 # Enhanced SimpleCrew — Current Status
 
+## Accounts — the connector rail (2026-09-16)
+
+Accounts batch 3 completes the medallion motif. Concept 04 does not just place three medallions; it threads the
+rows on a dashed rail with a small node beside each one, so the accounts read as the concept's *"financial
+constellation"* rather than a stack of separate tiles. The rows now carry that rail, with each node in its own
+row's tint — lilac beside cash, mint beside savings.
+
+Three details make it read as a deliberate rail rather than a stray border, and each has a guard:
+
+- **The line stops at the end medallions.** `:first-child` starts the rail at the row's vertical centre and
+  `:last-child` ends it there, so it never dangles past the first or last node.
+- **Rows without a medallion are excluded.** Archived rows carry no medallion, so a node beside one would mark
+  nothing; the selector is scoped `:not(.m-account-row-archived)`.
+- **The node colour comes from the row, not the medallion.** The tint attribute now sits on the row as well, so
+  the rail reads one token instead of needing a second colour table to drift out of sync.
+
+The rail required a 30px left gutter on the row so it sits clear of the medallion. That costs real width, so I
+checked mobile specifically rather than assuming: it holds, with zero overflow in the manifest at all five
+viewports.
+
+Verified: `tests/meridian/test_accounts_rail.py` 3 new guards; full non-browser suite
+`./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1162 passed, 1 skipped**; Ruff and
+`git diff --check` clean. Capture at 5 viewports × 2 themes in `artifacts/observatory-accounts-rail-2026-09-16/`
+with zero overflow and zero console errors, inspected at 1440×900 and 420×912.
+
+Deployed: nothing. No route, data, financial, provider or authority change. Still open in Accounts: the
+connection strip and the "Assets & documents" ticket.
+
 ## Accounts — the account medallion from the supplied frame asset (2026-09-16)
 
 Accounts batch 2, and the concept's most distinctive motif: each account row carries a coloured medallion.

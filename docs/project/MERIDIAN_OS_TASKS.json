@@ -890,6 +890,32 @@
         "artifacts": "design-qa.md Accounts medallion section",
         "limits": "The connector rail linking the medallions, the connection strip and the Assets & documents ticket remain open. Not deployed."
       }
+    },
+    {
+      "id": "OS-033",
+      "title": "Accounts: connector rail linking the account medallions",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-032"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Account rows are threaded on the concept's dashed rail with a node per medallion",
+        "The rail stops at the first and last medallion centres rather than dangling past them",
+        "Rows that carry no medallion are excluded instead of being given a node that marks nothing",
+        "The node colour derives from the row's own tint rather than a second colour table",
+        "The rail is decorative and its gutter does not overflow at any governed viewport"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Accounts (concept 04), connector rail",
+        "tests": "tests/meridian/test_accounts_rail.py 3 new guards; full non-browser suite 1162 passed / 1 skipped",
+        "capture": "artifacts/observatory-accounts-rail-2026-09-16/ (Accounts, 5 viewports x 2 themes; zero overflow, zero console errors)",
+        "artifacts": "design-qa.md Accounts rail section",
+        "limits": "The connection strip and the Assets & documents ticket remain open. Not deployed."
+      }
     }
   ]
 }

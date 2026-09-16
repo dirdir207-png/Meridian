@@ -240,29 +240,79 @@
   pointer-events: none;
 }
 
-.m-account-icon[data-tint="lilac"] {
+.m-account-icon[data-tint="lilac"],
+.m-account-row[data-tint="lilac"] {
   --medallion-tint: #c1a9e2;
 }
 
-.m-account-icon[data-tint="mint"] {
+.m-account-icon[data-tint="mint"],
+.m-account-row[data-tint="mint"] {
   --medallion-tint: #a5d4bf;
 }
 
-.m-account-icon[data-tint="apricot"] {
+.m-account-icon[data-tint="apricot"],
+.m-account-row[data-tint="apricot"] {
   --medallion-tint: #f3b272;
 }
 
-.m-account-icon[data-tint="coral"] {
+.m-account-icon[data-tint="coral"],
+.m-account-row[data-tint="coral"] {
   --medallion-tint: #e8a48c;
 }
 
-.m-account-icon[data-tint="slate"] {
+.m-account-icon[data-tint="slate"],
+.m-account-row[data-tint="slate"] {
   --medallion-tint: #b9c2d2;
 }
 
 .m-account-icon svg {
   width: 22px;
   height: 22px;
+}
+
+/* ---------- Connector rail (concept 04) ---------- */
+
+/* The concept threads its account rows on a dashed rail with a small node per row, so
+   the medallions read as one constellation rather than a stack of separate tiles. The
+   rail lives in the row's left gutter, clear of the medallion, and it is decorative. The
+   line stops at the medallion centres on the first and last rows instead of dangling
+   past them. Archived rows carry no medallion, so they are excluded rather than given a
+   node that marks nothing. */
+.m-account-row {
+  position: relative;
+  padding-left: 30px;
+}
+
+.m-account-list .m-account-row:not(.m-account-row-archived)::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed var(--m-border-strong);
+  pointer-events: none;
+}
+
+.m-account-list .m-account-row:first-child::before {
+  top: 50%;
+}
+
+.m-account-list .m-account-row:last-child::before {
+  bottom: 50%;
+}
+
+.m-account-list .m-account-row:not(.m-account-row-archived)::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--medallion-tint, var(--m-ink-faint));
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .m-account-identity {

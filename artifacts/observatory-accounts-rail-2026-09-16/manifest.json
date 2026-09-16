@@ -1,0 +1,204 @@
+{
+  "captures": [
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-rail-2026-09-16/accounts-desktop-light-full.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "4fb794a91489c24382b3333299e534d73ede2742",
+      "captured_at": "2026-09-16T07:39:47.568734Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-desktop-light-viewport.png",
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-desktop-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-rail-2026-09-16/accounts-desktop-dark-full.png",
+      "viewport": "desktop",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "4fb794a91489c24382b3333299e534d73ede2742",
+      "captured_at": "2026-09-16T07:39:49.463482Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-desktop-dark-viewport.png",
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-desktop-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-rail-2026-09-16/accounts-tablet-light-full.png",
+      "viewport": "tablet",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "4fb794a91489c24382b3333299e534d73ede2742",
+      "captured_at": "2026-09-16T07:39:50.700442Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-tablet-light-viewport.png",
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-tablet-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-rail-2026-09-16/accounts-tablet-dark-full.png",
+      "viewport": "tablet",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "4fb794a91489c24382b3333299e534d73ede2742",
+      "captured_at": "2026-09-16T07:39:51.885985Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-tablet-dark-viewport.png",
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-tablet-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-light-full.png",
+      "viewport": "mobile",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "4fb794a91489c24382b3333299e534d73ede2742",
+      "captured_at": "2026-09-16T07:39:54.000879Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-light-viewport.png",
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-dark-full.png",
+      "viewport": "mobile",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "4fb794a91489c24382b3333299e534d73ede2742",
+      "captured_at": "2026-09-16T07:39:56.107839Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-dark-viewport.png",
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-small-light-full.png",
+      "viewport": "mobile-small",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "4fb794a91489c24382b3333299e534d73ede2742",
+      "captured_at": "2026-09-16T07:39:58.180827Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-small-light-viewport.png",
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-small-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-small-dark-full.png",
+      "viewport": "mobile-small",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "4fb794a91489c24382b3333299e534d73ede2742",
+      "captured_at": "2026-09-16T07:40:00.218877Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-small-dark-viewport.png",
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-small-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-air-light-full.png",
+      "viewport": "mobile-air",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "4fb794a91489c24382b3333299e534d73ede2742",
+      "captured_at": "2026-09-16T07:40:02.514647Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-air-light-viewport.png",
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-air-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-air-dark-full.png",
+      "viewport": "mobile-air",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "4fb794a91489c24382b3333299e534d73ede2742",
+      "captured_at": "2026-09-16T07:40:04.699577Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-air-dark-viewport.png",
+        "artifacts/observatory-accounts-rail-2026-09-16/accounts-mobile-air-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    }
+  ]
+}

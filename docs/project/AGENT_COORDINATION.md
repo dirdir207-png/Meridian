@@ -54,6 +54,8 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (Accounts: account medallion) | `static/js/meridian/accounts.js`, `static/css/meridian/accounts.css`, `tests/meridian/test_accounts_medallion.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-16 | **released** at `4cdac31`. Track D Accounts, batch 2: each row carries the concept's medallion — the supplied brass ring above a code-owned tinted disk with the role icon on top, exactly the anatomy the kit specifies. The role glyph set is kept deliberately (the kit supplies no equivalent for three of five roles). **No** route, data, financial or authority change. |
 
+| Builder (Accounts: connector rail) | `static/js/meridian/accounts.js`, `static/css/meridian/accounts.css`, `tests/meridian/test_accounts_rail.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-16 | active. Track D Accounts, batch 3: the rows are threaded on the concept's dashed rail with a node per medallion in that row's tint, completing the constellation reading. The rail stops at the end medallions, skips rows with no medallion, and its 30px gutter was checked at mobile. **No** route, data, financial or authority change. |
+
 ## Log (append only — newest first)
 
 ### 2026-09-16 — Builder (Observatory identity slice) — claimed step 2 of the owner-directed handoff
