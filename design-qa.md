@@ -24,6 +24,31 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Plan — the folded allocation map (2026-09-16)
+
+![Plan mobile-air dark, folded allocation map](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-plan-map-2026-09-16/plan-mobile-air-dark-viewport.png)
+
+![Plan desktop dark, folded allocation map](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-plan-map-2026-09-16/plan-desktop-dark-viewport.png)
+
+Read against concept **02**: the allocation is now the folded parchment map from the kit, installed below the tabs
+and ahead of the coverage/funding summary, carrying one medallion per segment — Bills on the left station, Goals
+on the right, Available pinned to the lower hub — joined to a decorative compass rose by brass rules. Every
+figure is HTML: the art holds no money and no labels, and the stations are fixed by the concept rather than sized
+by the amounts, so the map never claims to encode the split the way the removed stacked bar did.
+
+**Accepted as matching** for the allocation map: art, silhouette, stations, medallion anatomy, rules and typography
+hierarchy. Two defects were caught by inspecting the capture rather than the tests — a bank glyph on the Goals
+medallion (the handoff maps goals to `flag`) and invisible glyphs on the navy medallion (an `<img>` cannot inherit
+`currentColor`, so the glyphs are now CSS masks). Both are fixed and visible in the image above.
+
+**Still open in Plan**, and deliberately not claimed: the concept's per-medallion status tags such as "Reserved"
+(the service exposes no per-segment status, and inventing one would present inference as fact), the row-level
+scale lines and chevrons on the commitment rows, the perforated "Next income" strip, the bottom apricot CTA, and
+the exact header/tab order. The coverage donut remains where the concept has none — a later batch decision, since
+removing it would drop a real funding figure.
+
+Evidence: `artifacts/observatory-plan-map-2026-09-16/` (4 viewports × 2 themes, full-page included).
+
 ## Today — connector runs (2026-09-16, step 3 batch 3)
 
 ![Today mobile-air dark, connector runs](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-today-connectors-2026-09-16/today-mobile-air-dark-viewport.png)

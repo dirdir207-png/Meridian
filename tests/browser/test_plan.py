@@ -134,8 +134,18 @@ def test_plan_renders_command_timeline_and_allocation():
         assert timeline_rows.count() == 1
         assert "Vacation" in timeline_rows.nth(0).inner_text()
 
-        legend_items = page.locator("[data-allocation-legend] li")
-        assert legend_items.count() == 3
+        # Concept 02 renders the allocation as medallions on the kit's folded map, so
+        # each payload segment must reach a station with its own label and amount, and
+        # the decorative art and rules must stay out of the accessibility tree.
+        medallions = page.locator("[data-allocation-medallions] .m-plan-medallion")
+        assert medallions.count() == 3
+        assert "Committed to commitments" in medallions.nth(0).inner_text()
+        assert "250" in medallions.nth(0).inner_text()
+        assert "Unfunded commitments" in medallions.nth(1).inner_text()
+        assert "Available" in medallions.nth(2).inner_text()
+        assert "500" in medallions.nth(2).inner_text()
+        assert page.locator("[data-allocation-links]").get_attribute("aria-hidden") == "true"
+        assert page.locator("[data-allocation-map] .m-plan-map-hub").get_attribute("aria-hidden") == "true"
 
         cards = page.locator("[data-commitment-card]")
         assert cards.count() == 2

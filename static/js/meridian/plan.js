@@ -183,36 +183,107 @@ function renderFundingCard(root, plan, activeRuleCount) {
 
 /* ---------- Allocation + timeline ---------- */
 
-const SEGMENT_CLASSES = {
-  "Committed to commitments": "is-committed",
-  "Unfunded commitments": "is-unfunded",
-  "Available": "is-available",
+/* Stations on the kit's folded map. These are composition, not data: the art carries
+   no money and no labels, and its constellations encode nothing, so a medallion's
+   place is fixed by the concept and only its label and amount come from the plan.
+   "Available" always takes the lower hub, because that is the station the concept
+   reserves for the money that is left over; the other segments take left then right
+   in the order the service returns them, and any further segment reuses the last
+   station rather than inventing a position the concept does not define. */
+const ALLOCATION_STATIONS = {
+  hub: { left: 50, top: 24 },
+  left: { left: 24, top: 38, modifier: "is-left" },
+  right: { left: 76, top: 38, modifier: "is-right" },
+  available: { left: 50, top: 74, modifier: "is-available" },
+  extra: { left: 50, top: 88, modifier: "is-extra" },
 };
 
-function renderAllocation(root, plan) {
-  const bar = root.querySelector("[data-allocation-bar]");
-  const legend = root.querySelector("[data-allocation-legend]");
-  bar.replaceChildren();
-  legend.replaceChildren();
+/* Semantic kit glyph per segment, reusing the vocabulary the handoff fixes: the
+   compass for what is still free to allocate, a bell for an unfunded shortfall, and
+   the bank for money already committed. */
+function allocationIcon(label) {
+  if (/available/i.test(label)) return "compass";
+  if (/goal/i.test(label)) return "flag";
+  if (/unfund/i.test(label)) return "bell";
+  return "bank";
+}
 
-  const cash = plan.allocation.cash_total || 0;
-  for (const segment of plan.allocation.segments) {
-    if (cash > 0 && segment.amount > 0) {
-      const slice = document.createElement("span");
-      slice.className = SEGMENT_CLASSES[segment.label] || "";
-      slice.style.width = `${(segment.amount / cash) * 100}%`;
-      bar.appendChild(slice);
+function renderAllocation(root, plan) {
+  const host = root.querySelector("[data-allocation-medallions]");
+  const links = root.querySelector("[data-allocation-links]");
+  if (!host) return;
+  host.replaceChildren();
+  if (links) links.replaceChildren();
+
+  const segments = plan.allocation?.segments || [];
+  let side = 0;
+  for (const segment of segments) {
+    let station;
+    if (/available/i.test(segment.label)) {
+      station = ALLOCATION_STATIONS.available;
+    } else if (side === 0) {
+      station = ALLOCATION_STATIONS.left;
+      side = 1;
+    } else if (side === 1) {
+      station = ALLOCATION_STATIONS.right;
+      side = 2;
+    } else {
+      station = ALLOCATION_STATIONS.extra;
     }
-    const item = document.createElement("li");
-    item.className = "m-allocation-legend-item";
-    const swatch = document.createElement("span");
-    swatch.className = `swatch ${SEGMENT_CLASSES[segment.label] || ""}`;
-    item.appendChild(swatch);
-    item.appendChild(
-      document.createTextNode(`${segment.label}: ${money(segment.amount)}`)
+
+    if (links) {
+      const rule = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      rule.setAttribute("x1", String(station.left));
+      rule.setAttribute("y1", String(station.top));
+      rule.setAttribute("x2", String(ALLOCATION_STATIONS.hub.left));
+      rule.setAttribute("y2", String(ALLOCATION_STATIONS.hub.top));
+      links.appendChild(rule);
+    }
+
+    const medallion = document.createElement("article");
+    medallion.className = `m-plan-medallion ${station.modifier}`;
+    medallion.style.left = `${station.left}%`;
+    medallion.style.top = `${station.top}%`;
+    medallion.dataset.segment = segment.label;
+
+    const disk = document.createElement("span");
+    disk.className = "m-plan-medallion-disk";
+    disk.setAttribute("aria-hidden", "true");
+    /* A CSS mask, not an <img>: inside an image an external SVG's currentColor
+       resolves to black, which would vanish on the navy "right" medallion. */
+    const glyph = document.createElement("span");
+    glyph.className = "m-plan-medallion-glyph";
+    glyph.style.setProperty(
+      "--m-medallion-icon",
+      `url("/static/img/meridian/observatory/kit-2026-09-16/icons/${allocationIcon(segment.label)}.svg")`
     );
-    legend.appendChild(item);
+    disk.appendChild(glyph);
+
+    const label = document.createElement("span");
+    label.className = "m-plan-medallion-label";
+    label.textContent = segment.label;
+    const amount = document.createElement("strong");
+    amount.className = "m-plan-medallion-amount";
+    amount.textContent = money(segment.amount);
+
+    medallion.append(disk, label, amount);
+    host.appendChild(medallion);
   }
+
+  // The map's own compass rose: a decorative north point, never a money label.
+  const hub = document.createElement("span");
+  hub.className = "m-plan-map-hub";
+  hub.setAttribute("aria-hidden", "true");
+  hub.style.left = `${ALLOCATION_STATIONS.hub.left}%`;
+  hub.style.top = `${ALLOCATION_STATIONS.hub.top}%`;
+  const rose = document.createElement("span");
+  rose.className = "m-plan-map-hub-rose";
+  rose.style.setProperty(
+    "--m-medallion-icon",
+    'url("/static/img/meridian/observatory/kit-2026-09-16/icons/star.svg")'
+  );
+  hub.appendChild(rose);
+  host.appendChild(hub);
 }
 
 function renderTimeline(root, plan) {

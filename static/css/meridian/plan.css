@@ -443,59 +443,171 @@
 
 .m-plan-support {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--m-space-4);
   align-items: start;
 }
 
-.m-plan-allocation-section,
 .m-plan-timeline-section {
   min-width: 0;
 }
 
-.m-allocation-bar {
-  display: flex;
-  height: 14px;
-  border-radius: var(--m-radius-sm);
-  overflow: hidden;
-  background: var(--m-surface-muted);
-  margin-top: var(--m-space-3);
+/* ---------- Allocation map (concept 02) ---------- */
+
+/* The kit's folded-map art is the allocation backdrop. It carries no money and no
+   labels, and its constellations encode nothing, so every figure is HTML and each
+   medallion's station is fixed by the concept rather than by its amount. Text on the
+   parchment uses the same dark ink the ticket uses, not the shell's cream --m-ink. */
+.m-plan-map-section {
+  margin-bottom: var(--m-space-5);
 }
 
-.m-allocation-bar span {
-  display: block;
+.m-plan-map {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+  aspect-ratio: 1536 / 1024;
+}
+
+.m-plan-map-art {
+  position: absolute;
+  inset: 0;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/plan-map.png") center / contain no-repeat;
+}
+
+.m-plan-map-links {
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.m-allocation-bar .is-committed {
-  background: var(--m-information);
+.m-plan-map-links line {
+  stroke: rgba(146, 118, 66, 0.75);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
 
-.m-allocation-bar .is-unfunded {
-  background: var(--m-caution);
+.m-plan-map-medallions {
+  position: absolute;
+  inset: 0;
 }
 
-.m-allocation-bar .is-available {
-  background: var(--m-healthy);
+.m-plan-medallion {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  max-width: 34%;
+  text-align: center;
+  /* Production labels are far longer than the fixture's short ones ("Committed to
+     commitments"), so the block must wrap inside its station instead of running off
+     the parchment. The left/right stations sit low enough to keep the wrapped stack
+     inside the map's silhouette. */
+  overflow-wrap: anywhere;
 }
 
-.m-allocation-legend {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--m-space-4);
-  margin: var(--m-space-3) 0 0;
-  padding: 0;
-  font-size: var(--m-text-sm);
-  color: var(--m-ink-muted);
+.m-plan-medallion-disk {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #c1a9e2;
+  color: #20263b;
+  border: 2px solid #c6aa71;
+  box-shadow: inset 0 0 0 1px #20263b, inset 0 0 0 2px #c6aa71;
 }
 
-.m-allocation-legend .swatch {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  margin-right: var(--m-space-2);
+.m-plan-medallion.is-right .m-plan-medallion-disk {
+  background: #20263b;
+  color: #ead8b5;
+}
+
+.m-plan-medallion.is-available .m-plan-medallion-disk,
+.m-plan-medallion.is-extra .m-plan-medallion-disk {
+  background: #c6aa71;
+}
+
+.m-plan-medallion-glyph {
+  display: block;
+  width: 26px;
+  height: 26px;
+  background-color: currentColor;
+  -webkit-mask: var(--m-medallion-icon) center / contain no-repeat;
+  mask: var(--m-medallion-icon) center / contain no-repeat;
+}
+
+.m-plan-medallion-label,
+.m-plan-medallion-amount {
+  color: #2f2a20;
+  font-family: var(--m-font-serif);
+}
+
+.m-plan-medallion-label {
+  font-size: 1.05rem;
+  line-height: 1.15;
+}
+
+.m-plan-medallion-amount {
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.m-plan-map-hub {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #20263b;
+  border: 3px solid #c6aa71;
+  box-shadow: 0 0 0 3px rgba(32, 38, 59, 0.85);
+}
+
+.m-plan-map-hub-rose {
+  display: block;
+  width: 30px;
+  height: 30px;
+  background-color: #c6aa71;
+  -webkit-mask: var(--m-medallion-icon) center / contain no-repeat;
+  mask: var(--m-medallion-icon) center / contain no-repeat;
+}
+
+@media (max-width: 560px) {
+  .m-plan-medallion-disk {
+    width: 42px;
+    height: 42px;
+  }
+
+  .m-plan-medallion-glyph {
+    width: 20px;
+    height: 20px;
+  }
+
+  .m-plan-medallion-label {
+    font-size: 0.8rem;
+  }
+
+  .m-plan-medallion-amount {
+    font-size: 1.15rem;
+  }
+
+  .m-plan-map-hub {
+    width: 48px;
+    height: 48px;
+  }
+
+  .m-plan-map-hub-rose {
+    width: 22px;
+    height: 22px;
+  }
 }
 
 .m-timeline {

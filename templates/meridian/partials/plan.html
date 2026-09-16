@@ -44,6 +44,19 @@
 
   <div class="m-plan-view" data-plan-view-pane="plan">
 
+  {# The allocation map. Kit README: "install the map below the tabs with semantic
+     allocation summaries and separate medallions". The art carries no money and no
+     labels, and its constellations encode nothing, so every figure below is HTML and
+     a medallion's station is fixed by the concept rather than by its amount. #}
+  <section class="m-plan-map-section" aria-labelledby="allocation-heading">
+    <h3 class="m-visually-hidden" id="allocation-heading">Where the money sits</h3>
+    <div class="m-plan-map" data-allocation-map>
+      <div class="m-plan-map-art obs-art" aria-hidden="true"></div>
+      <svg class="m-plan-map-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false" data-allocation-links></svg>
+      <div class="m-plan-map-medallions" data-allocation-medallions></div>
+    </div>
+  </section>
+
   {# Summary-first grid: coverage orbit + next paycheck. #}
   <section class="m-plan-summary-grid" aria-label="Coverage and next funding">
     <article class="m-surface m-plan-coverage-card" aria-labelledby="coverage-heading">
@@ -98,14 +111,8 @@
     <p class="m-plan-table-footer" data-plan-next-funding hidden></p>
   </section>
 
-  {# Secondary support: allocation map + next-30-days timeline. #}
+  {# Secondary support: next-30-days timeline. #}
   <div class="m-plan-support">
-    <section class="m-surface m-plan-allocation-section" aria-labelledby="allocation-heading">
-      <h3 class="m-section-label" id="allocation-heading">Where the money sits</h3>
-      <div class="m-allocation-bar" data-allocation-bar></div>
-      <ul class="m-allocation-legend" data-allocation-legend></ul>
-    </section>
-
     <section class="m-surface m-plan-timeline-section" aria-labelledby="timeline-heading">
       <h3 class="m-section-label" id="timeline-heading">Next 30 days</h3>
       <p class="m-empty-note" data-timeline-empty hidden>No funding events projected yet.</p>

@@ -1,5 +1,57 @@
 # Enhanced SimpleCrew — Current Status
 
+## Plan — the folded allocation map from the supplied asset (2026-09-16)
+
+Track D moves to the second workspace, against concept **02**. The workspace led with a coverage donut and kept
+the allocation in a "secondary support" strip as a generic stacked bar plus a swatch legend
+(`data-allocation-bar`/`data-allocation-legend`). Concept 02 carries no bar and no legend: the allocation is a
+**folded parchment map** with separate medallions. The kit README is explicit — *"Plan: install the map below the
+tabs with semantic allocation summaries and separate medallions"* — and its `plan-map.png` ("Plan allocation
+backdrop; no money or labels in image") is that map.
+
+The bar and legend are replaced by the map, installed as the first block inside the plan view pane, ahead of the
+coverage/funding summary. It renders:
+
+- the kit's folded-map art as a CSS background at its own `1536 / 1024` aspect ratio, so it is never stretched;
+- one medallion per allocation segment, built from `plan.allocation.segments`, each with its own kit glyph, its
+  own label and its own amount — every figure stays code-owned HTML;
+- brass leader rules from each medallion to the map's hub, and a decorative compass rose at that hub.
+
+**Stations are composition, not data.** The kit warns that "constellations do not encode money", and the removed
+bar sized each slice by `amount / cash_total`, which is exactly the claim the map must not make. So a medallion's
+place is fixed by the concept: `Available` is pinned to the lower hub because that is the station the concept
+reserves for money left over, the other segments take left then right in service order, and any further segment
+reuses the last station rather than inventing a position the concept does not define.
+
+**Two defects found and fixed during verification, both visible in the capture.** The first render put a bank
+glyph on the Goals medallion; the handoff maps goals to `flag`, so the resolver now keys goals to `flag`. The
+second was worse: the glyphs were `<img>` elements, and an external SVG's `currentColor` resolves to black inside
+an image, so the glyph on the navy "right" medallion was nearly invisible. Glyphs and the compass rose are now
+CSS masks driven by a `--m-medallion-icon` custom property, so each disk colours its own glyph — dark ink on the
+lilac and brass disks, cream on the navy one.
+
+**Deliberately not claimed.** Concept 02 also tags each medallion with a status ("Reserved", "Available to
+plan."). The plan service exposes no per-segment status, and deriving one would present an inference as fact, so
+the medallions carry label and amount only. Also not yet matched in this workspace: the concept's row-level scale
+lines, its perforated "Next income" strip, its bottom apricot CTA and the exact header/tab order.
+
+**A production-vocabulary problem handled without inventing data.** The plan service emits `"Committed to
+commitments"` and `"Unfunded commitments"`, far longer than the preview fixture's `"Bills"`/`"Goals"`, and the
+medallion block had a 34% max-width with no wrap rule, so a long label could run off the parchment. The block now
+wraps inside its station and the left/right stations sit lower (32% → 38%) for headroom. The capture uses the
+synthetic fixture, so the long-label case is guarded by test rather than by pixel — that limit is recorded here
+rather than papered over.
+
+Verified: `tests/meridian/test_plan_map.py` 6 guards (order below the tabs, decorative art, stations not amounts,
+the wrap constraint, a regression guard for the mask-glyph defect, and the kit asset's SHA-256 against its
+manifest); full non-browser suite `./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1145 passed,
+1 skipped**; Ruff and `git diff --check` clean. `tests/browser/test_plan.py` was updated from the removed legend
+to assert the medallions (it is `APP_URL`-gated and unexecuted here). Capture at 5 viewports × 2 themes in
+`artifacts/observatory-plan-map-2026-09-16/` (zero overflow, zero console errors), inspected at 420×912 and
+1440×900.
+
+Deployed: nothing. No route, data, financial, provider or authority change.
+
 ## Today — coordinate-anchored connector runs (2026-09-16)
 
 Handoff step 3, third batch, and the last item the handoff names for Today. The concept ties each rim marker to

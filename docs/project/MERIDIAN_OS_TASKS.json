@@ -708,6 +708,33 @@
         "artifacts": "design-qa.md Today connector section",
         "limits": "Closes the Today items the handoff names. Plan (02) is next. Not deployed."
       }
+    },
+    {
+      "id": "OS-026",
+      "title": "Plan: folded allocation map with code-owned medallions from the supplied asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-025"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The allocation map is installed below the tabs, ahead of the coverage/funding summary",
+        "The map keeps the supplied asset's aspect ratio and is never stretched",
+        "Each allocation segment reaches a medallion with its own kit glyph, label and amount in HTML",
+        "A medallion's station is fixed by the concept; no station is sized by an amount",
+        "The art, the leader rules and the compass rose are decorative and never money-bearing",
+        "The consumed kit asset matches its manifest hash"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Plan (concept 02), allocation map",
+        "tests": "tests/meridian/test_plan_map.py 6 guards; full non-browser suite 1145 passed / 1 skipped; tests/browser/test_plan.py updated to assert the medallions (APP_URL-gated, unexecuted here)",
+        "capture": "artifacts/observatory-plan-map-2026-09-16/ (Plan, 5 viewports x 2 themes; zero overflow, zero console errors)",
+        "artifacts": "design-qa.md Plan section",
+        "limits": "Per-medallion status tags not claimed: the service exposes no per-segment status. Row scale lines, perforated income strip, bottom CTA and exact header/tab order remain open. Not deployed."
+      }
     }
   ]
 }
