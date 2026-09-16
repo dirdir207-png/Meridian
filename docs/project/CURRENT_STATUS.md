@@ -37,6 +37,10 @@ workspaces, Settings separation, URL persistence and focus behaviour are untouch
 the isolated preview, so no Settings parity is claimed — `05-settings` stays governed by handoff step 6. Next:
 handoff step 3, Today geometry and event callouts against concept 06.
 
+Committed as `82c5a174550f87370414ae625582b87ba042fd7e`. Governed evidence carrying the consumed kit hashes and
+the exact consuming revision is `artifacts/observatory-identity-2026-09-16/identity-evidence.json`; the 40-record
+contract manifest and the full-resolution captures sit beside it.
+
 ## Observatory artwork kit and preview comparison — 2026-09-16
 
 Implemented the owner's requested separate art handoff in `static/img/meridian/observatory/kit-2026-09-16/`: eight transparent decorative PNGs (map, telescope, observatory, moon, blank dial ring, blank ticket, action plate and medallion frame), 22 MIT SVG icons, two SIL OFL font files, a standalone gallery/board, scoped typography/color examples, prompts, provenance and hash manifest. These are reference-based reconstructions; the fonts and library icons are explicitly proposed matches, not recovered identities. Production UI files and existing assets are unchanged.
