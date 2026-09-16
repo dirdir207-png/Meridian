@@ -125,6 +125,22 @@ def capture_matrix(
                         reduced_motion="reduce",
                     )
                     context.add_init_script(_FREEZE_SCRIPT % json.dumps(frozen_clock))
+                    # Pin the theme authoritatively BEFORE any app script runs.
+                    #
+                    # Emulating `color_scheme` alone was not enough, and the resulting
+                    # captures were wrong in a way that survived review: theme.js resolves
+                    # localStorage first and only falls back to prefers-color-scheme, and
+                    # this context is reused across every workspace in the loop below.
+                    # So once the app had written `meridian-theme`, every later page load
+                    # in that context kept that stored value, and the "light" pass rendered
+                    # the dark theme for every workspace after the first. The images were
+                    # labelled light and looked plausible side by side, so a luminance
+                    # check was needed to catch it. `THEMES` is the same value the harness
+                    # passes as `color_scheme`, so the two can no longer disagree.
+                    context.add_init_script(
+                        "try { localStorage.setItem('meridian-theme', %s); } catch (e) {}"
+                        % json.dumps(theme)
+                    )
                     page = context.new_page()
                     console_errors: list[str] = []
                     page.on("pageerror", lambda error: console_errors.append(str(error)))
