@@ -1,5 +1,51 @@
 # Enhanced SimpleCrew — Current Status
 
+## Today — semantic badges, prominent pointer, callout legibility (2026-09-16)
+
+Handoff step 3, first batch, against concept **06** (functional dial/evidence) with **01** supporting.
+
+- **Semantic event glyphs.** `dial.js` mapped a badge by generic `kind` only, so every bill rendered the same
+  lightning bolt — the exact duplication the kit's `Nuances` and `README` call out. The dial service emits only
+  `kind` plus the commitment's own name, and `normalizeEvent` is a strict whitelist, so the glyph is now resolved
+  by `eventIconName(event)` from the event's own title, with the kit README's mapping (electricity →
+  `lightning-charge`, Internet → `wifi`, rent → `house`, groceries → `basket`, transit → `bus-front`,
+  entertainment → `controller`, reserves → `bank`, goal → `flag`, transfer → `arrow-right`) and a kind fallback.
+  Presentation only: no financial meaning is inferred, and an unrecognised name keeps the kind glyph. The badge
+  now reads its glyphs from the kit icon directory, which also forces the `goal`/`transfer` remap because the kit
+  has no `bullseye` or `arrow-left-right`.
+- **Badge weight.** The weightless navy `3px double` border with a separate brass outline was replaced by the
+  concept's anatomy: coloured disk, brass band with navy hairlines inside and outside (so the rim reads as two
+  fine rings), and rivets straddling the band. Rivets are darkened brass with a brass outline so they stay legible
+  on the lilac, mint, brass and grey disks.
+- **Pointer prominence.** The needle is now a 7px round-capped mint stroke with a glow and a 13px brass-rimmed
+  tip, and reaches further inward (radius 132 → 118). Both the render path and `paintSVGSelection` were updated —
+  the pointer start radius is computed in two places, and changing one alone would have made the needle snap on
+  the first repaint.
+
+**Medallion frame not used, with a measurement.** The kit's `medallion-frame.png` is the concept's rim-plus-rivets,
+but its native stroke measures 48px across a 1254px canvas, so at badge scale it collapses to ≈1.7px at 44px and
+≈2.5px at 64px — the *double* rim the nuance requires cannot survive there. It is specified for medallions up to
+627 CSS px (2x) / 418 (3x) and should be used when a medallion at that scale is introduced (Activity/Settings).
+The badge anatomy is reproduced in CSS at the small sizes instead.
+
+**Pre-existing defect fixed, with attribution.** `tests/browser/test_dial_fidelity.py` was already red at
+`HEAD 1a9599f` before this batch: `test_long_event_list_does_not_push_dial_down_or_split_amounts[390|420|430]`
+(3 failed, 14 passed). Confirmed pre-existing by stashing this batch's three files and reproducing the identical
+3 failures. Measured cause: at ≤700px the callout title spans the whole rail column, so the rail width *is* the
+title's measure — at 116px the column left 110px while the word "arrangement" measures 112.7px at 17px serif, so
+`overflow-wrap: break-word` split an ordinary word across two lines. Fix: rail 116 → 130px and title 17 → 16px.
+The suite is now **17 passed**.
+
+Verified: `tests/meridian/test_dial_js.py` 28 passed (4 new guards); full non-browser suite
+`./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1137 passed, 1 skipped**; `tests/browser/test_dial_fidelity.py`
+**17 passed** (was 3 failed / 14 passed); Ruff and `git diff --check` clean. Governed capture of Today at
+4 viewports × 2 themes in `artifacts/observatory-today-step3-2026-09-16/`; the rendered capture confirms the
+Internet badge resolving to the wifi glyph, the lightning bolt retained on Electric, the star on Payday's mint
+disk, and a single-line callout title.
+
+Deployed: nothing. No connector geometry, ticket art, route, data, financial, provider or authority change.
+Still open in step 3: coordinate-anchored connectors from dial markers to callouts, and the shaped ticket.
+
 ## Observatory shared identity — type, wordmark and navigation (2026-09-16)
 
 Owner correction recorded: the 2026-09-16 Astra handoff and its supplied kit are the **governing implementation

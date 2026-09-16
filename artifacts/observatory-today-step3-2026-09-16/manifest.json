@@ -1,0 +1,204 @@
+{
+  "captures": [
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-today-step3-2026-09-16/today-desktop-light-full.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "1a9599f69788dac80c356b3afeaa1f30e323efa7",
+      "captured_at": "2026-09-16T06:15:24.283004Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-today-step3-2026-09-16/today-desktop-light-viewport.png",
+        "artifacts/observatory-today-step3-2026-09-16/today-desktop-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-today-step3-2026-09-16/today-desktop-dark-full.png",
+      "viewport": "desktop",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "1a9599f69788dac80c356b3afeaa1f30e323efa7",
+      "captured_at": "2026-09-16T06:15:25.379908Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-today-step3-2026-09-16/today-desktop-dark-viewport.png",
+        "artifacts/observatory-today-step3-2026-09-16/today-desktop-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-today-step3-2026-09-16/today-tablet-light-full.png",
+      "viewport": "tablet",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "1a9599f69788dac80c356b3afeaa1f30e323efa7",
+      "captured_at": "2026-09-16T06:15:26.506422Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-today-step3-2026-09-16/today-tablet-light-viewport.png",
+        "artifacts/observatory-today-step3-2026-09-16/today-tablet-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-today-step3-2026-09-16/today-tablet-dark-full.png",
+      "viewport": "tablet",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "1a9599f69788dac80c356b3afeaa1f30e323efa7",
+      "captured_at": "2026-09-16T06:15:27.537756Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-today-step3-2026-09-16/today-tablet-dark-viewport.png",
+        "artifacts/observatory-today-step3-2026-09-16/today-tablet-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-today-step3-2026-09-16/today-mobile-light-full.png",
+      "viewport": "mobile",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "1a9599f69788dac80c356b3afeaa1f30e323efa7",
+      "captured_at": "2026-09-16T06:15:29.036666Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-light-viewport.png",
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-today-step3-2026-09-16/today-mobile-dark-full.png",
+      "viewport": "mobile",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "1a9599f69788dac80c356b3afeaa1f30e323efa7",
+      "captured_at": "2026-09-16T06:15:30.532834Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-dark-viewport.png",
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-today-step3-2026-09-16/today-mobile-small-light-full.png",
+      "viewport": "mobile-small",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "1a9599f69788dac80c356b3afeaa1f30e323efa7",
+      "captured_at": "2026-09-16T06:15:31.997694Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-small-light-viewport.png",
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-small-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-today-step3-2026-09-16/today-mobile-small-dark-full.png",
+      "viewport": "mobile-small",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "1a9599f69788dac80c356b3afeaa1f30e323efa7",
+      "captured_at": "2026-09-16T06:15:33.434855Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-small-dark-viewport.png",
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-small-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-today-step3-2026-09-16/today-mobile-air-light-full.png",
+      "viewport": "mobile-air",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "1a9599f69788dac80c356b3afeaa1f30e323efa7",
+      "captured_at": "2026-09-16T06:15:34.869878Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-air-light-viewport.png",
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-air-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-today-step3-2026-09-16/today-mobile-air-dark-full.png",
+      "viewport": "mobile-air",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "1a9599f69788dac80c356b3afeaa1f30e323efa7",
+      "captured_at": "2026-09-16T06:15:36.424633Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-air-dark-viewport.png",
+        "artifacts/observatory-today-step3-2026-09-16/today-mobile-air-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    }
+  ]
+}

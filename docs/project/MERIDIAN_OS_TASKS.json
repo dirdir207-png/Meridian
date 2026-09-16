@@ -631,6 +631,32 @@
         "artifacts": "artifacts/observatory-identity-2026-09-16/identity-evidence.json",
         "limits": "No workspace geometry. Settings is absent from the isolated preview, so no Settings parity is claimed. Not deployed."
       }
+    },
+    {
+      "id": "OS-023",
+      "title": "Today step 3 batch 1: semantic event badges, prominent pointer, mobile callout legibility",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-022"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Each callout badge resolves a semantic glyph from the kit instead of repeating the kind glyph",
+        "Badges carry the concept anatomy: coloured disk, brass rim, rivets",
+        "The selection pointer is a prominent mint needle with a rimmed tip, updated in both render and repaint paths",
+        "Ordinary words no longer split in the mobile callout column",
+        "The pre-existing dial fidelity failures are attributed and resolved, not baselined"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 handoff step 3, batch 1 (concept 06, 01 supporting)",
+        "tests": "tests/meridian/test_dial_js.py 28 passed; full non-browser suite 1137 passed / 1 skipped; tests/browser/test_dial_fidelity.py 17 passed (was 3 failed / 14 passed at HEAD 1a9599f)",
+        "capture": "artifacts/observatory-today-step3-2026-09-16/ (Today, 4 viewports x 2 themes)",
+        "artifacts": "design-qa.md Today section",
+        "limits": "Connector geometry and the shaped ticket remain open. medallion-frame.png measured and deliberately unused at badge scale (48px native stroke collapses to ~1.7px at 44px). Not deployed."
+      }
     }
   ]
 }

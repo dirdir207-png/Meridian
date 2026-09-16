@@ -709,8 +709,8 @@
 .obs-dial-day-label.is-selected { color: #644780; }
 .obs-dial-caption--top { top: 5%; font-size: 10px; color: var(--obs-muted); }
 .obs-dial-caption--bottom { bottom: 26%; width: 34%; font: 13px/1.3 var(--obs-font-serif); color: #c5bad2; }
-.obs-dial-pointer-line { stroke: #a5d4bf; stroke-width: 4; }
-.obs-dial-pointer-tip { fill: #a5d4bf; stroke: #101a28; stroke-width: 3; r: 9px; }
+.obs-dial-pointer-line { stroke: #a5d4bf; stroke-width: 7; stroke-linecap: round; filter: drop-shadow(0 0 6px rgba(165, 212, 191, 0.55)); }
+.obs-dial-pointer-tip { fill: #a5d4bf; stroke: #c6aa71; stroke-width: 4; r: 13px; filter: drop-shadow(0 0 8px rgba(165, 212, 191, 0.6)); }
 .obs-dial-arc { stroke: #b9a87d; opacity: .5; }
 .obs-dial-tick, .obs-dial-tick--major { stroke: #725c36; }
 .obs-dial-date-heading { font-size: 24px; line-height: 1.2; font-weight: 400; color: var(--obs-paper); }
@@ -796,13 +796,38 @@ html[data-theme="light"] .obs-dial-range-label { color: #655d6c; }
    carry without depending on the theme. */
 .obs-dial-day-label.is-today { color: #5b3d16; text-shadow: none; }
 .obs-dial-caption--bottom { top: 68%; bottom: auto; left: 60%; width: 32%; font-size: 11px; }
-.obs-event-kind img { width: 22px; height: 22px; opacity: .85; }
-.obs-event-list--orbit .obs-event-kind { background: #c1a9e2; color: #20263b; border: 3px double #20263b; box-shadow: 0 0 0 1px #c6aa71; }
+.obs-event-kind img { width: 22px; height: 22px; opacity: 1; }
+/* Kit nuance: a coloured disk, a double brass rim and rivets. The navy hairlines sit
+   inside and outside the brass band so the rim reads as two fine rings rather than one
+   heavy border, and the rivets straddle the band. Rivets are darkened brass with a
+   brass outline so they stay legible on all four disk colours (lilac, mint, brass,
+   muted grey). */
+.obs-event-list--orbit .obs-event-kind {
+  position: relative;
+  background: #c1a9e2;
+  color: #20263b;
+  border: 2px solid #c6aa71;
+  box-shadow: inset 0 0 0 1px #20263b, inset 0 0 0 2px #c6aa71;
+}
+.obs-event-list--orbit .obs-event-kind::before,
+.obs-event-list--orbit .obs-event-kind::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 50%;
+  background: #20263b;
+  box-shadow: 0 0 0 1px #c6aa71;
+}
+.obs-event-list--orbit .obs-event-kind::before { left: -3px; }
+.obs-event-list--orbit .obs-event-kind::after { right: -3px; }
 .obs-event-list--orbit .obs-event-item[data-kind="income"] .obs-event-kind { background: #a5d4bf; color: #20263b; }
 .obs-event-list--orbit .obs-event-item[data-kind="goal"] .obs-event-kind { background: #c6aa71; color: #20263b; }
 .obs-event-list--orbit .obs-event-item[data-kind="transfer"] .obs-event-kind { background: #b7b8cb; color: #20263b; }
 html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
-.obs-dial-center-badge { display: grid; place-items: center; width: 38px; height: 38px; margin: 3px auto 5px; background: #c1a9e2; border: 3px double #20263b; outline: 1px solid #c6aa71; border-radius: 50%; }
+.obs-dial-center-badge { display: grid; place-items: center; width: 38px; height: 38px; margin: 3px auto 5px; background: #c1a9e2; border: 2px solid #c6aa71; box-shadow: inset 0 0 0 1px #20263b, inset 0 0 0 2px #c6aa71; border-radius: 50%; }
 .obs-dial-center-badge img { width: 22px; height: 22px; }
 .obs-dial-center-badge[hidden] { display: none; }
 .obs-dial-caption--bottom { display: none; }
@@ -865,7 +890,7 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
   .obs-event-list--orbit .obs-event-kind { width: 30px; height: 30px; min-width: 30px; grid-row: 1; }
   .obs-event-kind img { width: 17px; height: 17px; }
   .obs-event-list--orbit .obs-event-body { display: contents; }
-  .obs-event-list--orbit .obs-event-title { font-size: 17px; grid-column: 1 / -1; overflow-wrap: break-word; }
+  .obs-event-list--orbit .obs-event-title { font-size: 16px; grid-column: 1 / -1; overflow-wrap: break-word; }
   .obs-event-list--orbit .obs-event-date { font-size: 11px; grid-column: 2; align-self: center; }
   .obs-event-list--orbit .obs-event-meta { font-size: 10px; grid-column: 1 / -1; }
   .obs-event-list--orbit .obs-event-amount { font-size: 17px; grid-column: 1 / -1; letter-spacing: -.03em; white-space: nowrap; }
@@ -884,7 +909,7 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
 .obs-shell:has([data-workspace-section="today"]:not([hidden])) { background: #101a28; }
 html[data-theme="light"] .obs-shell:has([data-workspace-section="today"]:not([hidden])) { background: #f4ecdf; }
 @media (max-width: 700px) {
-  [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 116px; }
+  [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 130px; }
   .obs-dial-controls { width: 100%; }
   /* The concept's mobile header is the wordmark itself, so the shared mark is sized
      directly. The old "M" prefix and its font-size:0 suppression are gone. */

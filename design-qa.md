@@ -24,6 +24,27 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Today — badges, pointer and callout legibility (2026-09-16, step 3 batch 1)
+
+![Today mobile-air light, step 3 batch 1](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-today-step3-2026-09-16/today-mobile-air-light-viewport.png)
+
+![Today macOS desktop dark, step 3 batch 1](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-today-step3-2026-09-16/today-desktop-dark-viewport.png)
+
+Read against concept **06** in the review order: the callout column now distinguishes its events by glyph
+(Electric keeps the lightning bolt, Internet resolves to the wifi glyph, Payday to the star on its mint disk)
+instead of repeating one icon; each badge carries the concept's weighted anatomy — coloured disk, brass rim,
+rivets; the mint selection pointer reads as a needle with a rimmed tip rather than another engraved tick; and
+the callout titles are single-line at 390–430px instead of splitting mid-word.
+
+**Accepted as matching** for badges, pointer and callout legibility. **Still open** in step 3, and deliberately
+not claimed here: the dashed connector runs that tie a rim marker to its callout (no connector geometry exists
+yet at any width), and the shaped evidence ticket, which still renders as a rectangular parchment card with
+bracket corners rather than the supplied scalloped, riveted, fibrous silhouette.
+
+Evidence: full-resolution captures at 4 viewports × 2 themes in `artifacts/observatory-today-step3-2026-09-16/`.
+The kit's `medallion-frame.png` was measured and deliberately not used at badge scale: its 48px native stroke
+collapses to ≈1.7px at a 44px badge, so the double rim cannot survive there.
+
 ## Observatory shared identity — first handoff slice (2026-09-16)
 
 Authority corrected by the owner: the 2026-09-16 handoff and kit are the implementation specification, and the

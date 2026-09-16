@@ -234,3 +234,100 @@ def test_today_command_copy_matches_observatory_direction():
     assert "data-sts-horizon" in html
     assert 'class="obs-today-orbit" data-editorial-headline' in html
     assert html.index("data-today-safe") < html.index("data-observatory-dial-wrap")
+
+
+def test_dial_event_glyphs_come_from_the_kit_and_are_resolved_semantically():
+    """The kit README distinguishes electricity from Internet and maps the rest of
+    the semantic set. A kind-only glyph repeats one badge across unrelated bills, and
+    the legacy icon directory has no wifi/bank/house glyph to resolve to."""
+    js = _read("static/js/meridian/dial.js")
+    assert "export function eventIconName" in js
+    assert "/static/img/meridian/observatory/kit-2026-09-16/icons/" in js
+    assert "/static/img/meridian/observatory/icons/" not in js
+
+
+def test_dial_event_glyph_mapping_holds_under_node():
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is not available in this environment")
+    script = """
+      const { eventIconName } = await import('./static/js/meridian/dial.js');
+      const cases = [
+        [{ kind: 'bill', title: 'Electric' }, 'lightning-charge'],
+        [{ kind: 'bill', title: 'Internet' }, 'wifi'],
+        [{ kind: 'bill', title: 'Rent' }, 'house'],
+        [{ kind: 'bill', title: 'Groceries' }, 'basket'],
+        [{ kind: 'bill', title: 'Bus pass' }, 'bus-front'],
+        [{ kind: 'bill', title: 'Streaming subscription' }, 'controller'],
+        [{ kind: 'bill', title: 'Bill reserve' }, 'bank'],
+        [{ kind: 'income', title: 'Paycheck' }, 'star'],
+        [{ kind: 'goal', title: 'Japan trip' }, 'flag'],
+        [{ kind: 'transfer', title: 'Move to savings' }, 'arrow-right'],
+        [{ kind: 'bill', title: 'Zzz unrecognised' }, 'lightning-charge'],
+        [{ kind: undefined, title: undefined }, 'lightning-charge'],
+      ];
+      for (const [event, expected] of cases) {
+        const got = eventIconName(event);
+        if (got !== expected) {
+          throw new Error(`${JSON.stringify(event)}: expected ${expected}, got ${got}`);
+        }
+      }
+    """
+    result = subprocess.run(
+        [node, "--input-type=module", "-e", script],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_dial_pointer_is_prominent_and_keeps_a_mint_selection_cue():
+    """Handoff item 3: the pointer exists but its prominence needs work. It must read
+    as a needle with a bright rimmed tip, not as another engraved tick."""
+    css = _read("static/css/meridian/dial.css")
+    js = _read("static/js/meridian/dial.js")
+    assert "stroke: #a5d4bf; stroke-width: 7" in css
+    assert "stroke-linecap: round" in css
+    assert "r: 13px" in css
+    # The tip keeps a brass rim so it separates from the parchment ring beneath it.
+    assert "stroke: #c6aa71" in css
+    # The needle reaches further inward, so it reads as a pointer across the ring.
+    assert "positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 118, pointerAngle)" in js
+
+
+def test_dial_pointer_runs_stay_clear_of_the_centre_readout():
+    """Lengthening the needle must not drive it under the selected amount text."""
+    js = _read("static/js/meridian/dial.js")
+    assert "const pointerStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 118, pointerAngle);" in js
+    # The centre readout is a separate HTML overlay; the SVG needle stays outside it.
+    assert "VIEWBOX.r - 84, pointerAngle" in js
+
+
+def test_dial_event_badges_weight_the_rim_with_brass_and_rivets():
+    """Kit nuance: a coloured disk, a double brass rim and rivets. A plain navy
+    double border loses the brass weight the concept uses on every badge."""
+    css = _read("static/css/meridian/dial.css")
+    # The heavy navy double border and the thin brass outline it replaced are gone.
+    assert "3px double" not in css
+    assert "outline: 1px solid #c6aa71" not in css
+    # Brass band plus a double navy hairline now defines the rim.
+    assert "border: 2px solid #c6aa71" in css
+    assert "inset 0 0 0 1px #20263b, inset 0 0 0 2px #c6aa71" in css
+    assert ".obs-event-list--orbit .obs-event-kind::before" in css
+    assert ".obs-event-list--orbit .obs-event-kind::after" in css
+
+
+def test_mobile_callout_column_fits_ordinary_words():
+    """Diagnosed callout defect at ≤700px: the title spans the whole rail column, so the
+    rail width *is* the title's measure. At 116px the column left 110px while the word
+    "arrangement" measures 112.7px at 17px serif, so `overflow-wrap: break-word` split an
+    ordinary word across two lines. The rail now leaves room at 16px instead."""
+    css = _read("static/css/meridian/dial.css")
+    assert "grid-template-columns: minmax(0, 1fr) 130px" in css
+    assert (
+        ".obs-event-list--orbit .obs-event-title { font-size: 16px; "
+        "grid-column: 1 / -1; overflow-wrap: break-word; }" in css
+    )
+    assert "minmax(0, 1fr) 116px" not in css

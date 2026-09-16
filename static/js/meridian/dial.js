@@ -293,7 +293,7 @@ function renderInstrumentOverlay(state) {
   }
   const badge = document.createElement("span");
   badge.className = "obs-dial-center-badge";
-  if (selected) badge.appendChild(kindIcon(selected.kind));
+  if (selected) badge.appendChild(kindIcon(selected));
   else badge.hidden = true;
   if (amount.textContent.length > 10) amount.classList.add("obs-dial-center-amount--compact");
   center.append(kicker, badge, title, amount, status);
@@ -361,13 +361,56 @@ function fundingLabel(status) {
   return labels[status] || labels.unknown;
 }
 
-function kindIcon(kind) {
-  const icons = { bill: "lightning-charge", income: "star", goal: "bullseye", transfer: "arrow-left-right" };
+/* Kit README semantic mapping. The dial service emits only `kind` plus the
+   commitment's own name, so the badge glyph is resolved from the event's own
+   descriptive text and falls back to the kind default. This is presentation only:
+   no financial meaning is inferred, and an unrecognised name simply keeps the kind
+   glyph. Order matters — the first match wins. */
+const CATEGORY_ICONS = [
+  [/(electric|power|utility|energy|gas|water|sewer)/i, "lightning-charge"],
+  [/(internet|wifi|broadband|fibre|fiber|wireless|phone|mobile)/i, "wifi"],
+  [/(rent|mortgage|housing|landlord)/i, "house"],
+  [/(grocer|food|market)/i, "basket"],
+  [/(transit|bus|train|metro|commut)/i, "bus-front"],
+  [/(stream|entertain|game|gaming|hobby)/i, "controller"],
+  [/(reserve|savings|bank)/i, "bank"],
+  [/(household|family|people|connection)/i, "people"],
+  [/(insurance|alert|notification)/i, "bell"],
+  [/(passkey|security|key)/i, "key"],
+  [/(backup|cloud)/i, "cloud-arrow-down"],
+  [/(history|action log)/i, "clock-history"],
+];
+
+/* The kit has no bullseye or arrow-left-right glyph, so goal and transfer map to
+   the names it does supply (flag, arrow-right). */
+const KIND_ICONS = {
+  bill: "lightning-charge",
+  income: "star",
+  goal: "flag",
+  transfer: "arrow-right",
+};
+
+export function eventIconName(event) {
+  const safe = event || {};
+  const kind = safe.kind || "bill";
+  if (kind === "income") return "star";
+  if (kind === "goal") return "flag";
+  if (kind === "transfer") return "arrow-right";
+  const haystack = typeof safe.title === "string" ? safe.title : "";
+  for (const [pattern, icon] of CATEGORY_ICONS) {
+    if (pattern.test(haystack)) return icon;
+  }
+  return KIND_ICONS[kind] || "lightning-charge";
+}
+
+function kindIcon(event) {
+  const name = eventIconName(event);
   const icon = document.createElement("img");
-  icon.src = `/static/img/meridian/observatory/icons/${icons[kind] || "bullseye"}.svg`;
+  icon.src = `/static/img/meridian/observatory/kit-2026-09-16/icons/${name}.svg`;
   icon.alt = "";
   icon.width = 24;
   icon.height = 24;
+  icon.dataset.eventIcon = name;
   return icon;
 }
 
@@ -498,7 +541,7 @@ function renderDialSVG(state, container) {
   pointerGroup.setAttribute("class", "obs-dial-pointer");
   const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
   line.setAttribute("class", "obs-dial-pointer-line");
-  const pointerStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 132, pointerAngle);
+  const pointerStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 118, pointerAngle);
   line.setAttribute("x1", String(pointerStart.x.toFixed(2)));
   line.setAttribute("y1", String(pointerStart.y.toFixed(2)));
   line.setAttribute("x2", String(pointerPoint.x.toFixed(2)));
@@ -592,7 +635,7 @@ function renderEventList(state, container) {
       if (event.id === state.selectedEventId) button.setAttribute("data-selected", "true");
       const kind = document.createElement("span");
       kind.className = "obs-event-kind";
-      kind.appendChild(kindIcon(event.kind));
+      kind.appendChild(kindIcon(event));
       const body = document.createElement("span");
       body.className = "obs-event-body";
       const date = document.createElement("span");
@@ -837,7 +880,7 @@ function paintSVGSelection(svg, state) {
   const pointerAngle = dayToAngle(selectedIndex, totalDays);
   const pointerPoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 84, pointerAngle);
   if (pointerLine) {
-    const pointerStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 132, pointerAngle);
+    const pointerStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 118, pointerAngle);
     pointerLine.setAttribute("x1", String(pointerStart.x.toFixed(2)));
     pointerLine.setAttribute("y1", String(pointerStart.y.toFixed(2)));
     pointerLine.setAttribute("x2", String(pointerPoint.x.toFixed(2)));
