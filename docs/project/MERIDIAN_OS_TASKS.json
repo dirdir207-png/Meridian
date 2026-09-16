@@ -786,6 +786,32 @@
         "artifacts": "design-qa.md Plan action-plate section; computed-style probe at 420px and 1440px (222x58, dark plate ink, zero overflow)",
         "limits": "The concept places the plate as a full-width bottom CTA; it stays in the command header, which is a layout decision. Row scale lines and header/tab order remain open. Not deployed."
       }
+    },
+    {
+      "id": "OS-029",
+      "title": "Activity: header vignette from the supplied telescope asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-028"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The kit's telescope asset is installed as the Activity top-right vignette",
+        "The vignette is decorative and cannot intercept a click meant for a header control",
+        "The art never squeezes the heading or a touch target, at any governed viewport",
+        "The vignette stays inside the kit's stated 130-170 CSS px mobile band",
+        "The header copy is left-aligned to the concept's composition instead of hard right"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Activity (concept 03), header vignette",
+        "tests": "tests/meridian/test_activity_vignette.py 3 new guards; full non-browser suite 1150 passed / 1 skipped",
+        "capture": "artifacts/observatory-activity-vignette-2026-09-16/ (Activity, 5 viewports x 2 themes)",
+        "artifacts": "design-qa.md Activity vignette section; header geometry probe at 1440/1024/420/390",
+        "limits": "At mobile the vignette sits in flow above the Filter button rather than beside the heading, because the owner-accepted heading is a full sentence and the kit forbids squeezing it. Parchment review strip, framed category glyphs and the underlined tab treatment remain open. Not deployed."
+      }
     }
   ]
 }

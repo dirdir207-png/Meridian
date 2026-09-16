@@ -27,7 +27,48 @@
 /* ---------- Editorial command header ---------- */
 
 .m-activity-command {
-  align-items: flex-end;
+  position: relative;
+  align-items: flex-start;
+}
+
+/* ---------- Telescope vignette (concept 03) ---------- */
+
+/* The kit names this asset for the "Activity top-right vignette" (about 130-170 CSS px
+   wide on mobile) and is explicit that it must not squeeze the heading or a touch
+   target. The header copy was right-aligned on a column flex, which left the concept's
+   station empty; the copy is now left-aligned and the vignette takes that station. At
+   narrow widths our owner-accepted heading is a full sentence rather than the concept's
+   single word, so there is no free right column beside it: the vignette moves into the
+   flow above the Filter button instead of overlapping or squeezing the heading. */
+.m-activity-vignette {
+  width: 148px;
+  aspect-ratio: 1;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/activity-telescope.png") center / contain no-repeat;
+}
+
+@media (min-width: 601px) {
+  .m-activity-vignette {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: clamp(128px, 16vw, 176px);
+    pointer-events: none;
+  }
+
+  .m-activity-command-copy {
+    max-width: calc(100% - clamp(140px, 18vw, 196px));
+  }
+
+  /* The copy moved left, so the control follows it rather than staying centred. */
+  .m-activity-command .m-filter-button {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .m-activity-vignette {
+    align-self: flex-end;
+  }
 }
 
 .m-activity-command .m-editorial-headline {

@@ -1,5 +1,37 @@
 # Enhanced SimpleCrew — Current Status
 
+## Activity — the header vignette from the supplied telescope asset (2026-09-16)
+
+Track D reaches the third workspace, against concept **03**. The kit names `activity-telescope.png` for the
+*"Activity top-right vignette"* and adds two constraints: *"About 130–170 CSS px wide on mobile. Do not let it
+squeeze the heading or touch target."* Both are honoured here.
+
+**The header was structurally wrong before this slice, and the measurement showed it.** A geometry probe found
+the Activity header copy sitting at x 815–1339 of a 1088px-wide header — hard right — with the Filter button
+centred below it and the **entire left half empty**. The cause was `.m-command-header`'s column flex combined with
+`align-items: flex-end` on `.m-activity-command`, with `.m-filter-button { align-self: center }`. Concept 03 puts
+the copy at the left and the art at the right, so the empty half was exactly the station the vignette needed. The
+copy is now left-aligned (x 251–775 at 1440) and the vignette takes the top-right station.
+
+**The no-squeeze rule forced a deliberate mobile difference, recorded rather than hidden.** At 1440px there is a
+free right column, so the vignette is absolutely positioned top-right at `clamp(128px, 16vw, 176px)` and the copy
+is held clear with `max-width: calc(100% - clamp(140px, 18vw, 196px))`. Below 601px our owner-accepted heading is
+a full sentence ("One financial timeline."), not the concept's single word "Activity", so there is **no** free
+right column beside it: an absolutely placed vignette would overlap the heading or force it to wrap further. The
+vignette therefore moves into the flow above the Filter button at 148px — inside the kit's stated mobile band —
+so the heading keeps its full measure and the art still reads.
+
+Verified: header height unchanged at 1440px (248px) with the copy's right edge at 775 against a vignette starting
+at ~1163, so no overlap and no layout growth; at 420px the header grows only by the vignette's own 148px with the
+Filter button below it. Zero overflow in the manifest. `tests/meridian/test_activity_vignette.py` 3 new guards;
+full non-browser suite `./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1150 passed, 1 skipped**;
+Ruff and `git diff --check` clean. Capture at 5 viewports × 2 themes in
+`artifacts/observatory-activity-vignette-2026-09-16/`.
+
+Deployed: nothing. No route, data, financial, provider or authority change. Still open in Activity: the parchment
+"N categories to review" summary strip, framed circular category glyphs on the ledger rows, and the concept's
+underlined tab treatment.
+
 ## Plan — the primary action plate from the supplied button asset (2026-09-16)
 
 The third Plan batch. Concept 02's primary action is a wide apricot plate, and the kit specifies

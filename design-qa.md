@@ -24,6 +24,29 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Activity — the header vignette (2026-09-16, batch 1)
+
+![Activity desktop dark, telescope vignette top-right](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-activity-vignette-2026-09-16/activity-desktop-dark-viewport.png)
+
+![Activity mobile-air dark, telescope vignette in flow](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-air-dark-viewport.png)
+
+Read against concept **03**: the header copy is now left-aligned and the kit's telescope takes the top-right
+station, matching the concept's composition and filling a left half that measurement showed was entirely empty
+before this slice. **Accepted as matching** for the header structure and the art's station at desktop.
+
+**One deliberate difference at mobile.** Below 601px the concept's one-word "Activity" heading becomes our
+owner-accepted full sentence, so the free right column the concept relies on does not exist; an absolute vignette
+there would overlap the heading or squeeze it, which the kit forbids in as many words. The art therefore moves
+into the flow above the Filter button at 148px — inside the kit's 130–170px mobile band — keeping the heading's
+full measure. This is recorded as a reasoned deviation, not presented as parity.
+
+Still open in Activity, and deliberately not claimed: the parchment "N categories to review" strip, the framed
+circular category glyphs on ledger rows, and the concept's underlined tab treatment.
+
+Evidence: `artifacts/observatory-activity-vignette-2026-09-16/` (5 viewports × 2 themes, full-page included) and
+a header geometry probe at 1440/1024/420/390 confirming the copy's new left alignment, the unchanged desktop
+header height and zero overflow.
+
 ## Plan — the primary action plate (2026-09-16, batch 3)
 
 ![Plan mobile-air light, primary action plate](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-plan-cta-2026-09-16/plan-mobile-air-light-viewport.png)
