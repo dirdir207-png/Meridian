@@ -487,9 +487,36 @@
 
 /* ---------- Assets & Contracts (memory management) ---------- */
 
+/* Concept 04 closes the Accounts page with a compact parchment strip for tracked items,
+   and the kit names parchment-ticket.png for exactly that shape of surface ("Evidence,
+   account summary, compact income ticket"), so the strip reuses the same measured
+   80-slice. The concept's engraving on the strip has no counterpart in the kit: the only
+   engraving that would fit is the telescope, which the kit scopes to Activity and
+   Settings, so the strip takes the ticket's material and hierarchy without an invented
+   illustration.
+
+   Specificity note, and the same trap as the summary panel above: `.obs-shell
+   .m-section-label` sets the label colour at (0,2,0), so a two-class selector here ties
+   with it and the winner falls to stylesheet order. Three classes is deliberate. */
 .memory-management {
   display: grid;
   gap: var(--m-space-3);
+  padding: var(--m-space-4);
+  border: 20px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 fill / 20px round;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.obs-shell .memory-management .m-section-label {
+  color: #7a5a2e;
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-lg);
+}
+
+.obs-shell .memory-management .m-section-copy {
+  color: #5c5136;
 }
 
 .memory-management__actions {

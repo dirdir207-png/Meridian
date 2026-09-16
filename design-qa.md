@@ -24,6 +24,22 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Accounts — closing parchment strip (2026-09-16, batch 4)
+
+![Accounts mobile-air light, closing Assets & Contracts parchment strip](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-air-light-full.png)
+
+Read against concept **04**: the page now closes with the concept's compact parchment strip for tracked items, so
+the ticket material frames both ends of the page — the summary figure at the top and the tracked items at the
+bottom. **Accepted as matching** for the strip's material, placement and hierarchy.
+
+**One deliberate omission.** The concept draws an engraving on this strip, and the kit has no counterpart for it:
+the only engraving that would fit is the telescope, which the kit scopes to Activity with sparing reuse in
+Settings. Rather than an unsanctioned reuse, the strip carries the ticket material and hierarchy with no
+illustration, and a test asserts the telescope stays out of `accounts.css` so a later pass cannot quietly add it.
+
+The label again needed a three-class selector — `.obs-shell .m-section-label` sets that colour at the same (0,2,0)
+weight the summary panel tripped over in batch 1. Both sites now carry the rationale and a guard.
+
 ## Accounts — connector rail (2026-09-16, batch 3)
 
 ![Accounts desktop dark, dashed connector rail with per-row nodes](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-rail-2026-09-16/accounts-desktop-dark-viewport.png)

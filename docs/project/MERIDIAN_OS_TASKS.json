@@ -916,6 +916,32 @@
         "artifacts": "design-qa.md Accounts rail section",
         "limits": "The connection strip and the Assets & documents ticket remain open. Not deployed."
       }
+    },
+    {
+      "id": "OS-034",
+      "title": "Accounts: closing parchment strip, plus handoff reconciliation",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-033"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The tracked-items section uses the kit's ticket material and hierarchy",
+        "No unsanctioned asset reuse: the telescope stays scoped to Activity and Settings",
+        "Parchment text obeys the kit's dark-ink contrast rule at a specificity that actually wins",
+        "MERIDIAN_ROADMAP.md states the concept set and the kit as separate authorities",
+        "The stale blanket lane claim is released rather than left active"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Accounts (concept 04), closing strip + handoff reconciliation",
+        "tests": "tests/meridian/test_accounts_assets_strip.py 3 new guards; full non-browser suite 1165 passed / 1 skipped",
+        "capture": "artifacts/observatory-accounts-assets-2026-09-16/ (Accounts, 5 viewports x 2 themes; zero overflow, zero console errors)",
+        "artifacts": "design-qa.md Accounts closing-strip section; MERIDIAN_ROADMAP.md Track D authority split",
+        "limits": "The concept's strip engraving is omitted because the kit supplies no counterpart and scopes the telescope elsewhere. Settings (concept 05) remains blocked on its absent preview route; Activity's parchment review strip remains owner-gated. Not deployed."
+      }
     }
   ]
 }

@@ -1,5 +1,63 @@
 # Enhanced SimpleCrew — Current Status
 
+## Accounts — the closing parchment strip, and the handoff round closed (2026-09-16)
+
+**Accounts batch 4.** Concept 04 ends the page with a compact parchment strip for tracked items, and the kit
+names `parchment-ticket.png` for exactly that shape of surface — *"Evidence, account summary, compact income
+ticket"* — so the "Assets & Contracts" section reuses the same measured 80-slice as the other three tickets. The
+concept's engraving on that strip has **no counterpart in the kit**: the only engraving that would fit is the
+telescope, which the kit scopes to Activity with sparing reuse in Settings. Rather than perform an unsanctioned
+reuse, the strip takes the ticket's material and hierarchy with no invented illustration, and a guard asserts the
+telescope stays out of `accounts.css`.
+
+The label override needed three classes again, for the reason recorded in batch 1: `.obs-shell .m-section-label`
+sets that colour at (0,2,0), so a two-class selector ties and the winner falls to stylesheet order. That trap is
+now commented in both places and guarded in both.
+
+**Reconciliation completed in this round:**
+
+- `MERIDIAN_ROADMAP.md` §Track D previously named only `design/observatory-drafts-2026-09-08/` as visual
+  authority, which had been stale since the 2026-09-16 kit became the governing implementation specification. It
+  now states the split explicitly: the concept set is the **composition authority**, the kit is the
+  **implementation specification** and takes precedence where it speaks — including its explicit corrections such
+  as `bank` rather than the concept's semantically incorrect Wi-Fi reserve glyph.
+- The blanket `Builder (this lane)` claim row in `AGENT_COORDINATION.md`, open since 2026-09-13, is released. Its
+  `docs/project/*` scope had been superseded by these path-scoped per-slice claims; the row now says so instead of
+  sitting `active` and implying work was being held.
+
+Verified: `tests/meridian/test_accounts_assets_strip.py` 3 new guards; full non-browser suite
+`./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1165 passed, 1 skipped**; Ruff and
+`git diff --check` clean. Capture at 5 viewports × 2 themes in `artifacts/observatory-accounts-assets-2026-09-16/`
+with zero overflow and zero console errors, inspected at 420×912.
+
+### State of the handoff integration
+
+Six of the kit's assets are now consumed in production, each by the surface the kit names for it:
+
+| Kit asset | Surface it now serves |
+|---|---|
+| `parchment-ticket.png` | Today's evidence ticket, Plan's next-income strip, Accounts' summary panel, Accounts' closing strip |
+| `plan-map.png` | Plan's folded allocation map |
+| `apricot-button.png` | Plan's primary action plate |
+| `activity-telescope.png` | Activity's header vignette |
+| `observatory-landscape.png` | Accounts' summary vignette |
+| `medallion-frame.png` | Accounts' account medallions |
+
+Two items remain **open and owner-gated**, and are not claimed as done:
+
+1. **Activity's parchment "N categories to review" strip.** The transaction payload exposes no awaiting-review
+   field, so any count would have to be derived from an invented confidence threshold — placing a derived figure
+   where the concept shows a fact. Needs the owner's decision on what it counts and what it says.
+2. **Settings (concept 05).** The isolated preview serves only `today`, `plan`, `funding-rules`, `activity` and
+   `accounts`; `/meridian/settings?section=connections` 404s there. The kit itself defers Settings art *"only
+   after its preview route is available"*, so no Settings parity can honestly be claimed.
+
+Also open, smaller: Activity's row-level action plate (the concept reuses the apricot button there) and the
+concept's underlined tab treatment; Accounts' connection strip; Plan's row scale lines and exact header/tab order;
+and the older Today open gaps already listed in the roadmap.
+
+Deployed: nothing. No route, data, financial, provider or authority change across any slice.
+
 ## Accounts — the connector rail (2026-09-16)
 
 Accounts batch 3 completes the medallion motif. Concept 04 does not just place three medallions; it threads the

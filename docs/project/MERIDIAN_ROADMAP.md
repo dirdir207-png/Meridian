@@ -198,7 +198,15 @@ limited-policy experiments.
 ### Track D — Design and layout fidelity *(high priority)*
 
 **Goal:** match the governing concept — **layout *and* design** — as closely as possible, workspace by
-workspace, before any new pages or layers. `design/observatory-drafts-2026-09-08/` is the visual authority.
+workspace, before any new pages or layers.
+
+Two sources govern, in different roles. `design/observatory-drafts-2026-09-08/` is the **composition authority**
+— what each workspace should look like and how its parts are placed. The **2026-09-16 Observatory asset kit**
+(`static/img/meridian/observatory/kit-2026-09-16/`, specified by `docs/project/OBSERVATORY_ASSET_KIT_2026-09-16.md`
+and the kit's own `README.md`) is the **implementation specification** for the supplied artwork, and it takes
+precedence where it speaks: its asset roles, its measured nine-slice guidance, and its explicit corrections — such
+as `bank` rather than the concept's semantically incorrect Wi-Fi reserve glyph — override the concept. Where the
+older Design Atlas conflicts with a concept's layout, the concept governs.
 
 Order: **Today** (`01-today`) → Plan (`02`) → Activity (`03`) → Accounts (`04`) → Settings (`05`), then
 login and Virgil.
