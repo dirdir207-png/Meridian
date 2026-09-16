@@ -1,0 +1,20 @@
+{
+  "tool": "built-in image_gen",
+  "notes": "Additional reconstruction and alpha corrections. Original unselected generations remain in Codex generated_images; not included in shipping kit.",
+  "jobs": [
+    {
+      "asset": "dial-annulus",
+      "reference": "06-interactive-observatory-vision.png",
+      "prompt": "Extract/reconstruct standalone full parchment/brass circular annulus. Outer radius 45%, inner radius 33%. Fine concentric brass rims, subtle engraving, four screws. Transparent center/exterior. No numbers, dates, ticks, markers, pointer, observatory or labels."
+    },
+    {
+      "asset": "medallion-frame",
+      "reference": null,
+      "prompt": "Two very thin concentric antique brass wire circles; four tiny round brass rivets at cardinal points. Rim 5% of diameter, transparent hole 85%. No parchment band, ticks, dial, icon or text. Muted warm brass, transparent PNG."
+    },
+    {
+      "asset": "alpha-corrections",
+      "prompt": "Remove baked checkerboard background, preserve decorative object and blank interior, output genuine alpha transparency; dial correction also removes all radial tick marks."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+/* Standalone asset-kit primitives. Not loaded by the Meridian application. */
+@font-face{font-family:ObservatorySerif;src:url('fonts/LibreBaskerville.ttf') format('truetype');font-style:normal;font-weight:400 700;font-display:swap}
+@font-face{font-family:ObservatorySans;src:url('fonts/SourceSans3.ttf') format('truetype');font-style:normal;font-weight:200 900;font-display:swap}
+.obs-kit{--obs-bg:#172334;--obs-surface:#202b40;--obs-ink:#eee4cf;--obs-muted:#b7b8cb;--obs-lilac:#c1a9e2;--obs-mint:#a5d4bf;--obs-apricot:#f3b272;--obs-brass:#c6aa71;--obs-paper:#ead8b5;--obs-paper-ink:#20263b;--obs-danger:#f1a29a;--obs-font-serif:ObservatorySerif,Georgia,serif;--obs-font-sans:ObservatorySans,system-ui,sans-serif;color:var(--obs-ink);background:var(--obs-bg);font-family:var(--obs-font-sans);font-size:16px;line-height:1.5}
+.obs-kit *{box-sizing:border-box}
+.obs-kit h1,.obs-kit h2,.obs-kit h3,.obs-kit .money,.obs-kit .wordmark{font-family:var(--obs-font-serif);font-weight:400}
+.obs-kit .money{font-variant-numeric:tabular-nums lining-nums;font-size:clamp(32px,7vw,56px);line-height:1.1}
+.obs-kit .label{font:600 14px/1.3 var(--obs-font-sans);letter-spacing:.12em;text-transform:uppercase}
+.obs-kit .muted{color:var(--obs-muted)}
+.obs-kit .mint{color:var(--obs-mint)}
+.obs-kit .lilac{color:var(--obs-lilac)}
+.obs-kit .apricot{color:var(--obs-apricot)}
+.obs-kit .decor{pointer-events:none;user-select:none;object-fit:contain;max-width:100%;height:auto}
+.obs-kit .icon{display:inline-block;width:24px;height:24px;background:currentColor;mask:var(--icon) center/contain no-repeat;-webkit-mask:var(--icon) center/contain no-repeat;flex:none}
+.obs-kit .badge{position:relative;display:inline-grid;place-items:center;width:64px;height:64px;isolation:isolate;flex:none}
+.obs-kit .badge::before{content:'';position:absolute;inset:12%;border-radius:50%;background:var(--badge-fill,var(--obs-lilac));z-index:-1}
+.obs-kit .badge>img{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.obs-kit .badge .icon{width:28px;height:28px;color:var(--obs-paper-ink)}
+.obs-kit .wordmark{font-size:32px;line-height:1.2;letter-spacing:-.04em;position:relative;display:inline-block}
+.obs-kit .wordmark .accent-i{position:relative}
+.obs-kit .wordmark .accent-i::after{content:'';position:absolute;width:.18em;height:.18em;top:.10em;left:.1em;background:var(--obs-apricot);clip-path:polygon(50% 0,63% 36%,100% 50%,63% 64%,50% 100%,36% 64%,0 50%,36% 36%)}
+.obs-kit .paper-demo{position:relative;isolation:isolate;padding:36px 8%;color:var(--obs-paper-ink);min-height:180px}
+.obs-kit .paper-demo>img{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+.obs-kit a{color:var(--obs-lilac)}
+.obs-kit button{font:inherit;min-height:44px}
+.obs-kit :focus-visible{outline:3px solid var(--obs-mint);outline-offset:4px}
+/* The paper demo is a fixed-aspect specimen. Production variable-height tickets
+   must use measured nine-slice borders or separate fixed-size corners, not stretch this. */

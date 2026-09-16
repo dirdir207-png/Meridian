@@ -1,5 +1,13 @@
 # Enhanced SimpleCrew — Current Status
 
+## Observatory artwork kit and preview comparison — 2026-09-16
+
+Implemented the owner's requested separate art handoff in `static/img/meridian/observatory/kit-2026-09-16/`: eight transparent decorative PNGs (map, telescope, observatory, moon, blank dial ring, blank ticket, action plate and medallion frame), 22 MIT SVG icons, two SIL OFL font files, a standalone gallery/board, scoped typography/color examples, prompts, provenance and hash manifest. These are reference-based reconstructions; the fonts and library icons are explicitly proposed matches, not recovered identities. Production UI files and existing assets are unchanged.
+
+Verified: all seven original concept PNGs match the PDF appendix's decoded pixels; all eight exported PNGs have alpha transparency and match manifest hashes; 22 SVGs parse without script elements; font files and licenses are present and both fonts load in the browser. Inspected all eight pieces on indigo and white in the running gallery, with no broken images, horizontal overflow or console errors at 1200×900. At 420×912, no overflow was found and the initial viewport was visually checked after resetting a browser capture scaling defect; earlier malformed exports are rejected. Focused current-preview findings and accepted captures cover Today, Plan, Activity Review and Accounts; Settings returns 404 in this isolated preview. No full governed parity matrix or app visual acceptance is claimed.
+
+Deployed: nothing. No financial/provider call, banking change or production layout change. The build-team handoff is `docs/project/OBSERVATORY_ASSET_KIT_2026-09-16.md`; verification is `artifacts/observatory-asset-kit-2026-09-16/verification.json`. Next: Track D consumes the kit one visual gap at a time and regenerates governed captures; missing source artwork is no longer a blocker. Concurrent emitter handoff commit `4037e08` was preserved.
+
 ## Readiness contract probe repair — 2026-09-15
 
 Implemented the bounded Astra-lane follow-up in `scripts/verify_readiness.py`: replaced the removed `_verify_stored` import and call with the current `_verify_crew_bill_reserve_readback()` verifier factory. Added a regression test in `tests/test_readiness_tools.py` covering successful probe execution and the corrected anchor-preserving calendar values. Refreshed `artifacts/readiness-2026-09-13/contract-probes.json`; it is synthetic-only, records zero provider calls, and now reports `monthly_second: "2026-03-31"` and `semimonthly_next: "2026-01-31"`.

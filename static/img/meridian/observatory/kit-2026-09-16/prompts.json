@@ -1,0 +1,41 @@
+{
+  "tool": "built-in image_gen",
+  "method": "reference-based reconstruction, then alpha-background correction where required",
+  "jobs": [
+    {
+      "asset": "plan-map",
+      "reference": "02-plan.png",
+      "prompt": "Isolate and reconstruct ONLY the large folded parchment star map, maintaining its exact scalloped angular folded-paper silhouette, warm aged cream parchment, fine double brass/ink borders and faint star-chart lines. Remove ALL words, amounts, numbers, status labels, the 4 circular medallions and their thick connecting rods; naturally restore the paper under them. No UI, no background scene. Full uncropped map centered with 5 percent transparent padding. Landscape 1536x1024. Genuine transparent background outside paper."
+    },
+    {
+      "asset": "activity-telescope",
+      "reference": "03-activity.png",
+      "prompt": "Extract and faithfully reconstruct ONLY the brass engraved telescope vignette in the top right: telescope aimed up-left on an ornate pedestal, tiny stars and clouds, delicate antique crosshatched gold linework. Remove ALL surrounding UI and lettering. Preserve the reference's flat finely engraved illustration, not 3D. Full object centered, transparent background, 1024x1024, ample clear margin."
+    },
+    {
+      "asset": "observatory-landscape",
+      "reference": "06-interactive-observatory-vision.png",
+      "prompt": "Extract and faithfully reconstruct ONLY the engraved domed observatory and rocky wooded hill at the lower left of the dial. Complete the small hidden edges coherently. Warm parchment/brass engraving highlights with deep navy etched shadows, preserve the building's curved dome and intricate windows and landscape. Remove all dial rings, ticks, text, badges, ticket, sky and UI. Transparent background, no rectangular backdrop, isolated landscape silhouette, 1536x1024."
+    },
+    {
+      "asset": "moon-orbit",
+      "reference": "06-interactive-observatory-vision.png",
+      "prompt": "Extract and faithfully reconstruct ONLY the crescent moon, delicate thin brass elliptical orbit arcs and tiny four-point stars at the upper right. Remove all text including A calmer orbit forward, all interface and background; restore arcs behind text. Antique engraving in muted gold and cream, deep navy shaded moon face, delicate linework. Fully isolated on genuine transparency, 1024x1024, nothing cropped."
+    },
+    {
+      "asset": "parchment-ticket",
+      "reference": "06-interactive-observatory-vision.png",
+      "prompt": "Faithfully reconstruct ONLY a blank version of the wide parchment evidence ticket near the bottom. Warm fibrous cream paper, double hairline engraved border, scooped corners, small edge perforation scallops, four tiny brass rivets. REMOVE every word, number, icon, stamp, divider and rule from inside; interior must be clean continuous subtle parchment for live HTML text. Exact front-on rectangular view, no perspective. Transparent outside the ticket. Full ticket with margins, landscape 1536x640."
+    },
+    {
+      "asset": "apricot-button",
+      "reference": "02-plan.png",
+      "prompt": "Faithfully reconstruct ONLY the wide apricot orange metal/paper primary button at the bottom labeled Add a bill or goal, but REMOVE ALL lettering and arrow. Blank textured orange center for HTML label, clipped bevel corners, double dark navy and brass engraved outline, four tiny corner rivets. Exact front-on, transparent outside object, wide 1536x512, generous blank center. No other UI or background."
+    },
+    {
+      "asset": "medallion-frame",
+      "reference": "01-today.png",
+      "prompt": "Faithfully reconstruct a SINGLE blank circular brass instrument medallion frame in the style of the Electric/Internet event badges: delicate double concentric brass rings with four tiny compass-point rivets. No glyph, no text, no colored disk. Both center hole and exterior genuinely TRANSPARENT, ring only. Fine antique engraved brass detail, front-on 1024x1024, circle centered with 8 percent margin. This is a reusable frame for code-owned colored disks and semantic icons."
+    }
+  ]
+}
