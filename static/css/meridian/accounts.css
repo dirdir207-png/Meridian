@@ -54,8 +54,67 @@
 
 .m-accounts-summary {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
   gap: var(--m-space-4);
+}
+
+@media (max-width: 700px) {
+  .m-accounts-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Parchment summary panel (concept 04) ---------- */
+
+/* The kit names parchment-ticket.png for an "account summary" and
+   observatory-landscape.png for the "Accounts decorative vignette", so the dominant
+   cash figure sits on the ticket with the dome set beside it. Nine-slice keeps the
+   scalloped ends and corner rivets fixed while the panel reflows, and `fill` carries
+   the blank face, so the figure and its provenance note stay code-owned HTML.
+
+   The kit is explicit about this surface: "On parchment, use dark navy text; do not
+   carry pale lilac/mint text over without checking contrast." The figure's signal
+   colouring is therefore deliberately suppressed here -- it is a cash total, not a
+   warning, and pale mint would not survive the parchment. */
+.m-accounts-summary .m-accounts-ticket {
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-4);
+  padding: var(--m-space-4);
+  border: 20px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 fill / 20px round;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.m-accounts-ticket-art {
+  flex: 0 0 auto;
+  width: clamp(92px, 28%, 188px);
+  aspect-ratio: 1536 / 1024;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/observatory-landscape.png") center / contain no-repeat;
+}
+
+.m-accounts-ticket-figure {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Specificity note: `.m-accounts-net-card .m-section-label` sets the muted colour at
+   the same (0,2,0) weight and appears LATER in this file, so a two-class selector here
+   loses and the label rendered pale lilac on the parchment — the exact contrast failure
+   the kit warns about. Three classes is deliberate, not decorative. */
+.m-accounts-summary .m-accounts-ticket .m-section-label {
+  color: #7a5a2e;
+}
+
+.m-accounts-ticket .m-accounts-figure,
+.m-accounts-ticket .m-accounts-figure[data-signal] {
+  color: #20263b;
+}
+
+.m-accounts-ticket .m-accounts-figure-note {
+  color: #5c5136;
 }
 
 .m-accounts-net-card {

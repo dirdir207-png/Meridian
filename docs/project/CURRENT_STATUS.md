@@ -1,5 +1,36 @@
 # Enhanced SimpleCrew — Current Status
 
+## Accounts — the parchment summary panel from the supplied ticket and dome (2026-09-16)
+
+Track D reaches the fourth workspace, against concept **04**. Its dominant element is a large parchment panel
+carrying the cash figure, and the kit names both assets for it: `parchment-ticket.png` for an *"account summary"*
+and `observatory-landscape.png` for the *"Accounts decorative vignette"*. The dome-on-a-hill engraving in the
+concept is that second asset — confirmed by opening it, not assumed from its name.
+
+The "Available cash" card is now that panel: the ticket as a nine-slice at the same measured 80-slice the Today,
+Plan and Activity tickets use, with the dome set beside the figure and the provenance note beneath it. Both
+figures stay code-owned HTML on the blank face, and the summary grid gives the panel the concept's prominence
+(`2.1fr / 1fr`) while the Liabilities figure keeps its own card — nothing was dropped to make room.
+
+**A contrast failure was caught by inspecting the capture, not by reading the CSS.** The first render put the
+section label in **pale lilac on the parchment** — the exact case the kit calls out in as many words ("On
+parchment, use dark navy text; do not carry pale lilac/mint text over without checking contrast"). My override
+used two classes, which ties on specificity with `.m-accounts-net-card .m-section-label` (0,2,0) — and that rule
+appears **later** in the file, so it won. The selector is now three classes with a comment explaining that the
+depth is deliberate, and a guard pins it. The figure's `data-signal` colouring is suppressed on the parchment for
+the same reason: it is a cash total, not a warning, and pale mint would not have survived the paper.
+
+Verified: `tests/meridian/test_accounts_ticket.py` 3 new guards (asset nine-slice, no figure dropped, and the
+contrast rule with its specificity rationale); full non-browser suite
+`./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1156 passed, 1 skipped**; Ruff and
+`git diff --check` clean. Capture at 5 viewports × 2 themes in
+`artifacts/observatory-accounts-ticket-2026-09-16/` with zero overflow and zero console errors, inspected at
+420×912 in both themes.
+
+Deployed: nothing. No route, data, financial, provider or authority change. Still open in Accounts: the concept's
+large coloured account medallions with their connector rail, the connection strip, and the "Assets & documents"
+ticket.
+
 ## Activity — the framed category glyph on ledger rows (2026-09-16)
 
 Activity batch 2, and the concept's most-repeated motif: every row in concept 03's review list carries its

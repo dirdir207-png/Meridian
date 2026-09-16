@@ -838,6 +838,32 @@
         "artifacts": "design-qa.md Activity glyph section; static/js/meridian/kit-icons.js",
         "limits": "The parchment 'N categories to review' strip is not built: the payload has no awaiting-review field, so the count would require inventing a confidence threshold and would present a derived figure as a fact. The apricot plate on the row action and the underlined tab treatment also remain open. Not deployed."
       }
+    },
+    {
+      "id": "OS-031",
+      "title": "Accounts: parchment summary panel from the supplied ticket and dome assets",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-030"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The cash figure sits on the kit's parchment ticket, the asset the kit names for an account summary",
+        "The kit's Accounts decorative vignette is installed beside the figure",
+        "Nine-slice preserves the scalloped ends and corner rivets rather than stretching the border",
+        "The figure and its provenance note remain code-owned HTML on the ticket's blank face",
+        "No existing figure is dropped, and parchment text obeys the kit's dark-ink contrast rule"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Accounts (concept 04), parchment summary panel",
+        "tests": "tests/meridian/test_accounts_ticket.py 3 new guards; full non-browser suite 1156 passed / 1 skipped",
+        "capture": "artifacts/observatory-accounts-ticket-2026-09-16/ (Accounts, 5 viewports x 2 themes; zero overflow, zero console errors)",
+        "artifacts": "design-qa.md Accounts panel section",
+        "limits": "The concept's panel is full width; here it takes 2.1fr beside the Liabilities card so no figure is dropped. Coloured account medallions with their connector rail, the connection strip and the Assets & documents ticket remain open. Not deployed."
+      }
     }
   ]
 }

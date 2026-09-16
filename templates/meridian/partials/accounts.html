@@ -19,13 +19,18 @@
     </a>
   </header>
 
-  {# Net-position summary cards. The two dominant figures are computed by
-     accounts.js from the provider-neutral account structure. #}
+  {# Net-position summary. The dominant figure is the concept's parchment panel:
+     the kit names parchment-ticket.png for an "account summary" and
+     observatory-landscape.png for the "Accounts decorative vignette". Both the figure
+     and its provenance note stay code-owned HTML on the ticket's blank face. #}
   <section class="m-accounts-summary" aria-label="Net position">
-    <article class="m-surface m-accounts-net-card">
-      <p class="m-section-label">Available cash</p>
-      <strong class="m-accounts-figure" data-available-cash>—</strong>
-      <p class="m-accounts-figure-note" data-available-note></p>
+    <article class="m-surface m-accounts-net-card m-accounts-ticket">
+      <div class="m-accounts-ticket-art obs-art" aria-hidden="true"></div>
+      <div class="m-accounts-ticket-figure">
+        <p class="m-section-label">Available cash</p>
+        <strong class="m-accounts-figure" data-available-cash>—</strong>
+        <p class="m-accounts-figure-note" data-available-note></p>
+      </div>
     </article>
     <article class="m-surface m-accounts-net-card">
       <p class="m-section-label">Liabilities</p>

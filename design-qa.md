@@ -24,6 +24,26 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Accounts — parchment summary panel (2026-09-16, batch 1)
+
+![Accounts mobile-air light, parchment summary panel](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-ticket-2026-09-16/accounts-mobile-air-light-viewport.png)
+
+Read against concept **04**: the cash figure now sits on the concept's parchment panel, with the kit's dome
+engraving — `observatory-landscape.png`, the asset whose name does not say "dome" — set beside it. Scalloped
+ticket ends and corner rivets come from `parchment-ticket.png`; the figure and its provenance note stay
+code-owned HTML. **Accepted as matching** for the panel's material, silhouette and figure hierarchy.
+
+**The capture caught what the CSS did not.** The first render put "AVAILABLE CASH" in pale lilac on the
+parchment — exactly the contrast failure the kit names — because my two-class override tied on specificity with a
+later rule of equal weight. The selector is now three classes, with the reason recorded in a comment and pinned
+by a test. The figure's signal colouring is suppressed on the parchment too: a cash total is not a warning, and
+pale mint would not have survived the paper.
+
+Still open in Accounts, and deliberately not claimed: the concept's large coloured account medallions with their
+connector rail, the connection strip, and the "Assets & documents" ticket. The concept's panel is full width;
+here it takes 2.1fr beside the Liabilities card so no existing figure is dropped — a layout adaptation, recorded
+rather than presented as parity.
+
 ## Activity — framed category glyphs (2026-09-16, batch 2)
 
 ![Activity mobile-air dark, framed category glyphs in review mode](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-activity-glyph-2026-09-16/activity-mobile-air-dark-full.png)
