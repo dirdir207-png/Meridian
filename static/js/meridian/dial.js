@@ -253,8 +253,8 @@ function formatObservedAt(value) {
 }
 
 function selectedEventForState(state) {
-  const events = eventsForDate(state, state.selectedDate);
-  return events.find((event) => event.id === state.selectedEventId) || events[0] || null;
+  if (!state.selectedEventId) return null;
+  return state.model.events.find((event) => event.id === state.selectedEventId) || null;
 }
 
 function renderInstrumentOverlay(state) {
@@ -266,7 +266,7 @@ function renderInstrumentOverlay(state) {
   // concept art's dark sky with real data in the middle.
   const center = document.createElement("div");
   center.className = "obs-dial-center";
-  const selected = selectedEventForState(state);
+  const selected = state.mode === "today" ? null : selectedEventForState(state);
   const kicker = document.createElement("p");
   kicker.className = "obs-dial-center-kicker";
   const title = document.createElement("p");
@@ -281,10 +281,10 @@ function renderInstrumentOverlay(state) {
     amount.textContent = minorToDisplay(selected.amount) || "—";
     status.textContent = fundingLabel(selected.fundingStatus);
   } else if (state.model.availableToSpend && state.model.availableToSpend.minor != null) {
-    kicker.textContent = "Available to spend";
+    kicker.textContent = "Safe to spend";
     title.textContent = "";
     amount.textContent = minorToDisplay(state.model.availableToSpend) || "—";
-    status.textContent = "Horizon preview";
+    status.textContent = `Available until ${formatShortDay(state.model.horizonEnd)}`;
   } else {
     kicker.textContent = formatLongDate(state.selectedDate);
     title.textContent = "No event selected";
@@ -632,7 +632,9 @@ function renderEventList(state, container) {
       button.className = "obs-event-item";
       button.dataset.kind = event.kind;
       button.dataset.eventId = event.id;
-      if (event.id === state.selectedEventId) button.setAttribute("data-selected", "true");
+      if (state.mode !== "today" && event.id === state.selectedEventId) {
+        button.setAttribute("data-selected", "true");
+      }
       const kind = document.createElement("span");
       kind.className = "obs-event-kind";
       kind.appendChild(kindIcon(event));
@@ -892,8 +894,9 @@ function renderControls(state, onChange) {
   back.addEventListener("click", () => {
     state.selectedDate = state.model.today;
     state.mode = "today";
-    const todayEvents = eventsForDate(state, state.model.today);
-    state.selectedEventId = todayEvents.length ? todayEvents[0].id : null;
+    state.selectedEventId = state.model.events.find(
+      (event) => event.date >= state.model.today && event.date <= state.model.horizonEnd,
+    )?.id || null;
     onChange();
   });
 
@@ -1109,16 +1112,14 @@ function bindPointerDrag(svg, state, container, totalDays) {
 export function renderDial(container, inputModel) {
   if (!container) return null;
   const model = normalizeModel(inputModel);
-  const todayEvents = eventsForDate({ model }, model.today);
-  const initialEvent =
-    todayEvents[0] ||
-    model.events.find((event) => event.date >= model.today && event.date <= model.horizonEnd) ||
-    null;
+  const initialEvent = model.events.find(
+    (event) => event.date >= model.today && event.date <= model.horizonEnd,
+  ) || null;
   const state = {
     model,
-    selectedDate: initialEvent ? initialEvent.date : model.today,
+    selectedDate: model.today,
     selectedEventId: initialEvent ? initialEvent.id : null,
-    mode: initialEvent ? "explore" : "today",
+    mode: "today",
     drag: null,
   };
 

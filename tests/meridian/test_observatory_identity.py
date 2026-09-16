@@ -132,3 +132,29 @@ def test_active_navigation_keeps_a_non_colour_cue_and_uses_the_lilac_treatment()
     assert "var(--obs-lilac)" in observatory
     # The physical marker geometry stays owned by shell.css (existing behaviour).
     assert '.m-nav-item[aria-current="page"]::before' in shell
+
+
+def test_observatory_light_theme_replaces_dark_canvas_surface_and_ink_tokens():
+    css = OBSERVATORY.read_text()
+    light = css.split('html[data-theme="light"] .obs-shell', 1)[1]
+    assert "--m-canvas: #f4ecdf" in light
+    assert "--m-surface: #fffaf0" in light
+    assert "--m-ink: #20263b" in light
+    assert "--m-ink-muted: #655d6c" in light
+    assert "background:" in light
+
+
+def test_compact_header_uses_the_supplied_gear_as_a_current_color_mask():
+    html = INDEX.read_text()
+    css = SHELL.read_text()
+    assert 'class="m-topbar-settings-icon" aria-hidden="true"' in html
+    assert "kit-2026-09-16/icons/gear.svg" in css
+    assert "-webkit-mask:" in css
+    assert "background-color: currentColor" in css
+    assert ".m-topbar .m-theme-toggle-label" in css
+
+
+def test_light_header_keeps_the_wordmark_and_controls_legible():
+    css = OBSERVATORY.read_text()
+    assert 'html[data-theme="light"] .obs-shell .m-topbar .m-brand' in css
+    assert "color: #20263b" in css

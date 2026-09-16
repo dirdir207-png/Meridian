@@ -10,6 +10,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def test_accounts_command_copy_matches_the_governing_concept():
+    html = (ROOT / "templates/meridian/partials/accounts.html").read_text()
+    assert '<h2 class="m-editorial-headline">Accounts</h2>' in html
+    assert "Your financial constellation." in html
+
+
+def test_accounts_places_account_constellation_before_secondary_liabilities():
+    html = (ROOT / "templates/meridian/partials/accounts.html").read_text()
+    assert html.index("data-accounts-groups") < html.index("data-liabilities")
+
+
 def _read(relative):
     return (ROOT / relative).read_text(encoding="utf-8")
 

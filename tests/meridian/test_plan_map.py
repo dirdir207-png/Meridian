@@ -10,6 +10,24 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_plan_command_copy_matches_the_governing_concept():
+    html = (ROOT / "templates/meridian/partials/plan.html").read_text()
+    assert '<h2 class="m-editorial-headline">Plan</h2>' in html
+    assert "Give every dollar a destination." in html
+
+
+def test_plan_places_navigation_and_map_before_creation_actions():
+    html = (ROOT / "templates/meridian/partials/plan.html").read_text()
+    assert html.index("data-plan-seg") < html.index("data-allocation-map")
+    assert html.index("data-allocation-map") < html.index("data-plan-new-commitment")
+
+
+def test_plan_places_commitments_immediately_after_the_map_before_coverage():
+    html = (ROOT / "templates/meridian/partials/plan.html").read_text()
+    assert html.index("data-allocation-map") < html.index("data-commitment-list")
+    assert html.index("data-commitment-list") < html.index("data-coverage")
 KIT = ROOT / "static/img/meridian/observatory/kit-2026-09-16"
 
 
@@ -124,7 +142,7 @@ def test_plan_primary_action_uses_the_kit_plate_behind_a_real_button():
     # The kit's minimum target, and a real button carrying an HTML label beneath the art.
     assert "min-height: 44px" in css
     assert "data-plan-new-commitment" in html
-    assert "New commitment" in html
+    assert "Add a bill or goal" in html
 
 
 def test_plan_kit_assets_are_consumed_byte_for_byte():

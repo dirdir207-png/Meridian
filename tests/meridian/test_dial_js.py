@@ -203,11 +203,14 @@ def test_dial_markers_have_orbit_leader_lines():
     assert "stroke-dasharray: 3 4" in css
 
 
-def test_dial_selects_first_upcoming_event_by_default():
+def test_dial_opens_on_today_while_preloading_the_next_event_evidence():
     js = _read("static/js/meridian/dial.js")
     assert "const initialEvent" in js
-    assert "selectedEventId: initialEvent" in js
-    assert 'mode: initialEvent ? "explore" : "today"' in js
+    assert "selectedDate: model.today" in js
+    assert "selectedEventId: initialEvent ? initialEvent.id : null" in js
+    assert 'mode: "today"' in js
+    assert 'state.mode === "today"' in js
+    assert 'kicker.textContent = "Safe to spend"' in js
 
 
 def test_observatory_today_stage_gets_full_width_on_desktop():

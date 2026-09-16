@@ -5,11 +5,8 @@
   <header class="m-command-header m-accounts-command" aria-label="Accounts overview">
     <div class="m-accounts-command-copy">
       <p class="m-workspace-kicker">Accounts</p>
-      <h2 class="m-editorial-headline">Structure without provider clutter.</h2>
-      <p class="m-editorial-subline">
-        Accounts, pockets, cards, assets, and shared balances retain provenance
-        while reading as one system.
-      </p>
+      <h2 class="m-editorial-headline">Accounts</h2>
+      <p class="m-editorial-subline">Your financial constellation.</p>
     </div>
     <a class="m-primary-button m-accounts-connect" href="/meridian/settings?section=connections" data-connect-account>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
@@ -31,11 +28,6 @@
         <strong class="m-accounts-figure" data-available-cash>—</strong>
         <p class="m-accounts-figure-note" data-available-note></p>
       </div>
-    </article>
-    <article class="m-surface m-accounts-net-card">
-      <p class="m-section-label">Liabilities</p>
-      <strong class="m-accounts-figure" data-liabilities>—</strong>
-      <p class="m-accounts-figure-note" data-liabilities-note></p>
     </article>
   </section>
 
@@ -87,6 +79,12 @@
       </div>
     </aside>
   </div>
+
+  <article class="m-surface m-accounts-net-card m-accounts-liabilities">
+    <p class="m-section-label">Liabilities</p>
+    <strong class="m-accounts-figure" data-liabilities>—</strong>
+    <p class="m-accounts-figure-note" data-liabilities-note></p>
+  </article>
 
   <p class="m-inline-error" data-accounts-error role="alert" hidden></p>
 

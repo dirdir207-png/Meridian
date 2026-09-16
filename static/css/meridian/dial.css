@@ -916,7 +916,7 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
   [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 104px; gap: 12px; align-items: start; }
   /* Enlarge only into the left margin. The right edge stays in its own grid
      track, separated from callout text and hit targets by the column gap. */
-  .obs-dial-svg-wrap { width: calc(100% + 42px); max-width: none; margin: 0 0 0 -42px; justify-self: start; }
+  .obs-dial-svg-wrap { width: calc(100% + 80px); max-width: none; margin: 0 0 0 -80px; justify-self: start; }
   .obs-dial-center { width: 56%; }
   .obs-dial-events { z-index: 3; align-self: start; max-height: calc(100vw - 90px); }
   .obs-event-list--orbit { grid-template-columns: 1fr !important; gap: 16px; }
@@ -974,8 +974,82 @@ body.obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab.
 .obs-ticket-actions .obs-button { background: none; color: #644780; padding: 6px 0; border: 0; border-radius: 0; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
 @media (max-width: 700px) {
   .obs-shell .m-today-primary { gap: 12px; }
-  .obs-shell .m-today .m-command-top .m-workspace-kicker { margin: 0; }
+  .obs-shell .m-today .m-command-top { display: none; }
   .m-observatory-moon { width: 72px; margin: 0 auto; }
   .obs-shell .m-observatory-note .obs-today-orbit { font-size: 15px; }
   .obs-evidence-ticket { padding: 12px; gap: 10px; }
+}
+
+/* On the phone composition the evidence receipt and primary action both belong
+   above the reserved navigation row. Keep every fact, but use the concept's
+   compact two-band ticket instead of a desktop card stack. */
+@media (max-width: 700px) {
+  .m-observatory-advice { display: none; }
+  .obs-evidence-ticket {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "header header"
+      "facts actions";
+    gap: 7px 12px;
+    padding: 6px 8px;
+    border-width: 16px;
+    border-image-width: 16px;
+  }
+  .obs-ticket-header { grid-area: header; gap: 8px; }
+  .obs-ticket-title { font-size: 23px; }
+  .obs-ticket-date { flex-basis: 44px; padding: 4px 2px; font-size: 9px; }
+  .obs-source-stamp { font-size: 10px; }
+  .obs-ticket-rows { grid-area: facts; gap: 8px; }
+  .obs-ticket-row-label { font-size: 9px; }
+  .obs-ticket-row-value { font-size: 16px; }
+  .obs-ticket-actions {
+    grid-area: actions;
+    min-width: 104px;
+    align-self: end;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+  .obs-ticket-actions .obs-ticket-detail {
+    flex: 0 1 13ch;
+    max-width: 13ch;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .obs-ticket-actions .obs-button { font-size: 12px; }
+  .obs-explore-plan { margin: 2px 0 6px; }
+}
+
+@media (max-width: 700px) {
+  .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar {
+    min-height: 68px;
+    position: relative;
+    align-items: flex-start;
+    padding-bottom: 14px;
+    border-bottom-color: transparent;
+  }
+  html[data-theme="dark"] .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar {
+    background: #101a28;
+  }
+  .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar-date {
+    display: block;
+    position: absolute;
+    left: max(var(--m-space-4), env(safe-area-inset-left));
+    bottom: 5px;
+    color: var(--obs-lilac);
+    font: 600 10px/1.2 var(--obs-font-sans);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-theme-toggle--compact {
+    width: 44px;
+    justify-content: center;
+    padding: 4px;
+  }
+  .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-theme-toggle-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
 }

@@ -48,6 +48,24 @@
   font-size: clamp(2.4rem, 3.4vw, 3.1rem);
 }
 
+.obs-today-title {
+  margin: 0;
+  color: var(--obs-paper);
+  font: 400 clamp(2.9rem, 6vw, 4.9rem)/0.95 var(--obs-font-serif);
+  letter-spacing: -0.045em;
+}
+
+.obs-today-orbit-heading {
+  margin: 0;
+  color: var(--obs-paper);
+  font: 400 clamp(1.35rem, 2.7vw, 2rem)/1.15 var(--obs-font-serif);
+}
+
+html[data-theme="light"] .obs-today-title,
+html[data-theme="light"] .obs-today-orbit-heading {
+  color: var(--obs-paper-ink);
+}
+
 .m-today-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr);
@@ -475,6 +493,14 @@
   .m-command-header .m-editorial-headline {
     max-width: 14ch;
     font-size: 2.25rem;
+  }
+
+  .obs-today-title {
+    font-size: clamp(2.8rem, 14vw, 4rem);
+  }
+
+  .obs-today-orbit-heading {
+    font-size: clamp(1.3rem, 7vw, 1.8rem);
   }
 
   .m-today-primary {

@@ -692,3 +692,82 @@ body.obs-shell {
     font-size: 24px;
   }
 }
+
+/* The Observatory identity has a real light edition, not a second capture of
+   the midnight palette. Geometry and semantic colors stay stable while the
+   canvas, ordinary surfaces, ink hierarchy and borders move to parchment. */
+html[data-theme="light"] .obs-shell {
+  --m-canvas: #f4ecdf;
+  --m-surface: #fffaf0;
+  --m-surface-muted: #ead8b5;
+  --m-border: rgba(32, 38, 59, 0.16);
+  --m-border-strong: rgba(32, 38, 59, 0.3);
+  --m-ink: #20263b;
+  --m-ink-muted: #655d6c;
+  --m-ink-faint: #756d79;
+  --m-healthy: #25644f;
+  --m-healthy-wash: rgba(37, 100, 79, 0.12);
+  --m-caution: #9a4a18;
+  --m-caution-wash: rgba(154, 74, 24, 0.12);
+  --m-risk: #a74444;
+  --m-risk-wash: rgba(167, 68, 68, 0.1);
+  --m-information: #674d86;
+  --m-information-wash: rgba(103, 77, 134, 0.11);
+  --m-elevation-1: 0 1px 2px rgba(52, 40, 24, 0.06), 0 8px 22px rgba(52, 40, 24, 0.08);
+  --m-elevation-2: 0 2px 4px rgba(52, 40, 24, 0.08), 0 10px 28px rgba(52, 40, 24, 0.1);
+  --m-focus-ring: 0 0 0 2px #f4ecdf, 0 0 0 4px #674d86;
+  background:
+    url("/static/img/meridian/observatory/paper-texture.webp") center / 256px 256px repeat,
+    radial-gradient(120% 80% at 10% -10%, rgba(193, 169, 226, 0.16), transparent 48%),
+    #f4ecdf;
+  color: #20263b;
+}
+
+html[data-theme="light"] .obs-shell .m-surface,
+html[data-theme="light"] .obs-shell .m-ledger-card,
+html[data-theme="light"] .obs-shell .m-selected-summary,
+html[data-theme="light"] .obs-shell .m-activity .m-surface,
+html[data-theme="light"] .obs-shell .m-accounts .m-surface {
+  background: rgba(255, 250, 240, 0.9);
+  color: #20263b;
+}
+
+html[data-theme="light"] .obs-shell .m-editorial-headline,
+html[data-theme="light"] .obs-shell .m-workspace-heading,
+html[data-theme="light"] .obs-shell .m-account-name,
+html[data-theme="light"] .obs-shell .m-activity-command h2 {
+  color: #20263b;
+}
+
+html[data-theme="light"] .obs-shell .m-editorial-subline,
+html[data-theme="light"] .obs-shell .m-workspace-subline {
+  color: #655d6c;
+}
+
+html[data-theme="light"] .obs-shell .m-topbar .m-brand,
+html[data-theme="light"] .obs-shell .m-topbar-settings,
+html[data-theme="light"] .obs-shell .m-theme-toggle--compact {
+  color: #20263b;
+}
+
+@media (max-width: 700px) {
+  .obs-shell:has([data-workspace-section="plan"]:not([hidden])) .m-topbar,
+  .obs-shell:has([data-workspace-section="accounts"]:not([hidden])) .m-topbar {
+    min-height: 68px;
+    position: relative;
+    align-items: flex-start;
+    padding-bottom: 14px;
+  }
+
+  .obs-shell:has([data-workspace-section="plan"]:not([hidden])) .m-topbar-date,
+  .obs-shell:has([data-workspace-section="accounts"]:not([hidden])) .m-topbar-date {
+    display: block;
+    position: absolute;
+    left: max(var(--m-space-4), env(safe-area-inset-left));
+    bottom: 5px;
+    color: var(--obs-lilac);
+    font: 600 10px/1.2 var(--obs-font-sans);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+}

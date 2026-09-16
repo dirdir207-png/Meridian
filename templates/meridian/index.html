@@ -49,8 +49,12 @@
         <span class="m-visually-hidden">Meridian</span>
         <span aria-hidden="true">{% include 'meridian/partials/wordmark.html' %}</span>
       </span>
+      <span class="m-topbar-date" data-today-date hidden>Today</span>
       <span class="m-topbar-spacer" aria-hidden="true"></span>
-      <a class="m-topbar-settings" data-settings-link href="/meridian/settings?section=connections" {% if settings_active %}aria-current="page"{% endif %}>Settings</a>
+      <a class="m-topbar-settings" data-settings-link href="/meridian/settings?section=connections" {% if settings_active %}aria-current="page"{% endif %}>
+        <span>Settings</span>
+        <span class="m-topbar-settings-icon" aria-hidden="true"></span>
+      </a>
       <button
         class="m-theme-toggle m-theme-toggle--compact"
         type="button"

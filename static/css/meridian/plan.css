@@ -35,8 +35,15 @@
 
 /* The two command actions read as one cohesive toolbar rather than two separate
    full-width buttons stacked under the intro. */
-.m-plan-command .m-plan-new {
+.m-plan-create-actions .m-plan-new {
   align-self: flex-start;
+}
+
+.m-plan-create-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--m-space-3);
 }
 
 /* Secondary (autopilot rule) controls sit next to the primary (commitment) with a
@@ -69,7 +76,7 @@
    behind ~170px of transparent padding, and its chamfered end caps — the parts
    carrying the four rivets — are ~230px wide. The label stays HTML on the plate's
    blank centre, and the border box keeps a 44px target. */
-.m-plan-command .m-plan-new.m-primary-button {
+.m-plan-create-actions .m-plan-new.m-primary-button {
   border: 10px solid transparent;
   border-image: url("/static/img/meridian/observatory/kit-2026-09-16/apricot-button.png") 190 230 190 230 fill / 10px 34px round;
   border-radius: 0;

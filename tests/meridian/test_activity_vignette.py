@@ -10,6 +10,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def test_activity_command_copy_matches_the_governing_concept():
+    html = (ROOT / "templates/meridian/partials/activity.html").read_text()
+    assert '<h2 class="m-editorial-headline">Activity</h2>' in html
+    assert "Every movement, accounted for." in html
+
+
 def _read(relative):
     return (ROOT / relative).read_text(encoding="utf-8")
 
@@ -37,10 +43,23 @@ def test_activity_vignette_cannot_squeeze_the_heading_or_a_touch_target():
     assert "@media (min-width: 601px)" in css
     assert "position: absolute" in css
     assert "max-width: calc(100% - clamp(140px, 18vw, 196px))" in css
-    # Below that there is no free column, so the art moves into the flow instead of
-    # overlapping the heading.
+    # The governing short title leaves a real right station on mobile too, so the
+    # art stays absolute and the copy keeps a bounded measure.
     assert "@media (max-width: 600px)" in css
-    assert "align-self: flex-end" in css
+    assert ".m-activity-vignette { position: absolute" in css
+    assert ".m-activity-command-copy { max-width: calc(100% - 156px)" in css
+
+
+def test_activity_mobile_keeps_filters_open_without_the_extra_filter_button():
+    css = _read("static/css/meridian/activity.css")
+    assert ".m-filter-button { display: none; }" in css
+
+
+def test_activity_tabs_use_the_concepts_ruled_underline_treatment():
+    css = _read("static/css/meridian/activity.css")
+    assert ".m-activity-toolbar .m-segmented" in css
+    assert "border-bottom: 1px solid var(--obs-brass)" in css
+    assert '.m-button[aria-pressed="true"]::after' in css
 
 
 def test_activity_vignette_respects_the_kits_size_guidance():

@@ -185,25 +185,55 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
     page.evaluate("theme => document.documentElement.dataset.theme = theme", theme)
     page.wait_for_selector(".obs-dial-svg")
     page.wait_for_function("document.querySelector('[data-sts-figure]').textContent.includes('248.50')")
+    title = page.locator(".obs-today-title")
+    orbit = page.locator(".obs-today-orbit-heading")
+    assert title.is_visible()
+    assert title.inner_text() == "Today"
+    assert orbit.is_visible()
+    assert orbit.inner_text() == "Your next orbit."
     safe = page.locator("[data-sts-figure]")
-    assert safe.is_visible()
-    assert safe.bounding_box()["y"] < page.locator(".obs-dial-svg").bounding_box()["y"]
+    assert not safe.is_visible(), "the duplicate safe-to-spend block must not displace the dial"
+    dial_box = page.locator(".obs-dial-svg").bounding_box()
+    center_amount = page.locator(".obs-dial-center-amount")
+    assert center_amount.inner_text() == "$248.50"
+    assert page.locator(".obs-ticket-title").inner_text() == "Electric"
+    amount_box = center_amount.bounding_box()
+    assert dial_box["y"] < amount_box["y"] < dial_box["y"] + dial_box["height"]
     assert safe.evaluate("el => parseFloat(getComputedStyle(el).fontSize)") >= 48
     assert page.locator("[data-sts-horizon]").inner_text() == "Available until September 16"
     assert page.locator(".obs-dial-center-amount").evaluate("el => getComputedStyle(el).color") == "rgb(234, 216, 181)"
     assert not page.locator("#advisor-fab").is_visible()
-    assert page.get_by_role("button", name="Ask Virgil about this plan").is_visible()
+    advice = page.get_by_role("button", name="Ask Virgil about this plan")
+    assert advice.is_visible() if width > 430 else not advice.is_visible()
     if width <= 430:
-        dial_box = page.locator(".obs-dial-svg").bounding_box()
+        topbar_date = page.locator(".m-topbar-date")
+        assert topbar_date.is_visible()
+        assert topbar_date.inner_text() == "TUESDAY, SEPTEMBER 8"
+        assert page.locator(".m-command-top").is_hidden()
+        assert page.locator(".m-topbar-settings-icon").is_visible()
+        assert page.locator(".m-topbar .m-theme-toggle-label").bounding_box()["width"] <= 1
+        if theme == "dark":
+            assert page.locator(".m-topbar").evaluate(
+                "el => getComputedStyle(el).backgroundColor"
+            ) == page.locator("body").evaluate("el => getComputedStyle(el).backgroundColor")
         rail_box = page.locator(".obs-dial-events").bounding_box()
+        assert dial_box["width"] >= width * 0.74
+        assert dial_box["x"] <= 2
+        assert title.bounding_box()["y"] < dial_box["y"]
         assert rail_box["y"] < dial_box["y"] + dial_box["height"] * .5
         assert rail_box["x"] > dial_box["x"] + dial_box["width"] * .65
+        assert not page.locator(".m-observatory-advice").is_visible()
+        ticket_box = page.locator(".obs-evidence-ticket").bounding_box()
+        cta_box = page.locator(".obs-explore-plan").bounding_box()
+        dock_box = page.locator(".m-nav").bounding_box()
+        assert ticket_box["height"] <= 180
+        assert cta_box["y"] + cta_box["height"] + 8 <= dock_box["y"]
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
     page.get_by_role("button", name="Internet", exact=False).click()
     assert page.locator(".obs-ticket-title").inner_text() == "Internet"
     assert page.locator(".obs-dial-center-title").inner_text() == "Internet"
     if width == 390 and theme == "dark":
-        page.get_by_role("button", name="Ask Virgil about this plan").click()
+        page.get_by_role("button", name="Explore scenario").click()
         assert page.get_by_role("dialog", name="Virgil advisor").is_visible()
         page.get_by_role("button", name="Close advisor", exact=True).click()
         assert not page.get_by_role("dialog", name="Virgil advisor").is_visible()

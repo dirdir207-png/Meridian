@@ -604,16 +604,15 @@
 
 @media (max-width: 600px) {
   .m-activity-command {
-    align-items: stretch;
+    align-items: flex-start;
     flex-direction: column;
-    gap: var(--m-space-4);
+    min-height: 148px;
+    gap: var(--m-space-2);
   }
 
-  .m-filter-button {
-    align-self: stretch;
-    width: 100%;
-    text-align: center;
-  }
+  .m-activity-command-copy { max-width: calc(100% - 156px); }
+  .m-activity-vignette { position: absolute; top: 0; right: 0; width: 148px; }
+  .m-filter-button { display: none; }
 
   .m-activity-body {
     gap: var(--m-space-4);

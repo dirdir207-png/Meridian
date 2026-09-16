@@ -3,31 +3,9 @@
   <header class="m-plan-command m-command-header" aria-label="Plan summary">
     <div class="m-plan-command-copy">
       <p class="m-workspace-kicker">Plan</p>
-      <h2 class="m-editorial-headline">Every dollar has a next job.</h2>
-      <p class="m-editorial-subline">
-        Commitments combine bills, goals, reserves, buffers, and debt without
-        duplicating the same money.
-      </p>
+      <h2 class="m-editorial-headline">Plan</h2>
+      <p class="m-editorial-subline">Give every dollar a destination.</p>
     </div>
-    <button
-      type="button"
-      class="m-primary-button m-plan-new"
-      data-plan-new-commitment
-      aria-haspopup="dialog"
-    >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      New commitment
-    </button>
-    <button
-      type="button"
-      class="m-button m-plan-new m-plan-new-rule"
-      data-plan-new-rule
-      aria-haspopup="dialog"
-    >
-      New autopilot rule
-    </button>
   </header>
 
   {# Machine-readable plan summary (kept for assistive tech and tests); the
@@ -55,6 +33,22 @@
       <svg class="m-plan-map-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false" data-allocation-links></svg>
       <div class="m-plan-map-medallions" data-allocation-medallions></div>
     </div>
+  </section>
+
+  {# The concept places the upcoming commitments directly beneath the map. #}
+  <section class="m-plan-table-section" aria-label="Commitments">
+    <div class="m-section-heading-row">
+      <h2 class="m-section-label">Commitments</h2>
+    </div>
+    <div class="m-plan-table" role="table" aria-label="Commitments" data-commitment-list>
+      <div class="m-plan-table-head" role="row">
+        <span class="m-plan-table-cell m-plan-cell-commitment" role="columnheader">Commitment</span>
+        <span class="m-plan-table-cell" role="columnheader">Funded</span>
+        <span class="m-plan-table-cell" role="columnheader">Next</span>
+      </div>
+    </div>
+    <p class="m-empty-note" data-commitments-empty hidden>No commitments yet.</p>
+    <p class="m-plan-table-footer" data-plan-next-funding hidden></p>
   </section>
 
   {# Summary-first grid: coverage orbit + next paycheck. #}
@@ -95,21 +89,27 @@
     </article>
   </section>
 
-  {# Compact commitment table (summary-first; rows open the shared inspector). #}
-  <section class="m-plan-table-section" aria-label="Commitments">
-    <div class="m-section-heading-row">
-      <h2 class="m-section-label">Commitments</h2>
-    </div>
-    <div class="m-plan-table" role="table" aria-label="Commitments" data-commitment-list>
-      <div class="m-plan-table-head" role="row">
-        <span class="m-plan-table-cell m-plan-cell-commitment" role="columnheader">Commitment</span>
-        <span class="m-plan-table-cell" role="columnheader">Funded</span>
-        <span class="m-plan-table-cell" role="columnheader">Next</span>
-      </div>
-    </div>
-    <p class="m-empty-note" data-commitments-empty hidden>No commitments yet.</p>
-    <p class="m-plan-table-footer" data-plan-next-funding hidden></p>
-  </section>
+  <div class="m-plan-create-actions" aria-label="Plan creation actions">
+    <button
+      type="button"
+      class="m-primary-button m-plan-new"
+      data-plan-new-commitment
+      aria-haspopup="dialog"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Add a bill or goal
+    </button>
+    <button
+      type="button"
+      class="m-button m-plan-new m-plan-new-rule"
+      data-plan-new-rule
+      aria-haspopup="dialog"
+    >
+      New autopilot rule
+    </button>
+  </div>
 
   {# Secondary support: next-30-days timeline. #}
   <div class="m-plan-support">

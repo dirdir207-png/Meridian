@@ -299,10 +299,10 @@ function render(root, payload) {
     }
   }
 
-  const today = root.querySelector("[data-today-date]");
-  if (today) {
+  document.querySelectorAll("[data-today-date]").forEach((today) => {
     today.textContent = editorialDate(forecast.as_of);
-  }
+    today.hidden = false;
+  });
 
   const figure = root.querySelector("[data-sts-figure]");
   const note = root.querySelector("[data-sts-note]");

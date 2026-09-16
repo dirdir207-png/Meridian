@@ -204,6 +204,10 @@
   display: none;
 }
 
+.m-topbar-date {
+  display: none;
+}
+
 .m-nav-profile {
   margin-top: auto;
   padding: var(--m-space-4) var(--m-space-2) var(--m-space-2);
@@ -483,6 +487,17 @@
     display: inline-flex;
     align-items: center;
     padding: var(--m-space-2) var(--m-space-3);
+    gap: var(--m-space-2);
+  }
+
+  .m-topbar-settings-icon {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    flex: 0 0 auto;
+    background-color: currentColor;
+    -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/gear.svg") center / contain no-repeat;
+    mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/gear.svg") center / contain no-repeat;
   }
 
   .m-topbar-settings:hover,
@@ -499,6 +514,20 @@
   .m-theme-toggle--compact:hover,
   .m-theme-toggle--compact[aria-pressed="true"] {
     color: var(--m-ink);
+  }
+
+  .m-topbar .m-theme-toggle--compact {
+    width: 44px;
+    justify-content: center;
+    padding: 4px;
+  }
+
+  .m-topbar .m-theme-toggle-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 
   .m-main {
