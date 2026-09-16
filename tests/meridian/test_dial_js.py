@@ -319,6 +319,28 @@ def test_dial_event_badges_weight_the_rim_with_brass_and_rivets():
     assert ".obs-event-list--orbit .obs-event-kind::after" in css
 
 
+def test_dial_connector_runs_use_real_dial_and_row_geometry():
+    """The concept ties each rim marker to its callout with a dashed run, and the handoff
+    names connectors "tied to actual event coordinates". The previous decoration was a
+    fixed 25px dashed rule pinned to the list item's own midline that read no dial
+    coordinate at all, and it was off at <=900px where the concepts place the runs."""
+    js = _read("static/js/meridian/dial.js")
+    css = _read("static/css/meridian/dial.css")
+    assert "function renderConnectors" in js
+    # Start is the marker's own projection; end is the callout row's box.
+    assert "positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 84, angle)" in js
+    assert "data-connector-for" in js
+    assert "row.getBoundingClientRect()" in js
+    # Redrawn whenever the rows are replaced and whenever either side resizes.
+    assert "renderConnectors(state, container);" in js
+    assert "ResizeObserver" in js
+    # Decorative and safe: hidden from assistive tech, clipped so it cannot widen the
+    # document, and never a hit target over the callouts or the drag track.
+    assert 'layer.setAttribute("aria-hidden", "true")' in js
+    assert "pointer-events: none" in css
+    assert "overflow: hidden" in css
+
+
 def test_evidence_ticket_uses_the_supplied_shaped_asset():
     """Nuance: tickets use shaped silhouettes, layered hairline borders and subtle
     fibrous paper, with corners fixed as text reflows. The kit's parchment-ticket.png

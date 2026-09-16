@@ -207,3 +207,55 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
         assert page.get_by_role("dialog", name="Virgil advisor").is_visible()
         page.get_by_role("button", name="Close advisor", exact=True).click()
         assert not page.get_by_role("dialog", name="Virgil advisor").is_visible()
+
+
+def test_connector_runs_start_on_the_dial_and_end_at_their_own_row(dial_page):
+    """Fails if a connector is decoration only. Every run must start at its own marker's
+    projected point and finish at its own callout row, and the decorative layer must not
+    widen the document or capture pointer input."""
+    page = dial_page
+    page.wait_for_selector(".obs-dial-connector")
+    result = page.evaluate("""() => {
+      const panel = document.querySelector('.obs-dial-panel').getBoundingClientRect();
+      const svg = document.querySelector('.obs-dial-svg').getBoundingClientRect();
+      const layer = document.querySelector('.obs-dial-connectors');
+      const rows = [...document.querySelectorAll('.obs-event-item[data-event-id]')];
+      const runs = [...document.querySelectorAll('.obs-dial-connector')].map((path) => {
+        const row = document.querySelector(
+          `.obs-event-item[data-event-id="${path.dataset.connectorFor}"]`
+        );
+        const d = path.getAttribute('d');
+        const start = d.match(/^M([-\\d.]+) ([-\\d.]+) Q/);
+        const end = d.match(/Q[-\\d.]+ [-\\d.]+ ([-\\d.]+) ([-\\d.]+)$/);
+        const box = row.getBoundingClientRect();
+        const sx = Number(start[1]) + panel.left;
+        const sy = Number(start[2]) + panel.top;
+        return {
+          onDial: sx >= svg.left - 1 && sx <= svg.right + 1 &&
+                  sy >= svg.top - 1 && sy <= svg.bottom + 1,
+          endX: Number(end[1]) + panel.left,
+          endY: Number(end[2]) + panel.top,
+          rowLeft: box.left,
+          rowMidY: box.top + box.height / 2,
+        };
+      });
+      const style = getComputedStyle(layer);
+      return {
+        runs,
+        rowCount: rows.length,
+        pointerEvents: style.pointerEvents,
+        hidden: layer.getAttribute('aria-hidden'),
+        layoutWidth: Math.round(layer.getBoundingClientRect().width),
+        panelWidth: Math.round(panel.width),
+        overflow: document.documentElement.scrollWidth - innerWidth,
+      };
+    }""")
+    assert result["runs"], "no connector runs were drawn"
+    assert result["hidden"] == "true", "the connector layer must be decorative"
+    assert result["pointerEvents"] == "none", "the connector layer must not capture clicks"
+    assert result["layoutWidth"] <= result["panelWidth"], "the layer must span only the panel"
+    assert result["overflow"] <= 0, "connectors must not widen the document"
+    for run in result["runs"]:
+        assert run["onDial"], "a run does not start on the dial"
+        assert abs(run["endX"] - (run["rowLeft"] - 4)) <= 1.5, "a run does not end at its own row"
+        assert abs(run["endY"] - run["rowMidY"]) <= 1.5, "a run does not end at its row midline"

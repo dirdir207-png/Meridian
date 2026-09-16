@@ -677,6 +677,71 @@ function renderEventList(state, container) {
   return wrap;
 }
 
+/* Connector runs. The concept ties each rim marker to its callout with a dashed run,
+   so both ends come from real geometry: the start is the same projection
+   `renderDialSVG` uses for the marker, and the end is the callout row's own box. The
+   layer is decorative, clipped to the panel and never a hit target, so it adds no
+   layout width and cannot move the dial or the rail. */
+function renderConnectors(state, container) {
+  const panel = container.querySelector(".obs-dial-panel");
+  if (!panel) return;
+  let layer = panel.querySelector(".obs-dial-connectors");
+  if (!layer) {
+    layer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    layer.setAttribute("class", "obs-dial-connectors");
+    layer.setAttribute("aria-hidden", "true");
+    layer.setAttribute("focusable", "false");
+    panel.appendChild(layer);
+  }
+  while (layer.firstChild) layer.removeChild(layer.firstChild);
+
+  const svg = panel.querySelector(".obs-dial-svg");
+  if (!svg) return;
+  const panelBox = panel.getBoundingClientRect();
+  const svgBox = svg.getBoundingClientRect();
+  if (!panelBox.width || !svgBox.width) return;
+  layer.setAttribute("viewBox", `0 0 ${panelBox.width.toFixed(1)} ${panelBox.height.toFixed(1)}`);
+  layer.setAttribute("preserveAspectRatio", "none");
+
+  const scale = svgBox.width / VIEWBOX.w;
+  const originX = svgBox.left - panelBox.left;
+  const originY = svgBox.top - panelBox.top;
+
+  const seen = new Set();
+  for (const event of state.model.events) {
+    if (event.date < state.model.today || event.date > state.model.horizonEnd) continue;
+    if (seen.has(event.id)) continue;
+    seen.add(event.id);
+    const row = panel.querySelector(`.obs-event-item[data-event-id="${event.id}"]`);
+    if (!row) continue;
+    const day = dayIndexForDate(event.date, state.model.today);
+    const angle = dayToAngle(day, state.model.totalDays);
+    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 84, angle);
+    const sx = originX + point.x * scale;
+    const sy = originY + point.y * scale;
+    const rowBox = row.getBoundingClientRect();
+    const tx = rowBox.left - panelBox.left - 4;
+    const ty = rowBox.top - panelBox.top + rowBox.height / 2;
+    // A run needs somewhere to go; skip rather than draw backwards through the dial.
+    if (tx <= sx + 6) continue;
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("class", "obs-dial-connector");
+    path.setAttribute("data-connector-for", event.id);
+    const midX = sx + (tx - sx) * 0.55;
+    path.setAttribute(
+      "d",
+      `M${sx.toFixed(1)} ${sy.toFixed(1)} Q${midX.toFixed(1)} ${sy.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)}`
+    );
+    layer.appendChild(path);
+    const end = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    end.setAttribute("class", "obs-dial-connector-end");
+    end.setAttribute("cx", tx.toFixed(1));
+    end.setAttribute("cy", ty.toFixed(1));
+    end.setAttribute("r", "3");
+    layer.appendChild(end);
+  }
+}
+
 function renderEvidenceTicket(state, event) {
   const ticket = document.createElement("article");
   ticket.className = "obs-panel obs-panel--paper obs-evidence-ticket";
@@ -932,6 +997,9 @@ function update(state, container, rangeValue) {
     range.setAttribute("aria-valuetext", describeSelectedDay(state));
   }
 
+  // The event rows were just replaced, so the runs must be re-anchored to the new boxes.
+  renderConnectors(state, container);
+
   // Keep the actual control nodes alive: replacing them drops keyboard focus
   // and interrupts native range dragging on every date change.
 }
@@ -1080,7 +1148,17 @@ export function renderDial(container, inputModel) {
   panel.append(instrument, eventsColumn, controls, renderEvidenceTicket(state, selectedEventForState(state)));
   container.appendChild(panel);
 
+  // Both ends of a run follow live geometry, so recompute when either side resizes.
+  renderConnectors(state, container);
+  const redrawConnectors = () => renderConnectors(state, container);
+  const resizeObserver =
+    typeof ResizeObserver !== "undefined" ? new ResizeObserver(redrawConnectors) : null;
+  if (resizeObserver) resizeObserver.observe(panel);
+  else window.addEventListener("resize", redrawConnectors);
+
   return function stop() {
+    if (resizeObserver) resizeObserver.disconnect();
+    else window.removeEventListener("resize", redrawConnectors);
     container.replaceChildren();
   };
 }

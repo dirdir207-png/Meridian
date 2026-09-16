@@ -682,6 +682,32 @@
         "artifacts": "design-qa.md Today shaped-ticket section",
         "limits": "Coordinate-anchored connectors still not built. Not deployed."
       }
+    },
+    {
+      "id": "OS-025",
+      "title": "Today step 3 batch 3: coordinate-anchored connector runs from dial markers to callouts",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-024"
+      ],
+      "authority_impact": "none; presentation-only decoration. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Each run starts at its own marker's projected dial coordinate, not a fixed offset",
+        "Each run ends at its own callout row's left edge and midline",
+        "Runs re-anchor when the event rows are replaced and when either side resizes",
+        "The layer is decorative: aria-hidden, pointer-events none, clipped, and cannot widen the document",
+        "A run with no clear path is skipped rather than drawn back through the instrument"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 handoff step 3, batch 3 (concept 06)",
+        "tests": "tests/meridian/test_dial_js.py 30 passed; tests/browser/test_dial_fidelity.py 18 passed incl. an endpoint-geometry proof; full non-browser suite 1139 passed / 1 skipped",
+        "capture": "artifacts/observatory-today-connectors-2026-09-16/ (Today, 4 viewports x 2 themes)",
+        "artifacts": "design-qa.md Today connector section",
+        "limits": "Closes the Today items the handoff names. Plan (02) is next. Not deployed."
+      }
     }
   ]
 }

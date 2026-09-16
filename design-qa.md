@@ -24,6 +24,26 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Today — connector runs (2026-09-16, step 3 batch 3)
+
+![Today mobile-air dark, connector runs](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-today-connectors-2026-09-16/today-mobile-air-dark-viewport.png)
+
+![Today desktop dark, connector runs](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-today-connectors-2026-09-16/today-desktop-dark-viewport.png)
+
+Read against concept **06**: each rim marker now carries a dashed brass run across to its own callout, ending in a
+small brass stud at the row's left edge. Both ends are live geometry — the start is the marker's own projection,
+the end is that event's row box — so the runs follow the data and re-anchor when the rows are replaced or either
+side resizes. **Accepted as matching.** Previously the only decoration was a fixed dashed rule pinned to the list
+item's midline that read no dial coordinate, and it was off at ≤900px where the concepts place these runs.
+
+This completes the three Today items the handoff names — shaped ticket, prominent pointer, connectors tied to
+actual coordinates — together with the semantic badge work its `Nuances` section requires. **Today is
+presentation-complete for this pass**; remaining Track D work is Plan (02), then Activity (03), Accounts (04) and
+Settings (05), and Settings is still absent from the isolated preview so no Settings parity can be claimed yet.
+
+Evidence: `artifacts/observatory-today-connectors-2026-09-16/` (4 viewports × 2 themes), with the geometry proved
+by `tests/browser/test_dial_fidelity.py::test_connector_runs_start_on_the_dial_and_end_at_their_own_row`.
+
 ## Today — shaped evidence ticket (2026-09-16, step 3 batch 2)
 
 ![Today mobile-air light, shaped ticket](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-today-ticket-2026-09-16/today-mobile-air-light-viewport.png)

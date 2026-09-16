@@ -224,6 +224,35 @@
   stroke-dasharray: 3 4;
 }
 
+/* Connector runs from each rim marker to its callout. Decorative: hidden from
+   assistive tech, clipped to the panel so a run can never widen the document, and
+   never a hit target, so it cannot steal a callout click or the dial's drag. */
+[data-observatory-dial] .obs-dial-panel {
+  position: relative;
+}
+
+.obs-dial-connectors {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.obs-dial-connector {
+  fill: none;
+  stroke: rgba(198, 170, 113, 0.6);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.obs-dial-connector-end {
+  fill: #c6aa71;
+  opacity: 0.75;
+}
+
 .obs-dial-marker {
   cursor: pointer;
   color: var(--obs-lilac);

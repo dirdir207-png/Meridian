@@ -1,5 +1,35 @@
 # Enhanced SimpleCrew — Current Status
 
+## Today — coordinate-anchored connector runs (2026-09-16)
+
+Handoff step 3, third batch, and the last item the handoff names for Today. The concept ties each rim marker to
+its callout with a dashed run, and the handoff requires connectors "tied to actual event coordinates". Nothing of
+the sort existed: the only decoration was a fixed 25px dashed rule pinned to the list item's own midline, reading
+no dial coordinate at all, and it was switched off at ≤900px — exactly where concepts 01/06 place the runs.
+
+Both ends now come from live geometry. `renderConnectors` projects each upcoming event's marker with the same
+`dayToAngle`/`positionOnArc` call `renderDialSVG` uses, converts it into panel coordinates through the dial's own
+box, and terminates the run at that event's callout row, whose box it reads directly. Runs are redrawn whenever
+`update()` replaces the event rows — the rows are replaced, so stale anchors would otherwise point at detached
+nodes — and through a `ResizeObserver` on the panel, because both ends move when either side resizes. `stop()`
+disconnects the observer and removes the fallback `resize` listener.
+
+Layer safety: the overlay is `aria-hidden`, `pointer-events: none` and clipped to the panel, so it cannot capture
+a callout click or a dial drag, and cannot widen the document. A run with nowhere to go (target not at least 6px
+clear of the marker) is skipped rather than drawn backwards through the instrument.
+
+Verified: `tests/meridian/test_dial_js.py` 30 passed (1 new guard); full non-browser suite
+`./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1139 passed, 1 skipped**;
+`tests/browser/test_dial_fidelity.py` **18 passed** with a new test that proves every drawn run starts inside the
+dial, ends at its own row's left edge minus 4px, lands on that row's midline within 1.5px, reports
+`pointerEvents: none` and `aria-hidden`, spans no more than the panel and adds no document overflow. Ruff and
+`git diff --check` clean. Capture at 4 viewports × 2 themes in
+`artifacts/observatory-today-connectors-2026-09-16/`; inspected at 420×912 and 1440×900.
+
+This closes the three items the handoff names for Today: shaped ticket, prominent pointer, connectors tied to
+real coordinates — plus the semantic badge work its `Nuances` section requires. Deployed: nothing. No route,
+data, financial, provider or authority change. **Plan (concept 02) is the next Track D workspace.**
+
 ## Today — shaped evidence ticket from the supplied asset (2026-09-16)
 
 Handoff step 3, second batch. The evidence ticket was a rectangular parchment card: `ticket-corners.svg` drew
