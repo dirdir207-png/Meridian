@@ -24,6 +24,26 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Activity — framed category glyphs (2026-09-16, batch 2)
+
+![Activity mobile-air dark, framed category glyphs in review mode](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-activity-glyph-2026-09-16/activity-mobile-air-dark-full.png)
+
+Read against concept **03**: each review row now carries its category glyph inside a thin ring with the concept's
+small marker dot. **Accepted as matching** for the ring motif and the glyph placement.
+
+The screenshot is the evidence for a bug this batch fixed: **Internet** and **Electric** both carry the category
+"Utilities" in the fixture, so the first one-pass resolver painted a lightning bolt on the Internet row — the
+precise confusion the kit's mapping warns about. Scanning the specific merchant text before the broad category
+restores `wifi` for Internet and `lightning-charge` for electricity, and a Node round-trip pins both. That same
+test caught "Steam", the concept's own example, resolving to nothing.
+
+**Not claimed:** concept 03's parchment "N categories to review" strip. The payload has no "awaiting review"
+field, so the count would have to come from a confidence threshold — a classification policy I will not invent,
+and a derived figure that would sit where the concept shows a fact. It needs an owner decision.
+
+Also open: the apricot plate on the row's primary action (the concept uses the same action plate the Plan header
+now carries) and the concept's underlined tab treatment.
+
 ## Activity — the header vignette (2026-09-16, batch 1)
 
 ![Activity desktop dark, telescope vignette top-right](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-activity-vignette-2026-09-16/activity-desktop-dark-viewport.png)

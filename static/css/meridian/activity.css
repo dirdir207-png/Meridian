@@ -347,6 +347,57 @@
 
 /* ---------- Review cards (decision-first) ---------- */
 
+/* ---------- Framed category glyph (concept 03) ---------- */
+
+/* The concept frames each ledger row's category glyph in a ring carrying a small
+   marker dot. The glyph is decorative — it is a mask painted with currentColor so the
+   ring's own ink decides its colour, and it is hidden from assistive tech because the
+   category text beside it is what actually states the classification. */
+.m-review-glyph {
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--m-border-strong);
+  color: var(--m-ink);
+}
+
+.m-review-glyph::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--m-healthy);
+  transform: translateY(-50%);
+}
+
+.m-review-glyph-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background-color: currentColor;
+  -webkit-mask: var(--m-review-icon) center / contain no-repeat;
+  mask: var(--m-review-icon) center / contain no-repeat;
+}
+
+@media (max-width: 600px) {
+  .m-review-glyph {
+    width: 40px;
+    height: 40px;
+  }
+
+  .m-review-glyph-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
 .m-review-card {
   display: grid;
   gap: var(--m-space-3);

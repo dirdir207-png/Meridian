@@ -812,6 +812,32 @@
         "artifacts": "design-qa.md Activity vignette section; header geometry probe at 1440/1024/420/390",
         "limits": "At mobile the vignette sits in flow above the Filter button rather than beside the heading, because the owner-accepted heading is a full sentence and the kit forbids squeezing it. Parchment review strip, framed category glyphs and the underlined tab treatment remain open. Not deployed."
       }
+    },
+    {
+      "id": "OS-030",
+      "title": "Activity: framed category glyph on ledger rows from the kit icon set",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-029"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Each review row carries its category glyph inside the concept's ring with a marker dot",
+        "The glyph is decorative and hidden from assistive tech; the category text stays authoritative",
+        "The glyph colour follows the ring's own ink, so it stays legible in both themes",
+        "The kit's electricity-versus-Internet distinction survives a shared broad category",
+        "An unrecognised row keeps a neutral mark instead of borrowing a meaning"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Activity (concept 03), framed row glyphs",
+        "tests": "tests/meridian/test_activity_glyph.py 3 new guards, including a Node round-trip over ten resolver cases; full non-browser suite 1153 passed / 1 skipped",
+        "capture": "artifacts/observatory-activity-glyph-2026-09-16/ (Activity review mode via --ui-state-selector, 5 viewports x 2 themes)",
+        "artifacts": "design-qa.md Activity glyph section; static/js/meridian/kit-icons.js",
+        "limits": "The parchment 'N categories to review' strip is not built: the payload has no awaiting-review field, so the count would require inventing a confidence threshold and would present a derived figure as a fact. The apricot plate on the row action and the underlined tab treatment also remain open. Not deployed."
+      }
     }
   ]
 }

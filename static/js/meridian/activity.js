@@ -3,6 +3,7 @@
 import { MeridianApiError, meridianFetch } from "./api.js";
 import { describeTransactionAccount } from "./archived-accounts.js";
 import { dayKey, dayLabel, formatCurrency } from "./format.js";
+import { transactionIconName } from "./kit-icons.js";
 
 const state = {
   cursor: null,
@@ -156,7 +157,21 @@ function buildRow(transaction) {
     const amountEl = document.createElement("span");
     amountEl.className = `m-review-amount ${transaction.amount < 0 ? "is-spend" : "is-income"}`;
     amountEl.textContent = signedAmount(transaction.amount, transaction.currency);
-    header.append(name, select, amountEl);
+    // Concept 03 frames each row's category glyph in a ring with a small marker dot.
+    // Decorative: the icon is masked and hidden from assistive tech, while the real
+    // category text below stays authoritative.
+    const glyph = document.createElement("span");
+    glyph.className = "m-review-glyph";
+    glyph.setAttribute("aria-hidden", "true");
+    const glyphIcon = document.createElement("span");
+    glyphIcon.className = "m-review-glyph-icon";
+    glyphIcon.style.setProperty(
+      "--m-review-icon",
+      `url("/static/img/meridian/observatory/kit-2026-09-16/icons/${transactionIconName(transaction)}.svg")`
+    );
+    glyph.appendChild(glyphIcon);
+
+    header.append(glyph, name, select, amountEl);
     name.classList.add("m-review-grow");
 
     row.replaceChildren(header, meta, cat, actions);

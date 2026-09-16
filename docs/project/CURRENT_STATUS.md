@@ -1,5 +1,39 @@
 # Enhanced SimpleCrew — Current Status
 
+## Activity — the framed category glyph on ledger rows (2026-09-16)
+
+Activity batch 2, and the concept's most-repeated motif: every row in concept 03's review list carries its
+category glyph inside a thin ring with a small marker dot. Review cards now carry that ring, with the glyph
+resolved semantically from the row's own text.
+
+**A real resolver bug was caught by testing behaviourally rather than by reading source.** The first
+implementation scanned the merchant, description and category in one pass. The fixture's rows are "Internet" and
+"Electric", and *both* carry the category "Utilities" — so the electricity rule matched on the broad category and
+painted a **lightning bolt on the Internet row**, which is exactly the confusion the kit's own mapping calls out
+("lightning-charge (electricity) vs wifi (Internet)"). The resolver now scans the specific text (merchant,
+description) first and only falls back to the broad category. A Node round-trip test pins the distinction, and it
+immediately caught a second gap: "Steam" — the concept's own example row — matched nothing at all and fell through
+to the neutral mark, so the canonical streaming and console merchants were added.
+
+**The glyph is decorative, not authoritative.** It is a CSS mask painted with `currentColor` rather than an
+`<img>` (an external SVG's `currentColor` resolves to black inside an image — the defect fixed on Plan), it is
+`aria-hidden`, and the category text beside it stays the statement of record. An unrecognised row keeps a neutral
+compass rather than borrowing a meaning it does not have.
+
+**Not done: concept 03's parchment "N categories to review" strip.** The transaction payload exposes no
+"awaiting review" field, so any count would have to be derived from a confidence threshold — that is inventing a
+classification policy, and it would put a derived number where the concept shows a fact. It stays open pending an
+owner decision on what the figure should count and what it should say.
+
+Verified: `tests/meridian/test_activity_glyph.py` 3 new guards, one of which is a real Node round-trip over ten
+cases rather than a source-string check; full non-browser suite
+`./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1153 passed, 1 skipped**; Ruff and
+`git diff --check` clean. Captured in review mode via `--ui-state-selector '[data-activity-mode="review"]'` at 5
+viewports × 2 themes in `artifacts/observatory-activity-glyph-2026-09-16/`, zero overflow and zero console
+errors, and inspected at 420×912.
+
+Deployed: nothing. No route, data, financial, provider or authority change.
+
 ## Activity — the header vignette from the supplied telescope asset (2026-09-16)
 
 Track D reaches the third workspace, against concept **03**. The kit names `activity-telescope.png` for the
