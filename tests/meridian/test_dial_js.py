@@ -27,6 +27,33 @@ def test_observatory_css_defines_direction_tokens():
         assert token in css
 
 
+def test_mobile_dial_grows_on_both_sides_and_keeps_the_callout_column():
+    """The dial grows symmetrically; a one-sided bleed would not have shown at all.
+
+    With the wrap spanning `-b .. track`, the dial's right edge lands on `track`, so a
+    one-sided bleed puts everything it adds into the clipped region -- 42px and 80px of
+    bleed both left exactly `track` px visible. That is why the value was raised to 80px
+    without making the dial look any bigger, while clipping ~20% of it.
+
+    Enlarging the visible dial therefore requires growing it toward the right as well, and
+    the left track cannot be widened to help: the callout column is a floor at 130px
+    because "arrangement" measures 112.7px at 17px serif and splits mid-word below that.
+    """
+    css = _read("static/css/meridian/dial.css")
+    # Grows on both sides: +24 total, spending the 12px column gap on each side.
+    assert "calc(100% + 24px)" in css
+    assert "margin: 0 0 0 -12px" in css
+    # Growth past the gap put the brass ring behind "Internet"/"Reserved" and cost the
+    # text its contrast, so the larger value is pinned out.
+    assert "calc(100% + 56px)" not in css
+    assert "margin: 0 0 0 -28px" not in css
+    # The one-sided over-bleed that clipped ~20% of the dial must not return either.
+    assert "calc(100% + 80px)" not in css
+    assert "margin: 0 0 0 -80px" not in css
+    # The callout column stays at its measured floor.
+    assert "grid-template-columns: minmax(0, 1fr) 130px" in css
+
+
 def test_dial_css_defines_instrument_surface():
     css = _read("static/css/meridian/dial.css")
     assert ".obs-dial-arc" in css

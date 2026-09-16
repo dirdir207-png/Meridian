@@ -914,9 +914,37 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
   .m-observatory-safe-observed { font-size: 11px; }
   .obs-shell .m-observatory-note .obs-today-orbit { font-size: 16px; }
   [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 104px; gap: 12px; align-items: start; }
-  /* Enlarge only into the left margin. The right edge stays in its own grid
-     track, separated from callout text and hit targets by the column gap. */
-  .obs-dial-svg-wrap { width: calc(100% + 80px); max-width: none; margin: 0 0 0 -80px; justify-self: start; }
+  /* The dial grows symmetrically about its own centre, and the owner has confirmed a small
+   * left clip is acceptable.
+   *
+   * Three measurements drive this, and the third is the one that constrains the value:
+   *
+   * 1. Widening the LEFT TRACK is not available. The callout column is a hard floor at
+   *    130px -- at 116px the word "arrangement" measures 112.7px at 17px serif and
+   *    `overflow-wrap: break-word` splits it mid-word. (A width sweep that only checked
+   *    scrollWidth did not catch that; a test does.)
+   *
+   * 2. A one-sided bleed does NOT make the dial bigger on screen. With the wrap spanning
+   *    `-b .. track`, the dial's right edge lands on `track` and its left edge on `-b`, so
+   *    everything the bleed adds appears in the clipped region: 42px and 80px of bleed both
+   *    left exactly `track` px visible. Only growth toward the right is visible.
+   *
+   * 3. That rightward growth must stop at the callout column. Growing 28px past the track
+   *    (through the 12px gap and 16px into the column) put the bright brass ring directly
+   *    behind "Internet" and "Reserved", and the text lost contrast against it. +24 total
+   *    spends the 12px gap on each side and no more, so the ring meets the column without
+   *    crossing any callout text.
+   *
+   * Visible dial goes from 246px (unclipped track width) to 258px, clipping 12px at the
+   * left. Buying more size means overlapping callout text and needs a scrim behind it --
+   * a deliberate design decision, not a tweak, so do not raise this value casually.
+   */
+  .obs-dial-svg-wrap {
+    width: calc(100% + 24px);
+    max-width: none;
+    margin: 0 0 0 -12px;
+    justify-self: start;
+  }
   .obs-dial-center { width: 56%; }
   .obs-dial-events { z-index: 3; align-self: start; max-height: calc(100vw - 90px); }
   .obs-event-list--orbit { grid-template-columns: 1fr !important; gap: 16px; }

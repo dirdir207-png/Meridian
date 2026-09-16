@@ -1,5 +1,41 @@
 # Enhanced SimpleCrew — Current Status
 
+## Today dial: the left-clipping regression, and the geometry that caps its size (2026-09-16)
+
+**The regression.** The previous lane widened the dial's left bleed from 42px to 80px. Measured at the governed
+mobile widths that clipped **64px** of the instrument (~20%) against 26px (~9%) at 42px, so the dial read as
+clipped rather than bleeding. The owner reported it from a device screenshot. Restored, then reworked as below.
+
+**The non-obvious geometry, which is why raising the bleed never made the dial look bigger.** The wrap spans
+`-bleed .. track`, so the dial's right edge lands on `track` and its left edge on `-bleed`: everything a one-sided
+bleed adds falls in the *clipped* region. 42px and 80px of bleed both left exactly `track` px visible — raising it
+from 42 to 80 bought no visible size at all and only hid more. Corollary: **visible size grows only rightward.**
+
+**Two hard floors cap how large it can get.**
+
+1. The callout column cannot shrink below **130px**. At 116px the word "arrangement" (112.7px at 17px serif) splits
+   mid-word via `overflow-wrap: break-word`. A width sweep that only checked `scrollWidth` reported 96px as safe;
+   it was wrong, because overflow is not the same failure as a word not fitting. An existing test caught it.
+2. Rightward growth past the 12px column gap puts the bright brass ring behind "Internet" and "Reserved" and the
+   text loses contrast. Verified by capture, not assumed.
+
+**What changed.** The wrap now grows **symmetrically**: `calc(100% + 24px)` with `margin: 0 0 0 -12px`, spending the
+column gap on each side. The rendered dial goes 258–298px → **272–312px**, and left-clipping goes 26px → **0px**
+(the dial now starts 4px inside the viewport). Callouts stay clear of the ring. Verify at 390px if this changes.
+
+Guarded by `test_mobile_dial_grows_on_both_sides_and_keeps_the_callout_column`, which pins the +24/-12 pair, keeps
+the 130px column, and fails if 42px, 56px or 80px of one-sided bleed returns.
+
+Verified: full non-browser suite **1177 passed, 1 skipped**; `ruff` clean; `git diff --check` clean. Captures in
+`artifacts/observatory-today-dialfinal-2026-09-16/` — 10 files, zero overflow, zero console errors — inspected at
+420×912 and confirmed the ring is fully visible with the callout text legible over plain background.
+
+**Still not as large as the owner's reference, and that needs a decision rather than more CSS.** The reference
+composition makes the dial dominant with the callout detail carried by the parchment ticket below it. Reaching that
+size requires the dial to extend under the callout list, which needs one of: a scrim behind the callout text, moving
+the callouts (which would drop real information unless relocated), or shortening their labels. None of those is a
+tweak, so it is left open for the owner rather than guessed at.
+
 ## Capture tooling was producing wrong light-theme evidence, and the tab treatment is ruled (2026-09-16)
 
 **A tooling defect that invalidated part of this session's evidence.** The "light" capture for every workspace
