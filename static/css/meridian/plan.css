@@ -85,6 +85,78 @@
   box-shadow: var(--m-elevation-2);
 }
 
+/* ---------- Next-income strip (concept 02) ---------- */
+
+/* The kit's parchment ticket — whose stated role is "Evidence, account summary,
+   compact income ticket" — becomes the income strip. Nine-slice keeps the scalloped
+   ends, cut corners and corner rivets fixed while the band reflows, and `fill` carries
+   the blank centre so the date, amount and caption stay code-owned HTML. Text on the
+   parchment takes the ticket ink rather than the shell's cream, matching the evidence
+   ticket on Today. Copy is deliberately unchanged: the owner accepts the live wording. */
+.m-plan-summary-grid .m-plan-funding-card {
+  position: relative;
+  padding: var(--m-space-3) var(--m-space-4);
+  border: 20px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 fill / 20px round;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* A parchment band does not take the dark surface's lift on hover. */
+.m-plan-summary-grid .m-plan-funding-card:hover {
+  box-shadow: none;
+}
+
+/* The concept flanks the strip with a small compass star. Decorative only. */
+.m-plan-summary-grid .m-plan-funding-card::before,
+.m-plan-summary-grid .m-plan-funding-card::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translateY(-50%);
+  background-color: #a9863f;
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/star.svg") center / contain no-repeat;
+  pointer-events: none;
+}
+
+.m-plan-summary-grid .m-plan-funding-card::before {
+  left: 2px;
+}
+
+.m-plan-summary-grid .m-plan-funding-card::after {
+  right: 2px;
+}
+
+.m-plan-funding-card .m-section-label {
+  color: #7a5a2e;
+}
+
+.m-plan-funding-card .m-plan-next-title {
+  color: #2f2a20;
+  font-size: 1.5rem;
+}
+
+.m-plan-funding-card .m-plan-funding-date {
+  color: #6b5a3a;
+}
+
+.m-plan-funding-card .m-plan-funding-amount {
+  color: #1f4d3d;
+  font-size: 2rem;
+}
+
+.m-plan-funding-card .m-plan-funding-caption {
+  color: #5c5136;
+}
+
+.m-plan-funding-card .m-plan-shortfall {
+  color: #8a3b12;
+}
+
 /* ---------- Coverage orbit ---------- */
 
 .m-coverage {

@@ -24,6 +24,25 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Plan — the next-income strip (2026-09-16, batch 2)
+
+![Plan desktop light, next-income strip in place](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-plan-income-2026-09-16/plan-desktop-light-full.png)
+
+Read against concept **02**: the next income is now the concept's perforated parchment strip rather than a dark
+surface panel, reusing `parchment-ticket.png` — the kit's own stated role for it is "Evidence, account summary,
+compact income ticket". Scalloped ends, cut corners and corner rivets come from the asset; the date, amount and
+caption stay code-owned HTML on the ticket's blank centre, in ticket ink rather than the shell's cream.
+**Accepted as matching** for the strip's material, silhouette and typography rhythm.
+
+Still open in Plan, and deliberately not claimed: row-level scale lines and chevrons on the commitment rows, the
+bottom apricot CTA (`apricot-button.png`, which the kit specifies for exactly that), and the exact header/tab
+order. Copy is unchanged by design — the owner accepts the live wording, so the label reads "Next paycheck"
+rather than the concept's "Next income".
+
+Evidence: `artifacts/observatory-plan-income-2026-09-16/` (5 viewports × 2 themes, full-page included), plus a
+computed-style probe confirming the nine-slice, the two masked ornaments, the HTML amount and zero overflow at
+both 420px and 1440px.
+
 ## Plan — the folded allocation map (2026-09-16)
 
 ![Plan mobile-air dark, folded allocation map](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-plan-map-2026-09-16/plan-mobile-air-dark-viewport.png)

@@ -42,6 +42,8 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (Plan: folded allocation map) | `templates/meridian/partials/plan.html`, `static/js/meridian/plan.js`, `static/css/meridian/plan.css`, `tests/meridian/test_plan_map.py` (new), `tests/browser/test_plan.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-16 | **released** at `91c09f9`. Track D Plan, first batch: the kit's folded-map allocation replaces the generic stacked bar and swatch legend and is installed below the tabs. Stations are composition, not amounts; every figure stays HTML; the mask-glyph defect and long-label wrapping both carry regression guards. **No** route, data, financial or authority change. Still open in Plan: row scale lines, the perforated income strip, the bottom CTA and the exact header/tab order. |
 
+| Builder (Plan: next-income strip) | `static/css/meridian/plan.css`, `tests/meridian/test_plan_map.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-16 | active. Track D Plan, batch 2: the funding card becomes concept 02's perforated parchment income strip by reusing the kit's `parchment-ticket.png` as a nine-slice with `fill`; ticket ink, decorative star ornaments, no dark hover lift. Copy unchanged. **No** route, data, financial or authority change. |
+
 ## Log (append only — newest first)
 
 ### 2026-09-16 — Builder (Observatory identity slice) — claimed step 2 of the owner-directed handoff

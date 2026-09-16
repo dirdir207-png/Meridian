@@ -735,6 +735,32 @@
         "artifacts": "design-qa.md Plan section",
         "limits": "Per-medallion status tags not claimed: the service exposes no per-segment status. Row scale lines, perforated income strip, bottom CTA and exact header/tab order remain open. Not deployed."
       }
+    },
+    {
+      "id": "OS-027",
+      "title": "Plan: next-income strip from the supplied parchment ticket asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-026"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The next-income strip reuses the kit ticket asset the kit names for a compact income ticket",
+        "Nine-slice preserves the scalloped ends and corner rivets instead of stretching the border",
+        "The date, amount and caption remain code-owned HTML on the ticket's blank centre",
+        "Text on the parchment uses ticket ink, and the dark surface hover lift is dropped",
+        "The card's existing data hooks survive the restyle unchanged"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Plan (concept 02), next-income strip",
+        "tests": "tests/meridian/test_plan_map.py 7 guards; full non-browser suite 1146 passed / 1 skipped",
+        "capture": "artifacts/observatory-plan-income-2026-09-16/ (Plan, 5 viewports x 2 themes)",
+        "artifacts": "design-qa.md Plan next-income section; computed-style probe at 420px and 1440px",
+        "limits": "Copy deliberately unchanged (owner accepts live wording, so the label reads 'Next paycheck'). Row scale lines, bottom CTA and header/tab order remain open. Not deployed."
+      }
     }
   ]
 }

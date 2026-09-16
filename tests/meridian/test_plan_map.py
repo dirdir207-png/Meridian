@@ -92,6 +92,25 @@ def test_plan_map_medallion_labels_wrap_inside_their_station():
     assert "overflow-wrap: anywhere" in css
 
 
+def test_plan_income_strip_uses_the_kit_ticket_and_keeps_its_figures_in_html():
+    """Concept 02's next-income strip. The kit's stated role for this asset is
+    "Evidence, account summary, compact income ticket", so the strip reuses it rather
+    than inventing a shape; the date and amount must stay code-owned."""
+    css = _read("static/css/meridian/plan.css")
+    html = _read("templates/meridian/partials/plan.html")
+    assert "parchment-ticket.png" in css
+    # Nine-slice preserves the scalloped ends and corner rivets rather than stretching
+    # the whole border, and `fill` carries the blank centre.
+    assert "80 fill / 20px round" in css
+    # The band sits on the parchment card, so it must not keep the dark surface's fill.
+    assert ".m-plan-summary-grid .m-plan-funding-card" in css
+    # The data hooks that carry the figures survive the restyle.
+    assert "data-next-paycheck-date" in html
+    assert "data-next-paycheck-amount" in html
+    assert "data-funding-caption" in html
+    assert "data-plan-shortfall" in html
+
+
 def test_plan_map_consumes_the_kit_asset_byte_for_byte():
     manifest = json.loads((KIT / "manifest.json").read_text())
     entry = next(a for a in manifest["assets"] if a["file"] == "plan-map.png")

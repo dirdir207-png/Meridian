@@ -1,5 +1,33 @@
 # Enhanced SimpleCrew — Current Status
 
+## Plan — the next-income strip from the supplied ticket asset (2026-09-16)
+
+The second Plan batch. Concept 02 carries the next income as a **perforated parchment strip**, and the kit names
+that exact role for `parchment-ticket.png`: *"Evidence, account summary, compact income ticket"*. The funding card
+was still a dark `.m-surface` panel, so it now reuses the ticket as a nine-slice border image with `fill`, at the
+same 80-slice the Today evidence ticket uses. Nine-slice keeps the scalloped ends, cut corners and corner rivets
+fixed while the band reflows, and `fill` carries the blank centre, so the date, amount and caption stay
+code-owned HTML and the card's own data hooks are untouched.
+
+Text on the parchment takes the ticket ink rather than the shell's cream — the section label brass, the figure
+dark ink, the amount the incoming green — matching how the Today evidence ticket handles the same material. The
+concept flanks the strip with a small compass star, added here as two decorative `::before`/`::after` masks, and
+the dark surface's hover lift is dropped because a parchment band should not lift like a panel.
+
+Copy is deliberately unchanged: the owner accepts the live wording, so "Funding schedule" and "Next paycheck"
+stay as they are rather than becoming "Next income".
+
+Verified programmatically rather than only by eye, at 420px and 1440px: `border-image-source` resolves to
+`parchment-ticket.png`, `border-top-width` is 20px, both ornaments carry a mask at 22px, the amount renders
+`$1,660` from HTML, the card measures 388×197 and 441×197, and document overflow is 0 at both widths. Also
+`tests/meridian/test_plan_map.py` 7 guards (one new); full non-browser suite
+`./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1146 passed, 1 skipped**; Ruff and
+`git diff --check` clean. Capture at 5 viewports × 2 themes in `artifacts/observatory-plan-income-2026-09-16/`.
+
+Deployed: nothing. No route, data, financial, provider or authority change. Still open in Plan: row-level scale
+lines and chevrons, the bottom apricot CTA (`apricot-button.png`, which the kit specifies for exactly that), and
+the exact header/tab order.
+
 ## Plan — the folded allocation map from the supplied asset (2026-09-16)
 
 Track D moves to the second workspace, against concept **02**. The workspace led with a coverage donut and kept
