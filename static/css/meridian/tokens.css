@@ -1,6 +1,26 @@
 /* Meridian design tokens — Editorial Wealth supported by Quiet Precision.
    Light and dark themes are designed independently; never inherit legacy palettes. */
 
+/* Observatory identity — the self-hosted type pairing supplied by the 2026-09-16
+   handoff kit. The files are served from the kit directory in place so the consumed
+   bytes keep the SHA-256 provenance recorded in the kit manifest, and no third-party
+   font request is ever made from an authenticated financial surface. */
+@font-face {
+  font-family: "Meridian Serif";
+  src: url("/static/img/meridian/observatory/kit-2026-09-16/fonts/LibreBaskerville.ttf") format("truetype");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Meridian Sans";
+  src: url("/static/img/meridian/observatory/kit-2026-09-16/fonts/SourceSans3.ttf") format("truetype");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Standalone Meridian surface: sizes include padding and borders. */
 *,
 *::before,
@@ -62,9 +82,14 @@ textarea {
   --m-forest-muted: rgba(245, 242, 233, 0.66);
   --m-forest-wash: rgba(245, 242, 233, 0.09);
 
-  /* Typography */
-  --m-font-serif: "Iowan Old Style", Baskerville, Georgia, "Times New Roman", serif;
-  --m-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Typography — the self-hosted Observatory pairing declared at the top of this file.
+     Host faces stay as fallbacks so a failed fetch degrades instead of blocking text. */
+  --m-font-serif: "Meridian Serif", "Iowan Old Style", Baskerville, Georgia, "Times New Roman", serif;
+  --m-font-sans: "Meridian Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Observatory accent: the apricot star on the wordmark and the upcoming/action
+     emphasis. Kept in the shared layer so chrome does not depend on the .obs-* scope. */
+  --m-apricot: #f3b272;
 
   /* Type scale */
   --m-text-xs: 0.75rem;

@@ -550,3 +550,117 @@ def test_state_colored_figures_and_badges_carry_non_color_labels():
             badge_label = badge.get_attribute("aria-label")
             assert badge_label, "bill-badge conveys state by color alone (no aria-label)"
         browser.close()
+
+
+# --- Observatory shared identity (2026-09-16 handoff, step 2) -------------------
+
+
+def test_navigation_renders_the_supplied_kit_glyphs_beside_visible_labels():
+    """Fails if a workspace glyph is missing, invisible, oversized, or replaces its label.
+
+    The kit README requires each of the four entries to pair its glyph with a visible
+    label, so an icon-only control is a defect rather than a simplification.
+    """
+    playwright = pytest.importorskip("playwright.sync_api")
+    _setup_module()
+
+    labels = {"today": "Today", "plan": "Plan", "activity": "Activity", "accounts": "Accounts"}
+
+    with playwright.sync_playwright() as browser_driver:
+        browser = browser_driver.chromium.launch()
+        for viewport in (DESKTOP_VIEWPORT, MOBILE_VIEWPORT):
+            context, page = _shell_page(browser, viewport)
+            page.goto(f"{APP_URL}/meridian", wait_until="domcontentloaded")
+            _wait_for_shell(page)
+
+            for workspace, label in labels.items():
+                link = _nav_link(page, workspace)
+                assert link.is_visible(), f"{workspace} is hidden at {viewport}"
+                metrics = link.locator("[data-nav-icon]").evaluate(
+                    """node => {
+                      const style = getComputedStyle(node);
+                      const box = node.getBoundingClientRect();
+                      return {
+                        mask: style.maskImage || style.webkitMaskImage,
+                        width: Math.round(box.width),
+                        height: Math.round(box.height),
+                        hidden: node.getAttribute('aria-hidden'),
+                      };
+                    }"""
+                )
+                assert metrics["hidden"] == "true", f"{workspace} glyph must be decorative"
+                assert metrics["mask"] and metrics["mask"] != "none", (
+                    f"{workspace} glyph has no mask image: {metrics}"
+                )
+                assert metrics["width"] >= 16 and metrics["height"] >= 16, (
+                    f"{workspace} glyph is too small to read: {metrics}"
+                )
+                assert label in link.inner_text(), f"{workspace} label is no longer visible"
+
+            assert _workspace_links(page).count() == 4
+            context.close()
+        browser.close()
+
+
+def test_shared_wordmark_renders_with_its_accent_in_both_headers():
+    """Fails if the accented wordmark is absent, or the rail loses its accessible name."""
+    playwright = pytest.importorskip("playwright.sync_api")
+    _setup_module()
+
+    with playwright.sync_playwright() as browser_driver:
+        browser = browser_driver.chromium.launch()
+
+        context, page = _shell_page(browser, DESKTOP_VIEWPORT)
+        page.goto(f"{APP_URL}/meridian", wait_until="domcontentloaded")
+        _wait_for_shell(page)
+
+        rail_brand = page.locator("[data-primary-nav] [data-meridian-wordmark]")
+        assert rail_brand.is_visible(), "the rail wordmark is missing"
+        assert rail_brand.get_attribute("aria-label") == "Meridian home"
+        mark = rail_brand.locator(".m-wordmark")
+        assert mark.is_visible()
+        # The accent is a dotless letter, so the rendered word must normalise back.
+        assert mark.inner_text().replace("\u0131", "i") == "Meridian", (
+            "the wordmark no longer reads Meridian"
+        )
+        accent = mark.locator(".m-wordmark-accent").evaluate(
+            "node => getComputedStyle(node, '::after').content"
+        )
+        assert accent not in (None, "", "none", "normal"), "the wordmark accent is missing"
+        context.close()
+
+        context, page = _shell_page(browser, MOBILE_VIEWPORT)
+        page.goto(f"{APP_URL}/meridian", wait_until="domcontentloaded")
+        _wait_for_shell(page)
+        topbar_brand = page.locator("[data-topbar] .m-brand")
+        assert topbar_brand.is_visible(), "the mobile header brand is missing"
+        assert topbar_brand.locator(".m-wordmark").is_visible()
+        assert "Meridian" in topbar_brand.inner_text().replace("\u0131", "i")
+        context.close()
+        browser.close()
+
+
+def test_self_hosted_type_pairing_loads_and_is_applied():
+    """Fails if the bundled pairing is not requested, loaded, or actually applied."""
+    playwright = pytest.importorskip("playwright.sync_api")
+    _setup_module()
+
+    with playwright.sync_playwright() as browser_driver:
+        browser = browser_driver.chromium.launch()
+        context, page = _shell_page(browser, DESKTOP_VIEWPORT)
+        page.goto(f"{APP_URL}/meridian", wait_until="networkidle")
+        page.evaluate("() => document.fonts.ready.then(() => true)")
+
+        faces = page.evaluate("() => [...document.fonts].map((face) => [face.family, face.status])")
+        loaded = {family.strip('"') for family, status in faces if status == "loaded"}
+        assert "Meridian Serif" in loaded, f"serif pairing not loaded: {faces}"
+        assert "Meridian Sans" in loaded, f"sans pairing not loaded: {faces}"
+
+        applied = page.evaluate(
+            "() => getComputedStyle(document.querySelector('.m-wordmark')).fontFamily"
+        )
+        assert applied.split(",")[0].strip().strip('"') == "Meridian Serif", (
+            f"the wordmark is not rendering in the bundled serif: {applied}"
+        )
+        context.close()
+        browser.close()

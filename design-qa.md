@@ -24,6 +24,32 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Observatory shared identity — first handoff slice (2026-09-16)
+
+Authority corrected by the owner: the 2026-09-16 handoff and kit are the implementation specification, and the
+older Design Atlas does not govern a conflicting layout. Today's composition authority is **06** (functional
+dial/evidence) with **01** supporting; **02–05** govern Plan, Activity, Accounts and Settings.
+
+This slice is handoff step 2 — shared type/header/navigation — reviewed against the shared chrome those concepts
+show.
+
+![Today mobile-air light](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-identity-2026-09-16/today-mobile-air-light-viewport.png)
+
+![Today desktop dark](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-identity-2026-09-16/today-desktop-dark-viewport.png)
+
+Read against the concepts in the required order (structure → typography → spacing → controls → decoration): the
+wordmark now carries its apricot accent and renders in the bundled serif; the dock pairs each of the four entries
+with its supplied glyph and a visible label; the current entry is lilac with a physical bar rather than colour
+alone. **Accepted as matching at this review level.** No workspace geometry was in scope, so the dial, callout and
+ticket differences recorded further down stay open for step 3 and are deliberately not counted as this slice's
+gaps.
+
+Evidence: `artifacts/observatory-identity-2026-09-16/manifest.json` holds the 40 governed records with the
+contract metadata (concept path, viewport, DPR, theme, fixture, frozen clock, ui state, fullPage, commit);
+full-resolution PNGs sit beside it; `identity-evidence.json` records the consumed kit hashes and the consuming
+revision. No JPEG review copies were generated — the PNGs are retained locally and the owner reviews through the
+GUI, so a lossy second copy would add weight without adding evidence.
+
 ## Track D — consolidated position and the decisions it needs (2026-09-15)
 
 All four workspaces now have valid, informative, complete evidence, and all four have been assessed against their

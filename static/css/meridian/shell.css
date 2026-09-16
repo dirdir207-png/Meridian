@@ -78,14 +78,39 @@
   text-decoration: none;
 }
 
-.m-branded-wordmark {
-  font-weight: 500;
-  letter-spacing: -0.03em;
+/* Shared wordmark (partials/wordmark.html). The dotless letter anchors the apricot
+   four-point star to the glyph rather than the line box, and the star is a
+   pseudo-element so the mark adds no text to the accessibility tree. */
+.m-wordmark {
+  display: inline-block;
+  font-family: var(--m-font-serif);
+  font-weight: 400;
+  letter-spacing: -0.04em;
   line-height: 1;
 }
 
-.m-branded-wordmark:hover {
-  text-decoration: none;
+.m-wordmark-accent {
+  position: relative;
+}
+
+.m-wordmark-accent::after {
+  content: "";
+  position: absolute;
+  width: 0.18em;
+  height: 0.18em;
+  top: 0.1em;
+  left: 0.1em;
+  background: var(--m-apricot, #f3b272);
+  clip-path: polygon(
+    50% 0,
+    63% 36%,
+    100% 50%,
+    63% 64%,
+    50% 100%,
+    36% 64%,
+    0 50%,
+    36% 36%
+  );
 }
 
 .m-nav-list {
@@ -119,6 +144,36 @@
 .m-nav-item svg {
   display: block;
   flex: 0 0 auto;
+}
+
+/* Observatory shared identity: the four kit glyphs render as CSS masks so the link's
+   own `currentColor` drives them (the kit SVGs use fill="currentColor", which an
+   external <img> could not inherit). The glyph is decoration beside a visible label
+   and is never the only name for a workspace. */
+[data-nav-icon] {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  background-color: currentColor;
+  -webkit-mask: var(--m-nav-icon) center / contain no-repeat;
+  mask: var(--m-nav-icon) center / contain no-repeat;
+}
+
+[data-workspace-icon="today"] {
+  --m-nav-icon: url("/static/img/meridian/observatory/kit-2026-09-16/icons/compass.svg");
+}
+
+[data-workspace-icon="plan"] {
+  --m-nav-icon: url("/static/img/meridian/observatory/kit-2026-09-16/icons/map.svg");
+}
+
+[data-workspace-icon="activity"] {
+  --m-nav-icon: url("/static/img/meridian/observatory/kit-2026-09-16/icons/bar-chart.svg");
+}
+
+[data-workspace-icon="accounts"] {
+  --m-nav-icon: url("/static/img/meridian/observatory/kit-2026-09-16/icons/person-circle.svg");
 }
 
 .m-nav-item:hover {
@@ -407,17 +462,12 @@
     margin-bottom: 0;
     height: 44px;
     width: auto;
-    padding: 0 var(--m-space-3);
+    padding: 0 var(--m-space-2);
     display: inline-flex;
     align-items: center;
     gap: var(--m-space-2);
-    cursor: default;
+    font-size: 1.45rem;
     color: var(--m-ink);
-  }
-
-  .m-topbar-title {
-    font-family: var(--m-font-serif);
-    font-size: var(--m-text-lg);
   }
 
   .m-topbar-spacer {

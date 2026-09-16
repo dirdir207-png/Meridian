@@ -6,7 +6,7 @@
 ] -%}
 <nav class="m-nav" data-primary-nav aria-label="Primary">
   <a class="m-brand" data-meridian-wordmark href="/meridian?workspace=today" aria-label="Meridian home">
-    <span class="m-branded-wordmark">Meridian</span>
+    {% include 'meridian/partials/wordmark.html' %}
   </a>
   <ul class="m-nav-list">
     <li>
@@ -16,7 +16,7 @@
         data-workspace="today"
         {% if active_workspace == 'today' %}aria-current="page"{% endif %}
       >
-        <span data-nav-icon data-workspace-icon="today"></span>
+        <span data-nav-icon aria-hidden="true" data-workspace-icon="today"></span>
         <span class="m-nav-label">Today</span>
       </a>
     </li>
@@ -27,7 +27,7 @@
         data-workspace="plan"
         {% if active_workspace == 'plan' %}aria-current="page"{% endif %}
       >
-        <span data-nav-icon data-workspace-icon="plan"></span>
+        <span data-nav-icon aria-hidden="true" data-workspace-icon="plan"></span>
         <span class="m-nav-label">Plan</span>
       </a>
     </li>
@@ -38,7 +38,7 @@
         data-workspace="activity"
         {% if active_workspace == 'activity' %}aria-current="page"{% endif %}
       >
-        <span data-nav-icon data-workspace-icon="activity"></span>
+        <span data-nav-icon aria-hidden="true" data-workspace-icon="activity"></span>
         <span class="m-nav-label">Activity</span>
       </a>
     </li>
@@ -49,7 +49,7 @@
         data-workspace="accounts"
         {% if active_workspace == 'accounts' %}aria-current="page"{% endif %}
       >
-        <span data-nav-icon data-workspace-icon="accounts"></span>
+        <span data-nav-icon aria-hidden="true" data-workspace-icon="accounts"></span>
         <span class="m-nav-label">Accounts</span>
       </a>
     </li>

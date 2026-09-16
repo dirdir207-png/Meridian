@@ -30,8 +30,10 @@
   --obs-radius-md: 14px;
   --obs-radius-lg: 22px;
   --obs-radius-pill: 999px;
-  --obs-font-serif: "Iowan Old Style", Baskerville, Georgia, "Times New Roman", serif;
-  --obs-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* The Observatory layer sets its own font tokens, so it must resolve to the same
+     self-hosted pairing as the shell or `.obs-shell` would render in host fallbacks. */
+  --obs-font-serif: "Meridian Serif", "Iowan Old Style", Baskerville, Georgia, "Times New Roman", serif;
+  --obs-font-sans: "Meridian Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --obs-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --obs-motion-fast: 120ms;
   --obs-motion-base: 200ms;
@@ -422,6 +424,20 @@ body.obs-shell {
 
 .obs-shell .m-nav-item[aria-current="page"]::before {
   background: var(--obs-lilac);
+}
+
+/* The concept gives the current workspace a lilac label and glyph in addition to the
+   physical marker, so it reads at a glance without depending on colour alone — the
+   ::before bar above stays the non-colour cue. */
+.obs-shell .m-nav-item[aria-current="page"],
+.obs-shell .m-nav-item[aria-current="page"] [data-nav-icon] {
+  color: var(--obs-lilac);
+}
+
+@media (max-width: 900px) {
+  .obs-shell .m-nav-item[aria-current="page"] {
+    background: rgba(193, 169, 226, 0.16);
+  }
 }
 
 .obs-shell .m-brand {

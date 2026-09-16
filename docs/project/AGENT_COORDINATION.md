@@ -37,8 +37,21 @@ would have reverted three commits had it been applied. This file is the channel.
 | Builder (C4 transfer readback) | `meridian/providers/crewwork.py`, `meridian/crew_write_actions.py`, `tests/meridian/providers/test_crewwork.py`, `tests/meridian/test_crew_write_actions.py`, `docs/project/write-coverage.json`, `tests/meridian/test_write_coverage.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-14 | **released** (commit in this slice); `crew_initiate_transfer` readback verifier; coverage 15 → 16 of 17. No connector change, provider call, migration or authority change. |
 | Builder (dated occurrences) | `meridian/cadence.py` (new), `meridian/billers.py`, `meridian/payday.py`, `meridian/paycheck.py`, `meridian/paycheck_learning.py`, `meridian/services/{dial,plan,today}.py`, `tests/meridian/test_cadence.py` (new), `tests/meridian/test_biller_monitor.py`, `tests/meridian/test_payday.py`, status/coordination/claims | 2026-09-15 | **released** (commit in this slice); consolidated seven divergent recurrence implementations onto one anchor-preserving rule; pure date arithmetic, no authority or money movement |
 | Astra-H (Harness-side, gameplan H) | `tools/agent-presets/meridian-constitutional-builder/**` (new canonical preset source), a claim row + log entry in this file | see log | active. Harness code lives in the Harness repo and is **not** claimed here. Does **not** write `agent-claims.json` — the plugin only reads filesystem/git facts, so the two-writer hazard flagged in the log below stays open but unreachable from this side. |
+| Builder (Observatory identity slice) | `templates/meridian/partials/wordmark.html` (new), `templates/meridian/partials/navigation.html`, `templates/meridian/index.html`, `templates/meridian/settings.html`, `static/css/meridian/tokens.css`, `static/css/meridian/shell.css`, `static/css/meridian/observatory.css`, `tests/meridian/test_observatory_identity.py` (new), `tests/browser/test_meridian_shell.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md` | 2026-09-16 | active. Owner-directed 09-16 handoff, step 2 only: self-hosted type pair, shared accented wordmark, four kit navigation icons, lilac active state. **No** workspace geometry, route, data, financial or authority change. |
 
 ## Log (append only — newest first)
+
+### 2026-09-16 — Builder (Observatory identity slice) — claimed step 2 of the owner-directed handoff
+
+The owner corrected this lane's authority reading: the 2026-09-16 Astra handoff and its supplied kit are the
+**governing implementation specification**, not an optional aid, and the older Design Atlas must not govern a
+conflicting layout. Composition authority is concept **06** for Today's functional dial/evidence with **01**
+supporting, and concepts **02–05** for Plan, Activity, Accounts and Settings.
+
+This entry claims only handoff step 2 (shared type/header/navigation) so the tree is not held while the later
+workspace-composition slices are planned. `docs/project/*` is already inside the older broad Builder claim; this
+row narrows the files actually being touched now. No workspace geometry, route, data, financial or authority
+change is claimed.
 
 ### 2026-09-15 — Builder (cadence) — dated occurrences: drift made unreachable by chaining
 

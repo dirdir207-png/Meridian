@@ -46,8 +46,8 @@
 
     <header class="m-topbar" data-topbar>
       <span class="m-brand m-brand--compact">
-        M
-        <span class="m-topbar-title">Meridian</span>
+        <span class="m-visually-hidden">Meridian</span>
+        <span aria-hidden="true">{% include 'meridian/partials/wordmark.html' %}</span>
       </span>
       <span class="m-topbar-spacer" aria-hidden="true"></span>
       <a class="m-topbar-settings" data-settings-link href="/meridian/settings?section=connections" {% if settings_active %}aria-current="page"{% endif %}>Settings</a>

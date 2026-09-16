@@ -1,5 +1,42 @@
 # Enhanced SimpleCrew — Current Status
 
+## Observatory shared identity — type, wordmark and navigation (2026-09-16)
+
+Owner correction recorded: the 2026-09-16 Astra handoff and its supplied kit are the **governing implementation
+specification**, not an optional aid, and the older Design Atlas must not govern a conflicting layout.
+Composition authority is concept **06** for Today's functional dial/evidence with **01** supporting, and **02–05**
+for Plan, Activity, Accounts and Settings. This entry covers handoff step 2 only.
+
+Implemented the shared identity layer. The bundled licensed pairing is self-hosted from the kit directory
+(`LibreBaskerville.ttf` → `--m-font-serif`, `SourceSans3.ttf` → `--m-font-sans`), and the Observatory layer's own
+`--obs-font-*` tokens were pointed at the same families — without that second change `.obs-shell` would have kept
+rendering in host fallbacks. One `templates/meridian/partials/wordmark.html` now renders the accented Meridian
+wordmark in the desktop rail and both mobile headers; the apricot four-point star is a CSS pseudo-element on the
+dotless letter, so it adds no text to the accessibility tree. The four supplied glyphs (compass, map, bar-chart,
+person-circle) render as CSS masks so each link's `currentColor` drives them, always beside a visible label and
+with `aria-hidden="true"`, so a glyph can never become the only name for a workspace. The active entry keeps its
+physical marker and gains the concept's lilac label and glyph.
+
+Removed as dead by that change: the literal "M" prefix in both mobile headers, `.m-topbar-title`, and the
+`.m-branded-wordmark` rules. `dial.css` held a live rule sizing `.m-topbar-title` for the Today mobile header; it
+was retargeted to `.m-wordmark` instead of being left on a removed selector, which would have silently dropped
+the concept's large mobile wordmark.
+
+Verified: RED→GREEN `tests/meridian/test_observatory_identity.py` (9 checks). Full non-browser suite
+`./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1131 passed, 1 skipped**. Ruff clean on both
+changed test files; `git diff --check` clean. Governed capture matrix against the isolated synthetic preview
+(`scripts/preview_observatory_dial.py` on `:8093`, `--skip-login`): **40 records = 4 workspaces × 5 viewports ×
+2 themes**, with zero horizontal overflow and zero console errors in every record; artifacts in
+`artifacts/observatory-identity-2026-09-16/`. Rendered-property probe at 1440×900 DPR 1 and 420×912 DPR 3: four
+glyphs masked at 20×20 with labels intact and `aria-hidden="true"`; active bar 3px (rail) / 47px (dock) in lilac
+**and** an active lilac label; the wordmark accent pseudo-element present; both bundled faces report `loaded`;
+wordmark computed family `Meridian Serif`. All six consumed kit files match the kit manifest SHA-256 exactly.
+
+Deployed: nothing. No route, workspace-geometry, data, financial, provider or authority change; the four
+workspaces, Settings separation, URL persistence and focus behaviour are untouched. Settings still returns 404 in
+the isolated preview, so no Settings parity is claimed — `05-settings` stays governed by handoff step 6. Next:
+handoff step 3, Today geometry and event callouts against concept 06.
+
 ## Observatory artwork kit and preview comparison — 2026-09-16
 
 Implemented the owner's requested separate art handoff in `static/img/meridian/observatory/kit-2026-09-16/`: eight transparent decorative PNGs (map, telescope, observatory, moon, blank dial ring, blank ticket, action plate and medallion frame), 22 MIT SVG icons, two SIL OFL font files, a standalone gallery/board, scoped typography/color examples, prompts, provenance and hash manifest. These are reference-based reconstructions; the fonts and library icons are explicitly proposed matches, not recovered identities. Production UI files and existing assets are unchanged.

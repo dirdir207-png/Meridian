@@ -19,8 +19,8 @@
     {% include 'meridian/partials/navigation.html' %}
 
     <header class="m-topbar" data-topbar>
-      <a class="m-brand m-brand--compact" href="/meridian?workspace=today">
-        M <span class="m-topbar-title">Meridian</span>
+      <a class="m-brand m-brand--compact" data-meridian-wordmark href="/meridian?workspace=today" aria-label="Meridian home">
+        {% include 'meridian/partials/wordmark.html' %}
       </a>
       <strong class="m-settings-mobile-title">Settings</strong>
     </header>

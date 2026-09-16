@@ -886,8 +886,9 @@ html[data-theme="light"] .obs-shell:has([data-workspace-section="today"]:not([hi
 @media (max-width: 700px) {
   [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 116px; }
   .obs-dial-controls { width: 100%; }
-  .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar .m-brand--compact { font-size: 0; }
-  .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar-title { font: 30px/1.1 var(--obs-font-serif); }
+  /* The concept's mobile header is the wordmark itself, so the shared mark is sized
+     directly. The old "M" prefix and its font-size:0 suppression are gone. */
+  .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar .m-wordmark { font-size: 30px; }
 }
 
 .obs-dial-center-amount.obs-dial-center-amount--compact { font-size: 24px; }

@@ -604,6 +604,33 @@
         "Each new device, communications, context, research, or Home capability is added and verified independently",
         "Native polish, provider routing, and proactive behavior never widen authority implicitly"
       ]
+    },
+    {
+      "id": "OS-022",
+      "title": "Observatory shared identity: self-hosted type, accented wordmark, kit navigation glyphs",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-001"
+      ],
+      "authority_impact": "none; presentation-only chrome, no route, data or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The bundled licensed pairing is self-hosted and both the shell and Observatory token layers resolve to it",
+        "One shared wordmark partial renders the apricot accent in the desktop rail and both mobile headers",
+        "The four workspace entries pair their supplied glyph with a visible label and are never icon-only",
+        "The current entry keeps a non-colour cue alongside the lilac treatment",
+        "Governed captures cover all four workspaces with zero overflow and zero console errors",
+        "Consumed kit file hashes match the kit manifest"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 handoff step 2 (shared type/header/navigation)",
+        "tests": "tests/meridian/test_observatory_identity.py (9 checks, RED->GREEN), full non-browser suite 1131 passed / 1 skipped",
+        "capture": "artifacts/observatory-identity-2026-09-16/manifest.json (40 records: 4 workspaces x 5 viewports x 2 themes)",
+        "artifacts": "artifacts/observatory-identity-2026-09-16/identity-evidence.json",
+        "limits": "No workspace geometry. Settings is absent from the isolated preview, so no Settings parity is claimed. Not deployed."
+      }
     }
   ]
 }
