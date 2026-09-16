@@ -319,6 +319,18 @@ def test_dial_event_badges_weight_the_rim_with_brass_and_rivets():
     assert ".obs-event-list--orbit .obs-event-kind::after" in css
 
 
+def test_evidence_ticket_uses_the_supplied_shaped_asset():
+    """Nuance: tickets use shaped silhouettes, layered hairline borders and subtle
+    fibrous paper, with corners fixed as text reflows. The kit's parchment-ticket.png
+    carries the scalloped rails, cut corners, corner rivets and fibre; the previous
+    ticket-corners.svg drew only four brass brackets, so the card read as a rectangle."""
+    css = _read("static/css/meridian/dial.css")
+    assert "kit-2026-09-16/parchment-ticket.png" in css
+    # Nine-slice with `fill` keeps the corners fixed and the blank centre carrying the paper.
+    assert "80 fill / 24px round" in css
+    assert "ticket-corners.svg\") 40 / 24px" not in css
+
+
 def test_mobile_callout_column_fits_ordinary_words():
     """Diagnosed callout defect at ≤700px: the title spans the whole rail column, so the
     rail width *is* the title's measure. At 116px the column left 110px while the word

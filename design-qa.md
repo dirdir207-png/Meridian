@@ -24,6 +24,28 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Today — shaped evidence ticket (2026-09-16, step 3 batch 2)
+
+![Today mobile-air light, shaped ticket](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-today-ticket-2026-09-16/today-mobile-air-light-viewport.png)
+
+![Today desktop light, shaped ticket, full page](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-today-ticket-2026-09-16/today-desktop-light-full.png)
+
+Read against concept **06**: the ticket now carries the shaped silhouette the nuance names — scalloped side rails,
+cut corners, four corner rivets and fibrous paper — supplied by the kit's `parchment-ticket.png` as a nine-slice
+border image with `fill`, so the corner features stay fixed as the text reflows and the centre stays blank for
+real words and money. At desktop full page the slice tiles without a seam. **Accepted as matching** for the
+ticket. The previous `ticket-corners.svg` drew only four brass brackets, which is why the card read as a
+rectangle before.
+
+**Still open** in step 3: the dashed connector runs tying each rim marker to its callout. No connector geometry
+exists at any width today — the existing decoration is a fixed 25px dashed rule pinned to the list item's own
+midline, reading no dial coordinate, and it is switched off at ≤900px, which is exactly where concepts 01/06
+place the runs.
+
+Evidence: `artifacts/observatory-today-ticket-2026-09-16/` (4 viewports × 2 themes, plus full-page artifacts).
+Sizing was measured before widening, because the fidelity suite caps the ticket at 260px: the mobile ticket was
+193.6px, leaving 66.4px of headroom.
+
 ## Today — badges, pointer and callout legibility (2026-09-16, step 3 batch 1)
 
 ![Today mobile-air light, step 3 batch 1](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-today-step3-2026-09-16/today-mobile-air-light-viewport.png)

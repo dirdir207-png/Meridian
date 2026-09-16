@@ -655,7 +655,32 @@
         "tests": "tests/meridian/test_dial_js.py 28 passed; full non-browser suite 1137 passed / 1 skipped; tests/browser/test_dial_fidelity.py 17 passed (was 3 failed / 14 passed at HEAD 1a9599f)",
         "capture": "artifacts/observatory-today-step3-2026-09-16/ (Today, 4 viewports x 2 themes)",
         "artifacts": "design-qa.md Today section",
-        "limits": "Connector geometry and the shaped ticket remain open. medallion-frame.png measured and deliberately unused at badge scale (48px native stroke collapses to ~1.7px at 44px). Not deployed."
+        "limits": "Connector geometry remains open. medallion-frame.png measured and deliberately unused at badge scale (48px native stroke collapses to ~1.7px at 44px). Not deployed."
+      }
+    },
+    {
+      "id": "OS-024",
+      "title": "Today step 3 batch 2: shaped evidence ticket from the supplied parchment asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-023"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The evidence ticket uses the supplied shaped asset rather than four bracket corners",
+        "Corner features stay fixed as the HTML content reflows, and the centre stays blank for code-owned text",
+        "The 260px ticket height cap and the no-overflow assertions still hold at every governed viewport",
+        "Money, dates and status remain HTML with provenance, never baked into the artwork"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 handoff step 3, batch 2 (concept 06)",
+        "tests": "tests/meridian/test_dial_js.py 29 passed; full non-browser suite 1138 passed / 1 skipped; tests/browser/test_dial_fidelity.py 17 passed",
+        "capture": "artifacts/observatory-today-ticket-2026-09-16/ (Today, 4 viewports x 2 themes, full-page included)",
+        "artifacts": "design-qa.md Today shaped-ticket section",
+        "limits": "Coordinate-anchored connectors still not built. Not deployed."
       }
     }
   ]

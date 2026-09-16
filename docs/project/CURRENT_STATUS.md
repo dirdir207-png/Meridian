@@ -1,5 +1,30 @@
 # Enhanced SimpleCrew — Current Status
 
+## Today — shaped evidence ticket from the supplied asset (2026-09-16)
+
+Handoff step 3, second batch. The evidence ticket was a rectangular parchment card: `ticket-corners.svg` drew
+only four brass right-angle brackets, so the "shaped silhouette" reading was carried solely by the round date
+stamp. It now uses the kit's `parchment-ticket.png` as a nine-slice border image with `fill`: the supplied art
+brings the scalloped side rails, the cut corners, the four corner rivets and the fibrous paper, while nine-slice
+keeps those corner features fixed as the HTML content reflows and `fill` carries the blank centre through. Every
+word and amount stays code-owned. Border width 16 → 24px (10 → 20px at mobile).
+
+Sizing was checked before widening rather than assumed, because `tests/browser/test_dial_fidelity.py:87` caps the
+ticket at 260px: the mobile ticket measured 193.6px, leaving 66.4px of headroom, and the +20px frame lands well
+inside the cap. The fidelity suite stays **17 passed**, confirming the cap, the `<time datetime>` contract, the
+exactly-twice `$84.00` and the no-overflow assertions all survive the new frame, at 390/430/1024/1440 in both
+themes.
+
+Verified: `tests/meridian/test_dial_js.py` 29 passed (1 new guard); full non-browser suite
+`./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1138 passed, 1 skipped**; dial fidelity **17 passed**;
+Ruff and `git diff --check` clean. Capture at 4 viewports × 2 themes in `artifacts/observatory-today-ticket-2026-09-16/`,
+inspected at mobile and at desktop full-page to confirm the nine-slice tiles without seams.
+
+Deployed: nothing. No route, data, financial, provider or authority change. Still open in step 3: the
+coordinate-anchored connector runs from dial markers to their callouts — no connector geometry exists at any
+width today, and the concept places those runs precisely at the ≤900px widths where the current decorative
+bridge is switched off.
+
 ## Today — semantic badges, prominent pointer, callout legibility (2026-09-16)
 
 Handoff step 3, first batch, against concept **06** (functional dial/evidence) with **01** supporting.

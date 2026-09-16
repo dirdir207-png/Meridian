@@ -563,8 +563,13 @@
 .obs-evidence-ticket {
   display: grid;
   gap: var(--obs-space-4);
-  border: 16px solid transparent;
-  border-image: url("/static/img/meridian/observatory/ticket-corners.svg") 40 / 24px round;
+  /* The kit's ticket art carries the shaped silhouette the nuance requires: scalloped
+     side rails, cut corners, four corner rivets and fibrous paper. Nine-slice keeps
+     those corner features fixed while the HTML content reflows, and `fill` carries the
+     blank centre through so every word and amount stays code-owned. The earlier
+     ticket-corners.svg drew only four brass brackets, which read as a plain card. */
+  border: 24px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 fill / 24px round;
   border-radius: 0;
 }
 
@@ -773,7 +778,7 @@ html[data-theme="light"] .obs-dial-range-label { color: #655d6c; }
   .obs-event-list--orbit .obs-event-amount { font-size: 23px; }
   .obs-event-list--orbit .obs-event-date { font-size: 11px; }
   .obs-event-list--orbit .obs-event-meta { font-size: 10px; }
-  .obs-evidence-ticket { padding: 16px 12px; border-width: 10px; }
+  .obs-evidence-ticket { padding: 16px 12px; border-width: 20px; }
   .obs-ticket-title { font-size: 27px; }
   .obs-evidence-ticket .obs-amount--hero { font-size: 32px; }
   .obs-ticket-header { gap: 10px; }
