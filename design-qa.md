@@ -1,5 +1,29 @@
 # Observatory / Today visual QA
 
+## Reviewing the captures in chat (how to show images to the owner)
+
+The owner reviews away from the machine, so evidence that requires opening a local directory is not reviewable
+when it matters. The DSH web GUI renders an image when a message contains markdown image syntax with an
+**absolute POSIX path**; the client rewrites it to the GUI's own same-origin `/api/file?path=…` endpoint, which
+re-validates policy host-side and requires the session cookie. Because it is same-origin, the image also loads
+when the GUI is reached remotely, with no extra server or tunnel.
+
+```
+![Today mobile dark](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/trackd-review/today-mobile-dark.jpg)
+```
+
+Rules that matter, taken from the client's own tests:
+
+- The path **must be absolute** and POSIX. A relative path (`comparison.png`) and a Windows path are deliberately
+  inert, and no image renders.
+- Non-HTTP transports are inert, so this only works through the GUI.
+- `/api/file` returns **401** without the session cookie — expected, and the reason a bare `curl` cannot verify it.
+
+`artifacts/trackd-review/` holds every comparison downscaled to 760px wide as **progressive JPEG at quality 86**:
+17 files, 71–191 KB each, 2.0 MB total. The originals are 1.2–1.7 MB PNGs, which is too heavy to load on a phone
+and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
+these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
+
 ## Track D — consolidated position and the decisions it needs (2026-09-15)
 
 All four workspaces now have valid, informative, complete evidence, and all four have been assessed against their
