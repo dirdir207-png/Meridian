@@ -44,6 +44,8 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (Plan: next-income strip) | `static/css/meridian/plan.css`, `tests/meridian/test_plan_map.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-16 | **released** at `507bd5b`. Track D Plan, batch 2: the funding card becomes concept 02's perforated parchment income strip by reusing the kit's `parchment-ticket.png` as a nine-slice with `fill`; ticket ink, decorative star ornaments, no dark hover lift. Copy unchanged. **No** route, data, financial or authority change. |
 
+| Builder (Plan: primary action plate) | `static/css/meridian/plan.css`, `tests/meridian/test_plan_map.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-16 | active. Track D Plan, batch 3: the "New commitment" primary action carries the kit's `apricot-button.png` plate behind its real HTML label, with slice offsets measured from the asset rather than guessed. 44px target kept. **No** route, data, financial or authority change. |
+
 ## Log (append only — newest first)
 
 ### 2026-09-16 — Builder (Observatory identity slice) — claimed step 2 of the owner-directed handoff

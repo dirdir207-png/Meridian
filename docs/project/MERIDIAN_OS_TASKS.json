@@ -761,6 +761,31 @@
         "artifacts": "design-qa.md Plan next-income section; computed-style probe at 420px and 1440px",
         "limits": "Copy deliberately unchanged (owner accepts live wording, so the label reads 'Next paycheck'). Row scale lines, bottom CTA and header/tab order remain open. Not deployed."
       }
+    },
+    {
+      "id": "OS-028",
+      "title": "Plan: primary action plate from the supplied apricot button asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-027"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The primary action uses the kit's action plate behind a real button, not an image of a button",
+        "Slice offsets are measured from the asset, whose plate sits behind transparent padding",
+        "The label stays code-owned HTML on the plate's blank centre",
+        "The control meets the kit's 44px minimum target with no document overflow"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Plan (concept 02), primary action plate",
+        "tests": "tests/meridian/test_plan_map.py 8 guards; full non-browser suite 1147 passed / 1 skipped",
+        "capture": "artifacts/observatory-plan-cta-2026-09-16/ (Plan, 5 viewports x 2 themes)",
+        "artifacts": "design-qa.md Plan action-plate section; computed-style probe at 420px and 1440px (222x58, dark plate ink, zero overflow)",
+        "limits": "The concept places the plate as a full-width bottom CTA; it stays in the command header, which is a layout decision. Row scale lines and header/tab order remain open. Not deployed."
+      }
     }
   ]
 }

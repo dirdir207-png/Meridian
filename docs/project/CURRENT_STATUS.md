@@ -1,5 +1,30 @@
 # Enhanced SimpleCrew — Current Status
 
+## Plan — the primary action plate from the supplied button asset (2026-09-16)
+
+The third Plan batch. Concept 02's primary action is a wide apricot plate, and the kit specifies
+`apricot-button.png` for exactly that: *"Primary action plate ... Use behind a real button/link. HTML label and
+arrow; at least 44px target. Nine-slice for variable width."* The "New commitment" button now carries that plate
+behind its real HTML label and plus glyph.
+
+**The slice offsets were measured, not guessed.** The asset is 2172×724 but its plate occupies only y 171–515,
+sitting behind ~170px of transparent padding — so a naive uniform slice would mis-assign the chamfer and the four
+rivets to the tiled middle band and repeat them. Measuring the silhouette profile gave the chamfered end caps a
+width of ~230px, which became `190 230 190 230 fill / 10px 34px round`: the caps keep their chamfer and rivets,
+the thin top and bottom slices keep the plate's edge lines, and `fill` carries the fibrous apricot centre so the
+label stays code-owned.
+
+Verified programmatically at 1440px and 420px: `border-image-source` resolves to `apricot-button.png`, the slice
+is `190 230 fill`, width `10px 34px`, the button measures **222×58** (above the kit's 44px target), the label
+renders in the plate's dark ink `rgb(44, 29, 13)`, and document overflow is 0. Inspected in the capture: the
+chamfered corners, triple edge lines, four rivets and fibrous apricot all read correctly at mobile. Also
+`tests/meridian/test_plan_map.py` 8 guards (one new); full non-browser suite
+`./.venv311/bin/python -m pytest -q --ignore=tests/browser` — **1147 passed, 1 skipped**; Ruff and
+`git diff --check` clean. Capture at 5 viewports × 2 themes in `artifacts/observatory-plan-cta-2026-09-16/`.
+
+Deployed: nothing. No route, data, financial, provider or authority change. Plan's remaining gaps are now
+narrow: row-level scale lines and chevrons on the commitment rows, and the exact header/tab order.
+
 ## Plan — the next-income strip from the supplied ticket asset (2026-09-16)
 
 The second Plan batch. Concept 02 carries the next income as a **perforated parchment strip**, and the kit names

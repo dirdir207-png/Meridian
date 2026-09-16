@@ -24,6 +24,24 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Plan — the primary action plate (2026-09-16, batch 3)
+
+![Plan mobile-air light, primary action plate](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-plan-cta-2026-09-16/plan-mobile-air-light-viewport.png)
+
+Read against concept **02**: the primary action now uses the kit's apricot action plate — chamfered corners,
+triple edge lines, four rivets and fibrous apricot — behind the real "New commitment" button, whose label and
+plus glyph stay HTML on the plate's blank centre. **Accepted as matching** for the action's material and
+silhouette.
+
+The slice offsets were measured from the asset rather than assumed: the plate occupies only y 171–515 of a 724px
+canvas behind ~170px of transparent padding, so a uniform slice would have pushed the chamfer and rivets into the
+tiled middle band and repeated them. The measured ~230px end caps became `190 230 190 230 fill / 10px 34px round`,
+giving a 222×58 control at both viewports — above the kit's 44px target — with zero overflow.
+
+Still open in Plan, and deliberately not claimed: row-level scale lines and chevrons on the commitment rows, and
+the exact header/tab order. The concept places this plate as a full-width bottom CTA; it stays in the command
+header here, which is a layout decision rather than a material gap.
+
 ## Plan — the next-income strip (2026-09-16, batch 2)
 
 ![Plan desktop light, next-income strip in place](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-plan-income-2026-09-16/plan-desktop-light-full.png)

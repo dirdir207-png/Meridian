@@ -62,6 +62,22 @@
   white-space: nowrap;
 }
 
+/* Concept 02's primary action plate. The kit specifies apricot-button.png for exactly
+   this ("Primary action plate ... Use behind a real button/link. HTML label and arrow;
+   at least 44px target. Nine-slice for variable width."). Slice offsets were measured
+   from the asset rather than guessed: the plate occupies y 171-515 of a 724px canvas
+   behind ~170px of transparent padding, and its chamfered end caps — the parts
+   carrying the four rivets — are ~230px wide. The label stays HTML on the plate's
+   blank centre, and the border box keeps a 44px target. */
+.m-plan-command .m-plan-new.m-primary-button {
+  border: 10px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/apricot-button.png") 190 230 190 230 fill / 10px 34px round;
+  border-radius: 0;
+  background: none;
+  min-height: 44px;
+  padding: var(--m-space-2) calc(var(--m-space-4) + 12px);
+}
+
 /* ---------- Summary grid ---------- */
 
 .m-plan-summary-grid {

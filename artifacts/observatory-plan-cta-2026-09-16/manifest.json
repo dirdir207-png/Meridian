@@ -1,0 +1,204 @@
+{
+  "captures": [
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-plan-cta-2026-09-16/plan-desktop-light-full.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "d7bf9c8fc30e28e2c57e466adc27a1c8e3347892",
+      "captured_at": "2026-09-16T06:52:27.183888Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-plan-cta-2026-09-16/plan-desktop-light-viewport.png",
+        "artifacts/observatory-plan-cta-2026-09-16/plan-desktop-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-plan-cta-2026-09-16/plan-desktop-dark-full.png",
+      "viewport": "desktop",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "d7bf9c8fc30e28e2c57e466adc27a1c8e3347892",
+      "captured_at": "2026-09-16T06:52:28.788719Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-plan-cta-2026-09-16/plan-desktop-dark-viewport.png",
+        "artifacts/observatory-plan-cta-2026-09-16/plan-desktop-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-plan-cta-2026-09-16/plan-tablet-light-full.png",
+      "viewport": "tablet",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "d7bf9c8fc30e28e2c57e466adc27a1c8e3347892",
+      "captured_at": "2026-09-16T06:52:30.152987Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-plan-cta-2026-09-16/plan-tablet-light-viewport.png",
+        "artifacts/observatory-plan-cta-2026-09-16/plan-tablet-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-plan-cta-2026-09-16/plan-tablet-dark-full.png",
+      "viewport": "tablet",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "d7bf9c8fc30e28e2c57e466adc27a1c8e3347892",
+      "captured_at": "2026-09-16T06:52:31.535620Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-plan-cta-2026-09-16/plan-tablet-dark-viewport.png",
+        "artifacts/observatory-plan-cta-2026-09-16/plan-tablet-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-light-full.png",
+      "viewport": "mobile",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "d7bf9c8fc30e28e2c57e466adc27a1c8e3347892",
+      "captured_at": "2026-09-16T06:52:34.190194Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-light-viewport.png",
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-dark-full.png",
+      "viewport": "mobile",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "d7bf9c8fc30e28e2c57e466adc27a1c8e3347892",
+      "captured_at": "2026-09-16T06:52:36.985233Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-dark-viewport.png",
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-small-light-full.png",
+      "viewport": "mobile-small",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "d7bf9c8fc30e28e2c57e466adc27a1c8e3347892",
+      "captured_at": "2026-09-16T06:52:39.454163Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-small-light-viewport.png",
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-small-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-small-dark-full.png",
+      "viewport": "mobile-small",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "d7bf9c8fc30e28e2c57e466adc27a1c8e3347892",
+      "captured_at": "2026-09-16T06:52:41.824459Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-small-dark-viewport.png",
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-small-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-air-light-full.png",
+      "viewport": "mobile-air",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "d7bf9c8fc30e28e2c57e466adc27a1c8e3347892",
+      "captured_at": "2026-09-16T06:52:44.479660Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-air-light-viewport.png",
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-air-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-air-dark-full.png",
+      "viewport": "mobile-air",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "d7bf9c8fc30e28e2c57e466adc27a1c8e3347892",
+      "captured_at": "2026-09-16T06:52:47.219902Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-air-dark-viewport.png",
+        "artifacts/observatory-plan-cta-2026-09-16/plan-mobile-air-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    }
+  ]
+}

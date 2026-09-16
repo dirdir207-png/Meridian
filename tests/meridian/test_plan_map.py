@@ -111,7 +111,23 @@ def test_plan_income_strip_uses_the_kit_ticket_and_keeps_its_figures_in_html():
     assert "data-plan-shortfall" in html
 
 
-def test_plan_map_consumes_the_kit_asset_byte_for_byte():
+def test_plan_primary_action_uses_the_kit_plate_behind_a_real_button():
+    """Concept 02's primary action is the apricot plate, and the kit specifies this
+    asset for exactly that: "Primary action plate ... Use behind a real button/link.
+    HTML label and arrow; at least 44px target. Nine-slice for variable width." The
+    slice offsets are measured from the asset, whose plate sits behind ~170px of
+    transparent padding."""
+    css = _read("static/css/meridian/plan.css")
+    html = _read("templates/meridian/partials/plan.html")
+    assert "kit-2026-09-16/apricot-button.png" in css
+    assert "190 230 190 230 fill / 10px 34px round" in css
+    # The kit's minimum target, and a real button carrying an HTML label beneath the art.
+    assert "min-height: 44px" in css
+    assert "data-plan-new-commitment" in html
+    assert "New commitment" in html
+
+
+def test_plan_kit_assets_are_consumed_byte_for_byte():
     manifest = json.loads((KIT / "manifest.json").read_text())
     entry = next(a for a in manifest["assets"] if a["file"] == "plan-map.png")
     digest = hashlib.sha256((KIT / "plan-map.png").read_bytes()).hexdigest()
