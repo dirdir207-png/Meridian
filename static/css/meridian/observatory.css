@@ -8,7 +8,10 @@
    decorative imagery carry meaning. */
 
 :root {
-  --obs-bg: #172334;
+  /* Measured from the governing concepts, which agree closely across all four pages:
+     Today #161c34, Plan #131830, Activity #131b30, Accounts #151c34 -> mean (20,27,50).
+     The previous #172334 was both lighter and greener than every one of them. */
+  --obs-bg: #141b32;
   --obs-surface: #202b40;
   --obs-surface-raised: #26334a;
   --obs-ink: #eee4cf;

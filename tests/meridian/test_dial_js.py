@@ -19,7 +19,10 @@ def _read(relative):
 
 def test_observatory_css_defines_direction_tokens():
     css = _read("static/css/meridian/observatory.css")
-    for token in ("--obs-bg: #172334", "--obs-ink: #eee4cf", "--obs-lilac: #c1a9e2",
+    # --obs-bg is the measured mean of the four governing concepts (Today #161c34,
+    # Plan #131830, Activity #131b30, Accounts #151c34 -> (20,27,50)). It was
+    # #172334, which was lighter and greener than all four.
+    for token in ("--obs-bg: #141b32", "--obs-ink: #eee4cf", "--obs-lilac: #c1a9e2",
                   "--obs-mint: #a5d4bf", "--obs-apricot: #f3b272", "--obs-paper: #ead8b5"):
         assert token in css
 

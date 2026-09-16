@@ -940,7 +940,7 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
 .obs-shell .m-observatory-note .obs-today-orbit::after { display: none; }
 .m-observatory-advice { display: flex; justify-content: flex-end; margin-top: -12px; }
 .obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab { display: none; }
-.obs-shell:has([data-workspace-section="today"]:not([hidden])) { background: #101a28; }
+.obs-shell:has([data-workspace-section="today"]:not([hidden])) { background: #161c34; }
 html[data-theme="light"] .obs-shell:has([data-workspace-section="today"]:not([hidden])) { background: #f4ecdf; }
 @media (max-width: 700px) {
   [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 130px; }
