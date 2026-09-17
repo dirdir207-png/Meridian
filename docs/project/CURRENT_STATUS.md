@@ -1,5 +1,55 @@
 # Enhanced SimpleCrew — Current Status
 
+## RESUME HERE — open work, measured (2026-09-16, at `5c732f9`)
+
+Written so a fresh session can continue from the repository rather than from a conversation. Every number below was
+measured, not estimated. Ledger entries: `MERIDIAN_OS_TASKS.json` **OS-035…OS-039**.
+
+**Fixed and verified this round.** The empty evidence ticket's text collision (at `≤700px` the ticket is
+`grid-template-columns: 1fr auto` with named areas, and the empty state's two children have none, so they
+auto-placed into two columns and overlapped: both occupied `606..682`; now `606..631` / `637..684`). The dial's
+left-clipping regression (80px bleed clipped 64px, ~20% of the instrument; now 0px clipped).
+
+**Open, in the order I would take them:**
+
+1. **OS-035 — Today instrument centring, INCOMPLETE.** Space above the dial is `29px` against `233px` below. The
+   panel row is as tall as the event-list column and `align-items: start` pinned the instrument to the top.
+   `.obs-dial-instrument` already carries `align-self: center`, which moved it `0 → 29px` but did not balance it.
+   **The trap:** `align-self` must go on `.obs-dial-instrument`, the grid item — putting it on
+   `.obs-dial-svg-wrap` does nothing, because the wrap lives *inside* the instrument. I made exactly that mistake.
+
+2. **OS-036 — connector runs terminate on nothing** (owner-reported on device: "several lines" running straight
+   down to no row). Not diagnosed. Lead: `renderConnectors` re-anchors runs after the event rows are replaced
+   (`dial.js` `update()`).
+
+3. **OS-038 — remaining concept-reconciliation gaps**, each a bounded slice: the lilac wavy title underline
+   (Today/Activity/Accounts; the concepts show none on Plan), the Accounts connectors as curved dashed paths with
+   an end node each and star-tipped separators, the rotated/notched Accounts ticket, the Plan bordered tab bar with
+   the star medallion in its parchment-filled active cell, and richer medallion glyphs. All measurements live in
+   `artifacts/astra-fidelity-review-2026-09-16/README.md` → Finding 4.
+
+4. **OS-037 — pointer on "Next day", could NOT reproduce, blocked pending the owner.** In the isolated preview the
+   pointer *does* move on Next day (angle `-120° → -60°` over two steps). Two traps worth keeping: do not read
+   `x1` as "pinned" (equal `x` across steps is just `sin(-120°) == sin(-60°)`), and rule out a stale cached JS
+   bundle on the device with a hard refresh before changing code.
+
+5. **OS-039 — the Accounts rotunda engraving**, blocked on new art from Astra. The concept draws a colonnaded
+   domed rotunda; the kit's `observatory-landscape.png` is a different engraving. Do not present it as a match and
+   do not CSS-approximate an engraving.
+
+**Standing traps from this round, all of which cost real time:**
+
+- The dark canvas is `#141b32` (measured mean of the four concepts), and Today's own shell is `#161c34`. The
+  callout column is a hard floor at **130px** — below that "arrangement" splits mid-word.
+- A **one-sided dial bleed adds only clipped area, never visible area** (`wrap spans -b .. track`), so the dial
+  grows only rightward. The wrap is `calc(100% + 24px)` / `margin: 0 0 0 -12px`; do not raise it past the 12px
+  column gap without a scrim, or the brass ring lands behind "Internet"/"Reserved".
+- **Theme resolution and the theme toggle are different code paths.** Probing one proves nothing about the other;
+  a passing resolution probe is what produced a wrong "the app is fine" verdict earlier.
+- **Luminance, not eyeballing, catches theme-capture failures** — the two passes looked plausible side by side.
+- Temporary review tooling lives in untracked `tmp/probe_*.py`; `artifacts/` holds all captures and the Astra
+  package and is untracked by convention.
+
 ## Today dial: the left-clipping regression, and the geometry that caps its size (2026-09-16)
 
 **The regression.** The previous lane widened the dial's left bleed from 42px to 80px. Measured at the governed

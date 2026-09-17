@@ -461,7 +461,9 @@
       "phase": "integration-boundary",
       "status": "complete",
       "priority": "medium",
-      "dependencies": ["OS-001"],
+      "dependencies": [
+        "OS-001"
+      ],
       "authority_impact": "none; read-only projection and no transport",
       "owner_decision_required": false,
       "acceptance_criteria": [
@@ -942,6 +944,100 @@
         "artifacts": "design-qa.md Accounts closing-strip section; MERIDIAN_ROADMAP.md Track D authority split",
         "limits": "The concept's strip engraving is omitted because the kit supplies no counterpart and scopes the telescope elsewhere. Settings (concept 05) remains blocked on its absent preview route; Activity's parchment review strip remains owner-gated. Not deployed."
       }
+    },
+    {
+      "id": "OS-035",
+      "title": "Today: complete the instrument's vertical centring",
+      "phase": "design-fidelity",
+      "status": "in_progress",
+      "priority": "high",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Space above and below the instrument are within a few px of each other at 390/420/430px",
+        "Measured, not eyeballed: the open state is 29px above against 233px below",
+        "align-self must target the grid item .obs-dial-instrument, NOT .obs-dial-svg-wrap (the wrap lives inside it; aligning it changes nothing)",
+        "The event list keeps its current vertical rhythm"
+      ],
+      "notes": "Owner-reported: 'isn't centered top to bottom, there is a much larger gap below the dial than above.' Row height is driven by the event list column."
+    },
+    {
+      "id": "OS-036",
+      "title": "Today: connector runs terminate on nothing",
+      "phase": "design-fidelity",
+      "status": "open",
+      "priority": "high",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; presentation-only",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Every connector run ends on its own event row, verified by measuring both endpoints",
+        "No connector is left drawn against empty space when a day has no event",
+        "Lead: renderConnectors re-anchors runs after the rows are replaced (dial.js update())"
+      ],
+      "notes": "Owner-reported: 'the connecting lines also run straight down connecting to nothing, several lines.'"
+    },
+    {
+      "id": "OS-037",
+      "title": "Today: pointer does not visibly move on Next day",
+      "phase": "design-fidelity",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; presentation-only",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "Reproduced on the owner's data range before any code changes",
+        "Isolated preview moves the pointer correctly on Next day (angle -120deg -> -60deg over 2 steps), so the fixture does NOT reproduce it",
+        "Rule out a stale cached JS bundle on the device first (hard refresh)",
+        "Do not read x1 as 'pinned': sin(-120) == sin(-60), so equal x values across two steps are a coincidence"
+      ],
+      "notes": "Owner-reported. Needs a device-specific repro; blocked pending that or confirmation that a hard refresh clears it."
+    },
+    {
+      "id": "OS-038",
+      "title": "Reconcile the remaining concept-vs-current gaps (all four workspaces)",
+      "phase": "design-fidelity",
+      "status": "open",
+      "priority": "medium",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; presentation-only",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Lilac wavy title underline on Today/Activity/Accounts (the concepts show none on Plan)",
+        "Accounts connectors rebuilt as curved dashed paths with a node at each end, colour-matched per row, plus star-tipped row separators",
+        "Accounts ticket: rotated, punched notch edges, inset dotted border",
+        "Plan tab row: one bordered bar, three cells, active cell parchment-filled with a brass star medallion",
+        "All measurements are in artifacts/astra-fidelity-review-2026-09-16/README.md Finding 4"
+      ],
+      "notes": "Concept measurements recorded; each item is a separate bounded slice."
+    },
+    {
+      "id": "OS-039",
+      "title": "Accounts: the rotunda engraving differs from the concept",
+      "phase": "asset-gap",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; art only",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "Requires new art from Astra: the concept draws a colonnaded domed rotunda on a rocky knoll",
+        "The kit's observatory-landscape.png is a different engraving and must not be presented as a match",
+        "No CSS approximation of the engraving, per the handoff's rule"
+      ],
+      "notes": "Blocked on art supply, not on effort. Do not fake."
     }
   ]
 }
