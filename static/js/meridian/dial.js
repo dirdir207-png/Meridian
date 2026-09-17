@@ -748,6 +748,11 @@ function renderEvidenceTicket(state, event) {
   const ticket = document.createElement("article");
   ticket.className = "obs-panel obs-panel--paper obs-evidence-ticket";
   if (!event) {
+    // The populated ticket places its children by named grid area. The empty state has no
+    // header/facts/actions children, so without this modifier they auto-place into the two
+    // columns of the mobile template and render side by side on top of each other -- the
+    // owner saw "No event selected" with the detail text overlapping it.
+    ticket.classList.add("obs-evidence-ticket--empty");
     const title = document.createElement("h3");
     title.className = "obs-ticket-title";
     title.textContent = "No event selected";

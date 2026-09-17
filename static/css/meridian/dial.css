@@ -944,6 +944,20 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
     max-width: none;
     margin: 0 0 0 -12px;
     justify-self: start;
+    /* The panel row is as tall as the taller column (the event list), and `align-items:
+     * start` pinned the instrument to the top of it: measured 0px of space above the dial
+     * and 262px below, so it read as sitting high with a hole under it. Centre it in the
+     * row and leave the event list where it is; `start` on the wrap only, not the panel,
+     * so the rows keep their current vertical rhythm. */
+    align-self: center;
+  }
+
+  /* The grid ITEM is the instrument, not the wrap inside it -- aligning the wrap did
+     nothing (verified: the gap stayed 0px above / 262px below). The panel row is as tall
+     as the taller column, which is the event list, so `align-items: start` pinned the
+     instrument to the top of that row. Centring the instrument balances the space. */
+  [data-observatory-dial] .obs-dial-instrument {
+    align-self: center;
   }
   .obs-dial-center { width: 56%; }
   .obs-dial-events { z-index: 3; align-self: start; max-height: calc(100vw - 90px); }
@@ -1024,6 +1038,14 @@ body.obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab.
     border-image-width: 16px;
   }
   .obs-ticket-header { grid-area: header; gap: 8px; }
+  /* The empty ticket has no header/facts/actions children, so the two-column template
+     above would auto-place its title and detail side by side and collide them. Single
+     column, named areas off, and the plain stack the copy was written for. */
+  .obs-evidence-ticket--empty {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: none;
+    gap: 6px;
+  }
   .obs-ticket-title { font-size: 23px; }
   .obs-ticket-date { flex-basis: 44px; padding: 4px 2px; font-size: 9px; }
   .obs-source-stamp { font-size: 10px; }
