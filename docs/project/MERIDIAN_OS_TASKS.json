@@ -1079,6 +1079,34 @@
         "artifacts": "static/img/meridian/observatory/ASSET_MANIFEST.md (new row with provenance and measured alpha), templates/meridian/partials/accounts.html (stale comment corrected), design-qa.md",
         "limits": "The launch asset is 2.0MB for a display slot of at most 188 CSS px. That is within the project's existing precedent (dial-plate.png is 3.0MB) and its alpha is correct, so it is shipped as supplied; a downscale is recorded as an optional follow-up rather than applied to the owner's art without being asked. Not deployed."
       }
+    },
+    {
+      "id": "OS-040",
+      "title": "Bottom dock: taller, with the concepts' ornate glyphs",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; presentation only. No route, data, financial, provider or authority change",
+      "owner_decision_required": false,
+      "requested_by": "owner, 2026-09-18: 'Taller icon dock at the bottom I noticed as well, in the concept. Also with more ornate icons'",
+      "acceptance_criteria": [
+        "The dock is taller, measured against the concept rather than nudged",
+        "The glyphs are the concepts' ornate engravings, not 16px silhouettes",
+        "The desktop rail is unchanged",
+        "No horizontal overflow at any governed viewport"
+      ],
+      "evidence": {
+        "measurement": "Measured before changing anything, on the governing concept design/observatory-drafts-2026-09-08/01-today.png (853px wide): the dock panel spans y=1672..1823, so 152px tall = 17.8% of the frame's width; it is a rounded panel inset from the screen edges (x=17..836, i.e. 2.0% each side) ending 2.5% above the bottom; each item stacks its glyph above its label; the ringed compass glyph is ~72px = 8.4% of the width, about 34px at a 420px viewport; the current workspace is marked by a lilac rule UNDER its label with no fill behind the item. Live at 420px before: dock 65px = 15.5% of width, glyphs 20px, labels 12px, item laid out as a ROW with the glyph beside the label, and the marker a bar ABOVE the glyph.",
+        "delivered": "The dock stacks glyph over label (which is most of the height), glyphs 20px -> 34px, labels 12px -> 15px, item floor 56px -> 64px, and the panel became a rounded inset floating dock with a hairline border and hairline rules between workspaces, as the concept draws it. Measured after: 76px = 18.1% of a 420px viewport against the concept's 17.8%, a ratio of 1.02. The active marker moved under the label and the lilac fill behind the active item was removed, both because the concept draws neither.",
+        "glyphs": "Four glyphs drawn in-repo in static/img/meridian/observatory/nav/, matching the concept's engravings: compass-rose.svg (ring, inner ring, four-point star, four cardinal ticks), charted-map.svg (folded three-panel map, dotted route, cross and waypoint), rising-bars.svg (four ascending columns on a baseline), ringed-profile.svg (ring, head, shoulders). They stay single-colour CSS masks driven by currentColor, which is the existing documented mechanism; the concept inks the active glyph lilac and the rest muted, which is exactly what that does.",
+        "scope_limit": "The kit's Bootstrap glyphs remain on disk and are still used elsewhere (the Activity row glyphs); only the dock's mapping changed. The desktop rail is untouched and re-measured: 150px rail, row layout, 20px glyphs, no inset, zero overflow.",
+        "tests": "tests/meridian/test_nav_dock.py, 4 new guards (at least three drawn elements per glyph and no embedded raster; the stacked, larger, inset dock; the marker under the label with no fill; and that the kit glyphs are superseded rather than deleted). tests/meridian/test_observatory_identity.py::test_shell_maps_each_workspace_to_its_supplied_kit_glyph was reconciled and renamed to ..._to_its_own_glyph_and_the_file_exists, because it hard-coded the kit's filenames; it now guards the invariant (one workspace, one real glyph, both mask properties) instead of one path, which is what made it brittle. Full non-browser suite 1186 passed, 1 skipped.",
+        "capture": "artifacts/observatory-dock-2026-09-18/ - 40 files, four workspaces x five governed viewports x two themes, zero console errors, zero horizontal overflow, light/dark luminance deltas 151-159.",
+        "limits": "At 390px the dock is 19.5% of the viewport width against the concept's 17.8%, because the glyph and label are a fixed size while the viewport narrows; the concept is a single fixed-width composition, so this is recorded rather than chased. Not deployed."
+      }
     }
   ]
 }

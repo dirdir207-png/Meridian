@@ -146,10 +146,17 @@
   flex: 0 0 auto;
 }
 
-/* Observatory shared identity: the four kit glyphs render as CSS masks so the link's
-   own `currentColor` drives them (the kit SVGs use fill="currentColor", which an
-   external <img> could not inherit). The glyph is decoration beside a visible label
-   and is never the only name for a workspace. */
+/* Observatory shared identity: the four glyphs render as CSS masks so the link's own
+   `currentColor` drives them, which an external <img> could not inherit. The glyph is
+   decoration beside a visible label and is never the only name for a workspace.
+
+   The glyphs live in `observatory/nav/` and are drawn in-repo from the governing
+   concepts, replacing the kit's 16px Bootstrap silhouettes. The concept's dock icons
+   are line engravings with real detail -- a ringed compass rose with cardinal ticks, a
+   folding map carrying a dotted route to a cross, rising columns, a ringed profile --
+   and they read at 20px as nothing but blobs. They are single-colour masks by design:
+   the concept inks the active icon lilac and the rest muted, which is exactly what
+   `currentColor` already does. */
 [data-nav-icon] {
   display: inline-block;
   flex: 0 0 auto;
@@ -161,19 +168,19 @@
 }
 
 [data-workspace-icon="today"] {
-  --m-nav-icon: url("/static/img/meridian/observatory/kit-2026-09-16/icons/compass.svg");
+  --m-nav-icon: url("/static/img/meridian/observatory/nav/compass-rose.svg");
 }
 
 [data-workspace-icon="plan"] {
-  --m-nav-icon: url("/static/img/meridian/observatory/kit-2026-09-16/icons/map.svg");
+  --m-nav-icon: url("/static/img/meridian/observatory/nav/charted-map.svg");
 }
 
 [data-workspace-icon="activity"] {
-  --m-nav-icon: url("/static/img/meridian/observatory/kit-2026-09-16/icons/bar-chart.svg");
+  --m-nav-icon: url("/static/img/meridian/observatory/nav/rising-bars.svg");
 }
 
 [data-workspace-icon="accounts"] {
-  --m-nav-icon: url("/static/img/meridian/observatory/kit-2026-09-16/icons/person-circle.svg");
+  --m-nav-icon: url("/static/img/meridian/observatory/nav/ringed-profile.svg");
 }
 
 .m-nav-item:hover {
@@ -388,12 +395,15 @@
     z-index: 30;
     height: auto;
     flex-direction: row;
-    padding: var(--m-space-1) max(var(--m-space-2), env(safe-area-inset-right))
-      max(var(--m-space-1), env(safe-area-inset-bottom))
-      max(var(--m-space-2), env(safe-area-inset-left));
+    /* The concept's dock is a floating rounded panel inset from the screen edges, not a
+       full-bleed bar: measured on 01-today.png the panel spans x=17..836 of 853 (2.0%
+       inset each side) and ends 21px above the bottom of a 1844px frame (2.5%), with a
+       hairline border all the way round and a rounded corner. */
+    margin: 0 2% max(2.5%, env(safe-area-inset-bottom));
+    padding: var(--m-space-1) var(--m-space-2);
+    border: 1px solid var(--m-border);
+    border-radius: var(--m-radius-lg);
     background: var(--m-surface);
-    border-right: none;
-    border-top: 1px solid var(--m-border);
   }
 
   /* The forest brand treatment belongs to the desktop rail, not the dock. */
@@ -425,13 +435,37 @@
     justify-content: center;
   }
 
+  /* The concept separates the four workspaces with a hairline rule between them. */
+  .m-nav-list > li + li {
+    border-left: 1px solid var(--m-border);
+  }
+
   .m-nav-item {
     width: auto;
     flex: 1;
-    min-height: 56px;
+    /* The concept stacks the glyph above its label; the rail lays them side by side.
+       Stacking is most of what makes the dock taller, and it is what the concept shows:
+       measured on 01-today.png the dock panel is 152px tall in an 853px-wide frame, i.e.
+       17.8% of the width, against 15.5% before this change. */
+    flex-direction: column;
+    gap: 3px;
+    min-height: 64px;
+    padding: 4px;
     border-radius: var(--m-radius-sm);
     color: var(--m-ink-muted);
     justify-content: center;
+  }
+
+  /* The dock glyphs are drawn far larger than the rail's. Measured on the concept, the
+     ringed compass spans ~72px of 853, i.e. 8.4% of the width -- about 34px at 420px,
+     against the 20px the rail uses. */
+  .m-nav-item [data-nav-icon] {
+    width: 34px;
+    height: 34px;
+  }
+
+  .m-nav-item .m-nav-label {
+    font-size: 15px;
   }
 
   .m-nav-item:hover,
@@ -440,11 +474,14 @@
     color: var(--m-ink);
   }
 
+  /* The concept marks the current workspace with a lilac rule UNDER its label, not a bar
+     above the glyph, so the marker moves to match. It stays a physical, non-colour cue:
+     the geometry is still owned here and only the ink comes from observatory.css. */
   .m-nav-item[aria-current="page"]::before {
     left: 25%;
     right: 25%;
-    top: 4px;
-    bottom: auto;
+    top: auto;
+    bottom: 3px;
     width: auto;
     height: 3px;
     background: var(--m-healthy);

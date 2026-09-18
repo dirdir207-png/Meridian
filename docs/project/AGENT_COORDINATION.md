@@ -67,7 +67,53 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (Today: OS-036 connector runs, and the reverted instrument centring) | `static/js/meridian/dial.js`, `static/css/meridian/dial.css`, `tests/meridian/test_dial_js.py`, `tests/browser/test_dial_fidelity.py`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md` | 2026-09-18 | **released at this commit**. Track D Today: reproduces and fixes OS-036 (connector runs drew for rows the scrollable rail does not show, leaving dashed lines cut off in mid-air) and reverts the `align-self: center` that `5c732f9` added to the instrument, which did not fix the owner's report and made the dial's position depend on the event-list length. Turns 3 of the 9 pre-existing `tests/browser` failures green. **No** route, data, financial, provider or authority change; presentation only. |
 
+| Builder (Bottom dock: taller, with the concepts' ornate glyphs) | `static/img/meridian/observatory/nav/**` (new), `static/css/meridian/shell.css`, `static/css/meridian/observatory.css`, `tests/meridian/test_nav_dock.py` (new), `tests/meridian/test_observatory_identity.py`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md`, `artifacts/observatory-dock-2026-09-18/**` | 2026-09-18 | **released at this commit**. Owner-requested: the dock is taller and its icons more ornate, both measured against concept 01 rather than nudged (dock 65px/15.5% of width → 76px/18.1% against the concept's 17.8%; glyphs 20px → 34px against the concept's 8.4% of width). Stacks glyph over label, becomes the concept's rounded inset panel with hairline rules, moves the active marker under the label and removes the fill the concept does not draw. Four glyphs drawn in-repo; the kit's Bootstrap glyphs are superseded for the dock, **not deleted**, and the desktop rail is untouched. **No** route, data, financial, provider or authority change; presentation only. |
+
 ## Log (append only — newest first)
+
+### 2026-09-18 — Builder (bottom dock) — taller, with the concepts' ornate glyphs
+
+Owner-requested in the same pass as the dial work: *"Taller icon dock at the bottom I noticed as well, in the
+concept. Also with more ornate icons."* Both halves were measured against concept 01 before anything changed,
+and both were true.
+
+**The concept:** panel 152px tall in an 853px frame = **17.8%** of width; a rounded panel inset 2.0% from the
+screen edges, hairline rules between workspaces, each glyph **stacked above** its label, the ringed compass at
+~**8.4%** of width (~34px at 420px), and the active workspace marked by a lilac rule **under** its label with
+**no fill** behind the item.
+
+**The app had:** **65px (15.5%)** full-bleed bar, **20px** Bootstrap silhouettes, **12px** labels, glyph
+*beside* label, marker *above* the glyph.
+
+**Delivered:** stacked layout (most of the height), glyphs 20→34px, labels 12→15px, item floor 56→64px, the
+concept's rounded inset dock with hairline rules between workspaces, the marker moved under the label, and the
+lilac active fill removed. After: **76px = 18.1%** at 420px, a ratio of **1.02** against the concept.
+
+**Four glyphs were drawn, not borrowed:** `compass-rose.svg` (ring, inner ring, four-point star, cardinal
+ticks), `charted-map.svg` (folded three-panel map, dotted route, cross, waypoint), `rising-bars.svg` (four
+ascending columns on a baseline), `ringed-profile.svg` (ring, head, shoulders). They stay single-colour CSS
+masks driven by `currentColor` — the concept inks the active glyph lilac and the rest muted, which is precisely
+what that mechanism already does, so the theming architecture is unchanged. The kit's Bootstrap glyphs are
+**superseded for the dock, not deleted**: they remain on disk and still serve surfaces that use them.
+
+**One guard was reconciled rather than satisfied.**
+`test_shell_maps_each_workspace_to_its_supplied_kit_glyph` hard-coded the kit's filenames and failed the moment
+the owner's request was implemented. Its value was the invariant — one workspace, one real glyph, both mask
+properties — not one file's path, so it now guards that and is renamed
+`..._to_its_own_glyph_and_the_file_exists`. The path was the brittle part, not the intent.
+
+**Scope limit, re-measured:** the desktop rail is untouched — 150px, row layout, 20px glyphs, no inset, zero
+overflow.
+
+**Recorded, not chased:** at 390px the dock is 19.5% of width against the concept's 17.8%, because the glyph and
+label are fixed sizes while the viewport narrows; the concept is one fixed-width composition.
+
+**Test state:** non-browser suite **1186 passed, 1 skipped** (+4 new guards). Captures
+`artifacts/observatory-dock-2026-09-18/` — 40 files, four workspaces × five governed viewports × two themes,
+zero console errors, zero horizontal overflow, light/dark luminance deltas 151–159. Note
+`tests/browser/test_meridian_shell.py` cannot run against the isolated synthetic preview: its conftest registers
+an owner through `/api/auth/register`, which only the full app serves, so it fails at setup (20 errors) rather
+than on assertions. `ruff` clean; `git diff --check` clean.
 
 ### 2026-09-18 — Builder (Today dial) — OS-036 reproduced and fixed; the instrument centring reverted
 

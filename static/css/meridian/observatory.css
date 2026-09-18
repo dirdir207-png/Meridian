@@ -437,9 +437,14 @@ body.obs-shell {
   color: var(--obs-lilac);
 }
 
+/* The dock's active item was tinted lilac here. Removed 2026-09-18: the concept marks the
+   current workspace with three cues and no fill — the lilac glyph, the lilac label and a
+   lilac rule under the label — and a tinted block behind the item is a fourth that the
+   concept does not draw. The marker under the label remains the non-colour cue, so the
+   active state still does not depend on colour alone. */
 @media (max-width: 900px) {
   .obs-shell .m-nav-item[aria-current="page"] {
-    background: rgba(193, 169, 226, 0.16);
+    background: none;
   }
 }
 

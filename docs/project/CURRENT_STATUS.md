@@ -53,6 +53,48 @@ left-clipping regression (80px bleed clipped 64px, ~20% of the instrument; now 0
 - Temporary review tooling lives in untracked `tmp/probe_*.py`; `artifacts/` holds all captures and the Astra
   package and is untracked by convention.
 
+## The bottom dock: taller, with the concepts' ornate glyphs (2026-09-18)
+
+**Owner-reported:** *"Taller icon dock at the bottom I noticed as well, in the concept. Also with more ornate
+icons."* Both halves were measured against concept 01 before anything changed, and the owner was right on both.
+
+**What the concept actually draws.** The dock panel spans `y=1672..1823` of an 853px-wide frame: **152px** tall,
+i.e. **17.8%** of the frame's width. It is a **rounded panel inset** from the screen edges (x=17..836, 2.0% each
+side) ending 2.5% above the bottom, with a hairline border and **hairline rules between the workspaces**. Each
+item **stacks its glyph above its label**. The ringed compass glyph is ~72px = **8.4%** of the width — about
+**34px** at a 420px viewport. The current workspace is marked by a lilac rule **under its label**, with **no fill
+behind the item**.
+
+**What the app did.** At 420px: dock **65px = 15.5%** of width, glyphs **20px**, labels **12px**, each item laid
+out as a **row** with the glyph *beside* the label, and the active marker a bar **above** the glyph. The kit's
+glyphs are 16px Bootstrap silhouettes, which read as blobs at dock size.
+
+**Delivered.** Stacked layout (which is most of the height), glyphs 20→**34px**, labels 12→**15px**, item floor
+56→64px, the panel reworked as the concept's rounded inset floating dock with hairline rules between workspaces,
+the active marker moved **under** the label, and the lilac fill behind the active item **removed**. Measured
+after: **76px = 18.1%** of a 420px viewport against the concept's 17.8% — a ratio of **1.02**. Four glyphs were
+drawn in-repo in `static/img/meridian/observatory/nav/` to the concept's engravings: a ringed compass rose with
+cardinal ticks, a folded three-panel map with a dotted route and a cross, four ascending columns on a baseline,
+and a ringed profile. They remain single-colour CSS masks driven by `currentColor`, the existing documented
+mechanism — the concept inks the active glyph lilac and the rest muted, which is exactly what that does.
+
+**One test had to be reconciled, and it was the right call.** `test_shell_maps_each_workspace_to_its_supplied_kit_glyph`
+hard-coded the kit's filenames, so it failed the moment the owner's request was implemented. Its value was always
+the *invariant* — one workspace, one real glyph, both mask properties — not one file's path, so it now guards that
+and is renamed `..._to_its_own_glyph_and_the_file_exists`. The kit's Bootstrap files are **not deleted**: they stay
+on disk and still serve the surfaces that use them.
+
+**Scope limit, re-measured:** the desktop rail is untouched — 150px wide, row layout, 20px glyphs, no inset, zero
+overflow.
+
+**Recorded, not chased:** at 390px the dock is 19.5% of the viewport width against the concept's 17.8%, because
+the glyph and label are fixed sizes while the viewport narrows. The concept is a single fixed-width composition,
+so this is noted rather than tuned to one width.
+
+Verified: non-browser suite **1186 passed, 1 skipped** (+4 new guards); captures
+`artifacts/observatory-dock-2026-09-18/` — 40 files, four workspaces × five governed viewports × two themes, zero
+console errors, zero horizontal overflow, light/dark luminance deltas 151–159.
+
 ## OS-036 reproduced at last, and the instrument centring reverted (2026-09-18)
 
 **The connector bug is real, and the missing condition was the one recorded as untested: a longer event

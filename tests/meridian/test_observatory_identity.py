@@ -36,13 +36,20 @@ FONT_FILES = {
     SANS_FAMILY: "fonts/SourceSans3.ttf",
 }
 
-# kit README: "compass, map, bar-chart, person-circle map to the four navigation entries".
+# The kit README names "compass, map, bar-chart, person-circle" for the four navigation
+# entries, and those glyphs served until 2026-09-18. The owner then asked for the dock's
+# icons to be *more ornate*, matching the concepts, whose dock glyphs are detailed line
+# engravings -- a ringed compass rose with cardinal ticks, a folding map carrying a dotted
+# route to a cross, rising columns, a ringed profile -- rather than 16px Bootstrap
+# silhouettes that read as blobs once the dock was enlarged. The in-repo glyphs supersede
+# them for the dock. The kit's files stay on disk and are still used elsewhere.
 NAV_ICONS = {
-    "today": "compass.svg",
-    "plan": "map.svg",
-    "activity": "bar-chart.svg",
-    "accounts": "person-circle.svg",
+    "today": "compass-rose.svg",
+    "plan": "charted-map.svg",
+    "activity": "rising-bars.svg",
+    "accounts": "ringed-profile.svg",
 }
+NAV_ICON_DIR = ROOT / "static/img/meridian/observatory/nav"
 
 GOVERNING_HEADERS = {"navigation": NAVIGATION, "index": INDEX, "settings": SETTINGS}
 
@@ -109,16 +116,30 @@ def test_navigation_marks_its_four_glyphs_decorative_beside_visible_labels():
     assert text.count('class="m-nav-label"') == 4
 
 
-def test_shell_maps_each_workspace_to_its_supplied_kit_glyph():
+def test_shell_maps_each_workspace_to_its_own_glyph_and_the_file_exists():
+    """Each workspace maps to exactly one dock glyph, and that glyph is on disk.
+
+    Renamed from `..._to_its_supplied_kit_glyph` on 2026-09-18: the mapping is still
+    guarded, but the file it points at is now the in-repo engraving drawn for the dock
+    rather than the kit's Bootstrap silhouette. Guarding the *invariant* (one workspace,
+    one real glyph, both mask properties) matters more than pinning one file's path, which
+    is what made this test fail when the owner asked for more ornate icons."""
     css = SHELL.read_text()
     for workspace, filename in NAV_ICONS.items():
         assert f'[data-workspace-icon="{workspace}"]' in css, (
             f"no icon mapping for the {workspace} workspace"
         )
-        assert f"observatory/kit-2026-09-16/icons/{filename}" in css, (
-            f"{workspace} does not use the supplied {filename}"
+        assert f"observatory/nav/{filename}" in css, (
+            f"{workspace} does not use its dock glyph {filename}"
         )
-        assert (KIT / "icons" / filename).is_file(), f"kit glyph {filename} is missing"
+        assert (NAV_ICON_DIR / filename).is_file(), f"dock glyph {filename} is missing"
+        # A glyph must be drawn, not a placeholder: real geometry, decorative, and tinted
+        # by `currentColor` so the active treatment can reach it.
+        svg = (NAV_ICON_DIR / filename).read_text()
+        assert svg.count("<") >= 5, f"{filename} looks empty"
+        assert 'currentColor' in svg or 'fill="none"' in svg, (
+            f"{filename} must be line art so the mask takes the link's colour"
+        )
 
     # Both prefixed and standard mask properties, so Chromium and Firefox agree.
     assert "-webkit-mask:" in css

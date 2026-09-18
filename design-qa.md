@@ -24,6 +24,34 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Bottom dock — taller, with the concepts' ornate glyphs (2026-09-18)
+
+![Today mobile-air dark, the rebuilt bottom dock](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-dock-2026-09-18/today-mobile-air-dark-viewport.png)
+
+Read against concept **01**'s dock. The owner asked for it to be *taller* with *more ornate icons*, and both
+were true. Measured on the concept: the panel is **152px** tall in an 853px-wide frame (**17.8%** of width), a
+rounded inset panel with hairline rules between workspaces, each glyph **stacked above** its label, the ringed
+compass at ~**8.4%** of width (~34px at 420px), and the active workspace marked by a lilac rule **under** its
+label with **no fill** behind the item. The app had a **65px (15.5%)** full-bleed bar, **20px** Bootstrap
+silhouettes, **12px** labels, glyph *beside* label, and the marker *above* the glyph.
+
+After: **76px = 18.1%** at 420px (ratio 1.02 against the concept), glyphs **34px**, labels **15px**, stacked,
+rounded and inset, with the marker under the label and the fill removed. **Accepted as matching** for the dock's
+height, structure, icon weight and active treatment.
+
+**The four glyphs are in-repo engravings, drawn to the concept:** a ringed compass rose with cardinal ticks, a
+folded three-panel map carrying a dotted route and a cross, four ascending columns on a baseline, and a ringed
+profile. They stay single-colour CSS masks driven by `currentColor` — the concept inks the active glyph lilac and
+the rest muted, which is exactly what that mechanism does, so nothing about the theming changed.
+
+**Superseded, not deleted.** The kit's `compass/map/bar-chart/person-circle` Bootstrap glyphs no longer serve the
+dock, but they remain on disk and still serve the surfaces that use them (the Activity row glyphs). One guard
+hard-coded those filenames and was reconciled to check the invariant instead — one workspace, one real glyph, both
+mask properties — because the path was the brittle part, not the intent.
+
+**Not touched:** the desktop rail. Re-measured at 1440px: 150px wide, row layout, 20px glyphs, no inset, zero
+overflow.
+
 ## Today dial — the runs to nowhere, and the centring that was reverted (2026-09-18)
 
 **The owner's connector report is confirmed, and it only appears once the horizon is long enough to scroll
