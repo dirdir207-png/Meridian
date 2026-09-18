@@ -1126,6 +1126,34 @@
         "capture": "artifacts/observatory-dock-2026-09-18/ - 40 files, four workspaces x five governed viewports x two themes, zero console errors, zero horizontal overflow, light/dark luminance deltas 151-159.",
         "limits": "At 390px the dock is 19.5% of the viewport width against the concept's 17.8%, because the glyph and label are a fixed size while the viewport narrows; the concept is a single fixed-width composition, so this is recorded rather than chased. Not deployed."
       }
+    },
+    {
+      "id": "OS-041",
+      "title": "Today: place the dial evenly in its band (reverse the align-self revert)",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-035",
+        "OS-036"
+      ],
+      "authority_impact": "none; presentation only. No route, data, financial, provider or authority change",
+      "owner_decision_required": false,
+      "requested_by": "owner, 2026-09-18: 'I am much less concerned with the size of the dial, I just want it evenly placed vertically' -- which also RESOLVES OS-035's open composition question: the size is not the complaint, the vertical placement is.",
+      "acceptance_criteria": [
+        "The space above the dial matches the space below it in the band it shares with the callouts",
+        "The dial's position does not drift with the event-list length",
+        "The desktop rail layout is unchanged"
+      ],
+      "evidence": {
+        "what_the_owner_saw": "Measured at 420x912 with `align-items: start`: the dial sat 0px from the panel top with all 48px of its row's slack beneath it, and 252.3px from the dial's bottom to the panel's bottom. 0 above / 252 below is the worst possible arrangement for 'evenly placed', and it was produced by the align-self revert in d0e0cd6 on the previous slice -- that revert was correct about the OLD rule failing to fix the owner's report, and wrong about what the owner actually wanted.",
+        "what_the_concept_does": "Concept 01 is the authority and settles it. Its dial spans ~435px inside a band whose callouts span ~490px, i.e. roughly 25px above and 30px below -- CENTRED, not pinned to the top. The concept has almost no slack because its two columns are near-equal height; our 48px of slack is an artefact of the rail cap (`100vw - 102px` = 318px) being taller than the dial (270px), and with `align-items: start` every pixel of it fell below.",
+        "delivered": "`[data-observatory-dial] .obs-dial-instrument { align-self: center; }` in the <=700px block. Measured after: 24px above / 228px below to the panel, which is 24/24 INSIDE the band -- matching the concept's 25/30. Unchanged at 1024px and 1440px, where the dial (486/620px) is taller than the rail (418px), so the band has no slack and centring is a no-op.",
+        "why_the_earlier_objection_no_longer_holds": "The revert's second reason was that centring made the dial's vertical position track the event-list length, because the row grew with the list. d0e0cd6 also capped the rail, so the band height is now bounded at `100vw - 102px` and the offset is a derived 24px rather than one that drifts. The objection was true against the uncapped rail and is not true now.",
+        "test_reconciled": "`tests/browser/test_dial_fidelity.py::test_long_event_list_does_not_push_dial_down_or_split_amounts` asserted `dial.y - panel.y <= 8` with the message 'The event list must not vertically center the dial' -- it DEMANDED the arrangement the owner has now rejected. Its mechanism was superseded by the owner's requirement; its REASON (no drift with list length) is preserved. It now asserts the dial sits at the band's centre, `abs(centred - band_slack/2) <= 2`, which fails both on pinned-to-top (0) and pushed-down-by-the-list (more than the slack). Back to 3 passing; browser file is 6 failed / 13 passed, the same 6 pre-existing failures unrelated to the dial.",
+        "capture": "artifacts/observatory-dial-centring-2026-09-18/ -- 10 files, Today x five governed viewports x two themes, zero console errors, zero horizontal overflow.",
+        "limits": "This balances the dial inside its own band. It does NOT equalise the space above and below across the WHOLE panel, which measures 24 above / 228 below: the controls row and the evidence ticket sit below the band and `align-self` cannot reach them. Panel-level equalisation would need the dial's column to span all three rows, which would squeeze the controls and the 130px-wide callouts into one narrow column -- recorded as a composition question, not attempted. The concept also has substantial content below its dial band (the 'Bills reserved' strip), so content below is not itself the defect. Not deployed."
+      }
     }
   ]
 }

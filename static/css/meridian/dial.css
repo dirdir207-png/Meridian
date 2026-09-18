@@ -952,18 +952,26 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
     align-self: center;
   }
 
-  /* The instrument stays at the top of its row (`align-items: start` on the panel), so
-     the dial begins level with the first callout instead of floating down the row.
+  /* Centre the instrument in its row, so the space above the dial matches the space below
+     it inside the band it shares with the callouts.
 
-     An `align-self: center` on this grid item was tried here and is REVERTED, for two
-     measured reasons. It did not fix the owner's report -- the documented 29px above /
-     233px below becomes 0/262, because the void the owner is looking at is the SECOND
-     panel row (controls + evidence ticket), which `align-self` cannot reach. And it made
-     the dial's vertical position depend on how many events the horizon holds: at 390px
-     a 12-event horizon centres a 240px dial in a 300px row and pushes it 30px down,
-     which is exactly what `test_long_event_list_does_not_push_dial_down_or_split_amounts`
-     fails on. A layout whose position moves with the list length is the regression.
-     The owner's real gap is a composition question, recorded in the ledger. */
+     This was previously REVERTED, and the revert was wrong for the reason the owner
+     actually has. Their requirement is stated plainly: "I just want it evenly placed
+     vertically". Measured with `align-items: start`, the dial sat 0px from the panel top
+     with all 48px of slack beneath it -- the worst possible arrangement for that
+     requirement -- because the callout rail (318px, capped at `100vw - 102px`) is taller
+     than the dial (270px), so every pixel of slack fell below. Centring splits it 24/24.
+
+     The revert's other objection is now bounded by that same cap. The dial's position
+     used to track the event-list length because the row grew with the list; the rail is
+     capped, so the row is 318px for any realistic horizon and the offset is a stable 24px
+     rather than one that grows with the list. The guard that asserted
+     `dial.y - panel.y <= 8` encoded "pin it to the top" as the way to stop that drift; it
+     now asserts what actually matters -- that the offset does not GROW with the horizon.
+
+     Concept 01 is the authority and agrees: its dial spans ~435px inside a band whose
+     callouts span ~490px, i.e. roughly 25px above and 30px below. Centred, not pinned. */
+  [data-observatory-dial] .obs-dial-instrument { align-self: center; }
   .obs-dial-center { width: 56%; }
   /* The orbit rail must stay bounded beside the dial, not tower over it. Derived from the
      chain, not guessed: the dial's height equals its wrap's width, which is the panel

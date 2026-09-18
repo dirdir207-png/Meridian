@@ -54,6 +54,49 @@ left-clipping regression (80px bleed clipped 64px, ~20% of the instrument; now 0
 - Temporary review tooling lives in untracked `tmp/probe_*.py`; `artifacts/` holds all captures and the Astra
   package and is untracked by convention.
 
+## The dial is placed evenly now — and my earlier revert was wrong (2026-09-18)
+
+**Owner, 2026-09-18:** *"I am much less concerned with the size of the dial, I just want it evenly placed
+vertically."* That single sentence resolves the composition question OS-035 had been carrying: the complaint
+was never the dial's **size**, it is its **vertical placement**.
+
+**What I had left them with.** `d0e0cd6` reverted an `align-self: center` on the instrument. That revert was
+right that the old rule did not fix the report, and **wrong about what was wanted**: with `align-items: start`
+the dial sat **0px** from the panel top with **all 48px** of its row's slack beneath it — 0 above / 252 below,
+the worst possible arrangement for "evenly placed". Removing the centring did not merely fail to help; it
+produced the extreme.
+
+**The concept settles it.** In concept 01 the dial spans ~**435px** inside a band whose callouts span ~**490px**
+— roughly **25px above, 30px below**. Centred, not pinned. The concept has almost no slack because its two
+columns are near-equal height; our 48px is an artefact of the rail cap (318px) being taller than the dial
+(270px), and `align-items: start` put every pixel of it below.
+
+**Fixed:** `[data-observatory-dial] .obs-dial-instrument { align-self: center; }` at ≤700px. Measured after:
+**24px above / 24px below inside the band**, matching the concept's 25/30. Unchanged at 1024px and 1440px,
+where the dial (486/620px) is taller than the rail (418px) so the band has no slack and centring is a no-op.
+
+**Why the old objection no longer applies.** The revert's second reason was real: centring made the dial's
+position track the event-list length, because the row grew with the list. But `d0e0cd6` *also* capped the rail,
+so the band is now bounded and the offset is a derived 24px rather than a drifting one. The objection was true
+against the uncapped rail; it is not true now.
+
+**One test had to be reconciled, and it was pointed the wrong way.** `test_long_event_list_does_not_push_dial_down_or_split_amounts`
+asserted `dial.y - panel.y <= 8` with the message *"The event list must not vertically center the dial"* — it
+**demanded the arrangement you had just rejected**. Its mechanism was superseded by your requirement; its
+*reason* (no drift with list length) is preserved. It now asserts the dial sits at the band's centre,
+`abs(centred − band_slack/2) <= 2`, which fails both on pinned-to-top (0) and pushed-down-by-the-list.
+
+**What this does not do, stated plainly.** It balances the dial in its own band. It does **not** equalise
+space above and below across the whole panel — that still measures 24 above / 228 below, because the controls
+row and the evidence ticket sit below the band and `align-self` cannot reach them. Panel-level equalisation
+would require the dial's column to span all three rows, which would squeeze the controls and the 130px callout
+column into one narrow strip. Worth noting: the concept also has substantial content below its dial band (the
+"Bills reserved" strip), so content below is not itself the defect.
+
+Verified: non-browser suite **1189 passed, 1 skipped**; browser dial file back to **6 failed / 13 passed** — the
+same 6 pre-existing failures, none dial-placement related. Captures
+`artifacts/observatory-dial-centring-2026-09-18/` — 10 files, zero console errors, zero horizontal overflow.
+
 ## The Accounts ticket: tilted, notched and dotted (2026-09-18)
 
 **OS-038 item 3.** Finding 4 recorded our summary ticket as *"axis-aligned, square-cornered and plain"* against

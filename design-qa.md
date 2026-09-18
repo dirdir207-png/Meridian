@@ -24,6 +24,32 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Today — the dial placed evenly in its band (2026-09-18)
+
+![Today mobile-air dark, the dial centred in its band](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-dial-centring-2026-09-18/today-mobile-air-dark-viewport.png)
+
+**Owner:** *"I am much less concerned with the size of the dial, I just want it evenly placed vertically."* That
+resolves OS-035: the complaint was placement, never size.
+
+**Before:** 0px above the dial, 252px below. `d0e0cd6`'s revert of `align-self: center` was correct that the old
+rule failed to fix the report and wrong about what was wanted — with `align-items: start` the dial sat flush
+against the panel's top with all 48px of its band's slack beneath it.
+
+**The concept is the authority and agrees with you:** in concept 01 the dial spans ~435px inside a band whose
+callouts span ~490px — roughly **25px above, 30px below**. Centred, not pinned.
+
+**After:** **24px above / 24px below** inside the band. **Accepted as matching.** Unchanged at 1024px and
+1440px, where the dial is taller than its band and there is no slack to distribute.
+
+**The guard pointed the wrong way.** The test asserted `dial.y - panel.y <= 8` under the message *"The event list
+must not vertically center the dial"* — it demanded the arrangement you rejected. It now asserts the dial sits at
+the band's centre, which fails on both pinned-to-top and pushed-down-by-the-list.
+
+**What this does not do:** balance space above and below across the *whole panel*, which is still 24 above / 228
+below because the controls row and the evidence ticket sit below the band. Equalising that needs the dial's
+column to span all three rows, which would crush the controls and the callout column into one strip. The concept
+also carries substantial content below its dial band, so content below is not itself the defect.
+
 ## Accounts — the summary ticket tilted, notched and dotted (2026-09-18)
 
 ![Accounts mobile-air dark, the tilted ticket with punched notches and the dotted inset](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-ticket-2026-09-18/accounts-mobile-air-dark-viewport.png)

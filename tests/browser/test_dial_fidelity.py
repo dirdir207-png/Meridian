@@ -110,7 +110,26 @@ def test_long_event_list_does_not_push_dial_down_or_split_amounts(dial_page, wid
     panel = page.locator(".obs-dial-panel").bounding_box()
     dial = page.locator(".obs-dial-svg").bounding_box()
     rail = page.locator(".obs-dial-events").bounding_box()
-    assert dial["y"] - panel["y"] <= 8, "The event list must not vertically center the dial below its first item"
+    # The dial is CENTRED in the band it shares with the callouts, at the owner's explicit
+    # request: "I just want it evenly placed vertically" (2026-09-18). So it sits half the
+    # band's slack below the panel top.
+    #
+    # This assertion used to read `dial["y"] - panel["y"] <= 8` with the message "The event
+    # list must not vertically center the dial", i.e. it DEMANDED the dial be pinned to the
+    # top -- the arrangement the owner then reported as wrong (0px above, every pixel of
+    # slack below). The owner's requirement supersedes the mechanism, but not the reason the
+    # guard existed: with an uncapped rail, centring once made the dial's position track the
+    # event count. The rail is now capped at `calc(100vw - 102px)`, so the band height is
+    # bounded and the centred offset is derived rather than drifting. Asserting the dial
+    # equals the band's centre catches BOTH failures: pinned to the top (0) and pushed down
+    # by the list (more than the slack).
+    band_slack = rail["height"] - dial["height"]
+    centred = dial["y"] - panel["y"]
+    assert abs(centred - band_slack / 2) <= 2, (
+        f"The dial must be centred in its band, not pinned to the top or pushed down by the "
+        f"list: {centred}px above, expected {band_slack / 2}px from a band of "
+        f"{rail['height']}px around a {dial['height']}px dial"
+    )
     assert rail["height"] <= dial["height"] + 48, "The orbit rail must stay bounded beside the dial"
     controls = page.locator(".obs-dial-controls").bounding_box()
     assert controls["y"] >= rail["y"] + rail["height"], "Date controls must not overlap the scrollable callouts"

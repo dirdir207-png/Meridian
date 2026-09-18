@@ -73,7 +73,51 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (Accounts: the tilted, notched, dotted summary ticket, OS-038 item 3) | `static/css/meridian/accounts.css`, `tests/meridian/test_accounts_ticket.py`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md`, `artifacts/observatory-accounts-ticket-2026-09-18/**` | 2026-09-18 | **released at this commit**. OS-038 item 3, closing Finding 4's "axis-aligned, square-cornered and plain". The tilt is measured from two features inside the concept ticket that agree (−3.7° / −3.21° → −3.2°); the dotted inset border uses `outline-offset` so it needs no third pseudo-element; the notches are pseudo-element circles that rotate with the panel. The kit's nine-slice, scallops and rivets are **preserved**, and a test asserts that. Notch is 36px against the concept's ~25px because the kit's edge already carries ~10px scallops — recorded, not silent. NOTE: this touches `tests/meridian/test_accounts_ticket.py`, which the parallel `builder-trackd` claim lists; that lane's work is committed and its tree is clean, and the edits are additive (one new test) rather than overwriting, so the overlap is disclosed rather than taken silently. **No** route, data, financial, provider or authority change; presentation only. |
 
+| Builder (Today: the dial placed evenly in its band, OS-041) | `static/css/meridian/dial.css`, `tests/browser/test_dial_fidelity.py`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md`, `artifacts/observatory-dial-centring-2026-09-18/**` | 2026-09-18 | **released at this commit**. Owner: "I just want it evenly placed vertically", which also closes OS-035's composition question (placement, not size). Reverses `d0e0cd6`'s `align-self` revert, which was right that the old rule failed to fix the report and wrong about what was wanted: with `align-items: start` the dial sat 0px from the panel top with all 48px of slack beneath. Concept 01 agrees with the owner (~25px above / ~30px below). Now 24/24 inside the band. One browser guard DEMANDED the rejected arrangement ("must not vertically center the dial"); its mechanism is superseded and its reason (no drift with list length, now bounded by the rail cap) is preserved. **No** route, data, financial, provider or authority change; presentation only. |
+
 ## Log (append only — newest first)
+
+### 2026-09-18 — Builder (Today) — the dial placed evenly, and a revert I got wrong
+
+**Owner:** *"I am much less concerned with the size of the dial, I just want it evenly placed vertically."*
+That closes OS-035's open composition question in one sentence — placement, never size.
+
+**I had left it at the extreme.** `d0e0cd6` reverted an `align-self: center` on the instrument. The revert was
+right that the old rule did not fix the owner's report, and **wrong about what the owner wanted**: with
+`align-items: start` the dial measured **0px** from the panel top with **all 48px** of its band's slack beneath
+it — 0 above / 252 below. Removing the centring did not merely fail to help; it produced the worst available
+arrangement for "evenly placed". Worth saying plainly rather than quietly reversing it.
+
+**Concept 01 settles it and agrees with the owner:** its dial spans ~435px inside a band whose callouts span
+~490px, i.e. roughly 25px above and 30px below. Centred, not pinned. The concept barely has slack because its
+columns are near-equal height; ours had 48px because the rail cap (318px) exceeds the dial (270px).
+
+**Fix:** `align-self: center` on the instrument at ≤700px → **24px above / 24px below inside the band**.
+Unchanged at 1024/1440px, where the dial is taller than its band and centring is a no-op.
+
+**The revert's second reason was real but is now stale.** It was that centring made the dial's position track
+the event-list length because the row grew with the list. `d0e0cd6` also capped the rail, so the band height is
+bounded and the offset is derived, not drifting. True against the uncapped rail; not true now.
+
+**A guard pointed the wrong way, and this is the reusable lesson.**
+`test_long_event_list_does_not_push_dial_down_or_split_amounts` asserted `dial.y - panel.y <= 8` under the
+message *"The event list must not vertically center the dial"* — it **demanded the arrangement the owner has
+now rejected**. Its mechanism was superseded by the owner's requirement; its *reason* (no drift with list
+length) is preserved. It now asserts the dial sits at the band's centre, `abs(centred − band_slack/2) <= 2`,
+which fails both on pinned-to-top (0) and pushed-down-by-the-list. When a test encodes a *mechanism* rather
+than the *reason*, the owner's requirement can invert it — and the fix is to re-express the reason, not to
+delete the guard.
+
+**Stated limit:** this balances the dial in its own band. The whole panel still measures 24 above / 228 below,
+because the controls row and evidence ticket sit below the band and `align-self` cannot reach them. Panel-level
+equalisation needs the dial's column to span all three rows, which would crush the controls and the 130px
+callout column into one strip. The concept also carries real content below its dial band, so content below is
+not itself the defect.
+
+**Test state:** non-browser suite 1189 passed, 1 skipped. Browser dial file back to **6 failed / 13 passed** —
+the same 6 pre-existing failures, none dial-placement related (4 topbar theme-toggle label, 2 dial/rail
+clearance). Captures `artifacts/observatory-dial-centring-2026-09-18/` — 10 files, zero console errors, zero
+horizontal overflow.
 
 ### 2026-09-18 — Builder (Accounts) — the summary ticket tilted, notched and dotted
 
