@@ -203,6 +203,17 @@ so it was left to the owner. The count describes the review queue as currently d
 most recent 200 transactions, confidence below 0.7 — and is not a claim about the whole
 ledger.
 
+**The light edition's action colour is the palette's green, on the owner's instruction.**
+"Let's do the green or mint on light instead." Orange could not carry the selected tab's
+label there (1.95:1), and the earlier answer — dark ink — solved contrast while losing the
+concept's "label in the action colour". The light edition now maps the Activity action
+triple to `--m-healthy`, which the light Observatory block already defines as `#25644f`:
+**5.94:1** as text on the parchment, and the same reversed onto the filled control. The
+label therefore stays in the action colour in both editions from **one** declaration —
+orange at 7.45:1 in dark, green at 5.94:1 in light — and the earlier light-only override
+disappears. No second brand colour was invented and no new hex was added: the two
+`#e99a48` declarations are the only orange left, and a guard asserts exactly that.
+
 ### Three referenced handoff files are missing
 
 `index.html`, `manifest.json` (provenance, dimensions, SHA-256) and `VERIFICATION.md` (Astra's measured checks)

@@ -75,13 +75,28 @@ def test_activity_opts_into_the_handoffs_single_action_orange():
     css = _read("static/css/meridian/activity.css")
     activity_root = css.split(".m-activity {", 1)[1].split("}", 1)[0]
     assert "--obs-action: #e99a48" in activity_root
+    # The light edition swaps the ACTION to the palette's existing green rather than
+    # inventing a second brand orange, because #e99a48 cannot carry text on parchment.
+    light_root = css.split("html[data-theme=\"light\"] .m-activity {", 1)[1].split("}", 1)[0]
+    assert "--m-activity-action: var(--m-healthy)" in light_root
+    assert "--m-activity-action-ink: var(--m-canvas)" in light_root
+    # The dark root stays the handoff's orange, and no second orange hex is declared.
+    declarations = [
+        line.strip()
+        for line in css.splitlines()
+        if "#e99a48" in line and line.strip().startswith("--")
+    ]
+    assert declarations == [
+        "--obs-action: #e99a48;",
+        "--m-activity-action: #e99a48;",
+    ], declarations
     # Mint remains a semantic confirmed/incoming colour, never the unreviewed action.
     approve = css.split(".m-review-approve {", 1)[1].split("}", 1)[0]
-    assert "background: var(--obs-action)" in approve
+    assert "background: var(--m-activity-action)" in approve
     assert "var(--m-healthy)" not in approve
 
 
-def test_activity_tabs_use_orange_cues_with_a_selection_star_and_end_stars():
+def test_activity_tabs_use_action_cues_with_a_selection_star_and_end_stars():
     html = _read("templates/meridian/partials/activity.html")
     css = _read("static/css/meridian/activity.css")
     assert 'class="m-segmented m-activity-tabs"' in html
@@ -93,15 +108,13 @@ def test_activity_tabs_use_orange_cues_with_a_selection_star_and_end_stars():
     assert ".m-activity-tabs::after {" in css
     assert 'content: "✦"' in css
 
+    # One declaration now serves both editions: the token resolves to orange in dark
+    # and to the deep green in light, so the label always sits in the action colour.
     selected = css.split('.m-activity-tab[aria-pressed="true"] {', 1)[1].split("}", 1)[0]
-    assert "color: var(--obs-action)" in selected
-    light_selected = css.split(
-        'html[data-theme="light"] .m-activity-tab[aria-pressed="true"] {', 1
-    )[1].split("}", 1)[0]
-    assert "color: var(--obs-action-ink)" in light_selected
+    assert "color: var(--m-activity-action)" in selected
     assert '.m-activity-tab[aria-pressed="true"]::before' in css
     underline = css.split('.m-activity-tab[aria-pressed="true"]::after {', 1)[1].split("}", 1)[0]
-    assert "background: var(--obs-action)" in underline
+    assert "background: var(--m-activity-action)" in underline
 
 
 def test_review_actions_use_filled_and_continuously_outlined_ticket_silhouettes():
@@ -111,8 +124,8 @@ def test_review_actions_use_filled_and_continuously_outlined_ticket_silhouettes(
     assert "clip-path: polygon(" in actions
 
     approve = css.split(".m-review-approve {", 1)[1].split("}", 1)[0]
-    assert "background: var(--obs-action)" in approve
-    assert "color: var(--obs-action-ink)" in approve
+    assert "background: var(--m-activity-action)" in approve
+    assert "color: var(--m-activity-action-ink)" in approve
 
     correct = css.split(".m-review-correct {", 1)[1].split("}", 1)[0]
     assert "background: transparent" in correct
@@ -130,7 +143,7 @@ def test_review_action_focus_rings_contrast_with_each_ticket_face():
     approve_focus = css.split(
         ".m-review-actions .m-review-approve:focus-visible {", 1
     )[1].split("}", 1)[0]
-    assert "var(--obs-action-ink)" in approve_focus
+    assert "var(--m-activity-action-ink)" in approve_focus
     correct_focus = css.split(
         ".m-review-actions .m-review-correct:focus-visible::after {", 1
     )[1].split("}", 1)[0]

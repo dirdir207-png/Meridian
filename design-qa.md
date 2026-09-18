@@ -320,6 +320,16 @@ figure and the Review list are one queue, derived in the route from the list it 
 **Review mode only**: the timeline carries the kit's own banner instead, so the two do not
 stack into competing parchment invitations.
 
+**Light edition.** "Let's do the green or mint on light instead." Orange could not carry the
+selected tab's label on the parchment (1.95:1), and the previous answer — dark ink — solved
+contrast while losing the concept's "label in the action colour". The light edition now maps
+the Activity action triple to the palette's `--m-healthy`, which the light Observatory block
+already defines as `#25644f` — **5.94:1** as text on the parchment and the same reversed onto
+the filled control. Measured: light resolves to `rgb(37,100,79)` for the label, star,
+underline and confirmation fill; dark is unchanged at `rgb(233,154,72)`. Mint was rejected
+for this role because the dark edition's mint (`#a5d4bf`) is only 1.4:1 on parchment, and
+because mint already means "confirmed" and must not become an action colour.
+
 **Not claimed:** the timeline's "Your money, in order." banner and its day-part moon/sun
 markers, the row chevrons, the "Ask Virgil about this activity" footer, and the
 single-primary treatment for a row with nothing to confirm. Those are the remaining

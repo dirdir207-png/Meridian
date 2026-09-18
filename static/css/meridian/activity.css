@@ -26,6 +26,12 @@
   --obs-action-hover: #f3b272;
   --obs-action-ink: #20263b;
 
+  /* Activity reads its own triple so the light edition can use the palette's green
+     without editing the shared token. */
+  --m-activity-action: #e99a48;
+  --m-activity-action-hover: #f3b272;
+  --m-activity-action-ink: #20263b;
+
   display: grid;
   gap: var(--m-space-5);
 }
@@ -162,14 +168,20 @@
 
 .m-activity-tab[aria-pressed="true"] {
   background: none;
-  color: var(--obs-action);
+  color: var(--m-activity-action);
 }
 
-/* The action orange is intentionally a selection cue, but it cannot carry readable
-   text on the light parchment. Keep the star and underline orange there while the
-   label returns to the handoff's dark action ink. */
-html[data-theme="light"] .m-activity-tab[aria-pressed="true"] {
-  color: var(--obs-action-ink);
+/* On the light parchment the orange cannot carry the label at all: #e99a48 measures
+   1.95:1 there, below even the 3:1 large-text floor. The owner asked for the palette's
+   green on light instead, so the action triple moves to the deep green the light
+   edition already defines for a healthy state -- #25644f, which measures 5.94:1 as
+   text on the parchment and again with parchment ink reversed onto it. No second
+   brand orange is invented, and the label can stay in the action colour exactly as
+   the concept draws it. */
+html[data-theme="light"] .m-activity {
+  --m-activity-action: var(--m-healthy);
+  --m-activity-action-hover: color-mix(in srgb, var(--m-healthy) 82%, #000);
+  --m-activity-action-ink: var(--m-canvas);
 }
 
 .m-activity-tab[aria-pressed="true"]::before {
@@ -177,7 +189,7 @@ html[data-theme="light"] .m-activity-tab[aria-pressed="true"] {
   position: absolute;
   top: -0.7em;
   left: 50%;
-  color: var(--obs-action);
+  color: var(--m-activity-action);
   font-size: 13px;
   line-height: 1;
   transform: translateX(-50%);
@@ -190,7 +202,7 @@ html[data-theme="light"] .m-activity-tab[aria-pressed="true"] {
   right: var(--m-space-2);
   bottom: -1px;
   height: 2px;
-  background: var(--obs-action);
+  background: var(--m-activity-action);
 }
 
 /* The concept raises the review figure beside the label as a filled orange counter.
@@ -205,8 +217,8 @@ html[data-theme="light"] .m-activity-tab[aria-pressed="true"] {
   margin-left: var(--m-space-2);
   padding: 0 6px;
   border-radius: 999px;
-  background: var(--obs-action);
-  color: var(--obs-action-ink);
+  background: var(--m-activity-action);
+  color: var(--m-activity-action-ink);
   font-family: var(--m-font-sans);
   font-size: 12px;
   font-weight: 700;
@@ -680,25 +692,25 @@ html[data-theme="light"] .m-activity-tab[aria-pressed="true"] {
 }
 
 .m-review-actions .m-review-approve:focus-visible {
-  box-shadow: inset 0 0 0 3px var(--obs-action-ink);
+  box-shadow: inset 0 0 0 3px var(--m-activity-action-ink);
 }
 
 .m-review-approve {
   flex: 1.35 1 170px;
-  background: var(--obs-action);
-  border-color: var(--obs-action);
-  color: var(--obs-action-ink);
+  background: var(--m-activity-action);
+  border-color: var(--m-activity-action);
+  color: var(--m-activity-action-ink);
 }
 
 .m-review-approve:hover {
-  background: var(--obs-action-hover);
-  border-color: var(--obs-action-hover);
+  background: var(--m-activity-action-hover);
+  border-color: var(--m-activity-action-hover);
 }
 
 .m-review-approve:disabled {
-  background: color-mix(in srgb, var(--obs-action) 45%, var(--m-surface));
-  border-color: color-mix(in srgb, var(--obs-action) 45%, var(--m-surface));
-  color: var(--obs-action-ink);
+  background: color-mix(in srgb, var(--m-activity-action) 45%, var(--m-surface));
+  border-color: color-mix(in srgb, var(--m-activity-action) 45%, var(--m-surface));
+  color: var(--m-activity-action-ink);
   cursor: not-allowed;
 }
 
@@ -745,7 +757,7 @@ html[data-theme="light"] .m-activity-tab[aria-pressed="true"] {
 }
 
 .m-review-actions .m-review-correct:hover::before {
-  background: var(--obs-action);
+  background: var(--m-activity-action);
 }
 
 .m-review-actions .m-review-correct:hover::after {
