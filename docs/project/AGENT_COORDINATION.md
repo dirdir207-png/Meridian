@@ -61,7 +61,48 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (capture theme fix + Activity ruled tabs) | `scripts/capture_meridian_matrix.py`, `static/css/meridian/activity.css`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md` | 2026-09-16 | **released** at `8d8db80`. Two fixes: the capture script pinned the theme so light captures are genuinely light (the "light" pass had been rendering dark for every workspace after the first, which invalidated part of this session's evidence and produced a wrong diagnosis of the application); and Activity's mode row became the concept's ruled-underline treatment, making green a test the other lane had left failing. **No** route, data, financial or authority change. |
 
+| Builder (Today: lilac wavy title rule, OS-038 first item) | `static/img/meridian/observatory/title-rule.svg` (new), `static/img/meridian/observatory/ASSET_MANIFEST.md`, `static/css/meridian/workspaces.css`, `templates/meridian/partials/{today,activity,accounts}.html`, `tests/meridian/test_title_rule.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-17 | **active**. Track D OS-038, first bounded item: the lilac wavy rule under the workspace title, measured from concepts 01/03/04 and deliberately **not** added to Plan, whose concept 02 shows none. Presentation only: **no** route, data, financial or authority change. This row also records the measured verdict on OS-035 (the instrument is already centred 29/29 in its row; the 233px below is the controls+ticket grid row). |
+
 ## Log (append only — newest first)
+
+### 2026-09-17 — Builder (Today/Activity/Accounts) — OS-038 first item: the lilac wavy title rule
+
+Claimed `title-rule.svg`, its manifest row, `workspaces.css`, the three partials and the new guard file.
+**Released at the commit carrying this row.**
+
+The rule was measured before it was drawn, from the governing concepts rather than by eye: concept 01's rule is
+141×18 px with an 8.1px stroke and a 10.0px peak-to-peak wave, concept 03's is 130×17 with a 7.4px stroke. The
+scale-independent ratio the concepts agree on is **peak-to-stroke 1.23–1.28**, and the asset draws 1.25 (a 4-unit
+stroke, a 5-unit wave, a 24-unit half-period). It is held at a constant 72×12 CSS px rather than scaled with the
+title, because the concepts size it as a fixed ornament — it is 0.40× Today's cap height but 1.57× Activity's.
+Concept 02 (Plan) shows **no** rule, so none was added there, and a guard fails if one appears.
+
+Two traps worth keeping from this slice, both of which cost real time:
+
+- **A 3× capture cannot be compared to a concept by absolute pixel size.** The first version looked right in the
+  capture and was wrong: its amplitude was ~1.8× the concept's *relative to its stroke*. Only the ratio
+  peak-to-stroke, and the CSS-pixel size (`device px / DPR`), are comparable across the two.
+- **`--` is illegal inside an XML comment.** A perfectly readable SVG comment made the asset unparseable, which the
+  new guard caught before any browser saw it.
+
+Also measured this round, and recorded rather than "fixed": **OS-035 is not a defect.** The instrument is already
+centred in its own grid row at every governed mobile width (420px: 29.2px above, 29.1px below; 390px: 30.0/30.0).
+The 233px the owner measured is the *second* panel row — `.obs-dial-controls` plus `.obs-evidence-ticket` — which
+`align-self` cannot touch. The dial's real gap to the concept is **size**: 63.6% of viewport width against the
+concept's 82.5%, because the callout column is a hard 130px floor. Closing that needs callouts relocated, which is
+a composition decision, not a tweak.
+
+**Captures:** `artifacts/observatory-title-rule-2026-09-17/` — 30 files, three workspaces × five governed viewports
+× two themes, zero overflow and zero console errors, light/dark luminance deltas 147–182. An earlier attempt of the
+same run passed `--app-url .../meridian` and captured **30 clean-looking 404 pages** while the manifest reported
+zero console errors; the evidence was thrown away and re-captured against the root URL. Do not trust a manifest's
+error fields to tell you a page rendered — inspect the image.
+
+**Test state:** full non-browser suite **1181 passed, 1 skipped** (+4 new guards). The nine `tests/browser`
+`test_dial_fidelity.py` failures are **pre-existing and unrelated**: they reproduce with this slice's tracked edits
+stashed, on a clean `874f61a` tree (browser tests need `playwright`, which the uv runner cannot import, so the
+non-browser baseline is the one this lane can actually compare). `ruff` is clean on tracked source; `git diff
+--check` is clean.
 
 ### 2026-09-16 — Builder (Observatory identity slice) — claimed step 2 of the owner-directed handoff
 

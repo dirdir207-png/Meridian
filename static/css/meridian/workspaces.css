@@ -27,6 +27,30 @@
 
 
 
+/* The concepts' lilac wavy rule under the workspace title.
+   Measured from the governing concepts, not invented: Today 01 carries a 141x18 px
+   rule with an 8.1px stroke and a 10.0px peak-to-peak wave; Activity 03's is 130x17
+   with a 7.4px stroke. The scale-independent ratio the concepts agree on is
+   peak-to-stroke 1.23-1.28; the asset draws 1.25. Held at a constant 72x12 CSS px
+   rather than scaled with the title, because the concepts size it as a fixed
+   ornament (it is 0.40x Today's cap height but 1.57x Activity's).
+   Decorative only, so it stays out of the accessibility tree, and it carries the
+   concepts' own lilac rather than a theme token -- the rule keeps its colour on both
+   themes, exactly as the concepts do. Concept 02 (Plan) has NO rule: do not add the
+   span there. */
+.m-title-rule {
+  display: block;
+  width: 72px;
+  height: 12px;
+  margin: 6px 0 0;
+  background: url("/static/img/meridian/observatory/title-rule.svg") left center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+@media (max-width: 430px) {
+  .m-title-rule { width: 58px; height: 10px; margin-top: 5px; }
+}
+
 .m-editorial-subline {
   max-width: 60ch;
   margin: var(--m-space-3) 0 0;

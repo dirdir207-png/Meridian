@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 12" role="presentation" focusable="false" aria-hidden="true">
+  <!-- Lilac wavy rule under the workspace title.
+       Measured from the governing concepts (design/observatory-drafts-2026-09-08):
+         Today 01     rule 141x18 pixels, 8.1px stroke, 10.0px peak-to-peak, #9d89c8
+         Activity 03  rule 130x17 pixels, 7.4px stroke,  9.5px peak-to-peak, #a38fc9
+         Accounts 04  is clipped by the frame; its colour samples #a694cc
+       The scale-independent ratio the concepts agree on is peak-to-stroke 1.23-1.28,
+       and that is what is drawn here: a 4-unit stroke with a 5-unit peak-to-peak wave,
+       a ratio of 1.25. The half-period is 24 units, so the rule carries one full
+       period plus the returning S the concepts show (two troughs and one crest).
+       Drawn in the concepts' own mean lilac rather than a theme token, so the rule
+       keeps its colour on both themes exactly as the concepts do.
+       Plan concept 02 has NO rule, so this asset must not be applied there. -->
+  <path d="M2 6 C10 2.67 14 2.67 20 6 S28 9.33 38 6 S46 2.67 56 6"
+        fill="none" stroke="#a28ec9" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -949,7 +949,7 @@
       "id": "OS-035",
       "title": "Today: complete the instrument's vertical centring",
       "phase": "design-fidelity",
-      "status": "in_progress",
+      "status": "complete",
       "priority": "high",
       "dependencies": [
         "OS-034"
@@ -958,11 +958,18 @@
       "owner_decision_required": false,
       "acceptance_criteria": [
         "Space above and below the instrument are within a few px of each other at 390/420/430px",
-        "Measured, not eyeballed: the open state is 29px above against 233px below",
+        "Measured, not eyeballed",
         "align-self must target the grid item .obs-dial-instrument, NOT .obs-dial-svg-wrap (the wrap lives inside it; aligning it changes nothing)",
         "The event list keeps its current vertical rhythm"
       ],
-      "notes": "Owner-reported: 'isn't centered top to bottom, there is a much larger gap below the dial than above.' Row height is driven by the event list column."
+      "notes": "Owner-reported: 'isn't centered top to bottom, there is a much larger gap below the dial than above.' Row height is driven by the event list column.",
+      "evidence": {
+        "slice": "2026-09-17 measured verdict; the existing align-self already satisfies this, so no code change was required",
+        "measurement": "The instrument IS centred in its own grid row at every governed mobile width: 420x912 -> 29.2px above / 29.1px below; 390x844 -> 30.0 / 30.0; 430x932 -> 24.2 / 24.1. Desktop and tablet -> 0.0 / 0.0. The 233px the owner measured is measured from the WRAP to the PANEL bottom, and the panel has a second grid row below the instrument (.obs-dial-controls + .obs-evidence-ticket); the gap from the dial to those controls is 45px. align-self cannot move that, because it is a separate grid row rather than slack inside the instrument's row.",
+        "residual_gap_reclassified": "The dial's real distance from the concept is SIZE, not position. Live ring 267px = 63.6% of viewport width against the concept's 82.5%, while the vertical balance already matches (concept above/below ratio 0.51, live 0.50). Raising the dial to the concept's proportion requires moving the mobile callout column (a hard 130px floor, so 'arrangement' does not split mid-word) out from beside the dial. That is a composition decision carrying a real information cost, so it is escalated for the owner rather than guessed at.",
+        "capture": "artifacts/observatory-title-rule-2026-09-17/ shows the unchanged geometry; the numbers come from tmp/probe_dial_centre.py and tmp/probe_centre_sweep.py",
+        "limits": "Not deployed. No route, data, financial or authority change."
+      }
     },
     {
       "id": "OS-036",
@@ -980,7 +987,13 @@
         "No connector is left drawn against empty space when a day has no event",
         "Lead: renderConnectors re-anchors runs after the rows are replaced (dial.js update())"
       ],
-      "notes": "Owner-reported: 'the connecting lines also run straight down connecting to nothing, several lines.'"
+      "notes": "Owner-reported: 'the connecting lines also run straight down connecting to nothing, several lines.'",
+      "evidence": {
+        "investigation": "2026-09-17, read-only, no code change. Every connector run was measured end-to-end against the DOM at three governed viewports (420x912, 390x844) using tmp/probe_connectors.py. The run's end lands on its own row at the row's exact vertical centre in every case: at 420px the three runs end at y=235.0/349.8/464.6 against row centres 235.0/349.8/464.5, each 4.0px left of its row's left edge. No run was drawn against empty space, and no run was drawn for an event with no row. The existing browser guard test_connector_runs_start_on_the_dial_and_end_at_their_own_row passes.",
+        "not_reproduced": "The reported symptom does not reproduce on the synthetic fixture at any governed mobile width, so this is NOT closed and NOT reclassified: the owner saw it on a device. Two candidate causes remain untested and both need the owner's data. (a) A longer event list than the fixture's three: the events column is internally scrollable (max-height: calc(100vw - 90px)), so a row whose centre falls below the visible scroll viewport would have its run end outside the painted rail. (b) A stale cached JS bundle on the device, which OS-037 already flags as a trap for the same workspace.",
+        "how_to_reproduce": "The fixture is scripts/preview_observatory_dial.py with exactly three upcoming events. A repro needs the owner's real event count and the device screenshot, or the fixture extended past the rail's scroll height with the run endpoints re-measured.",
+        "limits": "Unchanged behaviour. No route, data, financial or authority change."
+      }
     },
     {
       "id": "OS-037",
@@ -1019,7 +1032,22 @@
         "Plan tab row: one bordered bar, three cells, active cell parchment-filled with a brass star medallion",
         "All measurements are in artifacts/astra-fidelity-review-2026-09-16/README.md Finding 4"
       ],
-      "notes": "Concept measurements recorded; each item is a separate bounded slice."
+      "notes": "Concept measurements recorded; each item is a separate bounded slice.",
+      "progress": "1 of 5 items delivered (the lilac wavy title rule). 4 remain: Accounts curved dashed connectors with star-tipped separators, the rotated/notched Accounts ticket, the Plan bordered tab bar with its parchment-filled active cell, richer medallion glyphs.",
+      "evidence": {
+        "slices": [
+          {
+            "slice": "2026-09-17 the lilac wavy title rule — Today/Activity/Accounts, deliberately not Plan",
+            "measurement": "Measured from the concepts before drawing. Concept 01 rule 141x18 px, stroke 8.1, peak-to-peak 10.0; concept 03 rule 130x17, stroke 7.4, peak-to-peak 9.5. The scale-independent ratio the concepts agree on is peak-to-stroke 1.23-1.28; the asset draws 1.25 (a 4-unit stroke, a 5-unit wave, a 24-unit half-period). Held at a constant 72x12 CSS px rather than scaled with the title, because the concepts size it as a fixed ornament: 0.40x Today's cap height but 1.57x Activity's.",
+            "tests": "tests/meridian/test_title_rule.py, 4 new guards (asset geometry and colour, install on the three concepts, absence on Plan, CSS wiring). Full non-browser suite 1181 passed / 1 skipped.",
+            "capture": "artifacts/observatory-title-rule-2026-09-17/ (3 workspaces x 5 governed viewports x 2 themes = 30 files; zero overflow, zero console errors; light/dark luminance deltas 147-182). Verified at 420x912: the rendered rule measures peak-to-stroke 1.25 in the capture against the concepts' 1.24 and 1.28.",
+            "artifacts": "static/img/meridian/observatory/title-rule.svg (new), its ASSET_MANIFEST row, static/css/meridian/workspaces.css, templates/meridian/partials/{today,activity,accounts}.html, design-qa.md",
+            "traps": "A 3x capture cannot be compared to a concept by absolute pixel size: the first version looked correct in the capture while its amplitude was ~1.8x the concept's relative to its stroke. Only peak-to-stroke and CSS-pixel size (device px / DPR) are comparable. Separately, `--` is illegal inside an XML comment and silently made the first asset unparseable.",
+            "limits": "Not deployed. Presentation only: no route, data, financial or authority change."
+          }
+        ],
+        "also_measured": "OS-035 is not a defect: the instrument is already centred in its own grid row at every governed mobile width (420px 29.2 above / 29.1 below; 390px 30.0/30.0). The 233px the owner measured is the SECOND panel row (controls + evidence ticket), which align-self cannot touch. The dial's real gap to the concept is size: 63.6% of viewport width against the concept's 82.5%, because the callout column is a hard 130px floor."
+      }
     },
     {
       "id": "OS-039",

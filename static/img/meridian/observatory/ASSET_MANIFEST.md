@@ -17,6 +17,7 @@ circular clip excludes the exterior checkerboard.
 | `moon-engraving.webp` | Optional small moon illustration | TBD | not yet produced |
 | `dial-plate.png` | Parchment/brass ring, starfield, observatory landscape | 1254×1254 | Generated from governing concept; circular CSS clip required |
 | `moon-engraving.png` | Decorative moon and orbit lines beside spendable | 1254×1254 | Generated from governing concept; navy backdrop |
+| `title-rule.svg` | Lilac wavy rule under the workspace title (Today/Activity/Accounts; **not** Plan) | 72×22 | Drawn in-repo from measurements of concepts 01/03/04 (141×18 device px, 8px stroke, 10px peak-to-peak, lilac `#a28ec9`). Decorative: carries no theme token, so it keeps the concepts' colour on both themes |
 | `icons/*.svg` | Standard event-kind icons | 24px | Bootstrap Icons 1.13.1, MIT; license included |
 
 Initial placeholders were authored in-repo. New raster provenance is recorded
