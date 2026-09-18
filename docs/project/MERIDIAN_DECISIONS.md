@@ -52,3 +52,7 @@ The constraints that will bound an autonomous CFO are being collected as open qu
 ## D-008 — Human-facing repository overview (owner, 2026-09-18)
 
 The owner requested review and correction of the GitHub landing page: Meridian branding, Observatory artwork, and no AI-centric instructions or directions. README.md now presents the product, current limitations, roadmap, and clearly labeled design concepts for human readers. Agent workflow, model routing, implementation status jargon, prompts, and verification commands stay out of the landing page. Existing Observatory artwork is reused to avoid unnecessary generation cost. This is a documentation change, not a change to product scope or financial authority.
+
+## D-009 — Preserve the full future roadmap in the overview (owner, 2026-09-18)
+
+The owner clarified that all roadmap concepts belong on the human-facing landing page as future features. Restored all 22 individually named concepts with plain-language intended benefits and explicit future status. D-008 excludes agent-facing instructions, not product features involving AI or agents; it must not be used to compress away the roadmap.
