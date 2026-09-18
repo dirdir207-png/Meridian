@@ -1,5 +1,9 @@
 # Enhanced SimpleCrew — Current Status
 
+## Repository navigation — 2026-09-18
+
+Added concise directory introductions and overview navigation links. Neutral commit descriptions replace internal commentary in the main page's latest-change rows for the affected directories. All 22 future concepts and the interactive dial description are preserved. Documentation only; Git history, runtime behavior, untracked material, and other checkouts are unchanged. Verification: README links, concept count, GitHub rendering, and diff checks; published-page verification follows merge.
+
 ## Full future roadmap restored — 2026-09-18
 
 Owner correction to the landing-page review: all 22 concepts are now individually listed as future features, including financial agents, skill generation, and bounded CFO behavior. Human-facing descriptions remain separate from internal instructions. Verified the names and count against `CONCEPT_COVERAGE.md`, GitHub Markdown rendering, and diff whitespace. Evidence: `docs/project/LANDING_PAGE_REVIEW_2026-09-18.md`. Documentation only; no runtime change or app deployment.

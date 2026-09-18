@@ -51,7 +51,7 @@ A few principles shape the experience:
 
 ## Roadmap: future features
 
-These 22 concepts describe Meridian's intended future feature set. **They are future features, not claims of current availability.** Some have early supporting code, but the complete experiences remain ahead. Each concept is listed individually so the full ambition of the project stays visible.
+These 22 concepts describe Meridian's intended future feature set. **They are future features, not claims of current availability.** Some have early supporting code, but the complete experiences remain ahead.
 
 | # | Future feature | What it would offer |
 |---:|---|---|
@@ -138,7 +138,7 @@ These later studies explore the Timeline, Review, Settings, and Virgil experienc
 
 ## About the codebase
 
-Meridian uses Python and Flask, server-rendered Jinja templates, vanilla JavaScript, CSS, and SQLite. The repository includes application code, tests using synthetic data, design studies, and development records.
+Meridian uses Python and Flask, server-rendered Jinja templates, vanilla JavaScript, CSS, and SQLite. The repository includes application code, tests using synthetic data, [design studies](design/README.md), and [technical documentation](docs/README.md).
 
 Meridian is an independent project built for use with Crew Banking, not an official Crew product.
 
