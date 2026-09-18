@@ -4,7 +4,7 @@ Meridian is a mobile-first personal financial command center over Crew. It bring
 
 The repository was previously named SimpleCrew/ORSC. The product direction is now Meridian; the GitHub repository is being renamed to match.
 
-![Meridian wordmark](static/images/512.png)
+![Meridian Beacon mark](static/images/meridian-avatar.png)
 
 ## Product overview
 
