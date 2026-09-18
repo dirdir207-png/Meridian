@@ -30,7 +30,7 @@ def test_ledger_glyph_is_installed_as_decorative_kit_art():
     # (an <img> cannot inherit currentColor and would render black).
     assert "mask: var(--m-review-icon) center / contain no-repeat" in css
     assert "background-color: currentColor" in css
-    assert "kit-2026-09-16/icons/" in js
+    assert "kit-2026-09-18/icons/" in js
     # The ring's marker dot from the concept.
     assert ".m-review-glyph::after" in css
 
@@ -67,7 +67,7 @@ def test_ledger_glyph_resolver_round_trips_with_node():
       check('income', transactionIconName({
         merchant: 'Paycheck', description: 'Paycheck', amount: 1660,
         classification: { category: 'Income' },
-      }), 'star');
+      }), 'cash-stack');
       check('groceries', transactionIconName({ merchant: 'Corner Market', amount: -32.4 }), 'basket');
       check('transit', transactionIconName({ merchant: 'City Transit', amount: -3 }), 'bus-front');
       check('rent', transactionIconName({ merchant: 'Rent', amount: -1320 }), 'house');
@@ -77,8 +77,8 @@ def test_ledger_glyph_resolver_round_trips_with_node():
       check('category-only', transactionIconName({
         amount: -20, classification: { category: 'Groceries' },
       }), 'basket');
-      check('unknown spend', transactionIconName({ merchant: 'Zz Unknown', amount: -5 }), 'compass');
-      check('unknown income', transactionIconName({ merchant: 'Zz Unknown', amount: 5 }), 'star');
+      check('unknown spend', transactionIconName({ merchant: 'Zz Unknown', amount: -5 }), 'question-circle');
+      check('unknown income', transactionIconName({ merchant: 'Zz Unknown', amount: 5 }), 'question-circle');
     """
     result = subprocess.run(
         [node, "--input-type=module", "-e", script],
@@ -87,4 +87,30 @@ def test_ledger_glyph_resolver_round_trips_with_node():
         text=True,
         timeout=20,
     )
+    assert result.returncode == 0, result.stderr
+
+
+def test_category_icons_preserve_owner_meaning_and_unknown_state():
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is unavailable")
+    script = """
+      const { transactionIconName, categoryIsAssigned } = await import('./static/js/meridian/kit-icons.js');
+      const cases = [
+        [{merchant:'Whole Foods',classification:{category:'Dining',method:'user_rule'}},'fork-knife'],
+        [{classification:{category:'Phone'}},'phone'],
+        [{classification:{category:'Pets'}},'heart'],
+        [{classification:{category:'Refunds'},amount:10},'arrow-counterclockwise'],
+        [{classification:{category:'Uncategorized'},merchant:'Unknown',amount:-5},'question-circle'],
+        [{classification:{category:'Work supplies',method:'user_rule'},merchant:'Whole Foods'},'tag'],
+      ];
+      for (const [input,want] of cases) {
+        const got = transactionIconName(input);
+        if (got !== want) throw Error(`${JSON.stringify(input)} expected ${want}, got ${got}`);
+      }
+      for (const v of [null, '', 'Uncategorized', 'unassigned', '  Uncategorized  ']) {
+        if (categoryIsAssigned(v)) throw Error(`Not a category: ${v}`);
+      }
+    """
+    result = subprocess.run([node, "--input-type=module", "-e", script], cwd=ROOT, capture_output=True, text=True, timeout=20)
     assert result.returncode == 0, result.stderr

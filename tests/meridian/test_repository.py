@@ -18,7 +18,7 @@ def test_keyword_category_guess_recognizes_common_merchants():
     assert _keyword_category_guess("Starbucks") == "Dining"
     assert _keyword_category_guess("WALMART") == "Shopping"
     assert _keyword_category_guess("Shell Oil") == "Gas"
-    assert _keyword_category_guess("Verizon Wireless") == "Utilities"
+    assert _keyword_category_guess("Verizon Wireless") == "Phone"
     assert _keyword_category_guess("Netflix") == "Entertainment"
     assert _keyword_category_guess("Uber") == "Transport"
     assert _keyword_category_guess("CVS Pharmacy") == "Health"

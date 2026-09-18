@@ -1,3 +1,5 @@
+import { categoryIsAssigned } from "./kit-icons.js";
+
 // Classification corrections are owner-initiated POSTs (not financial mutations
 // requiring a proposal), so they use plain fetch — meridianFetch only permits
 // GET + a small proposal allowlist.
@@ -49,6 +51,8 @@ const SUGGESTED_CATEGORIES = [
   "Home",
   "Education",
   "Fees",
+  "Internet", "Phone", "Fitness", "Pets", "Gifts", "Charity", "Taxes",
+  "Income", "Refunds", "Reimbursements", "Savings",
   "Other",
 ];
 
@@ -164,10 +168,13 @@ document.addEventListener("click", async (event) => {
   const row = event.target.closest("[data-transaction-row]");
   if (event.target.closest("[data-review-approve]") && row) {
     event.stopPropagation();
-    const classification =
-      row.dataset.classificationCategory ||
-      row.dataset.suggestedCategory ||
-      "Uncategorized";
+    const classification = categoryIsAssigned(row.dataset.classificationCategory)
+      ? row.dataset.classificationCategory
+      : row.dataset.suggestedCategory;
+    if (!categoryIsAssigned(classification)) {
+      openInlineCategoryEditor(row);
+      return;
+    }
     await correct(row, classification, row.dataset.kind || "spend", false);
     return;
   }

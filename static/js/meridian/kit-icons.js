@@ -1,22 +1,4 @@
-/* Kit README semantic mapping, applied to a ledger row.
-
-A row carries a merchant, a description and a category, so its framed glyph is
-resolved from that text. This is presentation only: the glyph never carries meaning
-the text does not, the category label beside it stays authoritative, and an
-unrecognised row keeps a neutral mark.
-
-Order matters — the first match wins — and the specific text is scanned before the
-broad category. The merchant and description name the actual thing ("Internet",
-"Electric") while a category is broad ("Utilities"), and the kit asks for wifi for
-Internet but lightning-charge for electricity. Matching both in one pass loses that
-distinction, because "Utilities" matches the electricity rule and that rule comes first.
-
-dial.js holds the same vocabulary for Today's events and plan.js for its segments;
-converging the three into this module is a worthwhile follow-up rather than part of a
-bounded slice. This file deliberately has no DOM or network dependency so it can be
-imported and exercised under Node.
-*/
-
+/* Category semantics take precedence over decorative merchant guesses. */
 const TRANSACTION_ICONS = [
   [/(electric|power|utilit|energy|gas|water|sewer)/i, "lightning-charge"],
   [/(internet|wifi|broadband|fibre|fiber|wireless|phone|mobile)/i, "wifi"],
@@ -31,20 +13,51 @@ const TRANSACTION_ICONS = [
   [/(goal|target)/i, "flag"],
 ];
 
+export const CATEGORY_ICONS = Object.freeze({
+  groceries: "basket", dining: "fork-knife", coffee: "cup-hot", gas: "fuel-pump",
+  transport: "bus-front", shopping: "bag", entertainment: "controller", travel: "airplane",
+  utilities: "lightning-charge", internet: "wifi", phone: "phone", rent: "house",
+  subscriptions: "arrow-repeat", health: "heart-pulse", fitness: "activity",
+  insurance: "shield-check", transfers: "arrow-left-right", "personal care": "scissors",
+  home: "tools", education: "mortarboard", fees: "receipt", pets: "heart",
+  gifts: "gift", charity: "balloon-heart", taxes: "receipt", income: "cash-stack",
+  refunds: "arrow-counterclockwise", reimbursements: "people", savings: "piggy-bank",
+  recurring: "arrow-repeat", other: "tag",
+});
+
+export const ACTION_ICONS = Object.freeze({
+  confirmCategory: "check-circle", correctCategory: "pencil-square", chooseCategory: "tag",
+  reviewProposal: "file-earmark-check", funding: "piggy-bank", transfer: "arrow-left-right",
+  schedule: "calendar-check", permission: "shield-check", evidence: "journal-text",
+  needsReview: "exclamation-triangle", awaitingVerification: "hourglass-split",
+  failed: "x-circle", history: "clock-history",
+});
+
+export function categoryIsAssigned(value) {
+  return typeof value === "string" && !["", "uncategorized", "unassigned"].includes(value.trim().toLowerCase());
+}
+
 export function transactionIconName(transaction) {
   const safe = transaction || {};
-  const text = (value) => (typeof value === "string" ? value : "");
-  const passes = [
-    [safe.merchant, safe.description],
-    [safe.classification?.category, safe.suggested_category],
-  ];
-  for (const parts of passes) {
-    const haystack = parts.map(text).join(" ");
-    if (!haystack.trim()) continue;
-    for (const [pattern, icon] of TRANSACTION_ICONS) {
-      if (pattern.test(haystack)) return icon;
+  const classification = safe.classification || {};
+  const category = (classification.category || "").trim().toLowerCase();
+  // Owner classifications always control their icon, including custom categories.
+  if (categoryIsAssigned(category)) {
+    if (category === "utilities" && classification.method !== "user_rule") {
+      const detail = `${safe.merchant || ""} ${safe.description || ""}`;
+      if (/internet|wifi|broadband|fibre|fiber/i.test(detail)) return "wifi";
     }
+    return CATEGORY_ICONS[category] || "tag";
   }
-  // Money in reads as income; anything unrecognised keeps a neutral heading mark.
-  return safe.amount > 0 ? "star" : "compass";
+  // Explicitly unknown classification must not acquire certainty from decoration.
+  if (category) return "question-circle";
+  if (categoryIsAssigned(safe.suggested_category)) {
+    return CATEGORY_ICONS[safe.suggested_category.trim().toLowerCase()] || "tag";
+  }
+  // Legacy unclassified fixture rows retain semantic descriptors until classified.
+  const text = [safe.merchant, safe.description].filter(v => typeof v === "string").join(" ");
+  for (const [pattern, icon] of TRANSACTION_ICONS) {
+    if (pattern.test(text)) return icon;
+  }
+  return "question-circle";
 }

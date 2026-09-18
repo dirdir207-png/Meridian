@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from .category_catalog import known_merchant_category
+
 
 @dataclass(frozen=True)
 class ClassificationInput:
@@ -34,11 +36,6 @@ class Classification:
     method: str
     provider: str | None = None
     model: str | None = None
-
-
-_KNOWN_MERCHANTS = {
-    "whole foods": ("Groceries", "merchant:whole-foods"),
-}
 
 
 def _matches(rule: AssignmentRule, transaction: ClassificationInput) -> bool:
@@ -121,17 +118,14 @@ def classify_deterministic(
             "positive amount and refund language",
             "deterministic",
         )
-    merchant = (transaction.merchant or "").casefold()
-    for pattern, (category, rule_id) in _KNOWN_MERCHANTS.items():
-        if pattern in merchant or pattern in description:
-            return Classification(
-                category,
-                "spend",
-                0.95,
-                rule_id,
-                f"normalized merchant matched {pattern}",
-                "deterministic",
-            )
+    match = known_merchant_category(transaction.merchant, transaction.description)
+    if transaction.amount < 0 and match:
+        category, rule_id, alias = match
+        return Classification(
+            category, "spend", 0.95, rule_id,
+            f"normalized merchant identity matched {alias}; merchant sector, not item evidence",
+            "deterministic",
+        )
     if _is_monthly(transaction, history):
         return Classification(
             "Recurring",

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional, Sequence
 
+from .category_catalog import CATEGORIES as _DEFAULT_CATEGORIES
 from .db import run_migrations
 from .models import AccountRecord, ArchivedAccountRecord, TransactionRecord
 from .timestamps import canonical_occurred_at
@@ -594,6 +595,10 @@ class FinancialRepository:
                 getattr(classification, "provider", None),
                 getattr(classification, "model", None),
             )
+            # Explicit per-transaction corrections are written by correct_classification.
+            # Automated sync/AI/rule refresh must never undo that owner decision.
+            if current["classification_evidence"] == "owner correction":
+                return
             if current_values == incoming_values:
                 return
             if current["classification_category"] is not None:
@@ -791,7 +796,7 @@ class FinancialRepository:
                 rows = connection.execute(
                     "SELECT classification_category FROM financial_transactions "
                     "WHERE lower(merchant) = ? AND classification_category IS NOT NULL "
-                    "AND classification_category != '' "
+                    "AND classification_category != '' AND lower(classification_category) != 'uncategorized' "
                     "ORDER BY classification_confidence DESC, updated_at DESC",
                     (lower_merchant,),
                 ).fetchall()
@@ -826,7 +831,7 @@ class FinancialRepository:
                 rows = connection.execute(
                     "SELECT classification_category FROM financial_transactions "
                     "WHERE lower(merchant) = ? AND classification_category IS NOT NULL "
-                    "AND classification_category != ''",
+                    "AND classification_category != '' AND lower(classification_category) != 'uncategorized'",
                     (lower_merchant,),
                 ).fetchall()
             for category, _count in Counter(r["classification_category"] for r in rows).most_common():
@@ -1158,6 +1163,11 @@ class FinancialRepository:
 
 def _keyword_category_guess(text: str) -> str | None:
     """Heuristic category for obvious merchant keywords (best-effort)."""
+    from .category_catalog import known_merchant_category
+
+    known = known_merchant_category(text)
+    if known:
+        return known[0]
     t = (text or "").lower()
     table = [
         (("starbucks", "chipotle", "mcdonald", "dunkin", "wendy", "taco bell", "kfc", "restaurant", "cafe", "coffee", "grill", "pizza", "subway", "bistro"), "Dining"),
@@ -1174,24 +1184,3 @@ def _keyword_category_guess(text: str) -> str | None:
         if any(k in t for k in keywords):
             return category
     return None
-
-_DEFAULT_CATEGORIES = [
-    "Groceries",
-    "Dining",
-    "Gas",
-    "Transport",
-    "Shopping",
-    "Entertainment",
-    "Travel",
-    "Utilities",
-    "Rent",
-    "Subscriptions",
-    "Health",
-    "Insurance",
-    "Transfers",
-    "Personal Care",
-    "Home",
-    "Education",
-    "Fees",
-    "Other",
-]

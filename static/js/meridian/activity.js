@@ -3,7 +3,7 @@
 import { MeridianApiError, meridianFetch } from "./api.js";
 import { describeTransactionAccount } from "./archived-accounts.js";
 import { dayKey, dayLabel, formatCurrency } from "./format.js";
-import { transactionIconName } from "./kit-icons.js";
+import { categoryIsAssigned, transactionIconName } from "./kit-icons.js";
 
 const state = {
   cursor: null,
@@ -106,8 +106,8 @@ function buildRow(transaction) {
     const dot = document.createElement("span");
     dot.className = "m-review-dot";
     const confidence = transaction.classification?.confidence || 0;
-    const hasCategory = !!transaction.classification?.category;
-    const suggested = transaction.suggested_category || "";
+    const hasCategory = categoryIsAssigned(transaction.classification?.category);
+    const suggested = categoryIsAssigned(transaction.suggested_category) ? transaction.suggested_category : "";
     // Expose the smart guess to the inline editor via a data attribute.
     if (suggested) {
       row.dataset.suggestedCategory = suggested;
@@ -134,6 +134,7 @@ function buildRow(transaction) {
     approve.dataset.reviewApprove = "";
     approve.textContent =
       hasCategory || suggested ? "Approve category" : "Needs category";
+    approve.disabled = !(hasCategory || suggested);
     const correct = document.createElement("button");
     correct.type = "button";
     correct.className = "m-button m-button--quiet m-review-correct";
@@ -167,7 +168,7 @@ function buildRow(transaction) {
     glyphIcon.className = "m-review-glyph-icon";
     glyphIcon.style.setProperty(
       "--m-review-icon",
-      `url("/static/img/meridian/observatory/kit-2026-09-16/icons/${transactionIconName(transaction)}.svg")`
+      `url("/static/img/meridian/observatory/kit-2026-09-18/icons/${transactionIconName(transaction)}.svg")`
     );
     glyph.appendChild(glyphIcon);
 
