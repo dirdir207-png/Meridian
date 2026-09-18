@@ -20,6 +20,12 @@
 }
 
 .m-activity {
+  /* The 2026-09-18 extension defines one action orange. Keep it scoped to Activity
+     until the wider token integration is approved; mint remains a status colour. */
+  --obs-action: #e99a48;
+  --obs-action-hover: #f3b272;
+  --obs-action-ink: #20263b;
+
   display: grid;
   gap: var(--m-space-5);
 }
@@ -100,25 +106,48 @@
   flex-wrap: wrap;
 }
 
-/* Concept 03's mode row is ruled, not pilled: the three labels sit on a brass line and
-   the active one is underlined beneath its label, with the star above it coming from the
-   ornament layer. The pill treatment read as a generic segmented control and put a
-   filled chip where the concept has a label resting on a rule -- which is also the line
-   the concept uses to separate the header from the tab row. */
-.m-activity-toolbar .m-segmented {
+/* The 2026-09-18 concepts keep the mode row quiet and full-width: labels rest on one
+   brass rule, the selected label/underline use the action orange, and the three stars are
+   ornament only (generated content never carries state or a name). */
+.m-activity-toolbar .m-activity-tabs {
+  position: relative;
   display: flex;
+  flex: 1 0 100%;
+  justify-content: space-around;
+  width: 100%;
+  box-sizing: border-box;
   gap: var(--m-space-6);
-  padding: 0;
+  padding: var(--m-space-3) var(--m-space-5) 0;
   border: 0;
   border-bottom: 1px solid var(--obs-brass);
   border-radius: 0;
   background: none;
 }
 
-.m-segmented .m-button {
+.m-activity-tabs::before,
+.m-activity-tabs::after {
+  content: "✦";
+  position: absolute;
+  bottom: -0.62em;
+  z-index: 1;
+  color: var(--obs-brass);
+  font-size: 15px;
+  line-height: 1;
+  background: var(--m-canvas);
+}
+
+.m-activity-tabs::before {
+  left: -0.2em;
+}
+
+.m-activity-tabs::after {
+  right: -0.2em;
+}
+
+.m-activity-tab {
   position: relative;
   min-height: 44px;
-  padding: 0 0 var(--m-space-2);
+  padding: var(--m-space-1) var(--m-space-2) var(--m-space-2);
   border: 0;
   border-radius: 0;
   background: none;
@@ -126,24 +155,42 @@
   font-family: var(--m-font-serif);
 }
 
-.m-segmented .m-button:hover {
+.m-activity-tab:hover {
   background: none;
   color: var(--m-ink);
 }
 
-.m-segmented .m-button[aria-pressed="true"] {
+.m-activity-tab[aria-pressed="true"] {
   background: none;
-  color: var(--obs-brass);
+  color: var(--obs-action);
 }
 
-.m-segmented .m-button[aria-pressed="true"]::after {
+/* The action orange is intentionally a selection cue, but it cannot carry readable
+   text on the light parchment. Keep the star and underline orange there while the
+   label returns to the handoff's dark action ink. */
+html[data-theme="light"] .m-activity-tab[aria-pressed="true"] {
+  color: var(--obs-action-ink);
+}
+
+.m-activity-tab[aria-pressed="true"]::before {
+  content: "✦";
+  position: absolute;
+  top: -0.7em;
+  left: 50%;
+  color: var(--obs-action);
+  font-size: 13px;
+  line-height: 1;
+  transform: translateX(-50%);
+}
+
+.m-activity-tab[aria-pressed="true"]::after {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
+  left: var(--m-space-2);
+  right: var(--m-space-2);
   bottom: -1px;
   height: 2px;
-  background: var(--obs-brass);
+  background: var(--obs-action);
 }
 
 .m-activity-filters {
@@ -519,20 +566,108 @@
   margin-top: var(--m-space-1);
 }
 
+/* Review is local bookkeeping, not bank approval. The primary and correction controls
+   share the concept's clipped ticket silhouette while fill alone communicates priority. */
+.m-review-actions .m-button {
+  --m-ticket-cut: 9px;
+
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--m-space-2) var(--m-space-4);
+  border-radius: 0;
+  clip-path: polygon(
+    var(--m-ticket-cut) 0,
+    calc(100% - var(--m-ticket-cut)) 0,
+    100% var(--m-ticket-cut),
+    100% calc(100% - var(--m-ticket-cut)),
+    calc(100% - var(--m-ticket-cut)) 100%,
+    var(--m-ticket-cut) 100%,
+    0 calc(100% - var(--m-ticket-cut)),
+    0 var(--m-ticket-cut)
+  );
+  font-family: var(--m-font-serif);
+  font-weight: 600;
+}
+
+.m-review-actions .m-button:focus-visible {
+  outline: none;
+}
+
+.m-review-actions .m-review-approve:focus-visible {
+  box-shadow: inset 0 0 0 3px var(--obs-action-ink);
+}
+
 .m-review-approve {
-  background: var(--m-healthy);
-  border-color: var(--m-healthy);
-  color: var(--m-surface);
+  flex: 1.35 1 170px;
+  background: var(--obs-action);
+  border-color: var(--obs-action);
+  color: var(--obs-action-ink);
 }
 
 .m-review-approve:hover {
-  background: color-mix(in srgb, var(--m-healthy) 88%, var(--m-ink));
-  border-color: transparent;
+  background: var(--obs-action-hover);
+  border-color: var(--obs-action-hover);
 }
 
-.m-review-correct {
-  border-color: var(--m-border-strong);
+.m-review-approve:disabled {
+  background: color-mix(in srgb, var(--obs-action) 45%, var(--m-surface));
+  border-color: color-mix(in srgb, var(--obs-action) 45%, var(--m-surface));
+  color: var(--obs-action-ink);
+  cursor: not-allowed;
+}
+
+.m-review-actions .m-review-correct {
+  --m-ticket-inner-cut: calc(var(--m-ticket-cut) - 1px);
+
+  position: relative;
+  isolation: isolate;
+  flex: 0.8 1 110px;
+  background: transparent;
+  border-color: transparent;
   color: var(--m-ink);
+}
+
+/* A rectangular border is severed by clip-path at every chamfer. Two inset
+   polygons instead draw one continuous brass ticket edge without extra markup. */
+.m-review-actions .m-review-correct::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: -2;
+  inset: 0;
+  background: var(--obs-brass);
+  clip-path: inherit;
+}
+
+.m-review-actions .m-review-correct::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+  inset: 1px;
+  background: var(--m-canvas);
+  clip-path: polygon(
+    var(--m-ticket-inner-cut) 0,
+    calc(100% - var(--m-ticket-inner-cut)) 0,
+    100% var(--m-ticket-inner-cut),
+    100% calc(100% - var(--m-ticket-inner-cut)),
+    calc(100% - var(--m-ticket-inner-cut)) 100%,
+    var(--m-ticket-inner-cut) 100%,
+    0 calc(100% - var(--m-ticket-inner-cut)),
+    0 var(--m-ticket-inner-cut)
+  );
+}
+
+.m-review-actions .m-review-correct:hover::before {
+  background: var(--obs-action);
+}
+
+.m-review-actions .m-review-correct:hover::after {
+  background: color-mix(in srgb, var(--obs-brass) 12%, var(--m-canvas));
+}
+
+.m-review-actions .m-review-correct:focus-visible::after {
+  box-shadow: inset 0 0 0 3px var(--m-ink);
 }
 
 /* Inline category editor (replaces a native prompt). */

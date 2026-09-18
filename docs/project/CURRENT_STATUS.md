@@ -103,14 +103,50 @@ no surface** — so there is no real token conflict, and no second orange should
 | Ornate icons | **Astra** | **delivered** — expanded semantic icon pack; do not duplicate |
 | Icon/category mapping | **Astra** | **delivered** — `CATEGORY_ICONS`, category-first with the internet/wifi case preserved |
 | "Approve category" → "Confirm category" | Astra's file | `activity.js` — needs Astra or a coordinated edit |
-| Tabs: deeper orange + star above selection | **me** | not started; underline + full-bleed rule already exist |
-| Buttons as tickets (filled / open-outlined) | **me** | not started; current button is **mint**, should be `--obs-action` |
-| Full-bleed lines with stars at each end | **me** | not started |
-| "N categories to review" banner | **me**, blocked | no pending-count exists anywhere in the code — needs a data source |
+| Tabs: deeper orange + star above selection | **Builder** | **complete** — `--obs-action`, orange underline, decorative selection star |
+| Buttons as tickets (filled / open-outlined) | **Builder** | **complete** — orange confirm/approve plate plus open brass correction ticket |
+| Full-bleed lines with stars at each end | **Builder** | **complete** — one full-width brass rule with decorative end stars |
+| "N categories to review" banner | **Builder**, blocked | no pending-count exists anywhere in the code — needs a data source |
 
 Also relevant: the handoff's own split — "Timeline = what happened, no approval button on every ordinary row;
 Review = what needs a decision, confirm/change is local bookkeeping and **never** bank authorization". That is
-consistent with Meridian's write model and should govern the Activity build.
+consistent with Meridian's write model and governs the delivered Activity build.
+
+### Activity orange actions and ruled tabs delivered
+
+The bounded Activity presentation slice is complete in `activity.html` and `activity.css`: the Activity root opts
+into Astra's one action orange (`--obs-action: #e99a48`), the selected tab carries that orange with a decorative
+star above it, the full-width brass rule has decorative stars at both ends, and Review actions share a clipped
+ticket silhouette. The local category confirmation is filled orange; correction is transparent with a continuous
+brass ticket edge. Mint is unchanged as a status colour and no financial semantics, route, provider call, data
+contract, or JavaScript changed.
+
+Two defects found in review are fixed in the same slice, both recorded because they were measurement findings:
+
+- **Orange could not carry the selected tab's text in the light edition.** `#e99a48` reaches only **1.95:1**
+  against the light page, below even the 3:1 large-text floor. The light edition now paints the label in the
+  handoff's own dark action ink (`--obs-action-ink`) at **12.78:1** while the star and underline stay orange. Dark
+  keeps the orange label at **7.45:1**. **No second orange was introduced** — that is what the one-action-orange
+  rule forbids. The orange cue itself therefore remains **1.95:1 in the light edition** (the same order as the
+  pre-existing brass hairline); the readable state is carried by the label, not by the star.
+- **`clip-path` severs a normal border at every chamfer**, so the "open ticket" control rendered as disconnected
+  strokes, not an outline. Correction now draws two stacked clipped polygons — a brass edge plus a 1px-inset page
+  -coloured face — giving one unbroken ticket outline with no extra markup.
+
+The unavailable "N categories to review" strip remains excluded: the Activity payload still exposes no pending
+count and this slice does not invent one. The existing "Approve category" copy also remains unchanged because it
+is owned by `activity.js`, outside this presentation-only claim.
+
+Verification used the isolated synthetic preview only. `artifacts/observatory-activity-actions-2026-09-18/`
+contains Review-state viewport and full-page captures for five governed viewports × both themes. All ten records
+show zero horizontal overflow and zero console errors. An explicit toggle probe moved dark → light, with mean
+viewport luminance **36.84 → 207.52**; computed styles resolved the fill to `rgb(233, 154, 72)`, the correction
+edge to brass `rgb(198, 170, 113)` over an opaque face (`rgb(20, 27, 50)` dark / `rgb(244, 236, 223)` light), and
+the two controls to 44px. At 390/420/430 CSS px the two controls stay on one row at 420/430 and wrap at 390.
+Keyboard traversal reaches **both** actions:
+`:focus-visible` is true, the ring is a 3px inset stroke in `--obs-action-ink` over the orange fill (**6.55:1**
+in both editions) and in `--m-ink` over the correction face (**13.5:1** dark / **12.78:1** light). All three
+generated stars are present.
 
 ### Three referenced handoff files are missing
 

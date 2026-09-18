@@ -57,9 +57,9 @@ def test_activity_mobile_keeps_filters_open_without_the_extra_filter_button():
 
 def test_activity_tabs_use_the_concepts_ruled_underline_treatment():
     css = _read("static/css/meridian/activity.css")
-    assert ".m-activity-toolbar .m-segmented" in css
+    assert ".m-activity-toolbar .m-activity-tabs" in css
     assert "border-bottom: 1px solid var(--obs-brass)" in css
-    assert '.m-button[aria-pressed="true"]::after' in css
+    assert '.m-activity-tab[aria-pressed="true"]::after' in css
 
 
 def test_activity_vignette_respects_the_kits_size_guidance():
@@ -69,3 +69,69 @@ def test_activity_vignette_respects_the_kits_size_guidance():
     assert "width: 148px" in css
     # The wide-width rule is fluid and bounded rather than unbounded.
     assert "clamp(128px, 16vw, 176px)" in css
+
+
+def test_activity_opts_into_the_handoffs_single_action_orange():
+    css = _read("static/css/meridian/activity.css")
+    activity_root = css.split(".m-activity {", 1)[1].split("}", 1)[0]
+    assert "--obs-action: #e99a48" in activity_root
+    # Mint remains a semantic confirmed/incoming colour, never the unreviewed action.
+    approve = css.split(".m-review-approve {", 1)[1].split("}", 1)[0]
+    assert "background: var(--obs-action)" in approve
+    assert "var(--m-healthy)" not in approve
+
+
+def test_activity_tabs_use_orange_cues_with_a_selection_star_and_end_stars():
+    html = _read("templates/meridian/partials/activity.html")
+    css = _read("static/css/meridian/activity.css")
+    assert 'class="m-segmented m-activity-tabs"' in html
+
+    tabs = css.split(".m-activity-tabs {", 1)[1].split("}", 1)[0]
+    assert "width: 100%" in tabs
+    assert "border-bottom: 1px solid var(--obs-brass)" in tabs
+    assert ".m-activity-tabs::before," in css
+    assert ".m-activity-tabs::after {" in css
+    assert 'content: "✦"' in css
+
+    selected = css.split('.m-activity-tab[aria-pressed="true"] {', 1)[1].split("}", 1)[0]
+    assert "color: var(--obs-action)" in selected
+    light_selected = css.split(
+        'html[data-theme="light"] .m-activity-tab[aria-pressed="true"] {', 1
+    )[1].split("}", 1)[0]
+    assert "color: var(--obs-action-ink)" in light_selected
+    assert '.m-activity-tab[aria-pressed="true"]::before' in css
+    underline = css.split('.m-activity-tab[aria-pressed="true"]::after {', 1)[1].split("}", 1)[0]
+    assert "background: var(--obs-action)" in underline
+
+
+def test_review_actions_use_filled_and_continuously_outlined_ticket_silhouettes():
+    css = _read("static/css/meridian/activity.css")
+    actions = css.split(".m-review-actions .m-button {", 1)[1].split("}", 1)[0]
+    assert "min-height: 44px" in actions
+    assert "clip-path: polygon(" in actions
+
+    approve = css.split(".m-review-approve {", 1)[1].split("}", 1)[0]
+    assert "background: var(--obs-action)" in approve
+    assert "color: var(--obs-action-ink)" in approve
+
+    correct = css.split(".m-review-correct {", 1)[1].split("}", 1)[0]
+    assert "background: transparent" in correct
+    assert "border-color: transparent" in correct
+    outer_edge = css.split(".m-review-actions .m-review-correct::before {", 1)[1].split("}", 1)[0]
+    assert "background: var(--obs-brass)" in outer_edge
+    assert "clip-path: inherit" in outer_edge
+    inner_face = css.split(".m-review-actions .m-review-correct::after {", 1)[1].split("}", 1)[0]
+    assert "inset: 1px" in inner_face
+    assert "clip-path: polygon(" in inner_face
+
+
+def test_review_action_focus_rings_contrast_with_each_ticket_face():
+    css = _read("static/css/meridian/activity.css")
+    approve_focus = css.split(
+        ".m-review-actions .m-review-approve:focus-visible {", 1
+    )[1].split("}", 1)[0]
+    assert "var(--obs-action-ink)" in approve_focus
+    correct_focus = css.split(
+        ".m-review-actions .m-review-correct:focus-visible::after {", 1
+    )[1].split("}", 1)[0]
+    assert "var(--m-ink)" in correct_focus

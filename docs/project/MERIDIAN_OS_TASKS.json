@@ -1207,6 +1207,36 @@
         "coordination_finding": "This working tree has a CONCURRENT WRITER. meridian/classify.py, meridian/repository.py, static/js/meridian/{activity,kit-icons,review}.js and tests/meridian/test_{activity_glyph,repository}.py are modified, plus new untracked meridian/category_catalog.py and tests/meridian/test_category_expansion.py -- mtimes 11:45-11:48, interleaved with this slice's 11:47-11:50. That work is NOT in this commit; three paths were staged by name and verified. There is no file overlap. The full-suite run and the governed capture therefore ran against a tree containing that uncommitted work.",
         "limits": "Not deployed. Activity captures may show the concurrent lane's in-flight icons."
       }
+    },
+    {
+      "id": "OS-044",
+      "title": "Activity: orange ruled tabs and ticket-shaped review actions",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-030",
+        "OS-043"
+      ],
+      "authority_impact": "none; presentation only. Category confirmation remains local bookkeeping and never bank authorization",
+      "owner_decision_required": false,
+      "requested_by": "owner approval of the bounded Activity presentation slice, 2026-09-18",
+      "acceptance_criteria": [
+        "The selected Activity tab uses the handoff's single #e99a48 action orange and has a decorative star above it",
+        "The Activity tab rule spans the available width and carries decorative stars at both ends",
+        "Review confirmation uses a filled orange ticket silhouette and correction uses an open brass ticket silhouette",
+        "Controls remain at least 44px high with a visible keyboard focus treatment and no horizontal overflow at every governed viewport",
+        "No pending-count banner, JavaScript, route, provider, data contract or financial authority change is introduced"
+      ],
+      "evidence": {
+        "visual_authority": "design/observatory-extension-2026-09-18/concepts/review.png and tokens.css; BUILD_HANDOFF.md's stale canvas/surface prose remains superseded by OS-043",
+        "delivered": "Activity-scoped --obs-action #e99a48, hover and ink tokens; scoped ruled tabs with selected/end-star pseudo-elements; shared clipped ticket silhouette; filled primary and a two-polygon open correction ticket",
+        "guards": "tests/meridian/test_activity_vignette.py pins the token, scoped tab classes, the light-edition ink override, selected/end stars, minimum height, ticket clip-path, orange primary fill, the transparent correction edge polygon and each focus ring colour; focused Activity checks passed",
+        "capture": "artifacts/observatory-activity-actions-2026-09-18/ -- Review state, five governed viewports x two themes, viewport and full-page images, zero console errors and zero horizontal overflow",
+        "browser": "Explicit dark-to-light UI-toggle probe measured mean luminance 36.84 to 207.52; #e99a48 resolved to rgb(233,154,72); correction resolved to a brass rgb(198,170,113) edge over an opaque page-coloured face; both controls measured 44px and stay on one row at 420/430 while wrapping at 390; keyboard traversal reached BOTH controls with :focus-visible true and a 3px inset ring at 6.55:1 over the orange fill and 13.5:1 dark / 12.78:1 light over the correction face",
+        "review_findings_fixed": "Review of the first pass found two real defects, both fixed and guarded. (1) clip-path severs a rectangular border at every chamfer, so the open ticket showed detached strokes; correction now stacks a brass edge polygon with a 1px-inset page-coloured face polygon. (2) #e99a48 as selected-tab TEXT measures only 1.95:1 on the light edition, below the 3:1 large-text floor; the light edition now uses --obs-action-ink for the label (12.78:1, dark keeps 7.45:1) while the star and underline stay orange, because the handoff forbids introducing a second orange. The orange cue itself remains 1.95:1 in light, recorded rather than hidden.",
+        "limits": "The pending-count banner remains blocked because the Activity payload has no pending-count source. The existing Approve category label remains because activity.js is outside this presentation-only claim. At 390px the ticket controls wrap to preserve the long label; they remain paired at 420px and 430px. The light-edition orange star and underline measure 1.95:1, so the accessible selection state is carried by the label contrast rather than by the star. Captures are fixture-only and not deployment evidence."
+      }
     }
   ]
 }
