@@ -24,6 +24,30 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Plan — the tabs as the concept's bordered bar (2026-09-18)
+
+![Plan mobile-air dark, the bordered tab bar with its parchment active cell](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-plan-tabs-2026-09-18/plan-mobile-air-dark-viewport.png)
+
+Read against concept **02**. The row of three pills in a muted trough was a **different construction**, not a
+different shade: the concept draws **one rounded container with a brass border, divided into three equal cells by
+thin vertical rules**, whose **active cell is parchment-filled with a brass star medallion at its left edge**.
+
+Measured on the concept (852px wide, 0.493 to a 420px viewport): container ~733×82px → ~361×40px; active cell
+254px = an equal third; medallion ~70px → ~34px. **Accepted as matching** for the construction, the cell division,
+the active treatment and the medallion.
+
+**Built to 44px, not the concept's 40px,** because the cells are buttons and 44px is the touch-target floor. A 4px
+deviation recorded rather than a target quietly missed.
+
+**Two real bugs surfaced during verification, and both had the same root.** The cells measured **148/119/119**,
+not equal thirds: with `box-sizing: border-box` a zero flex basis is floored by the active cell's own 42px
+medallion gutter. A one-third basis fixed it at the base rule — and then the existing `@media (max-width: 600px)`
+block's `flex: 1` re-imposed `1 1 0%` **at exactly the widths the concept's equal cells matter**. Final measured
+widths: 118.7/118.7/118.7 at 390px, 128.7 at 420px, 132 at 430px, labels fitting, no overflow.
+
+**Deliberately different from Activity.** Activity keeps the ruled-underline treatment concept 03 shows; the two
+workspaces are not meant to share one tab style, which is why this is scoped to `plan.css`.
+
 ## Bottom dock — taller, with the concepts' ornate glyphs (2026-09-18)
 
 ![Today mobile-air dark, the rebuilt bottom dock](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-dock-2026-09-18/today-mobile-air-dark-viewport.png)

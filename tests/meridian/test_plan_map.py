@@ -7,6 +7,7 @@ figure is code-owned HTML that comes from the plan payload.
 """
 import hashlib
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -150,3 +151,63 @@ def test_plan_kit_assets_are_consumed_byte_for_byte():
     entry = next(a for a in manifest["assets"] if a["file"] == "plan-map.png")
     digest = hashlib.sha256((KIT / "plan-map.png").read_bytes()).hexdigest()
     assert digest == entry["sha256"]
+
+
+def test_plan_tabs_are_the_concepts_bordered_bar_not_pills():
+    """Concept 02 draws ONE rounded container with a brass border, divided into three
+    EQUAL cells by thin vertical rules, whose active cell is parchment-filled with a brass
+    star medallion at its left edge. The previous treatment was three pills in a muted
+    trough, which is a different construction, not a different shade.
+
+    Measured on the concept (852px wide, 0.493 to a 420px viewport): container ~733x82px
+    -> ~361x40px; active cell 254px = an equal third; medallion ~70px -> ~34px. The bar is
+    built to 44px rather than the concept's 40px because its cells are buttons and 44px is
+    the touch-target floor."""
+    css = (ROOT / "static/css/meridian/plan.css").read_text()
+    seg = css.split(".m-plan-seg {", 1)[1].split("}", 1)[0]
+    assert "border: 1px solid var(--obs-brass)" in seg
+    assert "border-radius: var(--m-radius-pill)" in seg
+    assert "overflow: hidden" in seg, "the active parchment must clip to the rounded ends"
+
+    tab = css.split(".m-seg-tab {", 1)[1].split("}", 1)[0]
+    # Equal thirds. A zero basis is floored by the active cell's own padding, which made
+    # the cells 148/119/119; a percentage basis is the same for all three.
+    assert "flex: 1 1 33.3333%" in tab
+    assert "min-width: 0" in tab
+    assert "min-height: 44px" in tab
+    assert "border-radius: 0" in tab, "cells are cells, not pills"
+    assert "var(--m-font-serif)" in tab
+
+    # The thin rules between cells, and only between them.
+    assert ".m-seg-tab + .m-seg-tab" in css
+    assert "border-left: 1px solid var(--obs-brass)" in css
+
+    # The active cell: parchment with the ticket ink the kit requires on parchment.
+    active = css.split(".m-seg-tab.is-active {", 1)[1].split("}", 1)[0]
+    assert "background: var(--obs-paper)" in active
+    assert "color: var(--obs-paper-ink)" in active
+    assert "box-shadow: none" in active
+
+    # The medallion: a dark disc ringed in brass with a brass star, at the cell's left.
+    disc = css.split(".m-seg-tab.is-active::before {", 1)[1].split("}", 1)[0]
+    assert "border-radius: 50%" in disc
+    assert "border: 1px solid var(--obs-brass)" in disc
+    star = css.split(".m-seg-tab.is-active::after {", 1)[1].split("}", 1)[0]
+    assert "background-color: var(--obs-brass)" in star
+    assert "icons/star.svg" in star
+    assert "mask:" in star and "-webkit-mask:" in star
+
+
+def test_plan_mobile_rule_does_not_reintroduce_the_unequal_cells():
+    """A `flex: 1` inside the <=600px block overrode the equal basis at exactly the widths
+    the concept's equal cells matter, so the basis lives in one place and the mobile rule
+    only centres the labels."""
+    css = (ROOT / "static/css/meridian/plan.css").read_text()
+    block = css.split("@media (max-width: 600px) {", 1)[1].split("\n}\n", 1)[0]
+    assert ".m-seg-tab" in block
+    tab_rule = block.split(".m-seg-tab {", 1)[1].split("}", 1)[0]
+    # Strip CSS comments first: the rule's own comment records the removed `flex: 1`, and
+    # matching that text would make this guard fire on its own documentation.
+    declarations = re.sub(r"/\*.*?\*/", "", tab_rule, flags=re.S)
+    assert "flex:" not in declarations, "a shorthand flex here overrides the one-third basis"
+    assert "text-align: center" in declarations

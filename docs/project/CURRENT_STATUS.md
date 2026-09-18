@@ -22,11 +22,12 @@ left-clipping regression (80px bleed clipped 64px, ~20% of the instrument; now 0
    down to no row). Not diagnosed. Lead: `renderConnectors` re-anchors runs after the event rows are replaced
    (`dial.js` `update()`).
 
-3. **OS-038 — remaining concept-reconciliation gaps**, each a bounded slice: the lilac wavy title underline
-   (Today/Activity/Accounts; the concepts show none on Plan) — **delivered 2026-09-17** — plus the Accounts
-   connectors as curved dashed paths with an end node each and star-tipped separators, the rotated/notched Accounts
-   ticket, the Plan bordered tab bar with the star medallion in its parchment-filled active cell, and richer
-   medallion glyphs. All measurements live in `artifacts/astra-fidelity-review-2026-09-16/README.md` → Finding 4.
+3. **OS-038 — remaining concept-reconciliation gaps**, each a bounded slice. **2 of 5 delivered:** the lilac
+   wavy title underline (Today/Activity/Accounts; the concepts show none on Plan) on 2026-09-17, and the Plan
+   bordered tab bar on 2026-09-18. **3 remain:** the Accounts connectors as curved dashed paths with an end node
+   each and star-tipped separators, the rotated/notched Accounts ticket, and richer medallion glyphs — the last
+   of which Finding 4 records as an **asset decision for Astra, not a CSS fix**. All measurements live in
+   `artifacts/astra-fidelity-review-2026-09-16/README.md` → Finding 4.
 
 4. **OS-037 — pointer on "Next day", could NOT reproduce, blocked pending the owner.** In the isolated preview the
    pointer *does* move on Next day (angle `-120° → -60°` over two steps). Two traps worth keeping: do not read
@@ -52,6 +53,36 @@ left-clipping regression (80px bleed clipped 64px, ~20% of the instrument; now 0
 - **Luminance, not eyeballing, catches theme-capture failures** — the two passes looked plausible side by side.
 - Temporary review tooling lives in untracked `tmp/probe_*.py`; `artifacts/` holds all captures and the Astra
   package and is untracked by convention.
+
+## Plan's tabs: the concept's bordered bar, not pills (2026-09-18)
+
+**OS-038 item 4.** Concept 02 draws **one rounded container with a brass border**, divided into **three equal
+cells by thin vertical rules**, whose **active cell is parchment-filled with a brass star medallion at its left
+edge** — and that container's top edge doubles as the separator between the header and the tabs. Activity keeps
+the ruled-underline treatment concept 03 shows; the two workspaces are deliberately different.
+
+Measured on the concept (852px wide, so **0.493** to a 420px viewport): container ~733×82px → **~361×40px**;
+active cell **254px**, i.e. an equal third; medallion ~70px → **~34px**. The app had **three pills in a muted
+trough** — a different construction, not a different shade.
+
+Built: one rounded container with a `var(--obs-brass)` border and `overflow: hidden` so the parchment clips to
+the rounded ends; a 1px brass left border on every cell after the first for the rules; the active cell
+parchment-filled with `--obs-paper-ink` (the ticket ink the kit requires on parchment); and the medallion as a
+dark disc ringed in brass carrying a brass star mask. Built to **44px** rather than the concept's 40px because
+the cells are buttons and 44px is the touch-target floor — a 4px deviation **recorded rather than quietly
+missed**.
+
+**Two layout defects were found while verifying, and both are worth keeping.** The cells were **not** equal
+thirds (measured 148/119/119): every cell is `box-sizing: border-box`, so a zero flex basis is floored by the
+active cell's own 42px medallion gutter. A one-third percentage basis fixed that at the base rule — but the
+existing `@media (max-width: 600px)` block carried `flex: 1` (i.e. `1 1 0%`) and **re-imposed the asymmetry at
+exactly the widths the concept's equal cells matter**. Both are corrected and both are guarded. Measured after:
+**118.7/118.7/118.7** at 390px, 128.7 at 420px, 132 at 430px — labels fitting, zero horizontal overflow.
+
+Verified: non-browser suite **1188 passed, 1 skipped** (+2 guards in `tests/meridian/test_plan_map.py`);
+captures `artifacts/observatory-plan-tabs-2026-09-18/` — 10 files, Plan × five governed viewports × two themes,
+zero console errors, zero horizontal overflow. Presentation only; no route, data, financial, provider or
+authority change.
 
 ## The bottom dock: taller, with the concepts' ornate glyphs (2026-09-18)
 

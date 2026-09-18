@@ -997,26 +997,47 @@
   align-self: flex-start;
 }
 
-/* Segmented view switch (Plan | Rules | Crew actions) — keeps the page
-   scannable instead of one very long scroll. */
+/* Plan's view switch is the concept's bordered tab bar, not three pills.
+   Concept 02 draws ONE rounded container with a brass border, divided into three equal
+   cells by thin vertical rules; the active cell is parchment-filled with a brass star
+   medallion at its left edge, and that container's top edge doubles as the separator
+   between the header and the tabs. Activity keeps the ruled-underline treatment, which
+   concept 03 shows -- the two workspaces are deliberately different.
+
+   Measured on the concept (852px wide, so 0.493 to a 420px viewport): the container spans
+   ~733x82px, i.e. ~361x40px; the active cell is 254px, an equal third of the container;
+   the medallion is ~70px, i.e. ~34px. The bar is built to 44px rather than the concept's
+   40px because its cells are buttons and 44px is the touch-target floor -- a 4px
+   deviation recorded rather than a target quietly missed. */
 .m-plan-seg {
-  display: inline-flex;
-  gap: var(--m-space-1);
-  padding: var(--m-space-1);
+  display: flex;
+  width: 100%;
+  gap: 0;
   margin: 0 0 var(--m-space-4);
+  padding: 0;
+  border: 1px solid var(--obs-brass);
   border-radius: var(--m-radius-pill);
-  background: var(--m-surface-muted);
-  border: 1px solid var(--m-border);
+  background: transparent;
+  /* Clips the active cell's parchment to the container's rounded ends. */
+  overflow: hidden;
 }
 
 .m-seg-tab {
-  min-height: 40px;
-  padding: 0 var(--m-space-4);
+  position: relative;
+  /* An explicit one-third basis, not `flex: 1 1 0`. Every cell is `box-sizing: border-box`,
+     so a zero basis is floored by the cell's own padding: the active cell's 42px medallion
+     gutter made it 148px against 119px for the other two. A percentage basis is the same
+     for all three, so the padding sits inside an equal share and the cells are true thirds,
+     which is what the concept draws. */
+  flex: 1 1 33.3333%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 var(--m-space-3);
   border: 0;
-  border-radius: var(--m-radius-pill);
+  border-radius: 0;
   background: transparent;
-  color: var(--m-ink-muted);
-  font-family: var(--m-font-sans);
+  color: var(--obs-paper);
+  font-family: var(--m-font-serif);
   font-size: var(--m-text-sm);
   font-weight: 600;
   cursor: pointer;
@@ -1024,10 +1045,48 @@
     color var(--m-motion-fast) var(--m-ease-out);
 }
 
+/* The concept's thin vertical rules: one per cell boundary, drawn on the left edge of
+   every cell after the first so the container's own border is never doubled. */
+.m-seg-tab + .m-seg-tab {
+  border-left: 1px solid var(--obs-brass);
+}
+
 .m-seg-tab.is-active {
-  background: var(--m-surface);
-  color: var(--m-ink);
-  box-shadow: var(--m-elevation-1);
+  /* Parchment-filled, in the ticket ink the kit requires on parchment, with room at the
+     left for the medallion so the label never sits under it. */
+  background: var(--obs-paper);
+  color: var(--obs-paper-ink);
+  box-shadow: none;
+  padding-left: 42px;
+}
+
+/* The medallion: a dark disc ringed in brass, carrying a brass star -- the concept puts
+   it at the active cell's left edge, not above the label. */
+.m-seg-tab.is-active::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  border: 1px solid var(--obs-brass);
+  border-radius: 50%;
+  background: var(--obs-bg);
+}
+
+.m-seg-tab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  background-color: var(--obs-brass);
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/star.svg") center / contain no-repeat;
+  pointer-events: none;
 }
 
 .m-plan-view[hidden] {
@@ -1075,7 +1134,10 @@
     width: 100%;
   }
   .m-seg-tab {
-    flex: 1;
+    /* No `flex` here. It used to be `flex: 1`, i.e. `1 1 0%`, which overrode the equal
+       one-third basis above and reintroduced the padding-driven asymmetry at every width
+       this rule matches -- which is every mobile viewport, exactly where the concept's
+       equal cells matter. The basis belongs in one place. */
     text-align: center;
   }
 }

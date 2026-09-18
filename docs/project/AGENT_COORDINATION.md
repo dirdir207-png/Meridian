@@ -69,7 +69,35 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (Bottom dock: taller, with the concepts' ornate glyphs) | `static/img/meridian/observatory/nav/**` (new), `static/css/meridian/shell.css`, `static/css/meridian/observatory.css`, `tests/meridian/test_nav_dock.py` (new), `tests/meridian/test_observatory_identity.py`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md`, `artifacts/observatory-dock-2026-09-18/**` | 2026-09-18 | **released at this commit**. Owner-requested: the dock is taller and its icons more ornate, both measured against concept 01 rather than nudged (dock 65px/15.5% of width → 76px/18.1% against the concept's 17.8%; glyphs 20px → 34px against the concept's 8.4% of width). Stacks glyph over label, becomes the concept's rounded inset panel with hairline rules, moves the active marker under the label and removes the fill the concept does not draw. Four glyphs drawn in-repo; the kit's Bootstrap glyphs are superseded for the dock, **not deleted**, and the desktop rail is untouched. **No** route, data, financial, provider or authority change; presentation only. |
 
+| Builder (Plan: the concept's bordered tab bar, OS-038 item 4) | `static/css/meridian/plan.css`, `tests/meridian/test_plan_map.py`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md`, `artifacts/observatory-plan-tabs-2026-09-18/**` | 2026-09-18 | **released at this commit**. OS-038 item 4, measured against concept 02: one brass-bordered rounded container, three equal cells divided by thin rules, the active cell parchment-filled with a brass star medallion at its left edge. Fixed two real layout defects found while verifying (cells were 148/119/119 because a zero flex basis is floored by the active cell's own medallion gutter; a `flex: 1` in the ≤600px block then re-imposed it at mobile widths). Scoped to `plan.css` — Activity keeps the ruled-underline treatment concept 03 shows. **No** route, data, financial, provider or authority change; presentation only. |
+
 ## Log (append only — newest first)
+
+### 2026-09-18 — Builder (Plan) — the tabs rebuilt as the concept's bordered bar
+
+OS-038's fourth item. Concept 02's tab row is **one rounded container with a brass border, three equal cells
+divided by thin vertical rules, and a parchment-filled active cell carrying a brass star medallion at its left
+edge**; the app had three pills in a muted trough. Measured before building: container ~733×82px (852px concept,
+0.493 to 420px) → ~361×40px; active cell 254px = an equal third; medallion ~70px → ~34px.
+
+**Two real bugs surfaced while verifying, and the second is the instructive one.** The cells measured
+**148/119/119**: with `box-sizing: border-box` a zero flex basis is floored by the active cell's own 42px
+medallion gutter, so "Plan" was wider than its siblings. A one-third percentage basis fixed that at the base
+rule — and then the *existing* `@media (max-width: 600px)` block's `flex: 1` (i.e. `1 1 0%`) re-imposed the
+asymmetry at exactly the widths the concept's equal cells matter. A fix that only inspected the rule being
+written would have shipped the bug at every mobile width. Final measured cell widths: 118.7/118.7/118.7 at
+390px, 128.7 at 420px, 132 at 430px; labels fit; zero overflow.
+
+**Deliberate deviation, recorded:** the bar is built to 44px rather than the concept's 40px, because its cells
+are buttons and 44px is the touch-target floor.
+
+**Scoped to `plan.css`.** Activity keeps the ruled-underline treatment concept 03 shows; the two workspaces are
+not meant to share one tab style.
+
+**Test state:** non-browser suite 1188 passed, 1 skipped (+2 guards in `tests/meridian/test_plan_map.py`, one of
+which strips CSS comments before asserting so it cannot fire on its own documentation). Captures
+`artifacts/observatory-plan-tabs-2026-09-18/` — 10 files, Plan × five governed viewports × two themes, zero
+console errors, zero horizontal overflow. `ruff` clean; `git diff --check` clean.
 
 ### 2026-09-18 — Builder (bottom dock) — taller, with the concepts' ornate glyphs
 

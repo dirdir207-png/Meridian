@@ -1038,7 +1038,7 @@
         "All measurements are in artifacts/astra-fidelity-review-2026-09-16/README.md Finding 4"
       ],
       "notes": "Concept measurements recorded; each item is a separate bounded slice.",
-      "progress": "1 of 5 items delivered (the lilac wavy title rule). 4 remain: Accounts curved dashed connectors with star-tipped separators, the rotated/notched Accounts ticket, the Plan bordered tab bar with its parchment-filled active cell, richer medallion glyphs.",
+      "progress": "2 of 5 items delivered: the lilac wavy title rule (2026-09-17) and the Plan bordered tab bar (2026-09-18). 3 remain: Accounts curved dashed connectors with star-tipped separators, the rotated/notched Accounts ticket, and richer medallion glyphs -- the last of which Finding 4 records as an ASSET decision for Astra, not a CSS fix.",
       "evidence": {
         "slices": [
           {
@@ -1049,6 +1049,15 @@
             "artifacts": "static/img/meridian/observatory/title-rule.svg (new), its ASSET_MANIFEST row, static/css/meridian/workspaces.css, templates/meridian/partials/{today,activity,accounts}.html, design-qa.md",
             "traps": "A 3x capture cannot be compared to a concept by absolute pixel size: the first version looked correct in the capture while its amplitude was ~1.8x the concept's relative to its stroke. Only peak-to-stroke and CSS-pixel size (device px / DPR) are comparable. Separately, `--` is illegal inside an XML comment and silently made the first asset unparseable.",
             "limits": "Not deployed. Presentation only: no route, data, financial or authority change."
+          },
+          {
+            "item": "Plan tab row: one bordered bar, three cells, active cell parchment-filled with a brass star medallion",
+            "delivered": "2026-09-18",
+            "measurement": "Measured on concept 02 (852px wide, so 0.493 to a 420px viewport): the container spans ~733x82px -> ~361x40px; the active cell is 254px, an equal third of the container; the medallion is ~70px -> ~34px; the cells are divided by thin brass vertical rules. The app had three pills in a muted trough, which is a different construction rather than a different shade.",
+            "built": "One rounded container with a `var(--obs-brass)` border and `overflow: hidden` so the active cell's parchment clips to the rounded ends; three cells divided by a 1px brass left border on every cell after the first; the active cell parchment-filled (`--obs-paper`) with the ticket ink (`--obs-paper-ink`) the kit requires on parchment; and the medallion as a dark disc ringed in brass with a brass star mask, at the active cell's left edge rather than above its label. Built to 44px rather than the concept's 40px because the cells are buttons and 44px is the touch-target floor -- a 4px deviation recorded, not a target quietly missed.",
+            "defects_found_and_fixed_while_verifying": "The cells were NOT equal thirds (148/119/119): with `box-sizing: border-box` a zero flex basis is floored by the active cell's own 42px medallion gutter. A one-third percentage basis fixed it at the base rule, but a `flex: 1` inside the existing `@media (max-width: 600px)` block re-imposed `1 1 0%` at exactly the widths the concept's equal cells matter. Both are now correct and both are guarded: measured 118.7/118.7/118.7 at 390px, 128.7 at 420px and 132 at 430px, with labels fitting and zero horizontal overflow.",
+            "tests": "tests/meridian/test_plan_map.py: test_plan_tabs_are_the_concepts_bordered_bar_not_pills and test_plan_mobile_rule_does_not_reintroduce_the_unequal_cells (the latter strips CSS comments before checking, so it does not fire on its own documentation).",
+            "capture": "artifacts/observatory-plan-tabs-2026-09-18/ -- 10 files, Plan x five governed viewports x two themes, zero console errors, zero horizontal overflow."
           }
         ],
         "also_measured": "OS-035 is not a defect: the instrument is already centred in its own grid row at every governed mobile width (420px 29.2 above / 29.1 below; 390px 30.0/30.0). The 233px the owner measured is the SECOND panel row (controls + evidence ticket), which align-self cannot touch. The dial's real gap to the concept is size: 63.6% of viewport width against the concept's 82.5%, because the callout column is a hard 130px floor."
