@@ -49,22 +49,36 @@ A few principles shape the experience:
 - **Make corrections durable.** Reviewing a transaction should improve the record without losing the person's decision on the next refresh.
 - **Keep financial decisions with the person.** Proposed money movements require explicit approval, with their outcome checked afterward.
 
-## Where Meridian is heading
+## Roadmap: future features
 
-The broader vision extends beyond a dashboard. These are planned directions, with some supporting work already present; they are not a list of released features.
+These 22 concepts describe Meridian's intended future feature set. **They are future features, not claims of current availability.** Some have early supporting code, but the complete experiences remain ahead. Each concept is listed individually so the full ambition of the project stays visible.
 
-| Direction | Intended experience |
-|---|---|
-| **A connected financial picture** | Bring accounts, activity, commitments, supporting documents, and decision history together, with clear sources and uncertainty. |
-| **Longer-range planning** | Explore 7-, 30-, 90-, and 365-day projections, changed income or bill timing, and alternative scenarios. |
-| **Budgets and payday planning** | Reconcile plans with observed cash, allocate incoming pay across obligations, and explain gaps before they become urgent. |
-| **Personal priorities** | Remember the person's financial preferences and boundaries when preparing recommendations. |
-| **Early warnings and investigation** | Flag cash pressure, stale connections, unexpected balances, duplicate activity, and other changes worth reviewing. |
-| **Household administration** | Follow refunds, subscriptions, renewals, and reimbursements; assemble useful records for negotiations or disputes. |
-| **Independent connections** | Support multiple email and calendar accounts with clear permissions, retention choices, and disconnection controls. |
-| **Voice and iPhone access** | Make explanations and approved workflows easier to reach through Virgil, beginning with read-only access. |
-| **Shared and urgent planning** | Explore household coordination and a focused view of deadlines, resources, and next steps during financial difficulty. |
-| **Personalized assistance** | Offer specialized planning and investigation, temporary helpers, and suggested interface improvements with visible controls and review. |
+| # | Future feature | What it would offer |
+|---:|---|---|
+| 1 | **Financial digital twin** | An evolving model of your financial life, connecting accounts, transactions, bills, plans, and supporting records. |
+| 2 | **7-, 30-, 90-, and 365-day projections** | Views of where cash and obligations may stand across different time horizons, with the assumptions behind each forecast. |
+| 3 | **Explicit confidence, uncertainty, assumptions, and provenance** | Clear explanations of what is known, what is estimated, how certain a conclusion is, and where its evidence came from. |
+| 4 | **Living financial constitution** | A personal, revisable set of financial priorities, preferences, and boundaries that guides recommendations. |
+| 5 | **Policy evaluator** | Checks that proposed actions fit those priorities and boundaries, with understandable reasons when something does not. |
+| 6 | **Specialized financial agents** | Focused assistants for planning, classification, investigation, reconciliation, and explanation, each with a defined role and limited permissions. |
+| 7 | **A single constrained executor** | One controlled path for carrying out approved financial actions, recording the result and checking it with the provider. |
+| 8 | **Proactive financial weather and alerts** | Timely warnings about cash pressure, upcoming obligations, stale information, and meaningful changes without constant noise. |
+| 9 | **Balance forensics and anomaly investigation** | Help tracing unexpected balances, duplicate activity, missing records, and discrepancies back to their causes. |
+| 10 | **Continuously repaired budgets** | Budgets that reconcile with actual cash, reservations, commitments, and corrections, making needed adjustments visible for review. |
+| 11 | **Paycheck landing workflows** | A clear plan for incoming pay: what needs funding, what can go toward goals, and where a shortfall remains. |
+| 12 | **Scenario simulation and counterfactual learning** | Explore “what if” changes without affecting real accounts, then learn from how earlier choices and assumptions played out. |
+| 13 | **Refunds and subscription lifecycle management** | Track expected refunds, recurring charges, renewals, cancellations, and the follow-up needed to resolve them. |
+| 14 | **Bureaucracy and negotiation preparation** | Organize evidence, timelines, correspondence, and preparation for disputes, negotiations, and financial administration. |
+| 15 | **Household resource planning** | Coordinate shared resources, responsibilities, and plans with explicit consent and privacy boundaries. |
+| 16 | **Crisis-command mode** | A focused view of urgent deadlines, available resources, essential obligations, and practical next steps during financial difficulty. |
+| 17 | **Causal financial memory** | Remember why a decision or correction was made, so later explanations and recommendations retain that context. |
+| 18 | **Temporary personalized tools** | Purpose-built helpers for a particular planning or investigation need, with visible permissions, an expiry, and a way to revoke access. |
+| 19 | **Connector self-diagnosis** | Explain why a connection is stale, incomplete, limited, or failing, and identify a useful recovery path. |
+| 20 | **Sandboxed skill generation** | Create reusable helpers for recurring tasks inside an isolated environment, with reviewed permissions and controlled access. |
+| 21 | **Proposed UI evolution** | Suggest interface improvements based on how the product is used, with changes available for review rather than silently imposed. |
+| 22 | **Bounded autonomous CFO behavior** | A proactive financial planning partner that monitors, investigates, simulates, and prepares recommendations within agreed limits; money-moving actions remain subject to explicit approval. |
+
+The wider roadmap also includes multiple independent email and calendar connections, plus Virgil's staged voice and iPhone experience. These are future directions too, not released capabilities or promised delivery dates.
 
 ## The Observatory design
 

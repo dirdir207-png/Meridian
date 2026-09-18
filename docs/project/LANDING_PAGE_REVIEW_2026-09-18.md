@@ -17,3 +17,7 @@ Verification:
 - Self-reviewed the documentation diff and six original concept images. No application code, financial data, credentials, or deployment changed. Application tests are not relevant to this documentation-only change.
 
 Publication: submitted through a pull request to main; final publication and remote-content verification are reported in the task response.
+
+## Owner correction: full future roadmap
+
+The initial rewrite over-compressed the future scope into ten themes. Restored all 22 concepts individually, preserving their names from `CONCEPT_COVERAGE.md`, with product-facing descriptions. Clearly marked the entire set as future features regardless of partial supporting code. Agent-related product features are retained; instructions addressed to coding agents are not. Verification: exact case-insensitive concept-name/count comparison, GitHub Markdown rendering, and `git diff --check`. No runtime behavior changed.

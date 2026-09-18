@@ -1,5 +1,9 @@
 # Enhanced SimpleCrew — Current Status
 
+## Full future roadmap restored — 2026-09-18
+
+Owner correction to the landing-page review: all 22 concepts are now individually listed as future features, including financial agents, skill generation, and bounded CFO behavior. Human-facing descriptions remain separate from internal instructions. Verified the names and count against `CONCEPT_COVERAGE.md`, GitHub Markdown rendering, and diff whitespace. Evidence: `docs/project/LANDING_PAGE_REVIEW_2026-09-18.md`. Documentation only; no runtime change or app deployment.
+
 ## Repository overview review — 2026-09-18
 
 Reviewed Luna's README at `8f7d424` against the published `main` overview. Replaced the Beacon header with existing Observatory engraving; rewrote the page for human readers; removed internal agent/implementation guidance and local-environment commands; corrected the completed repository rename; separated current features, roadmap, and concept imagery. Detailed product scope remains in the existing project records. Branch: `feat/meridian-implementation`. Evidence: `docs/project/LANDING_PAGE_REVIEW_2026-09-18.md`. Documentation only; no app deployment or runtime behavior change. Publication is tracked in the review evidence.
