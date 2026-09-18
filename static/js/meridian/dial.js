@@ -27,7 +27,23 @@
 */
 
 const VIEWBOX = { w: 600, h: 600, cx: 300, cy: 300, r: 282 };
-const ARC_START = -120;
+/* The day arc. `ARC_START` was -120, which put day 0 — today — in the dial's lower-left
+   at (129,399), and that is exactly where the kit's `dial-plate.png` draws its observatory.
+   Measured on the plate (1254px, centre 626,632): the building intrudes into the sky disc
+   only between -140deg and -110deg, reaching inward to r=150-182 against a hand that runs
+   r=118-198, so today's hand crossed it and read as being "into the building" (owner,
+   2026-09-18). The building's inner edge jumps from 165 at -110deg to 283 at -105deg — a
+   near-vertical roofline — so -100 starts the arc clear of it with ~10deg of margin while
+   keeping a full-length hand for every day.
+
+   The concept is no help on the collision itself: its dial has NO building (verified in
+   both lower quadrants), so the observatory is the kit's addition and there is no authority
+   for how a hand should treat it. The concept's own arc does start near the top and sweep
+   clockwise, so shifting the start right is also the direction it points in.
+
+   `ARC_END` is unchanged, so the sweep narrows 240deg -> 220deg and the visible arc stops
+   short of the roofline too. */
+const ARC_START = -100;
 const ARC_END = 120;
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
 

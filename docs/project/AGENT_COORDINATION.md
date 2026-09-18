@@ -75,7 +75,53 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (Today: the dial placed evenly in its band, OS-041) | `static/css/meridian/dial.css`, `tests/browser/test_dial_fidelity.py`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md`, `artifacts/observatory-dial-centring-2026-09-18/**` | 2026-09-18 | **released at this commit**. Owner: "I just want it evenly placed vertically", which also closes OS-035's composition question (placement, not size). Reverses `d0e0cd6`'s `align-self` revert, which was right that the old rule failed to fix the report and wrong about what was wanted: with `align-items: start` the dial sat 0px from the panel top with all 48px of slack beneath. Concept 01 agrees with the owner (~25px above / ~30px below). Now 24/24 inside the band. One browser guard DEMANDED the rejected arrangement ("must not vertically center the dial"); its mechanism is superseded and its reason (no drift with list length, now bounded by the rail cap) is preserved. **No** route, data, financial, provider or authority change; presentation only. |
 
+| Builder (Today: the day arc starts clear of the building, OS-042) | `static/js/meridian/dial.js`, `tests/meridian/test_dial_js.py`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md`, `artifacts/observatory-dial-arc-2026-09-18/**` | 2026-09-18 | **released at this commit**. `ARC_START` −120 → −100 because day 0 sat at −120° and put the hand at (129,399), inside the kit's observatory. Measured the building by ray-casting the plate with an 8-sample run test (without it the first pass found phantom "building" on the right): it intrudes only between −140° and −110°, inward to r=150–182, against a hand running r=118–198. The r=198 tip now clears by 85 units on every day, full length throughout. The new guard READS the constant and fails below −105; proved to bite. Every day moved up to 20°, and drag clamps to the same range. **No** route, data, financial, provider or authority change. |
+
 ## Log (append only — newest first)
+
+### 2026-09-18 — Builder (Today) — the hand was landing in the observatory
+
+**Owner:** *"It defaults into the building for today and is not visually appealing. Where the hand sits per day
+to say."*
+
+**Root cause was a convention, not a widget bug.** The arc ran −120°…+120°, so day 0 (today) sat at −120° and put
+the hand at (129,399) — precisely where the kit's `dial-plate.png` draws its observatory. Worth recording that
+**the concept cannot arbitrate this: its dial has no building at all** (checked both lower quadrants of
+01-today.png), so the observatory is the kit's addition and there is no governing answer for how a hand should
+treat it. That is why this went to the owner as a decision rather than being silently "fixed".
+
+**Measurement note worth reusing.** Ray-casting the plate from its centre found "building" on the *right* side,
+where there is none: the sky's star sparkles are individually bright enough to trip a naive light-pixel test.
+Requiring a run of **8 consecutive light samples** (~16px) removed them and left the real mass. A measurement
+that reports structure where none exists is worse than no measurement, because it looks like data.
+
+| | |
+|---|---|
+| building intrudes into the sky disc | only between −140° and −110° |
+| reaches inward to | r = 150–182 |
+| hand runs | r = 118–198 |
+| roofline inner edge, −110° → −105° | 165 → 283 (near-vertical) |
+
+**Fixed:** `ARC_START` −120 → **−100**, `ARC_END` unchanged. Sweep 240° → 220°, which also stops the visible rim
+arc short of the roofline. The hand's r=198 tip clears the nearest building edge (r=283) by **85 units on every
+day**, with a full-length hand throughout.
+
+**Three options were measured and offered; the owner chose the shift.** Clamping the hand's outer radius at the
+roofline was rejected on evidence: at 14 days only day 0 falls in the −140°…−110° band, so the hand would
+visibly change length for a single day and read as a glitch. The full concept-arc rework was declined as too
+large a relocation.
+
+**The guard reads the constant rather than matching a literal.** `test_the_day_arc_starts_clear_of_the_dials_building_art`
+parses `ARC_START` from the source and fails below **−105** — the measured roofline, not a preference. Proved to
+bite by re-setting it to −120, which fails with the exact diagnosis.
+
+**Visible and intended:** every day's position moved by up to 20° at the lower-left end, so the arc is now
+asymmetric about the top (midpoint +10° rather than 0°). Drag input clamps to the same new range, so scrubbing
+and the rendered positions cannot disagree.
+
+**Test state:** non-browser suite 1189 passed, 1 skipped. Browser dial file unchanged at **6 failed / 13 passed**
+— the same 6 pre-existing failures. Captures `artifacts/observatory-dial-arc-2026-09-18/` — 10 files, zero
+console errors, zero horizontal overflow.
 
 ### 2026-09-18 — Builder (Today) — the dial placed evenly, and a revert I got wrong
 

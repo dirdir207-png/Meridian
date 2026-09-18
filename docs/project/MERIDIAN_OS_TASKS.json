@@ -1154,6 +1154,33 @@
         "capture": "artifacts/observatory-dial-centring-2026-09-18/ -- 10 files, Today x five governed viewports x two themes, zero console errors, zero horizontal overflow.",
         "limits": "This balances the dial inside its own band. It does NOT equalise the space above and below across the WHOLE panel, which measures 24 above / 228 below: the controls row and the evidence ticket sit below the band and `align-self` cannot reach them. Panel-level equalisation would need the dial's column to span all three rows, which would squeeze the controls and the 130px-wide callouts into one narrow column -- recorded as a composition question, not attempted. The concept also has substantial content below its dial band (the 'Bills reserved' strip), so content below is not itself the defect. Not deployed."
       }
+    },
+    {
+      "id": "OS-042",
+      "title": "Today: start the day arc clear of the dial's building art",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-041"
+      ],
+      "authority_impact": "none; presentation and input mapping only, both derived from one pair of constants. No route, data, financial, provider or authority change",
+      "owner_decision_required": false,
+      "requested_by": "owner, 2026-09-18: 'Can we modify the dial so that the lowest point on the left hand side is still above the building imagery? It defaults into the building for today and is not visually appealing. Where the hand sits per day that is to say.' Owner then chose the arc shift over the narrow hand-clamp and the full concept-arc rework.",
+      "acceptance_criteria": [
+        "The hand never overlaps the dial's building art, on any day of the horizon",
+        "Every day keeps a full-length hand",
+        "Day positions and the drag mapping stay consistent with each other"
+      ],
+      "evidence": {
+        "root_cause": "The arc ran -120deg..+120deg, so day 0 -- today -- sat at -120deg, placing the hand at (129,399). That is exactly where the kit's `dial-plate.png` draws its observatory. This is a convention difference, not a bug in one widget: the concept's own dial has NO building (verified in both lower quadrants of 01-today.png), so the observatory is the kit's addition and there is no authority for how a hand should treat it.",
+        "measurement_of_the_building": "Measured on the plate (1254px, ring centre 626,632 -> viewBox 300,300) by ray-casting from the centre and requiring an 8-sample run of light pixels, so the sky's star sparkles are not mistaken for it (a first pass without the run test reported intrusions on the right side where there is no building). The building intrudes into the sky disc ONLY between -140deg and -110deg, reaching inward to r=150-182 against a hand that runs r=118-198. Its inner edge jumps from 165 at -110deg to 283 at -105deg -- a near-vertical roofline.",
+        "delivered": "`ARC_START` -120 -> -100; `ARC_END` unchanged at 120. Sweep narrows 240deg -> 220deg, which also stops the visible rim arc short of the roofline. The hand's r=198 tip now clears the building's nearest edge (r=283 at that angle) by 85 units on every day, with a full-length hand throughout. Day 0 now sits at -100deg, day 1 at -91.5deg, day 2 at -83.1deg.",
+        "why_this_option": "Three were measured and offered. The narrow option (clamp the hand's outer radius at the roofline) was rejected because the hand would visibly change length for the 1-2 days in that band -- at 14 days only day 0 is affected, so it would read as a glitch. The full concept-arc rework (today near the top, sweeping clockwise to ~+200deg) was declined as too large a relocation. The shift keeps every day reachable, keeps a constant hand, and narrows the arc in the same direction the concept points.",
+        "test": "tests/meridian/test_dial_js.py::test_the_day_arc_starts_clear_of_the_dials_building_art READS ARC_START out of the source and fails below -105, the measured roofline, rather than matching a literal. Proved to bite: re-setting ARC_START to -120 fails it with the exact diagnosis. The existing geometry round-trip had three assertions updated for the new endpoints (-100/120).",
+        "capture": "artifacts/observatory-dial-arc-2026-09-18/ -- 10 files, Today x five governed viewports x two themes, zero console errors, zero horizontal overflow.",
+        "limits": "The day ARC_POSITIONS all moved by up to 20deg at the lower-left end; the arc is now asymmetric about the top (midpoint +10 rather than 0). This is visible and intended. Drag input clamps to the same new range, so scrubbing and the rendered positions cannot disagree. Not deployed."
+      }
     }
   ]
 }

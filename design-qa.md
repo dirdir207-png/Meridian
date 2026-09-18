@@ -24,6 +24,34 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Today — the day arc starts clear of the building (2026-09-18)
+
+![Today mobile-air dark, the hand stopping clear of the observatory](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-dial-arc-2026-09-18/today-mobile-air-dark-viewport.png)
+
+**Owner:** *"Can we modify the dial so that the lowest point on the left hand side is still above the building
+imagery? It defaults into the building for today and is not visually appealing."*
+
+**Root cause.** The arc ran −120°…+120°, so **today sat at −120°** and put the hand at (129,399) — exactly where
+the kit's `dial-plate.png` draws the observatory. **The concept can't arbitrate this: its dial has no building**,
+so this is the kit's addition.
+
+**Measured the building by ray-casting the plate**, requiring an 8-sample run of light pixels so the sky's star
+sparkles aren't mistaken for structure — without that run test, the first pass reported building on the *right*
+side where there is none. The building intrudes into the sky disc **only between −140° and −110°**, reaching
+inward to r=150–182 against a hand running r=118–198, with a near-vertical roofline (inner edge 165 at −110° →
+283 at −105°).
+
+**After:** `ARC_START` −120 → **−100**. The hand's r=198 tip clears the nearest building edge (r=283) by
+**85 units on every day**, with a full-length hand throughout. **Accepted as matching** the requirement.
+
+**Why not the alternatives.** Clamping the hand at the roofline would make it visibly change length for the 1–2
+days in that band — a glitch, not a design. The full concept-arc rework moves every day much further and was
+declined.
+
+**Visible and intended:** every day moved by up to 20° at the lower-left, so the arc is now asymmetric about the
+top (midpoint +10° rather than 0°). Drag clamps to the same range, so scrubbing and the rendered positions
+cannot disagree.
+
 ## Today — the dial placed evenly in its band (2026-09-18)
 
 ![Today mobile-air dark, the dial centred in its band](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-dial-centring-2026-09-18/today-mobile-air-dark-viewport.png)

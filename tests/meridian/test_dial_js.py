@@ -74,10 +74,10 @@ def test_dial_js_pure_geometry_round_trips_with_node():
       if (civilDaysBetween('2026-03-08', '2026-03-09') !== 1) throw new Error('DST civil-day mismatch');
       if (civilDaysBetween('2026-09-08', '2026-09-08') !== 0) throw new Error('same-day mismatch');
       if (civilDaysBetween('2024-02-28', '2024-03-01') !== 2) throw new Error('leap-day mismatch');
-      if (!close(dayToAngle(0, 14), -120)) throw new Error('arc start');
+      if (!close(dayToAngle(0, 14), -100)) throw new Error('arc start');
       if (!close(dayToAngle(14, 14), 120)) throw new Error('arc end');
       if (angleToDay(dayToAngle(7, 14), 14) !== 7) throw new Error('angle->day round trip');
-      if (angleToDay(-120, 1) !== 0 || angleToDay(120, 1) !== 1) throw new Error('N=1 endpoints');
+      if (angleToDay(-100, 1) !== 0 || angleToDay(120, 1) !== 1) throw new Error('N=1 endpoints');
       if (addDays('2025-12-31', 1) !== '2026-01-01') throw new Error('year rollover');
     """
     result = subprocess.run(
@@ -419,3 +419,32 @@ def test_mobile_callout_column_fits_ordinary_words():
         "grid-column: 1 / -1; overflow-wrap: break-word; }" in css
     )
     assert "minmax(0, 1fr) 116px" not in css
+
+
+def test_the_day_arc_starts_clear_of_the_dials_building_art():
+    """The kit's `dial-plate.png` draws an observatory in the dial's lower-left. The day arc
+    started at -120deg, which put day 0 -- today -- at (129,399): straight into the building.
+    Owner, 2026-09-18: "It defaults into the building for today and is not visually
+    appealing... Where the hand sits per day."
+
+    Measured on the plate (1254px, ring centre 626,632 -> viewBox 300,300): the building
+    intrudes into the sky disc ONLY between -140deg and -110deg, reaching inward to r=150-182
+    against a hand that runs r=118-198. Its inner edge jumps from 165 at -110deg to 283 at
+    -105deg -- a near-vertical roofline -- so a start at -100 leaves the hand's r=198 tip 85
+    units clear of it on every day of the horizon.
+
+    The threshold below is that measured roofline, not a preference: anything below -105
+    puts the hand back into the artwork.
+    """
+    import re
+
+    js = _read("static/js/meridian/dial.js")
+    match = re.search(r"const ARC_START = (-?\d+(?:\.\d+)?);", js)
+    assert match, "ARC_START must stay a plain literal so this guard can read it"
+    start = float(match.group(1))
+    assert start > -105, (
+        f"ARC_START={start}deg puts the hand back into the dial's building art: the kit's "
+        f"roofline begins at -110deg and the hand reaches r=198 there, inside the 150-182 "
+        f"building edge. -100 is the measured-safe start."
+    )
+    assert "const ARC_END = 120;" in js, "only the start moved; the sweep narrows to 220deg"
