@@ -1181,6 +1181,32 @@
         "capture": "artifacts/observatory-dial-arc-2026-09-18/ -- 10 files, Today x five governed viewports x two themes, zero console errors, zero horizontal overflow.",
         "limits": "The day ARC_POSITIONS all moved by up to 20deg at the lower-left end; the arc is now asymmetric about the top (midpoint +10 rather than 0). This is visible and intended. Drag input clamps to the same new range, so scrubbing and the rendered positions cannot disagree. Not deployed."
       }
+    },
+    {
+      "id": "OS-043",
+      "title": "All pages: one surface colour, not a lighter tint per box",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [],
+      "authority_impact": "none; presentation only",
+      "owner_decision_required": false,
+      "requested_by": "owner, 2026-09-18: 'Universally the more lightly colored boxes on all pages need to be removed. Take a look at accounts, checking, emergency, etc have a separate and cloying lighter colored box separating them. On the concept on all pages, it is the same unified deeper color we corrected for before.'",
+      "acceptance_criteria": [
+        "Every content surface resolves to the page colour",
+        "No page introduces a second background value",
+        "Separation is drawn with hairlines/engraving, not fills"
+      ],
+      "evidence": {
+        "measurement": "The concepts have exactly ONE background value. Sampled against each page's own background: concept 04 page rgb(20,26,49) vs account rows rgb(21,27,50) = delta 1; concept 01 page rgb(22,27,50) vs dock rgb(22,27,49) = delta 0; concept 01 page vs topbar rgb(21,26,50) = delta 0; concept 02 page rgb(21,26,50) vs dock = delta 0. Even the dock and topbar are the page colour.",
+        "what_was_wrong": "0b8fdaa corrected the page background to the measured mean #141b32 but left the surface tokens lighter: --obs-surface #202b40 = rgb(32,43,64) (+12/+16/+14) and --obs-surface-raised #26334a = rgb(38,51,74) (+18/+24/+24). Those feed --m-surface / --m-surface-muted at the .obs-shell remap, read by ~68 rules -- the Accounts CASH/SAVINGS sheet, Plan commitments, Activity review cards.",
+        "delivered": "Both tokens now resolve to var(--obs-bg) and stay declared so all consumers keep working. A translucent --obs-wash rgba(238,228,207,0.05) replaces the hover/focus fills that the flattening turned into no-ops. Light edition unified by the same principle: --m-surface was #fffaf0 (+11/+14/+17 over its canvas) and --m-surface-muted was #ead8b5, the PAPER colour.",
+        "leftover_override_fixed": "0b8fdaa corrected dial.css's Today shell rule from #101a28 to #161c34 but MISSED the Today topbar rule two rules later, which stayed #101a28 -- Today's bar measured rgb(20,27,50) against a rgb(22,28,52) page. That rule is deleted and Today's --m-surface set to its own canvas.",
+        "near_miss": "The first attempt set --m-surface on an unscoped `.obs-shell:has(...)` selector, which carries three attribute-level specificity and so BEAT the light edition's `html[data-theme=\"light\"] .obs-shell` remap -- painting a #161c34 topbar on the light parchment canvas. Caught only by probing BOTH themes; the rule is now scoped to html[data-theme=\"dark\"].",
+        "guard": "tests/meridian/test_observatory_identity.py::test_observatory_surfaces_are_the_page_colour_not_a_lighter_tint asserts both tokens resolve to var(--obs-bg) AND that the old literals are absent, so reintroducing a tint fails. Verified across four workspaces x both themes: 0 of 8 shell/topbar combinations mismatched, 0 horizontal overflow.",
+        "coordination_finding": "This working tree has a CONCURRENT WRITER. meridian/classify.py, meridian/repository.py, static/js/meridian/{activity,kit-icons,review}.js and tests/meridian/test_{activity_glyph,repository}.py are modified, plus new untracked meridian/category_catalog.py and tests/meridian/test_category_expansion.py -- mtimes 11:45-11:48, interleaved with this slice's 11:47-11:50. That work is NOT in this commit; three paths were staged by name and verified. There is no file overlap. The full-suite run and the governed capture therefore ran against a tree containing that uncommitted work.",
+        "limits": "Not deployed. Activity captures may show the concurrent lane's in-flight icons."
+      }
     }
   ]
 }

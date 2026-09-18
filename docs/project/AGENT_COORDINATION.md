@@ -79,6 +79,45 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-18 — ⚠ A CONCURRENT WRITER IS ACTIVE IN THIS WORKING TREE
+
+**Found while reviewing my own diff before committing OS-043.** `git diff` listed seven files I had
+never opened:
+
+    M meridian/classify.py              M static/js/meridian/activity.js
+    M meridian/repository.py            M static/js/meridian/kit-icons.js
+    M tests/meridian/test_activity_glyph.py    M static/js/meridian/review.js
+    M tests/meridian/test_repository.py
+    ?? meridian/category_catalog.py     ?? tests/meridian/test_category_expansion.py
+
+**mtimes 11:45–11:48, interleaved with my own 11:47–11:50.** So this is live, concurrent writing into the
+same directory — not a stale artifact and not a rebase.
+
+**What it is** (read so the report is concrete, not a guess):
+- a new `meridian/category_catalog.py` — 29 categories with a merchant→category lookup, imported by both
+  `classify.py` and `repository.py`. It is **untracked**, so any commit of those two files alone would break
+  the import.
+- `kit-icons.js` rewritten around a new ornate `CATEGORY_ICONS` vocabulary — basket, fork-knife, cup-hot,
+  fuel-pump, bus-front, bag, controller, airplane. **This is the "ornate icons" work the owner described
+  Astra as doing**, already in flight.
+- `repository.py` adds a genuine authority improvement: `if current["classification_evidence"] == "owner
+  correction": return` — automated sync/AI/rule refresh can no longer undo an owner's category correction.
+
+**What I did about it:** staged **three paths by name** for OS-043 and verified nothing else was staged.
+None of the concurrent files are in that commit, and there is **no file overlap** between the two sets. I
+did not revert, stash, or touch any of it.
+
+**Two consequences to hold on to:**
+1. A full-suite run and a governed capture taken in this tree are **contaminated** — they exercise that
+   uncommitted work. My "1220 passed" included it, and the Activity captures may show its icons. Targeted
+   tests for my own change were re-run in isolation (46 passed).
+2. **Concurrent uncommitted work to core logic (`classify.py`, `repository.py`) is itself a risk** — those
+   are not presentation. Classification drives what the app asserts about spending, and the pair cannot be
+   committed without `category_catalog.py` riding along.
+
+**Unresolved and needs the owner:** whether Astra's lane commits its own work, and who owns the remaining
+Activity presentation work, since the ornate-icon half already exists in this tree uncommitted.
+
 ### 2026-09-18 — Builder (Today) — the hand was landing in the observatory
 
 **Owner:** *"It defaults into the building for today and is not visually appealing. Where the hand sits per day
