@@ -1038,7 +1038,7 @@
         "All measurements are in artifacts/astra-fidelity-review-2026-09-16/README.md Finding 4"
       ],
       "notes": "Concept measurements recorded; each item is a separate bounded slice.",
-      "progress": "2 of 5 items delivered: the lilac wavy title rule (2026-09-17) and the Plan bordered tab bar (2026-09-18). 3 remain: Accounts curved dashed connectors with star-tipped separators, the rotated/notched Accounts ticket, and richer medallion glyphs -- the last of which Finding 4 records as an ASSET decision for Astra, not a CSS fix.",
+      "progress": "3 of 5 items delivered: the lilac wavy title rule (2026-09-17), the Plan bordered tab bar (2026-09-18) and the rotated/notched/notted Accounts ticket (2026-09-18). 2 remain: the Accounts connectors as curved dashed paths with an end node each and star-tipped separators, and richer medallion glyphs -- the last of which Finding 4 records as an ASSET decision for Astra, not a CSS fix.",
       "evidence": {
         "slices": [
           {
@@ -1058,6 +1058,16 @@
             "defects_found_and_fixed_while_verifying": "The cells were NOT equal thirds (148/119/119): with `box-sizing: border-box` a zero flex basis is floored by the active cell's own 42px medallion gutter. A one-third percentage basis fixed it at the base rule, but a `flex: 1` inside the existing `@media (max-width: 600px)` block re-imposed `1 1 0%` at exactly the widths the concept's equal cells matter. Both are now correct and both are guarded: measured 118.7/118.7/118.7 at 390px, 128.7 at 420px and 132 at 430px, with labels fitting and zero horizontal overflow.",
             "tests": "tests/meridian/test_plan_map.py: test_plan_tabs_are_the_concepts_bordered_bar_not_pills and test_plan_mobile_rule_does_not_reintroduce_the_unequal_cells (the latter strips CSS comments before checking, so it does not fire on its own documentation).",
             "capture": "artifacts/observatory-plan-tabs-2026-09-18/ -- 10 files, Plan x five governed viewports x two themes, zero console errors, zero horizontal overflow."
+          },
+          {
+            "item": "Accounts ticket: rotated, punched notch edges, inset dotted border",
+            "delivered": "2026-09-18",
+            "measurement": "The angle is measured, not guessed. Two independent features INSIDE the concept ticket agree: its own top edge (-3.7deg over 656 columns, robust fit) and the brass rule under the amount (-3.21deg over 104 columns). The rule is the cleaner, purely internal feature, so the panel takes -3.2deg. The concept also punches a semicircular notch out of each side at mid-height and insets a fine dotted brass border from the edge; Finding 4 had recorded ours as 'axis-aligned, square-cornered and plain'.",
+            "built": "`transform: rotate(-3.2deg)` on the ticket -- the text tilts with the panel, because that is what the concept draws; the dotted inset border as `outline: 1px dotted var(--obs-brass)` with `outline-offset: -14px`, which needs no third pseudo-element and stays out of the accessibility tree; and the two notches as ::before/::after circles in `var(--obs-bg)` at mid-height, so they rotate with the panel and need no mask-composite support. The kit's nine-slice, scalloped edges and corner rivets are preserved -- the treatments are ADDED to that panel, not a replacement.",
+            "deviation_recorded": "The notch is 36px, LARGER than the ~25px the concept's own notch measures. That is deliberate and was arrived at by measurement: the concept's ticket edge is smooth, so a concept-sized bite reads instantly, while the kit's `parchment-ticket.png` already carries ~10px scallops down the same edge, and at 22px the notch read as a missing scallop rather than a punched hole. Enlarging it is what makes the concept's gesture legible on the kit's edge.",
+            "overflow": "A rotated box is wider than the box that laid out: 388x164 at -3.2deg gives a bounding width of ~397px against a 388px column. Verified zero horizontal overflow at 390/420/430px (measured bounding x=11.7 and widths 366.6/396.5/406.5), and the governed capture confirms it at all five viewports in both themes.",
+            "tests": "tests/meridian/test_accounts_ticket.py::test_accounts_ticket_takes_the_concepts_angle_notches_and_dotted_inset, which also asserts the kit's nine-slice SURVIVES the change.",
+            "capture": "artifacts/observatory-accounts-ticket-2026-09-18/ -- 10 files, Accounts x five governed viewports x two themes, zero console errors, zero horizontal overflow."
           }
         ],
         "also_measured": "OS-035 is not a defect: the instrument is already centred in its own grid row at every governed mobile width (420px 29.2 above / 29.1 below; 390px 30.0/30.0). The 233px the owner measured is the SECOND panel row (controls + evidence ticket), which align-self cannot touch. The dial's real gap to the concept is size: 63.6% of viewport width against the concept's 82.5%, because the callout column is a hard 130px floor."

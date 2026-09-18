@@ -81,6 +81,7 @@
    colouring is therefore deliberately suppressed here -- it is a cash total, not a
    warning, and pale mint would not survive the parchment. */
 .m-accounts-summary .m-accounts-ticket {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--m-space-4);
@@ -90,6 +91,56 @@
   border-radius: 0;
   background: none;
   box-shadow: none;
+  /* Concept 04 sets the whole ticket at an angle. Measured two independent features
+     inside it -- the ticket's own top edge (-3.7deg over 656 columns) and the brass rule
+     under the amount (-3.21deg over 104 columns). The rule is the cleaner, purely
+     internal feature, so the panel takes its angle. The text tilts with the panel,
+     because that is what the concept draws. */
+  transform: rotate(-3.2deg);
+  /* A rotated box is wider than the box that laid out: 388x164 at -3.2deg gives a
+     bounding width of ~397px against a 388px column. The page's own 16px gutters absorb
+     that, so it cannot reach the viewport edge -- verified at all five governed viewports
+     with zero horizontal overflow. */
+  transform-origin: center;
+  /* The concept's fine dotted border, inset from the edge. `outline-offset` does this
+     without a third pseudo-element, and an outline is decorative by nature, so it adds
+     nothing to the accessibility tree. */
+  outline: 1px dotted var(--obs-brass);
+  outline-offset: -14px;
+}
+
+/* The concept's punched notches: a semicircle bitten out of each side at mid-height, as a
+   real ticket has. Drawn in the page background colour rather than cut with a mask, so it
+   needs no mask-composite support and rotates with the panel. Absolutes are placed
+   against the PADDING box, which sits 20px inside the border-image edge, hence -38px
+   (20px border + 18px half-notch) to centre each bite on the outer edge.
+
+   The notch is 36px, LARGER than the ~25px the concept's own notch measures. That is
+   deliberate and measured: the concept's ticket edge is smooth, so a 25px bite reads
+   instantly, while the kit's `parchment-ticket.png` already carries ~10px scallops down
+   the same edge, and a concept-sized notch disappears into them -- verified at 22px, where
+   it read as a missing scallop rather than a punched hole. Enlarging it is what makes the
+   concept's gesture legible on the kit's edge, and it is recorded here rather than left as
+   an unexplained size. */
+.m-accounts-summary .m-accounts-ticket::before,
+.m-accounts-summary .m-accounts-ticket::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 36px;
+  height: 36px;
+  margin-top: -18px;
+  border-radius: 50%;
+  background: var(--obs-bg);
+  pointer-events: none;
+}
+
+.m-accounts-summary .m-accounts-ticket::before {
+  left: -38px;
+}
+
+.m-accounts-summary .m-accounts-ticket::after {
+  right: -38px;
 }
 
 .m-accounts-ticket-art {

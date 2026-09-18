@@ -22,12 +22,12 @@ left-clipping regression (80px bleed clipped 64px, ~20% of the instrument; now 0
    down to no row). Not diagnosed. Lead: `renderConnectors` re-anchors runs after the event rows are replaced
    (`dial.js` `update()`).
 
-3. **OS-038 — remaining concept-reconciliation gaps**, each a bounded slice. **2 of 5 delivered:** the lilac
-   wavy title underline (Today/Activity/Accounts; the concepts show none on Plan) on 2026-09-17, and the Plan
-   bordered tab bar on 2026-09-18. **3 remain:** the Accounts connectors as curved dashed paths with an end node
-   each and star-tipped separators, the rotated/notched Accounts ticket, and richer medallion glyphs — the last
-   of which Finding 4 records as an **asset decision for Astra, not a CSS fix**. All measurements live in
-   `artifacts/astra-fidelity-review-2026-09-16/README.md` → Finding 4.
+3. **OS-038 — remaining concept-reconciliation gaps**, each a bounded slice. **3 of 5 delivered:** the lilac
+   wavy title underline (Today/Activity/Accounts; the concepts show none on Plan) on 2026-09-17, the Plan
+   bordered tab bar on 2026-09-18, and the rotated/notched/notted Accounts ticket on 2026-09-18. **2 remain:**
+   the Accounts connectors as curved dashed paths with an end node each and star-tipped separators, and richer
+   medallion glyphs — the last of which Finding 4 records as an **asset decision for Astra, not a CSS fix**. All
+   measurements live in `artifacts/astra-fidelity-review-2026-09-16/README.md` → Finding 4.
 
 4. **OS-037 — pointer on "Next day", could NOT reproduce, blocked pending the owner.** In the isolated preview the
    pointer *does* move on Next day (angle `-120° → -60°` over two steps). Two traps worth keeping: do not read
@@ -53,6 +53,38 @@ left-clipping regression (80px bleed clipped 64px, ~20% of the instrument; now 0
 - **Luminance, not eyeballing, catches theme-capture failures** — the two passes looked plausible side by side.
 - Temporary review tooling lives in untracked `tmp/probe_*.py`; `artifacts/` holds all captures and the Astra
   package and is untracked by convention.
+
+## The Accounts ticket: tilted, notched and dotted (2026-09-18)
+
+**OS-038 item 3.** Finding 4 recorded our summary ticket as *"axis-aligned, square-cornered and plain"* against
+a concept that sets it at an angle, punches a semicircular notch out of each side, and insets a fine dotted
+border.
+
+**The angle is measured, not guessed.** Two independent features **inside** the concept's ticket agree: its own
+top edge (**−3.7°** over 656 columns, robust fit) and the brass rule under the amount (**−3.21°** over 104
+columns). The rule is the cleaner, purely internal feature, so the panel takes **−3.2°**. The text tilts with
+the panel, because that is what the concept draws.
+
+Built: the rotation; the dotted inset border as `outline: 1px dotted var(--obs-brass)` with
+`outline-offset: -14px`, which needs **no third pseudo-element** and stays out of the accessibility tree; and the
+two notches as `::before`/`::after` circles in `var(--obs-bg)` at mid-height, so they rotate with the panel and
+need no mask-composite support. The kit's nine-slice, scalloped edges and corner rivets are **preserved** — the
+treatments are added to that panel, not a replacement for it.
+
+**One deviation, arrived at by measurement.** The notch is **36px**, larger than the ~25px the concept's own
+notch measures. The reason is concrete: the concept's ticket edge is **smooth**, so a concept-sized bite reads
+instantly, while the kit's `parchment-ticket.png` already carries **~10px scallops** down the same edge — at
+22px the notch read as a *missing scallop* rather than a punched hole. Enlarging it is what makes the concept's
+gesture legible on the kit's edge. Recorded in the CSS and the ledger rather than left as an unexplained size.
+
+**The rotation was checked for overflow, because a rotated box is wider than the box that laid out:** 388×164 at
+−3.2° gives a bounding width of ~397px against a 388px column. Measured **zero** horizontal overflow at
+390/420/430px (bounding x=11.7, widths 366.6/396.5/406.5), and the governed capture confirms it at all five
+viewports in both themes.
+
+Verified: non-browser suite **1189 passed, 1 skipped** (+1 guard that also asserts the kit's nine-slice
+*survives* the change); captures `artifacts/observatory-accounts-ticket-2026-09-18/` — 10 files, zero console
+errors, zero horizontal overflow. Presentation only.
 
 ## Plan's tabs: the concept's bordered bar, not pills (2026-09-18)
 

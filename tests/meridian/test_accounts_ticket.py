@@ -61,3 +61,44 @@ def test_accounts_ticket_text_obeys_the_kit_parchment_contrast_rule():
     # figure is a cash total, not a warning.
     assert ".m-accounts-ticket .m-accounts-figure[data-signal]" in css
     assert "color: #20263b;" in css
+
+
+def test_accounts_ticket_takes_the_concepts_angle_notches_and_dotted_inset():
+    """Concept 04 sets the whole ticket at an angle, punches a semicircular notch out of
+    each side at mid-height, and insets a fine dotted border from the edge. Finding 4
+    recorded ours as "axis-aligned, square-cornered and plain".
+
+    The angle is measured, not guessed: two independent features inside the concept agree
+    -- the ticket's own top edge (-3.7deg over 656 columns) and the brass rule under the
+    amount (-3.21deg over 104 columns). The rule is the cleaner, purely internal feature,
+    so the panel takes -3.2deg. The text tilts with it, because that is what the concept
+    draws."""
+    css = _read("static/css/meridian/accounts.css")
+    ticket = css.split(".m-accounts-summary .m-accounts-ticket {", 1)[1].split("}", 1)[0]
+    assert "transform: rotate(-3.2deg)" in ticket
+    # The kit's nine-slice must survive: the tilt is added to that panel, not a replacement.
+    assert "border-image:" in ticket
+    assert "parchment-ticket.png" in ticket
+    # A dotted border inset from the edge, done with an outline so it needs no third
+    # pseudo-element and stays out of the accessibility tree.
+    assert "outline: 1px dotted var(--obs-brass)" in ticket
+    assert "outline-offset: -14px" in ticket
+
+    # The punched notches: one per side, at mid-height, in the page background colour so
+    # they read as bites rather than discs. Both are decorative and inert. They share one
+    # rule, with only the side-specific offset split out below it.
+    shared = css.split(
+        ".m-accounts-summary .m-accounts-ticket::before,\n.m-accounts-summary .m-accounts-ticket::after {",
+        1,
+    )[1].split("}", 1)[0]
+    assert "border-radius: 50%" in shared
+    assert "background: var(--obs-bg)" in shared
+    assert "pointer-events: none" in shared
+    assert "top: 50%" in shared
+    assert "left: -38px" in css
+    assert "right: -38px" in css
+    # The notch is deliberately larger than the concept's own ~25px, because the kit's
+    # ticket edge already carries ~10px scallops that a concept-sized bite vanishes into.
+    assert "width: 36px" in shared
+    assert "height: 36px" in shared
+    assert "margin-top: -18px" in shared

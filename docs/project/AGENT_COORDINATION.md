@@ -71,7 +71,41 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (Plan: the concept's bordered tab bar, OS-038 item 4) | `static/css/meridian/plan.css`, `tests/meridian/test_plan_map.py`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md`, `artifacts/observatory-plan-tabs-2026-09-18/**` | 2026-09-18 | **released at this commit**. OS-038 item 4, measured against concept 02: one brass-bordered rounded container, three equal cells divided by thin rules, the active cell parchment-filled with a brass star medallion at its left edge. Fixed two real layout defects found while verifying (cells were 148/119/119 because a zero flex basis is floored by the active cell's own medallion gutter; a `flex: 1` in the ≤600px block then re-imposed it at mobile widths). Scoped to `plan.css` — Activity keeps the ruled-underline treatment concept 03 shows. **No** route, data, financial, provider or authority change; presentation only. |
 
+| Builder (Accounts: the tilted, notched, dotted summary ticket, OS-038 item 3) | `static/css/meridian/accounts.css`, `tests/meridian/test_accounts_ticket.py`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md`, `artifacts/observatory-accounts-ticket-2026-09-18/**` | 2026-09-18 | **released at this commit**. OS-038 item 3, closing Finding 4's "axis-aligned, square-cornered and plain". The tilt is measured from two features inside the concept ticket that agree (−3.7° / −3.21° → −3.2°); the dotted inset border uses `outline-offset` so it needs no third pseudo-element; the notches are pseudo-element circles that rotate with the panel. The kit's nine-slice, scallops and rivets are **preserved**, and a test asserts that. Notch is 36px against the concept's ~25px because the kit's edge already carries ~10px scallops — recorded, not silent. NOTE: this touches `tests/meridian/test_accounts_ticket.py`, which the parallel `builder-trackd` claim lists; that lane's work is committed and its tree is clean, and the edits are additive (one new test) rather than overwriting, so the overlap is disclosed rather than taken silently. **No** route, data, financial, provider or authority change; presentation only. |
+
 ## Log (append only — newest first)
+
+### 2026-09-18 — Builder (Accounts) — the summary ticket tilted, notched and dotted
+
+OS-038's third item, closing Finding 4's "axis-aligned, square-cornered and plain".
+
+**The angle was measured, not chosen.** Two independent features *inside* the concept's ticket agree: its top
+edge (−3.7° over 656 columns, robust fit) and the brass rule under the amount (−3.21° over 104 columns). The
+rule is the cleaner purely-internal feature, so the panel takes **−3.2°**. The text tilts with the panel,
+because that is what the concept draws.
+
+**The notch size is a measured deviation, not a slip.** At the concept's own ~25px the notch was invisible as a
+notch: the concept's edge is smooth, but the kit's `parchment-ticket.png` already carries ~10px scallops down
+the same edge, so a concept-sized bite read as a *missing scallop*. 36px makes the gesture legible. This is
+recorded in the CSS comment, the ledger and `design-qa.md` rather than left as an unexplained number.
+
+**Two implementation choices worth keeping.** The dotted inset border is `outline: 1px dotted` with
+`outline-offset: -14px` — it needs no third pseudo-element and stays out of the accessibility tree. The notches
+are pseudo-element circles in `var(--obs-bg)` rather than a mask cut, so they rotate with the panel and need no
+`mask-composite` support.
+
+**Verified rather than assumed:** a rotated box is wider than the box that laid out — 388×164 at −3.2° bounds to
+~397px against a 388px column. Zero horizontal overflow measured at 390/420/430px and confirmed by the governed
+capture at all five viewports in both themes. The kit's nine-slice, scallops and rivets are **preserved** and a
+test asserts the nine-slice survives the change.
+
+**Scope note:** this edits `tests/meridian/test_accounts_ticket.py`, which the parallel `builder-trackd` claim
+lists. That lane's work is committed, its tree is clean, and the edit is additive (one new test), so the overlap
+is disclosed here rather than taken silently.
+
+**Test state:** non-browser suite 1189 passed, 1 skipped. Captures
+`artifacts/observatory-accounts-ticket-2026-09-18/` — 10 files, zero console errors, zero horizontal overflow.
+`ruff` clean; `git diff --check` clean.
 
 ### 2026-09-18 — Builder (Plan) — the tabs rebuilt as the concept's bordered bar
 

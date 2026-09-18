@@ -24,6 +24,31 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Accounts — the summary ticket tilted, notched and dotted (2026-09-18)
+
+![Accounts mobile-air dark, the tilted ticket with punched notches and the dotted inset](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-ticket-2026-09-18/accounts-mobile-air-dark-viewport.png)
+
+Read against concept **04**. Finding 4 had recorded this panel as "axis-aligned, square-cornered and plain"; the
+concept sets it at an angle, punches a semicircular notch out of each side at mid-height, and insets a fine
+dotted brass border.
+
+**The angle is measured from two features inside the concept's own ticket**, which agree: its top edge (−3.7°
+over 656 columns) and the brass rule under the amount (−3.21° over 104 columns). The panel takes **−3.2°**, the
+cleaner purely-internal measurement. The text tilts with it, as the concept draws. **Accepted as matching** for
+the tilt, the notches and the dotted inset.
+
+**The notch is 36px against the concept's ~25px, deliberately, and the reason is measurable.** The concept's edge
+is smooth, so a concept-sized bite reads at once; the kit's `parchment-ticket.png` already carries ~10px scallops
+along that same edge, and at 22px the notch read as a *missing scallop* rather than a punched hole. The
+enlargement is what makes the concept's gesture legible on the kit's edge.
+
+**What was preserved:** the kit's nine-slice, its scalloped perforations and its corner rivets. These treatments
+are **added to** the sanctioned panel, not a replacement for it, and a test asserts the nine-slice survives.
+
+**Checked, not assumed:** a rotated box is wider than the box that laid out — 388×164 at −3.2° bounds to ~397px
+against a 388px column. Zero horizontal overflow at 390/420/430px and at all five governed viewports in both
+themes.
+
 ## Plan — the tabs as the concept's bordered bar (2026-09-18)
 
 ![Plan mobile-air dark, the bordered tab bar with its parchment active cell](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-plan-tabs-2026-09-18/plan-mobile-air-dark-viewport.png)
