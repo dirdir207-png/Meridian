@@ -54,6 +54,59 @@ left-clipping regression (80px bleed clipped 64px, ~20% of the instrument; now 0
 - Temporary review tooling lives in untracked `tmp/probe_*.py`; `artifacts/` holds all captures and the Astra
   package and is untracked by convention.
 
+## Astra's handoff landed, and reconciled against the Activity work (2026-09-18)
+
+Astra finished an extension lane and staged it in `design/observatory-extension-2026-09-18`. Landed in two
+commits, both **attributed to Astra, not to me**:
+
+- `8ed5d40` — deterministic category expansion + semantic icon pack (9 files)
+- `fc747cc` — the design handoff: 4 concepts, 62 SVGs, 3 assets, tokens (73 files, 11MB)
+
+### The trap, and why it was not obeyed
+
+`BUILD_HANDOFF.md:20` specifies **"Dark canvas `#172334`, surface `#202b40`"**. Both are superseded: `#172334`
+is the value `0b8fdaa` replaced (its message: lighter and greener than every concept), and `#202b40` is exactly
+the surface tint the owner asked to remove *today* and `d03aa48` removed. Obeying that line would have reverted
+both.
+
+**Astra's own artwork settles it.** Sampling each new concept against its own content areas:
+
+| concept | page bg | content area | delta |
+|---|---|---|---|
+| timeline | rgb(18,29,49) | rgb(18,30,49) | **1** |
+| review | rgb(18,28,47) | rgb(18,29,47) | **1** |
+| settings | rgb(19,28,47) | rgb(19,28,46) | **~0** |
+
+Unified, exactly as the owner described. The stale line is prose the pixels do not support — so the rule is
+that **Astra's artwork is the authority, and its prose token list is not**.
+
+`tokens.css` is unaffected and adoptable: it defines only `--obs-action #e99a48`, `--obs-action-hover #f3b272`,
+`--obs-action-ink #20263b`, `--obs-unknown`, `--obs-confirmed #a5d4bf`, `--obs-selection #c1a9e2`. **No canvas,
+no surface** — so there is no real token conflict, and no second orange should be added beside it.
+
+### The Activity list, reconciled
+
+| owner's Activity item | owner | status |
+|---|---|---|
+| Ornate icons | **Astra** | **delivered** — expanded semantic icon pack; do not duplicate |
+| Icon/category mapping | **Astra** | **delivered** — `CATEGORY_ICONS`, category-first with the internet/wifi case preserved |
+| "Approve category" → "Confirm category" | Astra's file | `activity.js` — needs Astra or a coordinated edit |
+| Tabs: deeper orange + star above selection | **me** | not started; underline + full-bleed rule already exist |
+| Buttons as tickets (filled / open-outlined) | **me** | not started; current button is **mint**, should be `--obs-action` |
+| Full-bleed lines with stars at each end | **me** | not started |
+| "N categories to review" banner | **me**, blocked | no pending-count exists anywhere in the code — needs a data source |
+
+Also relevant: the handoff's own split — "Timeline = what happened, no approval button on every ordinary row;
+Review = what needs a decision, confirm/change is local bookkeeping and **never** bank authorization". That is
+consistent with Meridian's write model and should govern the Activity build.
+
+### Three referenced handoff files are missing
+
+`index.html`, `manifest.json` (provenance, dimensions, SHA-256) and `VERIFICATION.md` (Astra's measured checks)
+are **not present**. So the assets' declared hashes cannot be verified and the "148 focused tests" claim cannot
+be audited from the handoff alone. `BUILD_SPEC.md` was checked and is *not* missing — it lives in the
+2026-09-08 set. Recorded so the next session neither chases them nor assumes provenance was checked.
+
 ## The day arc now starts clear of the dial's building (2026-09-18)
 
 **Owner, 2026-09-18:** *"Can we modify the dial so that the lowest point on the left hand side is still above
