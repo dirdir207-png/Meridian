@@ -21,6 +21,7 @@ def _read(relative):
 
 def test_ledger_glyph_is_installed_as_decorative_kit_art():
     js = _read("static/js/meridian/activity.js")
+    icons = _read("static/js/meridian/kit-icons.js")
     css = _read("static/css/meridian/activity.css")
     assert "m-review-glyph" in js
     # Decorative: hidden from assistive tech, because the category text is what states
@@ -30,9 +31,84 @@ def test_ledger_glyph_is_installed_as_decorative_kit_art():
     # (an <img> cannot inherit currentColor and would render black).
     assert "mask: var(--m-review-icon) center / contain no-repeat" in css
     assert "background-color: currentColor" in css
-    assert "kit-2026-09-18/icons/" in js
+    # The kit path lives with the mapping it belongs to, and the row builder reaches
+    # it through one helper rather than re-typing the path.
+    assert "kit-2026-09-18/icons" in icons
+    assert "kitIconUrl(transactionIconName(transaction))" in js
     # The ring's marker dot from the concept.
     assert ".m-review-glyph::after" in css
+
+
+def test_every_referenced_kit_icon_has_a_shipped_asset():
+    """A mapped name with no asset renders an EMPTY ring, not a fallback.
+
+    `bank` was mapped in the merchant patterns and shipped nowhere, so every row it
+    resolved to drew a blank circle that read as a broken icon. Nothing caught it
+    because the mapping and the asset set were never compared.
+    """
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is not available in this environment")
+    script = """
+      const fs = await import('node:fs');
+      const m = await import('./static/js/meridian/kit-icons.js');
+      const dir = 'static/img/meridian/observatory/kit-2026-09-18/icons';
+      const have = new Set(fs.readdirSync(dir)
+        .filter((f) => f.endsWith('.svg'))
+        .map((f) => f.replace(/\\.svg$/, '')));
+      const wanted = [...m.ICON_NAMES.category, ...m.ICON_NAMES.action,
+                      ...m.ICON_NAMES.merchant, ...m.ICON_NAMES.unknown];
+      const missing = [...new Set(wanted)].filter((n) => !have.has(n)).sort();
+      if (missing.length) throw new Error('mapped but not shipped: ' + missing.join(', '));
+      if (!/^\\/static\\/img\\//.test(m.KIT_ICON_ROOT)) throw new Error('kit root is not a static path');
+    """
+    result = subprocess.run(
+        [node, "--input-type=module", "-e", script],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_unclassified_rows_show_their_merchant_glyph_not_a_wall_of_questions():
+    """The owner's live data is entirely unclassified, so every row resolved to the
+    same question glyph and all 62 kit icons stayed unused.
+
+    The ring identifies the MERCHANT while the category line keeps saying nothing is
+    known, and only an unnameable merchant falls back to the question glyph.
+    """
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is not available in this environment")
+    script = """
+      const { transactionIconName } = await import('./static/js/meridian/kit-icons.js');
+      const check = (label, got, want) => {
+        if (got !== want) throw new Error(`${label}: expected ${want}, got ${got}`);
+      };
+      // Real merchants from the live ledger, all carrying an explicit "uncategorized"
+      // classification with no suggestion -- the exact state that produced the wall.
+      const uncategorized = { category: 'uncategorized' };
+      check('grocer', transactionIconName({ merchant: 'Dollar General', classification: uncategorized }), 'basket');
+      check('dining', transactionIconName({ merchant: "Wendy's", classification: uncategorized }), 'fork-knife');
+      check('energy', transactionIconName({ merchant: '2222 ENERGY NOR', classification: uncategorized }), 'lightning-charge');
+      check('lunch', transactionIconName({ merchant: 'Lunchflow', classification: uncategorized }), 'fork-knife');
+      check('keys', transactionIconName({ merchant: 'KeyMe', classification: uncategorized }), 'key');
+      // A merchant the kit cannot name keeps the concept's question glyph.
+      check('unnamed', transactionIconName({ merchant: 'Zz Unknown', classification: uncategorized }), 'question-circle');
+      check('empty', transactionIconName({ amount: -5 }), 'question-circle');
+      // The bank pattern used to name an icon the kit does not ship.
+      check('bank', transactionIconName({ merchant: 'Savings Reserve', amount: -50 }), 'piggy-bank');
+    """
+    result = subprocess.run(
+        [node, "--input-type=module", "-e", script],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_ledger_glyph_resolver_module_has_no_dom_or_network_dependency():

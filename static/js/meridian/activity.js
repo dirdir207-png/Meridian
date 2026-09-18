@@ -3,7 +3,7 @@
 import { MeridianApiError, meridianFetch } from "./api.js";
 import { describeTransactionAccount } from "./archived-accounts.js";
 import { dayKey, dayLabel, formatCurrency } from "./format.js";
-import { categoryIsAssigned, transactionIconName } from "./kit-icons.js";
+import { categoryIsAssigned, kitIconUrl, transactionIconName } from "./kit-icons.js";
 
 const state = {
   cursor: null,
@@ -78,6 +78,24 @@ function buildRow(transaction) {
   amount.textContent = signedAmount(transaction.amount, transaction.currency);
 
   row.append(left, category, amount);
+
+  // Concept 03 frames each row's category glyph in a ring with a small marker dot.
+  // Decorative: the icon is masked and hidden from assistive tech, while the real
+  // category text below stays authoritative. Built in BOTH modes -- the timeline
+  // previously had no glyph at all, so only the Review tab ever showed one and the
+  // ledger read as unadorned text next to a concept full of kit art.
+  const glyph = document.createElement("span");
+  glyph.className = "m-review-glyph";
+  glyph.setAttribute("aria-hidden", "true");
+  const glyphIcon = document.createElement("span");
+  glyphIcon.className = "m-review-glyph-icon";
+  glyphIcon.style.setProperty(
+    "--m-review-icon",
+    kitIconUrl(transactionIconName(transaction))
+  );
+  glyph.appendChild(glyphIcon);
+  row.prepend(glyph);
+
   if (state.mode === "review") {
     // Card layout: name + amount on top, merchant·date·account line, an orange
     // attention dot + category/confidence line, then two pill actions.
@@ -158,19 +176,6 @@ function buildRow(transaction) {
     const amountEl = document.createElement("span");
     amountEl.className = `m-review-amount ${transaction.amount < 0 ? "is-spend" : "is-income"}`;
     amountEl.textContent = signedAmount(transaction.amount, transaction.currency);
-    // Concept 03 frames each row's category glyph in a ring with a small marker dot.
-    // Decorative: the icon is masked and hidden from assistive tech, while the real
-    // category text below stays authoritative.
-    const glyph = document.createElement("span");
-    glyph.className = "m-review-glyph";
-    glyph.setAttribute("aria-hidden", "true");
-    const glyphIcon = document.createElement("span");
-    glyphIcon.className = "m-review-glyph-icon";
-    glyphIcon.style.setProperty(
-      "--m-review-icon",
-      `url("/static/img/meridian/observatory/kit-2026-09-18/icons/${transactionIconName(transaction)}.svg")`
-    );
-    glyph.appendChild(glyphIcon);
 
     header.append(glyph, name, select, amountEl);
     name.classList.add("m-review-grow");
