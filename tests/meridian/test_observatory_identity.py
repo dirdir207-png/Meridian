@@ -215,3 +215,32 @@ def test_observatory_surfaces_are_the_page_colour_not_a_lighter_tint():
     # A wash exists so flattened `:hover` rules still read as feedback without reintroducing
     # a second box colour.
     assert "--obs-wash: rgba(238, 228, 207, 0.05);" in css
+
+
+def test_no_rule_hard_codes_the_retired_surface_literals():
+    """Fixing the TOKENS was not enough: separate rules kept the old literals.
+
+    `--obs-surface` moving to `var(--obs-bg)` left `.obs-shell .m-surface`,
+    `.m-ledger-card`, `.m-selected-summary`, `.m-activity .m-surface`,
+    `.m-accounts .m-surface`, `.obs-plan-scenario` and `.obs-panel` painting
+    `rgba(32, 43, 64, ...)` or `rgba(255, 250, 240, ...)` directly. Measured on the
+    live Activity timeline afterwards, the ledger card was rgba(32,43,64,0.78)
+    against a #141b32 page -- the exact "lighter box" the owner reported, surviving
+    in a checkout that already contained the token fix.
+
+    Comments are stripped first, because the file explains what it removed.
+    """
+    import re
+
+    css = OBSERVATORY.read_text(encoding="utf-8")
+    without_comments = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    for literal in (
+        "rgba(32, 43, 64",
+        "rgba(255, 250, 240",
+        "#202b40",
+        "#fffaf0",
+        "#26334a",
+    ):
+        assert literal not in without_comments, (
+            f"{literal} survived as a hard-coded surface; it bypasses the token fix"
+        )
