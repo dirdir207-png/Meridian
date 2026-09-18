@@ -1,0 +1,161 @@
+{# Meridian responsive application shell.
+   Standalone template: it deliberately does not load the legacy app bundle. #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Meridian</title>
+  <link rel="icon" type="image/png" href="/static/images/favicon.png">
+  <meta name="theme-color" content="#f6f4ef">
+  {# Apply the persisted theme before first paint so the panel never flashes the wrong theme. #}
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("meridian-theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (_) {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="/static/css/meridian/tokens.css">
+  <link rel="stylesheet" href="/static/css/meridian/action-review.css">
+  <link rel="stylesheet" href="/static/css/meridian/shell.css">
+  <link rel="stylesheet" href="/static/css/meridian/workspaces.css">
+  <link rel="stylesheet" href="/static/css/meridian/today.css">
+  <link rel="stylesheet" href="/static/css/meridian/activity.css">
+  <link rel="stylesheet" href="/static/css/meridian/accounts.css">
+  <link rel="stylesheet" href="/static/css/meridian/plan.css">
+  <link rel="stylesheet" href="/static/css/meridian/inspector.css">
+  <link rel="stylesheet" href="/static/css/meridian/advisor.css">
+  <link rel="stylesheet" href="/static/css/meridian/motion.css">
+  <link rel="stylesheet" href="/static/css/meridian/observatory.css">
+  <link rel="stylesheet" href="/static/css/meridian/dial.css">
+  <script src="/static/js/meridian/theme.js"></script>
+  <script src="/static/js/meridian/haptics.js"></script>
+</head>
+<body class="obs-shell">
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <div class="m-shell" data-meridian-shell>
+    {% include 'meridian/partials/navigation.html' %}
+
+    <header class="m-topbar" data-topbar>
+      <span class="m-brand m-brand--compact">
+        <span class="m-visually-hidden">Meridian</span>
+        <span aria-hidden="true">{% include 'meridian/partials/wordmark.html' %}</span>
+      </span>
+      <span class="m-topbar-date" data-today-date hidden>Today</span>
+      <span class="m-topbar-spacer" aria-hidden="true"></span>
+      <a class="m-topbar-settings" data-settings-link href="/meridian/settings?section=connections" {% if settings_active %}aria-current="page"{% endif %}>
+        <span>Settings</span>
+        <span class="m-topbar-settings-icon" aria-hidden="true"></span>
+      </a>
+      <button
+        class="m-theme-toggle m-theme-toggle--compact"
+        type="button"
+        data-theme-toggle
+        aria-pressed="false"
+        aria-label="Toggle dark mode"
+      >
+        <span class="m-theme-toggle-track" aria-hidden="true">
+          <span class="m-theme-toggle-thumb"></span>
+        </span>
+        <span class="m-theme-toggle-label" data-theme-label>Dark</span>
+      </button>
+    </header>
+
+    <main id="main" class="m-main" data-workspace-canvas tabindex="-1">
+      <p class="m-visually-hidden" data-workspace-announcement role="status" aria-atomic="true"></p>
+
+      <section
+        id="workspace-today"
+        class="m-workspace"
+        data-workspace-section="today"
+        data-workspace="today"
+        data-memory-today
+        aria-labelledby="workspace-heading-today"
+        {% if active_workspace != 'today' %}hidden{% endif %}
+      >
+        <h1 class="m-visually-hidden" id="workspace-heading-today" tabindex="-1">Today</h1>
+        <div data-workspace-content="today">
+          {% include 'meridian/partials/today.html' %}
+        </div>
+      </section>
+
+      <section
+        id="workspace-plan"
+        class="m-workspace"
+        data-workspace-section="plan"
+        data-workspace="plan"
+        data-memory-plan
+        aria-labelledby="workspace-heading-plan"
+        {% if active_workspace != 'plan' %}hidden{% endif %}
+      >
+        <p class="m-workspace-kicker">Plan</p>
+        <h1 class="m-workspace-heading" id="workspace-heading-plan" tabindex="-1">Plan</h1>
+        <p class="m-workspace-subline">Commitments and how they get funded.</p>
+        <div data-workspace-content="plan">
+          {% include 'meridian/partials/plan.html' %}
+        </div>
+      </section>
+
+      <section
+        id="workspace-activity"
+        class="m-workspace"
+        data-workspace-section="activity"
+        data-workspace="activity"
+        data-memory-activity
+        aria-labelledby="workspace-heading-activity"
+        {% if active_workspace != 'activity' %}hidden{% endif %}
+      >
+        <p class="m-workspace-kicker">Activity</p>
+        <h1 class="m-workspace-heading" id="workspace-heading-activity" tabindex="-1">Activity</h1>
+        <p class="m-workspace-subline">Every transaction in one ledger.</p>
+        <div data-workspace-content="activity">
+          {% include 'meridian/partials/activity.html' %}
+        </div>
+      </section>
+
+      <section
+        id="workspace-accounts"
+        class="m-workspace"
+        data-workspace-section="accounts"
+        data-workspace="accounts"
+        data-memory-accounts
+        aria-labelledby="workspace-heading-accounts"
+        {% if active_workspace != 'accounts' %}hidden{% endif %}
+      >
+        <p class="m-workspace-kicker">Accounts</p>
+        <h1 class="m-workspace-heading" id="workspace-heading-accounts" tabindex="-1">Accounts</h1>
+        <p class="m-workspace-subline">Structure: accounts, cards, family, connections.</p>
+        <div data-workspace-content="accounts">
+          {% include 'meridian/partials/accounts.html' %}
+        </div>
+      </section>
+    </main>
+
+    <aside class="m-inspector" data-inspector-rail aria-label="Details" hidden>
+      {% include 'meridian/partials/transaction-inspector.html' %}
+    </aside>
+  </div>
+
+  {% include 'partials/advisor_fab.html' %}
+
+  <script type="module" src="/static/js/meridian/action-review.js"></script>
+  <script type="module" src="/static/js/meridian/shell.js"></script>
+  <script type="module" src="/static/js/meridian/today.js"></script>
+  <script type="module" src="/static/js/meridian/dial.js"></script>
+  <script type="module" src="/static/js/meridian/activity.js"></script>
+  <script type="module" src="/static/js/meridian/review.js"></script>
+  <script type="module" src="/static/js/meridian/plan.js"></script>
+  <script type="module" src="/static/js/meridian/accounts.js"></script>
+  <script type="module" src="/static/js/meridian/memory.js"></script>
+  <script type="module" src="/static/js/meridian/transaction-inspector.js"></script>
+  <script src="/static/js/ui/advisor_fab.js"></script>
+</body>
+</html>

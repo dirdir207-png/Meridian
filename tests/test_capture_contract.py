@@ -1,0 +1,97 @@
+import pytest
+
+from tests.browser.capture_contract import (
+    CAPTURE_MATRIX,
+    CaptureMetadata,
+    required_matrix,
+    validate_metadata,
+)
+
+
+def metadata(**overrides):
+    values = dict(concept_path="design/current.png", current_path="capture.png", viewport="mobile-small",
+                  theme="dark", fixture="preview-v1", frozen_clock="2026-09-10T12:00:00Z",
+                  ui_state="today-selected-default", full_page=True, commit="abc1234",
+                  captured_at="2026-09-10T12:01:00Z", dpr=3)
+    values.update(overrides)
+    return values
+
+
+def test_matrix_matches_governing_viewports_and_two_themes():
+    assert len(required_matrix()) == 10
+    assert CAPTURE_MATRIX["desktop"] == {"width": 1440, "height": 900, "dpr": 1}
+    assert CAPTURE_MATRIX["mobile-small"]["dpr"] == 3
+    # The owner's device is governed, so iPhone Air alignment work is verifiable.
+    assert CAPTURE_MATRIX["mobile-air"] == {"width": 420, "height": 912, "dpr": 3}
+
+
+def test_metadata_requires_all_determinism_fields():
+    validate_metadata(metadata())
+    with pytest.raises(ValueError, match="missing"):
+        validate_metadata({"viewport": "desktop"})
+
+
+def test_metadata_rejects_wrong_dpr_and_theme():
+    with pytest.raises(ValueError, match="DPR"):
+        validate_metadata(metadata(viewport="desktop", dpr=3))
+    with pytest.raises(ValueError, match="theme"):
+        validate_metadata(metadata(theme="system"))
+
+
+def test_metadata_serializes_as_json_safe_dict():
+    result = CaptureMetadata(**metadata()).to_dict()
+    assert result["full_page"] is True
+    assert result["viewport"] == "mobile-small"
+
+
+def test_capture_script_uses_full_matrix_dpr_theme_and_manifest():
+    source = __import__("pathlib").Path("scripts/capture_meridian_matrix.py").read_text()
+    assert "for viewport_name, viewport in CAPTURE_MATRIX.items()" in source
+    assert "for theme in THEMES" in source
+    assert 'device_scale_factor=viewport["dpr"]' in source
+    assert "color_scheme=theme" in source
+    assert 'reduced_motion="reduce"' in source
+    assert "manifest.write_text" in source
+    assert "validate_metadata(metadata)" in source
+    assert "context.add_init_script" in source
+    assert "window.setInterval = () => 0" in source
+    assert "full_page=False" in source
+    assert "full_page=True" in source
+    assert "only accepts an isolated loopback preview" in source
+
+
+def test_capture_target_rejects_non_loopback_and_invalid_clock():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("capture_meridian_matrix", "scripts/capture_meridian_matrix.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    with pytest.raises(ValueError, match="loopback"):
+        module._validate_capture_target("https://bank.example", "fixture", "2026-09-10T12:00:00Z")
+    with pytest.raises(ValueError):
+        module._validate_capture_target("http://127.0.0.1:8081", "fixture", "not-a-time")
+
+
+def test_capture_script_maps_workspaces_to_governing_concept_files():
+    source = __import__("pathlib").Path("scripts/capture_meridian_matrix.py").read_text()
+    for concept in ("01-today.png", "02-plan.png", "03-activity.png", "04-accounts.png"):
+        assert concept in source
+
+
+def test_full_page_capture_unpins_the_viewport_height_shell():
+    """Guard a regression that silently shrank every mobile full-page artifact.
+
+    The mobile shell pins itself to one viewport and scrolls an inner canvas, so
+    the document is only viewport-tall and Playwright's full_page captured no more
+    than the viewport. Every mobile "full-page" artifact was byte-identical to its
+    viewport artifact as a result, and nothing in the manifest recorded a height,
+    so the breakage was invisible to the contract validator.
+
+    This asserts the unpin/remove cycle is present, because a source assertion is
+    the cheapest guard that survives a future edit.
+    """
+    source = __import__("pathlib").Path("scripts/capture_meridian_matrix.py").read_text()
+
+    assert "height:auto !important" in source, "the shell must be unpinned for full-page capture"
+    assert "overflow:visible !important" in source
+    assert "el => el.remove()" in source, "the unpin override must be removed after the shot"

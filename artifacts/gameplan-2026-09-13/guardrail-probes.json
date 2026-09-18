@@ -1,0 +1,12 @@
+{
+  "design_sha": "bf82f26984cc72142c13d7a0606494b79433a635",
+  "same_head_modified_migration": {
+    "exit_code": 0,
+    "output": "OK  guardrails for 'test' (1 scope pattern(s), base 0ad15b6)\n"
+  },
+  "new_migration_after_head_advance": {
+    "exit_code": 1,
+    "output": "FAIL  shipped migration modified: meridian/migrations/002.sql (ship a new migration)\nFAIL  guardrails for 'test' (1 scope pattern(s), base 0ad15b6)\n"
+  },
+  "scope": "temporary synthetic Git repository only"
+}

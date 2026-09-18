@@ -3,61 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SimpleCrew - Setup</title>
+    <title>Meridian - Setup</title>
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#FDFDFD">
+    <meta name="theme-color" content="#172334">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="SimpleCrew">
+    <meta name="apple-mobile-web-app-title" content="Meridian">
     <link rel="apple-touch-icon" href="/static/images/192.png">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="/static/css/meridian/observatory.css">
+    <style>
+      body.obs-shell {
+        background:
+          radial-gradient(140% 90% at 20% -10%, rgba(193, 169, 226, 0.10), transparent 45%),
+          radial-gradient(120% 80% at 95% 10%, rgba(165, 212, 191, 0.06), transparent 45%),
+          var(--obs-bg);
+        color: var(--obs-ink);
+        font-family: var(--obs-font-sans);
+      }
+      .obs-login-shell {
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+      }
+      .obs-login-card {
+        width: 100%;
+        max-width: 450px;
+        background: linear-gradient(180deg, rgba(32, 43, 64, 0.96), rgba(32, 43, 64, 0.88));
+        border: 1px solid rgba(238, 228, 207, 0.16);
+        border-radius: 22px;
+        padding: 40px;
+        box-shadow: 0 18px 48px rgba(7, 12, 21, 0.35);
+      }
+      .obs-login-title {
+        color: var(--obs-paper) !important;
+        font-family: var(--obs-font-serif) !important;
+        font-weight: 500 !important;
+      }
+      .obs-login-sub {
+        color: var(--obs-muted) !important;
+      }
+      .obs-login-field-label {
+        color: var(--obs-ink) !important;
+      }
+      .obs-login-input {
+        border-color: rgba(238, 228, 207, 0.22) !important;
+        background: rgba(23, 35, 52, 0.72) !important;
+        color: var(--obs-ink) !important;
+      }
+      .obs-login-input:focus {
+        outline: 2px solid var(--obs-lilac);
+        outline-offset: 2px;
+      }
+      .obs-login-primary {
+        background: var(--obs-apricot) !important;
+        color: #2c1d0d !important;
+        font-weight: 700 !important;
+      }
+      .obs-login-engraving {
+        display: block;
+        width: min(180px, 55vw);
+        margin: 0 auto 8px;
+        opacity: 0.9;
+      }
+      .obs-login-error {
+        background: rgba(241, 162, 154, 0.12) !important;
+        color: var(--obs-danger) !important;
+      }
+      .obs-login-note {
+        color: var(--obs-muted) !important;
+      }
+    </style>
 </head>
-<body>
-    <div class="data-container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+<body class="obs-shell">
+    <div class="data-container obs-login-shell">
         <div style="max-width: 450px; width: 100%; padding: 0 20px;">
-            <div style="background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 12px; padding: 40px;">
+            <div class="obs-login-card">
                 <div style="text-align: center; margin-bottom: 32px;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">🏦</div>
-                    <h1 style="font-size: 28px; font-weight: 600; color: var(--text-dark); margin: 0 0 8px 0;">Welcome to SimpleCrew</h1>
-                    <p style="font-size: 15px; color: var(--text-light); margin: 0;">Create your account to get started</p>
+                    <img class="obs-login-engraving obs-art" src="/static/img/meridian/observatory/observatory-engraving.svg" alt="" width="180" height="108">
+                    <h1 class="obs-login-title" style="font-size: 28px; font-weight: 600; margin: 0 0 8px 0;">Meridian</h1>
+                    <p class="obs-login-sub" style="font-size: 15px; margin: 0;">Create your account to get started</p>
                 </div>
 
                 <form id="registerForm">
                     <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-dark); font-size: 14px;">Username</label>
+                        <label class="obs-login-field-label" style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px;">Username</label>
                         <input type="text" id="username" name="username" placeholder="Choose a username" required autocomplete="username"
-                               style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 14px; background: var(--bg-input); color: var(--text-dark); box-sizing: border-box;">
+                               class="obs-login-input" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 14px; box-sizing: border-box;">
                     </div>
 
                     <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-dark); font-size: 14px;">Email <span style="color: var(--text-light); font-weight: 400;">(optional)</span></label>
+                        <label class="obs-login-field-label" style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px;">Email <span class="obs-login-note" style="font-weight: 400;">(optional)</span></label>
                         <input type="email" id="email" name="email" placeholder="your@email.com" autocomplete="email"
-                               style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 14px; background: var(--bg-input); color: var(--text-dark); box-sizing: border-box;">
+                               class="obs-login-input" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 14px; box-sizing: border-box;">
                     </div>
 
                     <div style="margin-bottom: 8px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-dark); font-size: 14px;">Password</label>
+                        <label class="obs-login-field-label" style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px;">Password</label>
                         <input type="password" id="password" name="password" placeholder="Create a password" required autocomplete="new-password"
-                               style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 14px; background: var(--bg-input); color: var(--text-dark); box-sizing: border-box;">
+                               class="obs-login-input" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 14px; box-sizing: border-box;">
                     </div>
 
                     <div style="margin-bottom: 24px;">
-                        <p style="font-size: 12px; color: var(--text-light); margin: 0;">
+                        <p class="obs-login-note" style="font-size: 12px; margin: 0;">
                             Password must be at least 8 characters long
                         </p>
                     </div>
 
-                    <div id="errorMessage" style="background: #fee; color: #c00; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none; font-size: 14px;"></div>
+                    <div id="errorMessage" class="obs-login-error" style="padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none; font-size: 14px;"></div>
 
-                    <button type="submit" style="width: 100%; background: var(--simple-blue); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px;">
+                    <button type="submit" class="obs-login-primary" style="width: 100%; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 15px;">
                         Create Account
                     </button>
                 </form>
             </div>
 
             <div style="text-align: center; margin-top: 20px;">
-                <p style="font-size: 13px; color: var(--text-light);">SimpleCrew - Personal Finance Management</p>
+                <p class="obs-login-note" style="font-size: 13px;">Meridian - Personal Economic Operating System</p>
             </div>
         </div>
     </div>

@@ -1,0 +1,16 @@
+{
+  "command": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "packages/preset/persona/tests",
+    "packages/core/system-prompt/tests",
+    "packages/plan/plan-mode/tests",
+    "packages/compaction/compaction/tests",
+    "--reporter=json",
+    "--outputFile=/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/readiness-2026-09-13/harness-tests.json"
+  ],
+  "exit_code": 0,
+  "credentials_environment": "not inherited",
+  "source_sha": "a834868c143f4a896840b8d08a7777df1b899f13"
+}

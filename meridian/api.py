@@ -1,0 +1,1900 @@
+"""Stable, authenticated HTTP read models for Meridian."""
+
+import os
+from datetime import date
+from functools import wraps
+from typing import Optional
+
+from flask import Blueprint, Response, current_app, jsonify, request
+from flask_login import login_required
+
+from meridian.ai.advisor import AdvisorContext
+from meridian.cancellation import (
+    CancellationRepository,
+    CancellationState,
+    VerificationSignal,
+)
+from meridian.cancellation.approval import evaluate_submission
+from meridian.cancellation.brief import build_cancellation_brief
+from meridian.cancellation.capture import capture_trial
+from meridian.cancellation.deadlines import upcoming_deadlines
+from meridian.cancellation.escalation import build_escalation_plan
+from meridian.cancellation.notification_payload import build_trial_reminder_payload
+from meridian.cancellation.notifications import TrialNotificationRepository
+from meridian.commitments import CommitmentRepository
+from meridian.connections import ConnectionRepository, ConnectionState
+from meridian.evidence import EvidenceRepository
+from meridian.funding_repo import FundingRuleRepository
+from meridian.models import AccountRecord, TransactionRecord
+from meridian.observations import ObservationRepository, build_simulation_input
+from meridian.proactive import build_financial_weather
+from meridian.services.accounts import build_accounts
+from meridian.services.activity import (
+    get_activity,
+    get_patterns,
+    get_review_queue,
+    get_transaction,
+)
+from meridian.services.connections import build_connections, get_connection_detail
+from meridian.services.dial import build_dial
+from meridian.services.plan import build_plan
+from meridian.services.today import build_today, data_freshness
+from meridian.trials import TrialRepository
+
+meridian_api = Blueprint("meridian_api", __name__)
+
+
+def _repository():
+    return current_app.config["MERIDIAN_REPOSITORY_FACTORY"]()
+
+
+def _evidence_repository(graph=None):
+    factory = current_app.config.get("MERIDIAN_EVIDENCE_REPOSITORY_FACTORY")
+    if factory:
+        return factory()
+    graph = graph or _repository()
+    return EvidenceRepository(graph.db_path)
+
+
+def _evidence_blob_store(graph=None):
+    """Build the encrypted evidence blob store (same as app._evidence_store_factory).
+
+    Intake needs this to persist the raw content so invoice/evidence links can
+    later decrypt and display it. Uses the app secret key as the derived key.
+    """
+    from meridian.storage import DerivedKeyProvider, EncryptedBlobStore
+
+    graph = graph or _repository()
+    evidence_root = os.path.join(os.path.dirname(os.path.abspath(graph.db_path)), "evidence")
+    return EncryptedBlobStore(evidence_root, DerivedKeyProvider(current_app.secret_key.encode()))
+
+
+def _connection_repository(graph=None):
+    factory = current_app.config.get("MERIDIAN_CONNECTIONS_FACTORY")
+    if factory:
+        return factory()
+    graph = graph or _repository()
+    return ConnectionRepository(graph.db_path)
+
+
+def _evidence_payload(repository, link):
+    item = repository.get_item(link.evidence_id)
+    if item is None:
+        return None
+    return {
+        "id": item.id,
+        "title": item.title,
+        "sender": item.sender,
+        "source_kind": item.source_kind,
+        "mime_type": item.mime_type,
+        "size_bytes": item.size_bytes,
+        "relation": link.relation,
+        "provenance": link.provenance,
+        "confidence": None,
+        "expires_at": item.expires_at,
+        "content_url": f"/api/meridian/evidence/{item.id}/content",
+    }
+
+
+def _plan_repositories():
+    graph = _repository()
+    commitments = current_app.config.get("MERIDIAN_COMMITMENTS_FACTORY")
+    rules = current_app.config.get("MERIDIAN_FUNDING_RULES_FACTORY")
+    return (
+        graph,
+        commitments() if commitments else CommitmentRepository(graph.db_path),
+        rules() if rules else FundingRuleRepository(graph.db_path),
+    )
+
+
+def _error(
+    code: str,
+    message: str,
+    recovery_action: str,
+    status: int,
+    *,
+    freshness: dict[str, object] | None = None,
+):
+    return (
+        jsonify(
+            {
+                "error": {
+                    "code": code,
+                    "message": message,
+                    "recovery_action": recovery_action,
+                },
+                "data_freshness": freshness
+                or {"status": "unavailable", "last_updated_at": None},
+            }
+        ),
+        status,
+    )
+
+
+def _safe_read(view):
+    """Keep provider/repository failures out of browser contracts and logs."""
+
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        try:
+            return view(*args, **kwargs)
+        except Exception:
+            return _error(
+                "financial_data_unavailable",
+                "Financial data is temporarily unavailable.",
+                "Try again after your provider reconnects.",
+                503,
+            )
+
+    return wrapped
+
+
+def _account_payload(account: AccountRecord) -> dict[str, object]:
+    return {
+        "id": account.id,
+        "provider": account.provider,
+        "name": account.name,
+        "account_type": account.account_type,
+        "balance": account.balance,
+        "available_balance": account.available_balance,
+        "currency": account.currency,
+        "is_active": account.is_active,
+        "source_updated_at": account.source_updated_at,
+        "synced_at": account.synced_at,
+    }
+
+
+def _account_labels(repository) -> dict[int, dict[str, object]]:
+    """Name and currentness for every account a transaction page can reference.
+
+    An archived account keeps its row, so its historical transactions can still be
+    labelled with the account they were recorded under, marked as no longer
+    returned by the provider.
+    """
+    labels: dict[int, dict[str, object]] = {
+        account.id: {"name": account.name, "archived": False}
+        for account in repository.list_accounts()
+    }
+    for item in repository.list_archived_accounts():
+        labels[item.account.id] = {"name": item.account.name, "archived": True}
+    return labels
+
+
+def _transaction_payload(
+    transaction: TransactionRecord,
+    account_labels: Optional[dict[int, dict[str, object]]] = None,
+) -> dict[str, object]:
+    account = (account_labels or {}).get(transaction.account_id)
+    return {
+        "id": transaction.id,
+        "account_id": transaction.account_id,
+        "account_name": account["name"] if account else None,
+        "account_archived": bool(account and account["archived"]),
+        "provider": transaction.provider,
+        "amount": transaction.amount,
+        "currency": transaction.currency,
+        "occurred_at": transaction.occurred_at,
+        "posted_at": transaction.posted_at,
+        "description": transaction.description,
+        "merchant": transaction.merchant,
+        "status": transaction.status,
+        "source_updated_at": transaction.source_updated_at,
+        "classification": {
+            "category": transaction.classification_category,
+            "kind": transaction.classification_kind,
+            "confidence": transaction.classification_confidence,
+            "rule_id": transaction.classification_rule_id,
+            "evidence": transaction.classification_evidence,
+            "method": transaction.classification_method,
+            "provider": transaction.classification_provider,
+            "model": transaction.classification_model,
+        },
+        "synced_at": transaction.synced_at,
+    }
+
+
+def _transaction_payload_with_suggestion(repository, transaction, account_labels=None):
+    """Transaction payload plus a data-derived category suggestion (the "smart"
+    first guess for the Review editor) and ranked category options."""
+    payload = _transaction_payload(transaction, account_labels)
+    if payload["classification"].get("category"):
+        payload["suggested_category"] = None
+        payload["category_options"] = []
+    else:
+        payload["suggested_category"] = repository.suggest_category(
+            merchant=transaction.merchant,
+            description=transaction.description,
+        )
+        payload["category_options"] = repository.category_options(
+            merchant=transaction.merchant,
+            description=transaction.description,
+        )
+    return payload
+
+
+def _positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed < 1:
+        raise ValueError
+    return parsed
+
+
+@meridian_api.get("/observations")
+@login_required
+@_safe_read
+def observations():
+    """Return credential-free immutable observation metadata."""
+    try:
+        limit = int(request.args.get("limit", "100"))
+    except ValueError:
+        return _error("invalid_request", "limit must be an integer.", "Use a limit between 1 and 500.", 400)
+    try:
+        records = ObservationRepository(_repository().db_path).list_recent(limit)
+    except ValueError as error:
+        return _error("invalid_request", str(error), "Use a limit between 1 and 500.", 400)
+    return jsonify({"observations": [record.to_dict() for record in records], "data_mode": "actual"})
+
+
+@meridian_api.get("/observations/<snapshot_id>")
+@login_required
+@_safe_read
+def observation_snapshot(snapshot_id):
+    try:
+        snapshot = ObservationRepository(_repository().db_path).load_snapshot(snapshot_id)
+    except ValueError:
+        return _error("not_found", "Observation snapshot was not found.", "Refresh observations and select an available snapshot.", 404)
+    return jsonify(snapshot.to_dict())
+
+
+@meridian_api.post("/observations/<snapshot_id>/simulation")
+@login_required
+@_safe_read
+def observation_simulation(snapshot_id):
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return _error("invalid_request", "Simulation changes must be an object.", "Submit JSON object changes.", 400)
+    try:
+        snapshot = ObservationRepository(_repository().db_path).load_snapshot(snapshot_id)
+        simulation = build_simulation_input(snapshot, payload)
+    except ValueError as error:
+        status = 404 if str(error) == "unknown snapshot" else 400
+        return _error("not_found" if status == 404 else "invalid_request", str(error), "Use an actual observation snapshot and object changes.", status)
+    return jsonify(simulation.to_dict())
+
+
+@meridian_api.get("/plan")
+@login_required
+@_safe_read
+def plan():
+    graph, commitments, rules = _plan_repositories()
+    as_of_value = request.args.get("as_of")
+    try:
+        as_of = date.fromisoformat(as_of_value) if as_of_value else date.today()
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "as_of must be an ISO date (YYYY-MM-DD).",
+            "Use today's date or omit as_of.",
+            400,
+        )
+    return jsonify(build_plan(graph, commitments, rules, as_of=as_of, last_paid_by_id=_last_paid_by_id(graph, commitments), paycheck=_paycheck_config(graph), evidence_repository=EvidenceRepository(graph.db_path)))
+
+
+def _scenario_changes_from_payload(payload):
+    """Validate the read-only scenario inputs.
+
+    Only deterministic numeric knobs are accepted. Context assumptions are
+    intentionally omitted from this slice: the UI does not yet supply them and
+    they must come from an audited source before being treated as a scenario.
+    """
+    allowed = ("income", "reserve", "contribution", "expense_change", "due_date_days")
+    changes = {}
+    for key in allowed:
+        value = payload.get(key)
+        if value is None or value == "":
+            continue
+        try:
+            if key == "due_date_days":
+                changes[key] = int(value)
+            else:
+                changes[key] = float(value)
+        except (TypeError, ValueError):
+            raise ValueError(f"{key} must be a number") from None
+    return changes
+
+
+def _forecast_view(scenario_or_base):
+    """Compact serializable projection view used by the scenario preview."""
+    return {
+        "starting_cash": round(float(scenario_or_base.starting_cash), 2),
+        "daily_expense": round(float(scenario_or_base.daily_expense), 2),
+        "runway_days": scenario_or_base.runway_days,
+        "low_point": (
+            round(float(scenario_or_base.low_point), 2)
+            if scenario_or_base.low_point is not None
+            else None
+        ),
+        "low_point_date": (
+            scenario_or_base.low_point_date.isoformat()
+            if scenario_or_base.low_point_date is not None
+            else None
+        ),
+    }
+
+
+@meridian_api.post("/plan/scenario")
+@login_required
+@_safe_read
+def plan_scenario_preview():
+    """Read-only hypothetical Plan preview.
+
+    This endpoint never writes. It runs the same pure scenario comparison used
+    by tests against the current Plan forecast and returns a before/after view
+    plus the assumptions it made. Apply/approval is intentionally not wired yet.
+    """
+    from datetime import datetime
+
+    from meridian.scenarios import run_scenario
+
+    graph, commitments, rules = _plan_repositories()
+    as_of_value = request.args.get("as_of")
+    try:
+        as_of = date.fromisoformat(as_of_value) if as_of_value else date.today()
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "as_of must be an ISO date (YYYY-MM-DD).",
+            "Use today's date or omit as_of.",
+            400,
+        )
+
+    payload = request.get_json(silent=True) or {}
+    try:
+        changes = _scenario_changes_from_payload(payload)
+    except ValueError as error:
+        return _error(
+            "invalid_request",
+            str(error),
+            "Enter numeric values only for the preview fields.",
+            400,
+        )
+
+    plan = build_plan(
+        graph,
+        commitments,
+        rules,
+        as_of=as_of,
+        last_paid_by_id=_last_paid_by_id(graph, commitments),
+        paycheck=_paycheck_config(graph),
+        evidence_repository=EvidenceRepository(graph.db_path),
+    )
+    forecast = plan.get("forecast") or {}
+    available = bool(forecast.get("available"))
+    if not available:
+        return jsonify(
+            {
+                "read_only": True,
+                "available": False,
+                "reason": forecast.get("reason") or "Forecast unavailable.",
+                "assumptions": [],
+                "comparison": {},
+                "base": None,
+                "scenario": None,
+                "data_freshness": plan.get("data_freshness"),
+            }
+        )
+
+    # Rehydrate the forecast dataclass from the serialized plan payload. This
+    # keeps comparison logic in one tested pure module rather than duplicating
+    # it in the browser.
+    try:
+        from meridian.beacon import Forecast, ForecastFactor, ForecastShortfall
+
+        def _date_or_none(value):
+            if isinstance(value, date):
+                return value
+            if isinstance(value, datetime):
+                return value.date()
+            if isinstance(value, str) and value:
+                try:
+                    return date.fromisoformat(value)
+                except ValueError:
+                    return None
+            return None
+
+        shortfall_data = forecast.get("first_shortfall") or {}
+        first_shortfall = None
+        if shortfall_data:
+            # The serialized plan can carry a dict or no shortfall.
+            try:
+                first_shortfall = ForecastShortfall(
+                    _date_or_none(shortfall_data.get("date")),
+                    float(shortfall_data.get("amount") or 0),
+                    str(shortfall_data.get("cause") or ""),
+                )
+            except (TypeError, ValueError):
+                first_shortfall = None
+
+        factors = [
+            ForecastFactor(
+                kind=str(factor.get("kind", "")),
+                amount=float(factor.get("amount", 0) or 0),
+                date=_date_or_none(factor.get("date")),
+                explanation=str(factor.get("explanation", "")),
+                evidence_ids=tuple(
+                    int(item) for item in (factor.get("evidence_ids") or ())
+                ),
+            )
+            for factor in (forecast.get("factors") or ())
+            if isinstance(factor, dict)
+        ]
+
+        base = Forecast(
+            available=True,
+            reason=None,
+            as_of=_date_or_none(forecast.get("as_of")) or as_of,
+            starting_cash=float(forecast.get("starting_cash") or 0),
+            daily_expense=float(forecast.get("daily_expense") or 0),
+            daily_expense_range=tuple(
+                float(value) for value in (forecast.get("daily_expense_range") or (0, 0))
+            ),
+            runway_days=forecast.get("runway_days"),
+            low_point=(
+                float(forecast.get("low_point"))
+                if forecast.get("low_point") is not None
+                else None
+            ),
+            low_point_date=_date_or_none(forecast.get("low_point_date")),
+            first_shortfall=first_shortfall,
+            coverage_horizons={
+                str(key): float(value)
+                for key, value in (forecast.get("coverage_horizons") or {}).items()
+            },
+            factors=tuple(factors),
+            confidence=float(forecast.get("confidence") or 0),
+            freshness=str(forecast.get("freshness") or "unavailable"),
+            next_paycheck=_date_or_none(forecast.get("next_paycheck")),
+            paycheck_covers=bool(forecast.get("paycheck_covers")),
+            paycheck_range=(
+                tuple(float(value) for value in forecast.get("paycheck_range") or ())
+                if forecast.get("paycheck_range")
+                else None
+            ),
+        )
+    except (TypeError, ValueError):
+        return _error(
+            "unavailable",
+            "The current forecast could not be used for a preview.",
+            "Refresh Plan and try again.",
+            503,
+        )
+
+    result = run_scenario(base, changes)
+    return jsonify(
+        {
+            "read_only": True,
+            "available": True,
+            "assumptions": list(result.assumptions),
+            "comparison": {
+                "starting_cash": round(float(result.comparison["starting_cash"] or 0), 2),
+                "daily_expense": round(float(result.comparison["daily_expense"] or 0), 2),
+                "runway_days": result.comparison["runway_days"],
+                "low_point": (
+                    round(float(result.comparison["low_point"]), 2)
+                    if result.comparison["low_point"] is not None
+                    else None
+                ),
+            },
+            "base": _forecast_view(base),
+            "scenario": _forecast_view(result.scenario),
+            "data_freshness": plan.get("data_freshness"),
+        }
+    )
+
+
+def _paycheck_config(graph):
+    """Load the owner's paycheck config, OR learn it from real income.
+
+    Prefers the owner's explicit config; when none is set, auto-learn the typical
+    recurring income (e.g. a Cash App paycheck) so the forecast/beacon reflect
+    reality. The learned config auto-updates as new paychecks land.
+    """
+    from meridian.paycheck import PaycheckConfig, PaycheckRepository
+
+    manual = PaycheckRepository(graph.db_path).get()
+    if manual is not None:
+        return manual
+    learned = _learned_paycheck(graph)
+    if learned is not None:
+        return PaycheckConfig(
+            cadence=learned["cadence"],
+            amount=learned["amount"],
+            next_date=learned["next_date"],
+            active=True,
+        )
+    return None
+
+
+def _learned_paycheck(graph):
+    """Learn the paycheck from recent income transactions (best-effort)."""
+    try:
+        from meridian.paycheck_learning import learn_paycheck
+        from meridian.repository import FinancialRepository
+
+        financial = graph if isinstance(graph, FinancialRepository) else FinancialRepository(graph.db_path)
+        transactions, _cursor = financial.list_transactions(limit=200)
+        return learn_paycheck(transactions)
+    except Exception:  # noqa: BLE001 - learning is best-effort
+        return None
+
+
+@meridian_api.get("/paycheck")
+@login_required
+@_safe_read
+def paycheck_get():
+    graph = _repository()
+    cfg = _paycheck_config(graph)
+    if cfg is None:
+        return jsonify({"paycheck": None})
+    return jsonify(
+        {
+            "paycheck": {
+                "cadence": cfg.cadence,
+                "amount": cfg.amount,
+                "next_date": cfg.next_date,
+                "active": cfg.active,
+            }
+        }
+    )
+
+
+@meridian_api.post("/paycheck")
+@login_required
+@_safe_read
+def paycheck_set():
+    """Set the owner's paycheck (funding source). Approval-gated planning
+    metadata; never moves money. Reuses the proposal pipeline."""
+    from meridian.paycheck import PaycheckConfig, PaycheckRepository
+
+    graph = _repository()
+    payload = request.get_json(silent=True) or {}
+    cadence = str(payload.get("cadence") or "monthly").lower()
+    if cadence not in ("weekly", "biweekly", "monthly", "semimonthly"):
+        return _error("invalid_request", "cadence must be weekly, biweekly, monthly, or semimonthly.",
+                      "Choose a supported cadence and try again.", 400)
+    try:
+        amount = float(payload.get("amount"))
+    except (TypeError, ValueError):
+        return _error("invalid_request", "amount must be a number.", "Enter a paycheck amount.", 400)
+    if amount <= 0:
+        return _error("invalid_request", "amount must be positive.", "Enter a positive paycheck amount.", 400)
+    next_date = str(payload.get("next_date") or "")
+    if not next_date:
+        return _error("invalid_request", "next_date is required.", "Set the next paycheck date.", 400)
+    try:
+        date.fromisoformat(next_date)
+    except ValueError:
+        return _error("invalid_request", "next_date must be an ISO date (YYYY-MM-DD).",
+                      "Use a valid date and try again.", 400)
+    cfg = PaycheckConfig(cadence=cadence, amount=amount, next_date=next_date, active=bool(payload.get("active", True)))
+    PaycheckRepository(graph.db_path).save(cfg)
+    return jsonify({"state": "saved", "paycheck": {"cadence": cfg.cadence, "amount": cfg.amount, "next_date": cfg.next_date}})
+
+
+def _last_paid_by_id(graph, commitment_repository):
+    """Best-effort map of commitment_id -> last-paid amount from charge history.
+
+    Drives the ``changed`` bill badge (amount drift) on the Plan card. Empty
+    when no charge history matches, so the badge is never fabricated.
+    """
+    from meridian.billers import build_biller_monitor
+    from meridian.repository import FinancialRepository
+
+    financial = graph if isinstance(graph, FinancialRepository) else FinancialRepository(graph.db_path)
+    transactions, _cursor = financial.list_transactions(limit=200)
+    bills = build_biller_monitor(commitment_repository.list_active(), transactions)
+    return {b.commitment_id: b.last_paid_amount for b in bills}
+
+
+def _icloud_configured() -> bool:
+    """iCloud Mail is configured when the owner set the IMAP username + app pw."""
+    import os
+
+    return bool(
+        os.environ.get("ICLOUD_MAIL_USERNAME")
+        and os.environ.get("ICLOUD_MAIL_APP_PASSWORD")
+    )
+
+
+@meridian_api.get("/icloud/status")
+@login_required
+@_safe_read
+def icloud_status():
+    """Read-only iCloud Mail connection status (configured or not)."""
+    return jsonify(
+        {
+            "connected": _icloud_configured(),
+            "configured": _icloud_configured(),
+            "read_only": True,
+        }
+    )
+
+
+@meridian_api.post("/icloud/intake")
+@login_required
+@_safe_read
+def icloud_intake():
+    """Ingest recent iCloud Mail as evidence (read-only, no iCloud mutation).
+
+    Best-effort pilot: returns a sanitized summary. Quarantines/errors never
+    leak message bodies.
+    """
+    from meridian.connectors.icloud_mail import IcloudMailReadError, IcloudMailTransport
+    from meridian.evidence import EvidenceRepository
+    from meridian.gmail_intake import ingest_icloud_recent
+    from meridian.repository import FinancialRepository
+
+    graph = _repository()
+    if not _icloud_configured():
+        return _error(
+            "connection_unavailable",
+            "iCloud Mail is not configured.",
+            "Set ICLOUD_MAIL_USERNAME and ICLOUD_MAIL_APP_PASSWORD (an Apple app-specific password) and try again.",
+            503,
+        )
+    try:
+        transport = IcloudMailTransport()
+        financial = graph if isinstance(graph, FinancialRepository) else FinancialRepository(graph.db_path)
+        transactions, _cursor = financial.list_transactions(limit=200)
+        summary = ingest_icloud_recent(
+            transport=transport,
+            evidence_repo=EvidenceRepository(graph.db_path),
+            transactions=transactions,
+            max_messages=100,
+            since_days=30,
+            blob_store=_evidence_blob_store(graph),
+        )
+    except IcloudMailReadError as exc:
+        return _error("connection_unavailable", str(exc), "Check the iCloud Mail credentials and try again.", 503)
+    return jsonify({"state": "ingested", "summary": summary})
+
+
+@meridian_api.post("/gmail/intake")
+@login_required
+@_safe_read
+def gmail_intake():
+    """Backfill ~30 days of Gmail from every connected Gmail account into evidence.
+
+    Read-only Gmail; builds a refresh-capable OAuth client from the owner's
+    env-configured Google client so each stored account token can be refreshed
+    on 401. Returns a per-account + total summary of stored mail evidence.
+    """
+    from meridian.evidence import EvidenceRepository
+    from meridian.gmail_intake import ingest_all_gmail_accounts
+
+    graph = _repository()
+
+    def _token_client():
+        from meridian.connectors.google_auth import (
+            GoogleOAuth2Client,
+            GoogleOAuthConfig,
+        )
+
+        return GoogleOAuth2Client(GoogleOAuthConfig.from_env(), scopes=("email",))
+
+    summary = ingest_all_gmail_accounts(
+        db_path=graph.db_path,
+        evidence_repo=EvidenceRepository(graph.db_path),
+        token_client=_token_client(),
+        max_messages_per_account=50,
+        since_days=30,
+        blob_store=_evidence_blob_store(graph),
+    )
+    return jsonify({"state": "ingested", "summary": summary})
+
+
+@meridian_api.get("/billers/monitor")
+@login_required
+@_safe_read
+def billers_monitor():
+    """Read-only biller monitor (R33).
+
+    Computes bill state from Meridian's own bill commitments + transaction
+    charge history. No provider/network, no payment-method switching, no
+    autopay/statement/biller-health fields (Crew exposes none of these) — every
+    returned field is tagged with provenance so nothing looks provider-backed
+    when it was computed locally. Reuses existing commitment ids (no second
+    bill identity).
+    """
+    from meridian.billers import build_biller_monitor
+    from meridian.repository import FinancialRepository
+
+    graph = _repository()
+    _graph, commitment_repository, _rules = _plan_repositories()
+    bill_commitments = [
+        c for c in commitment_repository.list_active()
+    ]
+    # Pull available charge history via the financial repository (paged enough
+    # to cover bill-charge matching; best-effort on brand aliases).
+    financial = graph if isinstance(graph, FinancialRepository) else FinancialRepository(graph.db_path)
+    transactions, _cursor = financial.list_transactions(limit=200)
+    bills = build_biller_monitor(bill_commitments, transactions)
+    return jsonify(
+        {
+            "bills": [b.__dict__ for b in bills],
+            "safeguards": {
+                "read_only": True,
+                "no_payment_switching": True,
+                "no_second_bill_identity": True,
+            },
+        }
+    )
+
+
+@meridian_api.get("/commitments")
+@login_required
+@_safe_read
+def commitments():
+    _graph, commitment_repository, rule_repository = _plan_repositories()
+    views = []
+    for commitment in commitment_repository.list_active():
+        views.append(
+            {
+                "id": commitment.id,
+                "type": commitment.type.value,
+                "name": commitment.name,
+                "status": commitment.status.value,
+                "priority": commitment.priority,
+                "target_amount": commitment.target_amount,
+                "amount": commitment.amount,
+                "funded_amount": commitment.funded_amount,
+                "due_date": commitment.due_date,
+                "target_date": commitment.target_date,
+                "buffer_minimum": commitment.buffer_minimum,
+                "minimum_payment": commitment.minimum_payment,
+                "backing_account_id": commitment.backing_account_id,
+                "rule_ids": [
+                    rule.id
+                    for rule in rule_repository.list_for_commitment(commitment.id)
+                ],
+            }
+        )
+    return jsonify({"commitments": views})
+
+
+@meridian_api.get("/funding-rules")
+@login_required
+@_safe_read
+def funding_rules():
+    _graph, _commitments, rule_repository = _plan_repositories()
+    views = []
+    for rule in rule_repository.list_all():
+        views.append(
+            {
+                "id": rule.id,
+                "commitment_id": rule.commitment_id,
+                "kind": rule.kind,
+                "amount": float(rule.amount) if rule.amount is not None else None,
+                "percent": float(rule.percent) if rule.percent is not None else None,
+                "cadence": rule.cadence,
+                "day_of_month": rule.day_of_month,
+                "start_date": rule.start_date.isoformat(),
+                "horizon_end": rule.horizon_end.isoformat()
+                if rule.horizon_end
+                else None,
+                "min_contribution": (
+                    float(rule.min_contribution)
+                    if rule.min_contribution is not None
+                    else None
+                ),
+                "max_contribution": (
+                    float(rule.max_contribution)
+                    if rule.max_contribution is not None
+                    else None
+                ),
+                "paused": rule.paused,
+                "one_time_override": (
+                    float(rule.one_time_override)
+                    if rule.one_time_override is not None
+                    else None
+                ),
+                "priority": rule.priority,
+            }
+        )
+    return jsonify({"funding_rules": views})
+
+
+@meridian_api.get("/today")
+@login_required
+@_safe_read
+def today():
+    graph, commitments, rules = _plan_repositories()
+    return jsonify(build_today(graph, commitments, rules, paycheck=_paycheck_config(graph)))
+
+
+@meridian_api.get("/dial")
+@login_required
+@_safe_read
+def dial():
+    """Read-only Observatory dial horizon.
+
+    Returns a DialModel with integer minor-unit amounts and no projections until
+    the shared occurrence/reserve model is able to produce trustworthy per-day
+    projected balances. This endpoint never mutates anything.
+    """
+    graph, commitments, _rules = _plan_repositories()
+    as_of_value = request.args.get("as_of")
+    try:
+        as_of = date.fromisoformat(as_of_value) if as_of_value else date.today()
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "as_of must be an ISO date (YYYY-MM-DD).",
+            "Use today's date or omit as_of.",
+            400,
+        )
+    return jsonify(
+        build_dial(
+            graph,
+            commitments.list_active(),
+            as_of=as_of,
+            paycheck=_paycheck_config(graph),
+        )
+    )
+
+
+@meridian_api.get("/weather")
+@login_required
+@_safe_read
+def weather():
+    """Read-only proactive weather derived from the Observatory dial.
+
+    Returns grouped near-term events plus a financial-weather state and its
+    plain-language explanation. It reports ``unknown`` rather than a reassuring
+    state when provider data is stale or the available balance is unavailable,
+    and it never mutates anything.
+    """
+    graph, commitments, _rules = _plan_repositories()
+    as_of_value = request.args.get("as_of")
+    try:
+        as_of = date.fromisoformat(as_of_value) if as_of_value else date.today()
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "as_of must be an ISO date (YYYY-MM-DD).",
+            "Use today's date or omit as_of.",
+            400,
+        )
+    dial = build_dial(
+        graph,
+        commitments.list_active(),
+        as_of=as_of,
+        paycheck=_paycheck_config(graph),
+    )
+    return jsonify(build_financial_weather(dial).to_dict())
+
+
+@meridian_api.get("/sync")
+@login_required
+def sync_now():
+    """Trigger a live data refresh on demand. Single-flight and safe.
+
+    This is an idempotent read-side synchronization (not a financial mutation),
+    so it uses GET for compatibility with the read-only fetch client.
+    ``?wait=false`` returns immediately with the current report; the default
+    waits for the refresh to finish (snapshots take a few seconds).
+    """
+    service = current_app.config.get("MERIDIAN_REFRESH_SERVICE")
+    if service is None:
+        return jsonify({"success": False, "error": "refresh_unavailable"}), 503
+    wait = request.args.get("wait", "true").lower() != "false"
+    try:
+        if wait:
+            report = service.refresh_once()
+            if report is None:
+                return jsonify({"success": False, "error": "refresh_failed"}), 502
+            return jsonify(
+                {
+                    "success": True,
+                    "provider": report.provider,
+                    "status": report.status,
+                    "accounts_synced": report.accounts_synced,
+                    "transactions_synced": report.transactions_synced,
+                    "errors": report.errors,
+                    "refreshed_at": None,
+                }
+            )
+        # Non-blocking: kick a refresh if none is running, report in_progress.
+        report = service.refresh_once()
+        return jsonify({"success": True, "status": report.status if report else "in_progress"})
+    except Exception:  # noqa: BLE001 - the browser never sees provider errors
+        return jsonify({"success": False, "error": "refresh_unavailable"}), 502
+
+
+@meridian_api.get("/accounts")
+@login_required
+@_safe_read
+def accounts():
+    repository = _repository()
+    payload = build_accounts(repository)
+    payload["accounts"] = [
+        account for group in payload["groups"] for account in group["accounts"]
+    ]
+    return jsonify(payload)
+
+
+@meridian_api.get("/settings/connections")
+@login_required
+@_safe_read
+def settings_connections():
+    graph = _repository()
+    return jsonify(
+        build_connections(
+            graph,
+            _connection_repository(graph),
+            selected_id=request.args.get("selected"),
+            db_path=graph.db_path if hasattr(graph, "db_path") else None,
+        )
+    )
+
+
+@meridian_api.get("/settings/connections/<public_id>")
+@login_required
+@_safe_read
+def settings_connection_detail(public_id: str):
+    detail = get_connection_detail(_connection_repository(), public_id)
+    if detail is None:
+        return _error(
+            "connection_not_found",
+            "That connection is not available.",
+            "Return to Connections and choose an available source.",
+            404,
+        )
+    return jsonify(detail)
+
+
+@meridian_api.post("/settings/connections/<kind>/authorize")
+@login_required
+def settings_connection_authorize(kind: str):
+    display_names = {"gmail": "Gmail", "calendar": "Google Calendar"}
+    if kind not in display_names:
+        return _error(
+            "unsupported_connection",
+            "That connection type is not supported.",
+            "Choose Gmail or Google Calendar.",
+            400,
+        )
+    authorizer = current_app.config.get("MERIDIAN_CONNECTION_AUTHORIZERS", {}).get(
+        kind
+    )
+    if authorizer is None:
+        return _error(
+            "connection_unavailable",
+            "Connection setup is temporarily unavailable.",
+            "Try again after the connection provider is configured.",
+            503,
+        )
+    try:
+        from meridian.connectors.google_auth import callback_redirect_uri
+
+        handoff = authorizer(callback_redirect_uri(request.host_url))
+        authorization_url = handoff["authorization_url"]
+        _connection_repository().upsert(
+            kind=kind,
+            display_name=display_names[kind],
+            state=ConnectionState.PENDING,
+            granted_scopes=(),
+            last_successful_at=None,
+            retention_days=365 if kind == "gmail" else 90,
+        )
+    except Exception:
+        return _error(
+            "connection_unavailable",
+            "Connection setup could not start.",
+            "Try again without changing any existing connection.",
+            503,
+        )
+    return jsonify({"state": "pending", "authorization_url": authorization_url})
+
+
+@meridian_api.route("/connections/oauth/callback", methods=["GET", "POST"])
+def settings_connection_oauth_callback():
+    """Google OAuth redirect target: exchange code, persist token, mark connected.
+
+    Called by the browser after the owner authorizes in Google (received with
+    ?code&state&scope). Tokens are stored per-account in oauth_tokens; the
+    connection record is upserted as connected. Read-only scopes only.
+
+    NOT wrapped in @login_required: Google only redirects here after a real
+    grant for this app's client, and the single-use code is exchanged and the
+    token persisted server-side. Requiring an app session here wasted the
+    one-time authorization code whenever the callback arrived in a tab without
+    an app session (it 302'd to /login before exchange). The `state`/`kind`
+    check and Google's own validation gate this endpoint; it performs no
+    privileged financial action beyond storing an OAuth token.
+    """
+    kind_map = {"gmail": "gmail", "calendar": "calendar"}
+    kind = request.args.get("state", "").replace("-connect", "")
+    code = request.args.get("code", "")
+    if not code or kind not in kind_map:
+        return _error(
+            "invalid_oauth_callback",
+            "The OAuth callback was missing a code or kind.",
+            "Start the connection again and authorize in Google.",
+            400,
+        )
+    authorizer = current_app.config.get("MERIDIAN_CONNECTION_AUTHORIZERS", {}).get(kind)
+    if authorizer is None:
+        return _error(
+            "connection_unavailable",
+            "The connection provider is not configured.",
+            "Set GOOGLE_OAUTH_CLIENT_ID/SECRET for this app.",
+            503,
+        )
+    from meridian.connectors.calendar import READ_ONLY_CALENDAR_SCOPE
+    from meridian.connectors.email import READ_ONLY_GMAIL_SCOPE
+    from meridian.connectors.google_auth import (
+        GoogleOAuth2Client,
+        GoogleOAuthConfig,
+        GoogleOAuthConfigError,
+        OAuthTokenStore,
+        email_from_id_token,
+    )
+
+    scope = READ_ONLY_GMAIL_SCOPE if kind == "gmail" else READ_ONLY_CALENDAR_SCOPE
+    try:
+        from meridian.connectors.google_auth import callback_redirect_uri
+
+        client = GoogleOAuth2Client(GoogleOAuthConfig.from_env(), scopes=(scope,))
+        tokens = client.exchange(code, redirect_uri=callback_redirect_uri(request.host_url))
+    except GoogleOAuthConfigError as exc:
+        return _error("connection_unavailable", str(exc), "Configure the OAuth client and retry.", 503)
+    except Exception:  # noqa: BLE001 - exchange failure is endpoint-facing
+        return _error("oauth_exchange_failed", "Google did not accept the authorization.",
+                      "Try the connection again.", 502)
+    # The authorizing account is identified by the id_token email claim
+    # (granted via openid+email identity scopes); the connector's first
+    # successful read may later enrich the record, never orphan it.
+    account_email = (
+        email_from_id_token(tokens.get("id_token", ""))
+        or tokens.get("email")
+        or f"{kind}-account"
+    )
+    OAuthTokenStore(_repository().db_path).save(
+        kind=kind,
+        account_email=account_email,
+        access_token=tokens["access_token"],
+        refresh_token=tokens.get("refresh_token", ""),
+        expires_at=tokens.get("expires_at"),
+    )
+    _connection_repository().upsert(
+        kind=kind,
+        display_name="Gmail" if kind == "gmail" else "Google Calendar",
+        state=ConnectionState.CONNECTED,
+        granted_scopes=(scope,),
+        last_successful_at=_now_iso(),
+        retention_days=365 if kind == "gmail" else 90,
+    )
+    return jsonify({"state": "connected", "kind": kind, "account": account_email})
+
+
+@meridian_api.post("/connections/oauth/<kind>/<account_email>/revoke")
+@login_required
+def settings_connection_oauth_revoke(kind: str, account_email: str):
+    """R27: revoke ONE OAuth identity (token + ingestion cursor) without
+    touching other accounts of the same kind."""
+    if kind not in ("gmail", "calendar"):
+        return _error("invalid_request", "Unsupported connection kind.", "Choose Gmail or Calendar.", 400)
+    from meridian.connection_jobs import IngestionCursorStore
+
+    db_path = _repository().db_path
+    # Delete the token row for this identity.
+    import sqlite3
+
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "DELETE FROM oauth_tokens WHERE kind=? AND account_email=?",
+        (kind, account_email),
+    )
+    conn.commit()
+    conn.close()
+    IngestionCursorStore(db_path).revoke(kind=kind, account_email=account_email)
+    return jsonify({"state": "revoked", "kind": kind, "account": account_email})
+
+
+def _now_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+@meridian_api.post("/settings/connections/<public_id>/revoke")
+@login_required
+def settings_connection_revoke(public_id: str):
+    repository = _connection_repository()
+    record = repository.get(public_id)
+    if record is None:
+        return _error(
+            "connection_not_found",
+            "That connection is not available.",
+            "Return to Connections and choose an available source.",
+            404,
+        )
+    connector = current_app.config.get("MERIDIAN_CONNECTION_CONNECTORS", {}).get(
+        public_id
+    )
+    if connector is None:
+        return _error(
+            "connection_unavailable",
+            "The connection could not be revoked right now.",
+            "Try again after the provider reconnects.",
+            503,
+        )
+    try:
+        connector.revoke()
+        revoked = repository.revoke(public_id)
+    except Exception:
+        return _error(
+            "connection_unavailable",
+            "The connection could not be revoked right now.",
+            "No connection state was changed. Try again later.",
+            503,
+        )
+    return jsonify({"public_id": revoked.public_id, "state": revoked.state.value})
+
+
+@meridian_api.get("/settings/payday")
+@login_required
+@_safe_read
+def settings_payday():
+    from meridian.services.payday import build_payday_settings
+
+    graph, commitments, rules = _plan_repositories()
+    as_of_value = request.args.get("as_of")
+    try:
+        as_of = date.fromisoformat(as_of_value) if as_of_value else date.today()
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "as_of must be an ISO date (YYYY-MM-DD).",
+            "Use today's date or omit as_of.",
+            400,
+        )
+    return jsonify(build_payday_settings(graph, commitments, rules, as_of=as_of))
+
+
+@meridian_api.get("/activity")
+@login_required
+@_safe_read
+def activity():
+    mode = request.args.get("mode", "timeline")
+    if mode not in {"timeline", "review", "patterns"}:
+        return _error(
+            "invalid_request",
+            "mode must be timeline, review, or patterns.",
+            "Choose an Activity mode and try again.",
+            400,
+        )
+    if mode == "review":
+        repository = _repository()
+        account_labels = _account_labels(repository)
+        return jsonify(
+            {
+                "transactions": [
+                    _transaction_payload_with_suggestion(repository, item, account_labels)
+                    for item in get_review_queue(repository)
+                ],
+                "next_cursor": None,
+                "data_freshness": data_freshness(
+                    repository, include_all_connections=True
+                ),
+            }
+        )
+    if mode == "patterns":
+        repository = _repository()
+        return jsonify(
+            {
+                "patterns": get_patterns(repository),
+                "data_freshness": data_freshness(
+                    repository, include_all_connections=True
+                ),
+            }
+        )
+    limit_value = request.args.get("limit", "50")
+    try:
+        limit = _positive_int(limit_value)
+        if limit > 200:
+            raise ValueError
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "limit must be an integer between 1 and 200.",
+            "Use a limit between 1 and 200 and try again.",
+            400,
+        )
+    account_id_value = request.args.get("account_id")
+    try:
+        account_id = _positive_int(account_id_value) if account_id_value else None
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "account_id must be a positive integer.",
+            "Use a positive account_id and try again.",
+            400,
+        )
+
+    repository = _repository()
+    try:
+        page = get_activity(
+            repository,
+            limit=limit,
+            cursor=request.args.get("cursor"),
+            account_id=account_id,
+        )
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "The activity cursor is invalid.",
+            "Restart from the first Activity page and try again.",
+            400,
+        )
+    account_labels = _account_labels(repository)
+    return jsonify(
+        {
+            "transactions": [
+                _transaction_payload(transaction, account_labels)
+                for transaction in page["transactions"]
+            ],
+            "next_cursor": page["next_cursor"],
+            "data_freshness": page["data_freshness"],
+        }
+    )
+
+
+@meridian_api.get("/transactions/<transaction_id>")
+@login_required
+@_safe_read
+def transaction_detail(transaction_id: str):
+    try:
+        repository = _repository()
+        transaction = get_transaction(repository, _positive_int(transaction_id))
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "transaction_id must be a positive integer.",
+            "Choose a transaction from Activity and try again.",
+            400,
+        )
+    if transaction is None:
+        return _error(
+            "transaction_not_found",
+            "The requested transaction is not available.",
+            "Return to Activity and choose another transaction.",
+            404,
+            freshness=data_freshness(repository),
+        )
+    evidence_repository = _evidence_repository(repository)
+    evidence = [
+        payload
+        for link in evidence_repository.list_links_for_target(
+            "transaction", str(transaction.id)
+        )
+        if (payload := _evidence_payload(evidence_repository, link)) is not None
+    ]
+    return jsonify(
+        {
+            "transaction": _transaction_payload(
+                transaction, _account_labels(repository)
+            ),
+            "evidence": evidence,
+            "data_freshness": data_freshness(
+                repository,
+                transaction_ids=[transaction.id],
+            ),
+        }
+    )
+
+
+@meridian_api.get("/evidence/<evidence_id>/content")
+@login_required
+@_safe_read
+def evidence_content(evidence_id: str):
+    repository = _evidence_repository()
+    try:
+        item = repository.get_item(_positive_int(evidence_id))
+    except ValueError:
+        return _error(
+            "invalid_request",
+            "evidence_id must be a positive integer.",
+            "Open evidence from a Meridian record.",
+            400,
+        )
+    if item is None:
+        return _error(
+            "evidence_not_found",
+            "The evidence content is unavailable or has expired.",
+            "Return to the related Meridian record.",
+            404,
+        )
+    factory = current_app.config.get("MERIDIAN_EVIDENCE_BLOB_STORE_FACTORY")
+    if factory is None:
+        return _error(
+            "evidence_storage_unavailable",
+            "Evidence storage is not configured.",
+            "Configure the encrypted evidence store.",
+            503,
+        )
+    try:
+        content = factory().read(item.content_hash)
+    except Exception:  # noqa: BLE001 - a missing/undecryptable blob must not
+        # surface as a raw provider error; degrade to the evidence's cached facts.
+        return _error(
+            "evidence_content_missing",
+            "This document's content is not stored yet.",
+            "It was created before content was persisted; re-run the mail intake to backfill it.",
+            404,
+        )
+    # Render email HTML in a minimal, script-free viewer (so it reads like an
+    # email, not raw source) while never running its scripts. Plain text is
+    # shown escaped in a readable block.
+    text = content.decode("utf-8", errors="replace")
+    return Response(_evidence_viewer_html(text, item.title), mimetype="text/html")
+
+
+def _evidence_viewer_html(content: str, title: str | None) -> str:
+    """Wrap evidence content in a safe, readable viewer.
+
+    HTML content is embedded in a sandboxed iframe (no scripts, no remote
+    origin) so it renders but can never run code. Plain text is escaped and shown
+    in a `<pre>`. A header shows the subject/title and a way back to the app.
+    """
+    import html as _html
+
+    looks_html = "<" in content[:400] and (">" in content[:400])
+    if looks_html:
+        framed = f'<iframe sandbox srcdoc="{_html.escape(content, quote=True)}"></iframe>'
+    else:
+        framed = f"<pre>{_html.escape(content)}</pre>"
+    safe_title = _html.escape(title or "Evidence")
+    return f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{safe_title}</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; frame-src 'none'">
+<style>
+  :root {{ color-scheme: light dark; }}
+  body {{ margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; background:#14110d; color:#ece7de; }}
+  .bar {{ position:sticky; top:0; display:flex; align-items:center; gap:.75rem; padding:.75rem 1rem;
+          background:#1d1915; border-bottom:1px solid #332d25; }}
+  .bar h1 {{ margin:0; font-size:.9rem; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
+  .bar a {{ font-size:.8rem; color:#7fb0dc; text-decoration:none; }}
+  .content {{ padding:1rem; overflow-wrap:anywhere; }}
+  .content pre {{ margin:0; white-space:pre-wrap; font-family:ui-monospace,Menlo,monospace; font-size:.85rem; }}
+  iframe {{ border:0; width:100%; height:calc(100vh - 60px); background:transparent; }}
+</style></head>
+<body>
+  <div class="bar"><h1>{safe_title}</h1><a href="/meridian?workspace=plan">Back to Plan</a></div>
+  <div class="content">{framed}</div>
+</body></html>"""
+
+
+@meridian_api.get("/memory/<workspace>")
+@login_required
+@_safe_read
+def memory_workspace(workspace: str):
+    from meridian.services.memory import WORKSPACES, build_memory
+
+    if workspace not in WORKSPACES:
+        return _error(
+            "invalid_request",
+            f"Unknown memory workspace: {workspace}",
+            "Choose today, plan, activity, or accounts.",
+            404,
+        )
+    payload = build_memory(_repository().db_path, workspace)
+    return jsonify(payload)
+
+
+def _proposal_sink():
+    factory = current_app.config.get("MERIDIAN_PROPOSAL_SINK_FACTORY")
+    if factory is None:
+        return None
+    return factory()
+
+
+def _management_payload(action_type: str, params: dict):
+    sink = _proposal_sink()
+    if sink is None:
+        return _error(
+            "management_unavailable",
+            "Action proposals are not configured.",
+            "Start the application with the action pipeline enabled.",
+            503,
+        )
+    try:
+        proposal = sink(action_type, params)
+    except ValueError as error:
+        return _error("invalid_request", str(error), "Review the record and try again.", 400)
+    return jsonify({"proposal": {"id": proposal["id"], "state": proposal["state"]}}), 202
+
+
+@meridian_api.post("/assets")
+@login_required
+@_safe_read
+def create_asset_proposal():
+    payload = request.get_json(silent=True) or {}
+    if not payload.get("name") or not payload.get("category"):
+        return _error("invalid_request", "name and category are required.",
+                      "Provide both and try again.", 400)
+    return _management_payload("create_asset", payload)
+
+
+@meridian_api.patch("/assets/<asset_id>")
+@login_required
+@_safe_read
+def update_asset_proposal(asset_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        payload["record_id"] = _positive_int(asset_id)
+    except ValueError:
+        return _error("invalid_request", "asset_id must be a positive integer.",
+                      "Provide a valid asset id and try again.", 400)
+    return _management_payload("update_asset", payload)
+
+
+@meridian_api.delete("/assets/<asset_id>")
+@login_required
+@_safe_read
+def delete_asset_proposal(asset_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        payload["record_id"] = _positive_int(asset_id)
+    except ValueError:
+        return _error("invalid_request", "asset_id must be a positive integer.",
+                      "Provide a valid asset id and try again.", 400)
+    return _management_payload("delete_asset", payload)
+
+
+@meridian_api.post("/contracts")
+@login_required
+@_safe_read
+def create_contract_proposal():
+    payload = request.get_json(silent=True) or {}
+    if not payload.get("name") or not payload.get("kind"):
+        return _error("invalid_request", "name and kind are required.",
+                      "Provide both and try again.", 400)
+    return _management_payload("create_contract", payload)
+
+
+@meridian_api.patch("/contracts/<contract_id>")
+@login_required
+@_safe_read
+def update_contract_proposal(contract_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        payload["record_id"] = _positive_int(contract_id)
+    except ValueError:
+        return _error("invalid_request", "contract_id must be a positive integer.",
+                      "Provide a valid contract id and try again.", 400)
+    return _management_payload("update_contract", payload)
+
+
+@meridian_api.delete("/contracts/<contract_id>")
+@login_required
+@_safe_read
+def delete_contract_proposal(contract_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        payload["record_id"] = _positive_int(contract_id)
+    except ValueError:
+        return _error("invalid_request", "contract_id must be a positive integer.",
+                      "Provide a valid contract id and try again.", 400)
+    return _management_payload("delete_contract", payload)
+
+
+# ── Crew live-edit proposals ────────────────────────────────────────────────
+# Edits to a live Crew bill/rule create an approval-gated proposal; nothing
+# reaches Crew until the owner approves and the executor runs.
+
+@meridian_api.post("/crew/bills")
+@login_required
+@_safe_read
+def update_crew_bill_proposal():
+    """Propose a live Crew bill edit (approval-gated write-back)."""
+    payload = request.get_json(silent=True) or {}
+    if not payload.get("billId") or (not payload.get("name") and payload.get("amount") is None):
+        return _error("invalid_request", "Provide a billId and a name or amount to update.",
+                      "Provide at least one change and try again.", 400)
+    return _management_payload("update_crew_bill", payload)
+
+
+@meridian_api.patch("/crew/bills/<bill_id>/reserve-settings")
+@login_required
+@_safe_read
+def update_crew_bill_reserve_settings_proposal(bill_id: str):
+    """Propose a live Crew bill reserve/funding-settings edit."""
+    payload = request.get_json(silent=True) or {}
+    payload["billReserveId"] = payload.pop("billReserveId", None) or bill_id
+    return _management_payload("update_crew_bill_reserve_settings", payload)
+
+
+@meridian_api.post("/crew/rules")
+@login_required
+@_safe_read
+def create_crew_autopilot_rule_proposal():
+    """Propose a new live Crew autopilot rule (approval-gated write-back)."""
+    payload = request.get_json(silent=True) or {}
+    if not payload.get("name"):
+        return _error("invalid_request", "name is required.",
+                      "Provide a rule name and try again.", 400)
+    return _management_payload("create_crew_autopilot_rule", payload)
+
+
+@meridian_api.post("/transactions/<transaction_id>/classification")
+@login_required
+@_safe_read
+def correct_transaction_classification(transaction_id: str):
+    payload = request.get_json(silent=True) or {}
+    try:
+        repository = _repository()
+        transaction = repository.correct_classification(
+            _positive_int(transaction_id),
+            category=payload.get("category"),
+            kind=payload.get("kind"),
+            create_rule=payload.get("create_rule") is True,
+        )
+    except ValueError as error:
+        return _error(
+            "invalid_request", str(error), "Review the correction and try again.", 400
+        )
+    return jsonify(
+        {"classification": _transaction_payload(transaction)["classification"]}
+    )
+
+
+@meridian_api.post("/classifications/batch")
+@login_required
+@_safe_read
+def batch_correct_transaction_classifications():
+    payload = request.get_json(silent=True) or {}
+    transaction_ids = payload.get("transaction_ids")
+    if not isinstance(transaction_ids, list) or not transaction_ids:
+        return _error(
+            "invalid_request",
+            "transaction_ids is required.",
+            "Select transactions and try again.",
+            400,
+        )
+    repository = _repository()
+    corrected = []
+    try:
+        for transaction_id in transaction_ids:
+            corrected.append(
+                repository.correct_classification(
+                    _positive_int(str(transaction_id)),
+                    category=payload.get("category"),
+                    kind=payload.get("kind"),
+                    create_rule=False,
+                ).id
+            )
+    except ValueError as error:
+        return _error(
+            "invalid_request", str(error), "Review the batch and try again.", 400
+        )
+    return jsonify({"corrected_transaction_ids": corrected})
+
+
+@meridian_api.post("/advisor")
+@login_required
+@_safe_read
+def contextual_advisor():
+    payload = request.get_json(silent=True) or {}
+    context_payload = payload.get("context") or {}
+    question = payload.get("question")
+    factory = current_app.config.get("MERIDIAN_ADVISOR_FACTORY")
+    if factory is None:
+        return _error(
+            "advisor_unavailable",
+            "The contextual advisor is not configured.",
+            "Configure an AI provider and try again.",
+            503,
+        )
+    try:
+        if not isinstance(question, str) or not question.strip():
+            raise ValueError("question is required")
+        evidence_ids = context_payload.get("evidence_ids") or []
+        if not isinstance(evidence_ids, list) or not all(
+            isinstance(item, str) for item in evidence_ids
+        ):
+            raise ValueError("evidence_ids must be a list of strings")
+        context = AdvisorContext(
+            kind=context_payload.get("kind"),
+            object_id=context_payload.get("object_id"),
+            evidence_ids=tuple(evidence_ids),
+        )
+        result = factory().ask(context, question.strip())
+    except ValueError as error:
+        return _error(
+            "invalid_request",
+            str(error),
+            "Choose a supported Meridian object and try again.",
+            400,
+        )
+    return jsonify(result)
+
+
+
+def _trial_repository():
+    factory = current_app.config.get("MERIDIAN_TRIALS_FACTORY")
+    return factory() if factory else TrialRepository(_repository().db_path)
+
+
+@meridian_api.get("/trials")
+@login_required
+def list_trials():
+    include_canceled = request.args.get("include_canceled", "false").lower() == "true"
+    return jsonify({"trials": [trial.as_dict() for trial in _trial_repository().list(include_canceled=include_canceled)]})
+
+
+@meridian_api.post("/trials")
+@login_required
+def create_trial():
+    payload = request.get_json(silent=True) or {}
+    try:
+        trial = _trial_repository().create(**payload)
+    except (TypeError, ValueError) as error:
+        return _error("invalid_request", str(error), "Provide complete, accurate trial terms.", 400)
+    return jsonify({"trial": trial.as_dict()}), 201
+
+
+@meridian_api.post("/trials/capture")
+@login_required
+def capture_trial_terms():
+    payload = request.get_json(silent=True) or {}
+    try:
+        trial = capture_trial(_trial_repository(), payload)
+    except (TypeError, ValueError) as error:
+        return _error("invalid_capture", str(error), "Capture explicit merchant trial dates before saving.", 400)
+    return jsonify({"trial": trial.as_dict(), "captured": True}), 201
+
+
+@meridian_api.get("/trials/deadlines")
+@login_required
+def list_trial_deadlines():
+    include_overdue = request.args.get("include_overdue", "true").lower() == "true"
+    deadlines = upcoming_deadlines(
+        _trial_repository().list(), include_overdue=include_overdue
+    )
+    return jsonify({"deadlines": deadlines, "read_only": True})
+
+
+@meridian_api.get("/trials/<int:trial_id>")
+@login_required
+def get_trial(trial_id: int):
+    trial = _trial_repository().get(trial_id)
+    if trial is None:
+        return _error("not_found", "Trial not found.", "Refresh the trial list.", 404)
+    return jsonify({"trial": trial.as_dict()})
+
+
+@meridian_api.patch("/trials/<int:trial_id>")
+@login_required
+def update_trial(trial_id: int):
+    payload = request.get_json(silent=True) or {}
+    try:
+        trial = _trial_repository().update(trial_id, **payload)
+    except KeyError:
+        return _error("not_found", "Trial not found.", "Refresh the trial list.", 404)
+    except (TypeError, ValueError) as error:
+        return _error("invalid_request", str(error), "Provide valid trial terms.", 400)
+    return jsonify({"trial": trial.as_dict()})
+
+
+
+def _cancellation_repository():
+    factory = current_app.config.get("MERIDIAN_CANCELLATION_FACTORY")
+    return factory() if factory else CancellationRepository(_repository().db_path)
+
+
+def _trial_notification_repository():
+    factory = current_app.config.get("MERIDIAN_TRIAL_NOTIFICATIONS_FACTORY")
+    return factory() if factory else TrialNotificationRepository(_repository().db_path)
+
+
+@meridian_api.get("/trials/notifications")
+@login_required
+def list_trial_notifications():
+    status = request.args.get("status")
+    try:
+        notifications = _trial_notification_repository().list(status=status)
+    except ValueError as error:
+        return _error("invalid_request", str(error), "Use pending, sent, or dismissed.", 400)
+    payloads = []
+    for notification in notifications:
+        trial = _trial_repository().get(notification.trial_id)
+        if trial is not None:
+            payloads.append(build_trial_reminder_payload(notification, service=trial.service).as_dict())
+    return jsonify({"notifications": [notification.__dict__ for notification in notifications], "payloads": payloads})
+
+
+@meridian_api.post("/trials/notifications/materialize")
+@login_required
+def materialize_trial_notifications():
+    notifications = _trial_notification_repository().materialize_due()
+    return jsonify({"notifications": [notification.__dict__ for notification in notifications], "sent": False})
+
+
+@meridian_api.post("/trials/notifications/<int:notification_id>/mark-sent")
+@login_required
+def mark_trial_notification_sent(notification_id: int):
+    try:
+        notification = _trial_notification_repository().mark_sent(notification_id)
+    except KeyError:
+        return _error("not_found", "Trial notification not found or already handled.", "Refresh notifications.", 404)
+    return jsonify({"notification": notification.__dict__})
+
+
+@meridian_api.get("/trials/<int:trial_id>/escalation-plan")
+@login_required
+def get_escalation_plan(trial_id: int):
+    trial = _trial_repository().get(trial_id)
+    if trial is None:
+        return _error("not_found", "Trial not found.", "Refresh the trial list.", 404)
+    actions = _cancellation_repository().list_for_trial(trial_id)
+    plan = build_escalation_plan(trial, actions)
+    return jsonify({"plan": plan})
+
+
+@meridian_api.get("/trials/<int:trial_id>/cancellation-brief")
+@login_required
+def get_cancellation_brief(trial_id: int):
+    trial = _trial_repository().get(trial_id)
+    if trial is None:
+        return _error("not_found", "Trial not found.", "Refresh the trial list.", 404)
+    actions = _cancellation_repository().list_for_trial(trial_id)
+    brief = build_cancellation_brief(
+        trial, existing_channels=(action.channel for action in actions)
+    )
+    return jsonify({"brief": brief, "read_only": True})
+
+
+@meridian_api.get("/trials/<int:trial_id>/cancellation-actions")
+@login_required
+def list_cancellation_actions(trial_id: int):
+    return jsonify({"actions": [action.as_dict() for action in _cancellation_repository().list_for_trial(trial_id)]})
+
+
+@meridian_api.post("/trials/<int:trial_id>/cancellation-actions")
+@login_required
+def create_cancellation_action(trial_id: int):
+    payload = request.get_json(silent=True) or {}
+    try:
+        action = _cancellation_repository().create(trial_id, payload.get("channel"), notes=payload.get("notes"))
+    except ValueError as error:
+        return _error("invalid_request", str(error), "Choose a cancellation channel.", 400)
+    return jsonify({"action": action.as_dict()}), 201
+
+
+@meridian_api.get("/cancellation-actions/<int:action_id>/evidence")
+@login_required
+def list_cancellation_evidence(action_id: int):
+    try:
+        evidence = _cancellation_repository().list_evidence(action_id)
+    except KeyError:
+        return _error("not_found", "Cancellation action not found.", "Refresh the trial.", 404)
+    return jsonify({"evidence": evidence})
+
+
+@meridian_api.post("/cancellation-actions/<int:action_id>/evidence")
+@login_required
+def attach_cancellation_evidence(action_id: int):
+    payload = request.get_json(silent=True) or {}
+    try:
+        evidence = _cancellation_repository().attach_evidence(
+            action_id, int(payload.get("evidence_id")),
+            relation=payload.get("relation", "supports"),
+            provenance=payload.get("provenance", "owner"),
+        )
+    except KeyError:
+        return _error("not_found", "Cancellation action not found.", "Refresh the trial.", 404)
+    except (TypeError, ValueError) as error:
+        return _error("invalid_request", str(error), "Provide an accessible evidence id.", 400)
+    return jsonify({"evidence": evidence}), 201
+
+
+@meridian_api.post("/cancellation-actions/<int:action_id>/approval-check")
+@login_required
+def check_cancellation_approval(action_id: int):
+    payload = request.get_json(silent=True) or {}
+    action = _cancellation_repository().get(action_id)
+    if action is None:
+        return _error("not_found", "Cancellation action not found.", "Refresh the trial.", 404)
+    try:
+        decision = evaluate_submission(
+            action, owner_approved=bool(payload.get("owner_approved")),
+            known_recipe=bool(payload.get("known_recipe")),
+            confidence=float(payload.get("confidence", 0)),
+            allowlisted=bool(payload.get("allowlisted")),
+            essential=bool(payload.get("essential")),
+            multi_operation=bool(payload.get("multi_operation")),
+        )
+    except (TypeError, ValueError) as error:
+        return _error("invalid_request", str(error), "Provide a valid approval context.", 400)
+    return jsonify({"decision": decision.__dict__, "submit": False})
+
+
+@meridian_api.post("/cancellation-actions/<int:action_id>/transition")
+@login_required
+def transition_cancellation_action(action_id: int):
+    payload = request.get_json(silent=True) or {}
+    try:
+        target = CancellationState(payload.get("state"))
+        signals = {VerificationSignal(value) for value in payload.get("signals", [])}
+        action = _cancellation_repository().transition(
+            action_id,
+            target,
+            signals=signals,
+            confirmation_reference=payload.get("confirmation_reference"),
+            artifact_ids=payload.get("artifact_ids"),
+            notes=payload.get("notes"),
+        )
+    except KeyError:
+        return _error("not_found", "Cancellation action not found.", "Refresh the trial.", 404)
+    except (TypeError, ValueError) as error:
+        return _error("invalid_transition", str(error), "Use the next permitted workflow state and include evidence.", 400)
+    return jsonify({"action": action.as_dict()})
+
+
+@meridian_api.get("/crew/mutations-status")
+@login_required
+def crew_mutations_status():
+    """Read-only view of the verified Crew mutation catalog + capture status.
+
+    Serves docs/project/crew_mutations.json (built by scripts/build_crew_catalog.py
+    from the mitm capture archive + the documented contract set) and reports how
+    many mutations are captured vs missing, so "capture in totality" is measurable.
+    Read-only; never triggers a live Crew write.
+    """
+    import json
+    from pathlib import Path
+
+    # Resolve docs/project/crew_mutations.json robustly regardless of where the
+    # repo is mounted (walk up from root_path / this module until found).
+    candidates = [
+        Path(current_app.root_path),
+        Path(current_app.root_path).parent,
+        Path(__file__).resolve().parents[1],
+    ]
+    catalog_path = None
+    for base in candidates:
+        p = base / "docs" / "project" / "crew_mutations.json"
+        if p.exists():
+            catalog_path = p
+            break
+    if catalog_path is None:
+        return jsonify({"success": False, "error": "catalog_unavailable"}), 404
+    try:
+        payload = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except Exception:
+        return jsonify({"success": False, "error": "catalog_unreadable"}), 500
+    return jsonify(payload)

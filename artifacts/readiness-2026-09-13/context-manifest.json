@@ -1,0 +1,1999 @@
+{
+  "source_sha": "70fef6446d8cbcbbdac435ac522e349f01ee6dfb",
+  "context_dir": "/var/folders/bx/d29gvxlj3531yrq_hv4wf3180000gn/T/meridian-readiness-context-1okoi8oq",
+  "files": [
+    {
+      "path": "Dockerfile",
+      "sha256": "65ae0121c7b351782b7d0731bc2ec99373eb3e04a4b16e87704b894ce1e5f5a5"
+    },
+    {
+      "path": "app.py",
+      "sha256": "65b455ef641b609b942ef42acbd33d76a47e314bc35eb0f81c41c7bda3dbbf8b"
+    },
+    {
+      "path": "assistant.py",
+      "sha256": "f20ec6922ff1b53d8d513d58d70d89a112fe543c0e049f55fbcdaa3988a4afe2"
+    },
+    {
+      "path": "crew/__init__.py",
+      "sha256": "60b1bd42e26d399a542b5c6845c7d98fb52d0cebccbc6a356f558f6f06fcb5ae"
+    },
+    {
+      "path": "crew/actions.py",
+      "sha256": "c3a25550ef6ebbebecaad92072561c3f55dbc9aebec8d8b04b093ffe20f2a178"
+    },
+    {
+      "path": "crew/advisor.py",
+      "sha256": "9762f7ffd004bfee12d1b52d38c96ee0c892b6d716ec23ec92090f1fa0d6367f"
+    },
+    {
+      "path": "crew/assistant.py",
+      "sha256": "f9a3f65c6d7d4aa193e5f364d6add281ee57fe3963fd5b54108cfffa7004b579"
+    },
+    {
+      "path": "crew/beacon.py",
+      "sha256": "87c26a62af7e544fed8984ce50b2e32ce1e7a4e7d236d0b5d10c364f5a0fdb31"
+    },
+    {
+      "path": "crew/broker.py",
+      "sha256": "8531d79f88c7cc64ee7be7366b3530bd8212ffac390d5f3648efe77d073178f1"
+    },
+    {
+      "path": "crew/browser_capture.py",
+      "sha256": "c9400533fb969dd841fed1d09e302107a4fd58dd53d24299e783ab35b053ffee"
+    },
+    {
+      "path": "crew/client.py",
+      "sha256": "705f3fadb438261933b51d1a19449fe0d2dbc1ed66c379553958bdb8d8abf0c1"
+    },
+    {
+      "path": "crew/credentials.py",
+      "sha256": "e3ae1ffbbdec437c5038d482c397cf53b560588fa06af57b9984c518dc164272"
+    },
+    {
+      "path": "crew/executors.py",
+      "sha256": "0d4a9e6a6674195938559609b699943e1796df61549abe02b52ac3b9bd5784e6"
+    },
+    {
+      "path": "crew/health.py",
+      "sha256": "0dc3ced0cbdb70c3f9581c68f137adb23a755c2ba03874b43d24a0a65c3db551"
+    },
+    {
+      "path": "crew/mac_secrets.py",
+      "sha256": "252f445062423dbf6ed5fac7dad125852ead26ea15e6d3f9a877ee7fd2efe218"
+    },
+    {
+      "path": "crew/operations.py",
+      "sha256": "bfde34065616bb5e75d4240f95b85e296a5a2ed1e55a009ee000e24d9fd563a6"
+    },
+    {
+      "path": "crew/proposals.py",
+      "sha256": "595061e20d03595846281d4fd9ec40f84cbfc202d6eed55667ebb90230a78c98"
+    },
+    {
+      "path": "crew/propose_key.py",
+      "sha256": "0b48eeb6a13cdc37ca9f6aa153cc2592fc001648e9ef45a2ab49f54c42e9bf38"
+    },
+    {
+      "path": "crew/renewal.py",
+      "sha256": "c0a643e38f6f7dab685b31271a8c0270f9c34a1882f82a9fa330d4ce6f7dbded"
+    },
+    {
+      "path": "crew/session_credentials.py",
+      "sha256": "90157e58d15dd6bb9bc55cc9ca242668017a4f6fc6996efbeda300fe19e9dc5c"
+    },
+    {
+      "path": "crew/transports.py",
+      "sha256": "ee1e69595aa8fe82281e9ea1ffd9cf36d1c40143e0a2fd5fa5e01855417e72c8"
+    },
+    {
+      "path": "crew_broker.py",
+      "sha256": "797b5078a049df9b0a71d296978ea358b1b0fbe0e17813c47566e3dae443d06e"
+    },
+    {
+      "path": "docs/ASSISTANT.md",
+      "sha256": "e0b09bb02a4f9918bca9cfd860259fa3ab3e99115c5798152ed039c0495b0671"
+    },
+    {
+      "path": "docs/MERIDIAN_MIGRATION.md",
+      "sha256": "b619b6d651cb551fcad70db8cfe23a2e324cdb754ed2d51950f52a3e901977e9"
+    },
+    {
+      "path": "docs/REMOTE_ACCESS.md",
+      "sha256": "d826d8913c9641d6132f702ae0c1c02a5617c837051f2c72a190f4ca69a5880a"
+    },
+    {
+      "path": "docs/design-audits/2026-08-30-meridian-atlas-fidelity-audit.md",
+      "sha256": "308ea09dc66f5ff1f7ccf8c14bc50496e8bcac4d5f2e13dfbb90555db272118c"
+    },
+    {
+      "path": "docs/designs/2026-08-25-action-pipeline.md",
+      "sha256": "b11106cab906534b3546081fa98c90ea1e67f165a1423d89bb6e4d55e32e50b4"
+    },
+    {
+      "path": "docs/designs/2026-08-25-action-proposer.md",
+      "sha256": "0c969b3c4d23449d954fae7a6ffc660cf7eabb355a0924edf079c9319b3dafd8"
+    },
+    {
+      "path": "docs/designs/2026-08-25-ai-advisor.md",
+      "sha256": "058fb76c7ff82d4f000e42a12c662e305c8eec074c57c91e1a69354f9396d0e7"
+    },
+    {
+      "path": "docs/designs/2026-08-25-guided-credential-renewal.md",
+      "sha256": "6b00bb3feb238ffbe6d1b185f96ddc6bce7965c5c2b201912dfc2ae321b02d64"
+    },
+    {
+      "path": "docs/meridian-ip-and-commercialization-brief.md",
+      "sha256": "e437ef400e0fed099e32edf08c11a622cdfd1a207bb3ed6d2e8bd5139309b5c3"
+    },
+    {
+      "path": "docs/meridian-project-memory.md",
+      "sha256": "a656e830b274f2d0aeb639a94740bacf34599447fee42d5b74b361bb63fe9a91"
+    },
+    {
+      "path": "docs/project/AGENT_COORDINATION.md",
+      "sha256": "e57cfb38261cd9a2b89c859f6a3ad1d6ce2efb5b0137f0922d5a9256a9f97a31"
+    },
+    {
+      "path": "docs/project/ASTRA_GAMEPLAN_PROMPT.md",
+      "sha256": "93958dfda123070923bbd8254d4d94ea7810193c22983fb053e357e3c803fb2d"
+    },
+    {
+      "path": "docs/project/BILLER_CAPABILITIES.md",
+      "sha256": "4dfd97727d230b1f8b0e672921707704f16426f5c1bc6e61c4a155c764eb11c4"
+    },
+    {
+      "path": "docs/project/CODEX_CLI_HANDOFF.md",
+      "sha256": "e2c3b31f8132f5c5cada9239e839a400367708190a6b1390cef170b062a55584"
+    },
+    {
+      "path": "docs/project/CONSTITUTIONAL_BUILDER_REVIEW_2026-09-12.md",
+      "sha256": "6c4302a251bae777aa8179e1977eb636b8e8a3650804fa318be97714320e33bb"
+    },
+    {
+      "path": "docs/project/CREW_GRAPHQL_CATALOG.md",
+      "sha256": "441c9554cbe38e9f728880eea071795efc720079a212e0280e5693d48e6185cc"
+    },
+    {
+      "path": "docs/project/CREW_SESSION_BROKER_CLI_HANDOFF.md",
+      "sha256": "bd30e933054e0ad671b0026adefac17b054aa2a219bc1749c57bf52c81f7e9aa"
+    },
+    {
+      "path": "docs/project/CURRENT_STATUS.md",
+      "sha256": "80f9cae725b4ed79394b2812495264eff7b0bb6f72e6cb05f088aff10b83d273"
+    },
+    {
+      "path": "docs/project/DIAL_ALIGNMENT_FIX_2026-09-12.md",
+      "sha256": "f923d53650e03c708d3b9fb91f5afec26b49fbe184b00fca0b137de02cd72e6d"
+    },
+    {
+      "path": "docs/project/MERIDIAN_DECISIONS.md",
+      "sha256": "b3002bf28a4a6b2ccb163b9afac112496a9d2f89d13f8e27f77440aa3c69e187"
+    },
+    {
+      "path": "docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md",
+      "sha256": "cded1da72ae49dee3ccfc3e796640c690fbe9e03f72ebd5d511c480c20f741ce"
+    },
+    {
+      "path": "docs/project/MERIDIAN_INITIAL_BUILDER_PROMPT.md",
+      "sha256": "2e5836b00c8de69435a5527058a57a400f20ea66b93d21691c833331709863f5"
+    },
+    {
+      "path": "docs/project/MERIDIAN_OS_ARCHITECTURE.md",
+      "sha256": "91e078787019834ff3451f2456f2c58ccb68d03b3f0c54642abea993b8e77cef"
+    },
+    {
+      "path": "docs/project/MERIDIAN_OS_ROADMAP.md",
+      "sha256": "2a90bfbd975398a66a615dc38d6811789d78e06f972988230ddd88a28590d084"
+    },
+    {
+      "path": "docs/project/MERIDIAN_OS_TASKS.json",
+      "sha256": "eed2ce59ad2c0a7d7c55f0d68dac5e5c4b7e33b68d61146fe96f39fc75828091"
+    },
+    {
+      "path": "docs/project/MERIDIAN_ROADMAP.md",
+      "sha256": "7b6361fedbe374843d851e8c4284ebd865684599f769118d89cad7aa8707a164"
+    },
+    {
+      "path": "docs/project/MERIDIAN_ROADMAP_COMPARISON_PROTOCOL.md",
+      "sha256": "272c916dba4d1616ade9c1f64cb233a02487033ae2fb3c45dbe68df8239ab739"
+    },
+    {
+      "path": "docs/project/MERIDIAN_SECOND_ROADMAP_REVIEW_2026-09-11.md",
+      "sha256": "e1a8f81e0cf592bf760061ead612446d74ced154776edc394d9cdb30a1a417fd"
+    },
+    {
+      "path": "docs/project/MERIDIAN_VISION_ROADMAP.md",
+      "sha256": "a51d7c12526dfb71b2bd3178cf7f3149d73818089a12bb47760e17c7ceffd7e1"
+    },
+    {
+      "path": "docs/project/MERIDIAN_VISUAL_CAPTURE_SPEC.md",
+      "sha256": "5b893e1b4af7a3b65a57c5da3e5aed1a980cf508a2996e6cddf84e8f2e62b6e4"
+    },
+    {
+      "path": "docs/project/OBSERVATORY_DIAL_HANDOFF_2026-09-09.md",
+      "sha256": "6f550d6b204da187303009441a97fe17dbe922de3659aa908a226c544ad61769"
+    },
+    {
+      "path": "docs/project/OBSERVATORY_REFINEMENT_2026-09-12.md",
+      "sha256": "0dc2d1b2d9ca0cb2edb52d03c58180390080d4c2a873323e54fda8841073d0e6"
+    },
+    {
+      "path": "docs/project/PRESET_GUARDRAIL_IMPLEMENTATION.md",
+      "sha256": "0eb6391a49833fdbbb4a7bffb75661fce20244c4d2ad8d74b201937ad6704e58"
+    },
+    {
+      "path": "docs/project/PRIVATE_RELEASE_ACCEPTANCE.md",
+      "sha256": "4a6f6bbf559b1026ff3db7a7da802c4aa2e0439d23bdd08d58bdfd02001f6d00"
+    },
+    {
+      "path": "docs/project/PROJECT_INSTRUCTIONS.md",
+      "sha256": "2d236b275f9423c2e0337591bcbafc7b2a94113d131c58b721d9059e5e13274c"
+    },
+    {
+      "path": "docs/project/README.md",
+      "sha256": "e817d36e5b4fc1057e446c09f1fa6d7ea894204b75c918a2c37a82d7354135e4"
+    },
+    {
+      "path": "docs/project/ROTATION_REASONING_EFFORT_HANDOFF.md",
+      "sha256": "8ddefc0b482ece92c51b55c928ddbb707a1029f991897f28f9087c43f22eb0b8"
+    },
+    {
+      "path": "docs/project/TRIAL_CANCELER_HANDOFF.md",
+      "sha256": "671aaca6e5ff4a709b7275f7704520ccd62bc663bc25796f1b31703a7451f29c"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-26-meridian-model-and-token-strategy.md",
+      "sha256": "29ed100675975302395eea23f7b1c528b11d016813fdd59c796bb92da6a930b7"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-26-meridian-overhaul-implementation.md",
+      "sha256": "532c0c758dc5949b0fc5442da9291d271fbc6f8a6cfff9267973085572e2b471"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-28-crew-session-broker.md",
+      "sha256": "313412fb9a762b0a27413b070f9acdc3e4cbf7f546d311d5ec276d8c47820478"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-30-meridian-visual-recovery.md",
+      "sha256": "ed0be920b5dba2892a87c92635c9382717f01d00bf42564d2dc4782a082cb58e"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-31-meridian-payday-funding.md",
+      "sha256": "89ca0efd32654fa877dff7c005735e4e33d0ab98d2c98edf6cd51a225c6ef6ec"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-31-meridian-settings-connections.md",
+      "sha256": "b89392f1115f9d901ba915a965cfc12567a60c5a2b0e987faddb5a47f7fd2958"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-31-task26-evidence-memory.md",
+      "sha256": "1d8f91addf630281acbc4dc53c029402fff536e97e525cba56c1bfcc2cafa462"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-26-meridian-product-overhaul-design.md",
+      "sha256": "0446332dd26fd8935b95d9f7432a5b82bddd1e6aec5e8a46bc49b2236840be90"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-28-crew-session-broker-design.md",
+      "sha256": "164a54c41692a036cdac16ed8ca743e40a7b22c05bc7b1caebece64dd9b7a2dc"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-31-meridian-settings-connections-design.md",
+      "sha256": "1a4fecd1b8620621d7c45204df6926d9ba7a4c5b234c097f1f68a7f146ef4387"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-31-task26-evidence-memory-design.md",
+      "sha256": "d53d2b67c902370b479d4375bb4bf784d6478c1b8c69560c11a653c1384b1d37"
+    },
+    {
+      "path": "gunicorn.conf.py",
+      "sha256": "bae34b015f013fb6b8a767bc2d33b97bbc932c20675e31fdc841d41a34fdd94b"
+    },
+    {
+      "path": "meridian/__init__.py",
+      "sha256": "dcec577ce153ff2d32eff3b5a2cc8cd57d08ad5e9279ffd7e45493537166088d"
+    },
+    {
+      "path": "meridian/ai/__init__.py",
+      "sha256": "74cdff9802f51859682333f5faf0a3c238dc9cd7a419391b5ff22f2799dbef71"
+    },
+    {
+      "path": "meridian/ai/advisor.py",
+      "sha256": "72eb52a54d1d859fbfe91ade5f7015975021e1886c3e71735e5abe668c75da9a"
+    },
+    {
+      "path": "meridian/ai/classifier.py",
+      "sha256": "8aab166bb9ee3932bef97fea918f87619a0986b751e8f3d69e2e1b5e3a349088"
+    },
+    {
+      "path": "meridian/api.py",
+      "sha256": "19799848226c532157e13351562ca12a449cec7fa73191b0224b68b2b8fd917d"
+    },
+    {
+      "path": "meridian/assets.py",
+      "sha256": "33ce41aa5f88d829b3cca707015de0c3d7e8d1300d6ff23f53a408cc9a403fca"
+    },
+    {
+      "path": "meridian/beacon.py",
+      "sha256": "924155b509dc64f418b78ac3fc841d6b89a07405ad0c073cec8492659592bc8b"
+    },
+    {
+      "path": "meridian/billers.py",
+      "sha256": "3b07d8453d3b5293a463145c0cc58adb4326c337c67428846d4a01dd58d2432a"
+    },
+    {
+      "path": "meridian/cancellation/__init__.py",
+      "sha256": "12609a61c184425fa575b1e5c704fa2b485abd4dd3d6cb82454f85cd70b6a6d7"
+    },
+    {
+      "path": "meridian/cancellation/adapters.py",
+      "sha256": "a3f5f1497e76aabd967916867c07b6e8f45f739c4d9cab344e11511468ddc829"
+    },
+    {
+      "path": "meridian/cancellation/approval.py",
+      "sha256": "dcab84c6dd024b3ebe61546cd5db370465a46540e19dbfc681d36fb61cb3b0fd"
+    },
+    {
+      "path": "meridian/cancellation/brief.py",
+      "sha256": "7050182a49a1abd4640f63d3f88f7e6e90518f4725545f5bcfc2eea5da40e994"
+    },
+    {
+      "path": "meridian/cancellation/capture.py",
+      "sha256": "643f047c5ef9e48839933e2515267078acbc3dd6b9db81fabc77de3a85bd76d1"
+    },
+    {
+      "path": "meridian/cancellation/deadlines.py",
+      "sha256": "bb66aa5d2be30edede0b5454ac4f65644c5ed5ac7b101a9df2f82f4ee1ea4fee"
+    },
+    {
+      "path": "meridian/cancellation/escalation.py",
+      "sha256": "fa8baf08bcb239a78dfd5ed8c8418c0131cdad1e8f5ece218d43232ef52a9fed"
+    },
+    {
+      "path": "meridian/cancellation/executor.py",
+      "sha256": "d6bae3a028dee7b8363ae3f8be45d205871a6ca55e0c5acbf916d923e5ae70c1"
+    },
+    {
+      "path": "meridian/cancellation/notification_payload.py",
+      "sha256": "e0279609a696d30f74edb3587a201a3cafbc1042daa91f874d5d169667509305"
+    },
+    {
+      "path": "meridian/cancellation/notifications.py",
+      "sha256": "56bd2a84fba00cc9938ca99a933e0d8ab5d3a35c46f5682a2612dcc2da4ad1b0"
+    },
+    {
+      "path": "meridian/cancellation/recipes/__init__.py",
+      "sha256": "a2ba75cfaceddcdc1ec457d1f88e26c90ae793724b24f95c4b0e63fe5e8153f4"
+    },
+    {
+      "path": "meridian/cancellation/recipes/catalog.py",
+      "sha256": "7b91a0211e68710e66f3c77ab98dbafac6bfef3a9e0b28022be82dfcdee9df55"
+    },
+    {
+      "path": "meridian/cancellation/reconcile.py",
+      "sha256": "439e9ab1acd9293816aa70da6ed01c669d1fdd534b708c8c6a3a0b6a2d4538a6"
+    },
+    {
+      "path": "meridian/cancellation/replay.py",
+      "sha256": "13ce5c18cb2c02f18d46c7836d923f29a5736ff489cba19d65a9a74d9232cd5f"
+    },
+    {
+      "path": "meridian/cancellation/repository.py",
+      "sha256": "f177bee70fb133392c3506dbd65ba5d7aedd79929b30f0a057946011487085fa"
+    },
+    {
+      "path": "meridian/cancellation/scheduler.py",
+      "sha256": "fc5cc77ae89c22367d77278041d0bc20a67e654d0a34c652e091d70031658289"
+    },
+    {
+      "path": "meridian/cancellation/workflow.py",
+      "sha256": "500530a7dca127eca054607f05d74f364e3550ca3d2e7967a2443c0808caf6ce"
+    },
+    {
+      "path": "meridian/classify.py",
+      "sha256": "2f8eb2b389c8cdf3836a13a72514472be7c72640e92253ec4c59e43015d9a52f"
+    },
+    {
+      "path": "meridian/commitments.py",
+      "sha256": "555262ca71c5aee22927baea5b1497f00dbbe026f34cd623c1a17edfdac492a6"
+    },
+    {
+      "path": "meridian/connection_jobs.py",
+      "sha256": "be30409d6e5eddddb54fa97d70e796cbf45741e7390ad4044dfcc5a3148e71d8"
+    },
+    {
+      "path": "meridian/connections.py",
+      "sha256": "4b16517c83bb9ab65fa37a9014b01f18e363177f2c2bf99eca2a72edc6b1b921"
+    },
+    {
+      "path": "meridian/connectors/__init__.py",
+      "sha256": "b017e3b72c96e8eeb9b51b6d32e0d27f6caebee72fcb5af360de6567b3e91613"
+    },
+    {
+      "path": "meridian/connectors/calendar.py",
+      "sha256": "b2cb9a5e3c25dcfea2789d2a44533f21029797e4fc5b4141dc4adbc89d2dc807"
+    },
+    {
+      "path": "meridian/connectors/email.py",
+      "sha256": "edba3f84ecda82a4afea268eb6aaa0254aea8640bbb528d41ff9ffbddba7c5a5"
+    },
+    {
+      "path": "meridian/connectors/gmail_read.py",
+      "sha256": "093991e63d8b028d030389cf76ccf0445fa078d51bb301b9e617f5b9f07f1e0d"
+    },
+    {
+      "path": "meridian/connectors/google_auth.py",
+      "sha256": "6869c267413e32fbe64583acc0cb21b80931c05627c2de3fdd24c9d7eb43b593"
+    },
+    {
+      "path": "meridian/connectors/icloud_mail.py",
+      "sha256": "4e23fa1d29b7f2c689fb39bb8ca40f25261eaea73b830ece88f1794f7cab0911"
+    },
+    {
+      "path": "meridian/context.py",
+      "sha256": "42b323e7c4277ab33496772660b47ddd29bec5556fe611164c8a51425428d81b"
+    },
+    {
+      "path": "meridian/contracts.py",
+      "sha256": "531f42947e80d25104866ed5b84e31a1310c595c2eb5fac2d1e30e6f08d6f9a9"
+    },
+    {
+      "path": "meridian/crew_commands.py",
+      "sha256": "fa9076ad725c2f501514cee604b50862e216aedd4394610cdca2bf3d9a3291a4"
+    },
+    {
+      "path": "meridian/crew_write.py",
+      "sha256": "18f3d1501fef4be17249a2cbe29309fa2abb63dca4ef8f97a92e768bc7fe4028"
+    },
+    {
+      "path": "meridian/crew_write_actions.py",
+      "sha256": "de5825f9ac71c93483547dd8d463f314d0c3f031c55b1b077dce40c94fe1b19a"
+    },
+    {
+      "path": "meridian/db.py",
+      "sha256": "73bc127cb92691493b8c61179c9e833e3264cf81f650f32897b30787aacfa6d4"
+    },
+    {
+      "path": "meridian/deposit_discovery.py",
+      "sha256": "59774832650dbe506d6ce9121b6755952d555f7ba29fa9ae934499a05ca90d34"
+    },
+    {
+      "path": "meridian/documents/__init__.py",
+      "sha256": "26f2eef8202cae758f6d76ad7472d1334bf83ff63ceb1154b3647f4bcce0c57d"
+    },
+    {
+      "path": "meridian/documents/extract.py",
+      "sha256": "f5bdeafabc701a7e8798ce48208e10c715b768beee44712082a2bc36ebfc7e2a"
+    },
+    {
+      "path": "meridian/documents/reconcile.py",
+      "sha256": "d3c2cc88ab106192ceffefbedaad19d7af5ca01efbabeb3f2fe2d5ef5f0e1c18"
+    },
+    {
+      "path": "meridian/documents/safety.py",
+      "sha256": "19f2eeea9cd0965483043ce7d804a60124d897084edca72ea6ede80a450f6774"
+    },
+    {
+      "path": "meridian/evidence.py",
+      "sha256": "4fa08c08b5873ee8a058c4127ca428ae23b172be53757ff900cf7a04de9c5f00"
+    },
+    {
+      "path": "meridian/funding.py",
+      "sha256": "2f83f7ed44f732b736ce4bc1e8769dcffa9386f976516d934978bf17ca44e1a2"
+    },
+    {
+      "path": "meridian/funding_proposals.py",
+      "sha256": "cd0495ae3b365becdd51e1dce939180038696e5886cd9b37ba64b25cc4b94a7c"
+    },
+    {
+      "path": "meridian/funding_repo.py",
+      "sha256": "9573c604b711cb6aea667e0ae286a37e24b77e4e4224176dafcc7d13cc08a738"
+    },
+    {
+      "path": "meridian/gmail_intake.py",
+      "sha256": "921d41ea10259ca8bb87000a8c7a1ec6299a8fb854446d5621314bcae64e8cad"
+    },
+    {
+      "path": "meridian/ingest.py",
+      "sha256": "1755826a331f010112364600b76489efa8fc20077513b258d1588dca77772fa0"
+    },
+    {
+      "path": "meridian/live.py",
+      "sha256": "28ceba5fc19278ee5f03166b5ce241ce2599218d8d34f2d5460a16e5f3549f27"
+    },
+    {
+      "path": "meridian/memory_actions.py",
+      "sha256": "31ab5270d32bbd4bde8bc851437c31cdfea8ff4b27d4d871245f0895a7907cd1"
+    },
+    {
+      "path": "meridian/migrate_legacy.py",
+      "sha256": "a585c160727c978bb6d5e0988abc2417fd659ef79081267ba8e5d02cace0e360"
+    },
+    {
+      "path": "meridian/migrations/001_financial_graph.sql",
+      "sha256": "0a185eee376e676356191db9543aef173c4b6cf1db188965b16e2c36c58ab8a1"
+    },
+    {
+      "path": "meridian/migrations/002_financial_integrity.sql",
+      "sha256": "90dc2b034138170c1db71e9b30cc957b9ca1218329e7ee1863d6862d380f21dd"
+    },
+    {
+      "path": "meridian/migrations/003_provider_sync_runs.sql",
+      "sha256": "fb10f2b7333d0ccc2549c091c63e2392526438fa27446186a763b31a217d3d7e"
+    },
+    {
+      "path": "meridian/migrations/004_canonical_transaction_timestamps.sql",
+      "sha256": "c69e8460c7d3edc8a292eec2ff98d1fd47fa818c9bee1032906f193ca512b63c"
+    },
+    {
+      "path": "meridian/migrations/005_commitments.sql",
+      "sha256": "99f6ed2e736cb8c6e92fc708e3a54bec06b4cd6bd7a7c34ac655a13cd6965bcd"
+    },
+    {
+      "path": "meridian/migrations/006_funding_rules.sql",
+      "sha256": "156591a45c9c79683d87c811d2ab81bc99139839ceb8e8bb5d0e5bc9f376669a"
+    },
+    {
+      "path": "meridian/migrations/007_transaction_classification.sql",
+      "sha256": "cafe836e3e10bc761a887b48757b8535f43d8d038c1936559c809f4fd5e0eeab"
+    },
+    {
+      "path": "meridian/migrations/008_ai_classification_audit.sql",
+      "sha256": "f87ab0cc520875b79f55bb25ee111d7fa8c0faef97d01feb864309e28a765d2c"
+    },
+    {
+      "path": "meridian/migrations/009_review_rules.sql",
+      "sha256": "c8b99436bd527e9545b436574e102fadda1853432549c63b64491b199df023a7"
+    },
+    {
+      "path": "meridian/migrations/010_provider_reimbursements.sql",
+      "sha256": "19193f5d85f0a513c34d2d166718463cdcb399ce91f8bfc231ea6c881afb5f57"
+    },
+    {
+      "path": "meridian/migrations/011_evidence_graph.sql",
+      "sha256": "7bacc75015272e7b01e76f83ef490911fb0072483d07e56ebaca4c24633afa62"
+    },
+    {
+      "path": "meridian/migrations/012_context_signals.sql",
+      "sha256": "8ebfc90b3dcca424fa8720f1854635010922dee0fc9f93cd240f224d8caffdc1"
+    },
+    {
+      "path": "meridian/migrations/013_assets_contracts.sql",
+      "sha256": "f61997b9f18036fe50aa716855ebed29c69ae1888fb8bc682d23e392c55ca34d"
+    },
+    {
+      "path": "meridian/migrations/014_connection_authorizations.sql",
+      "sha256": "757ea5824c10c991c577575785d3536b6f9b7b1691a7ffcd2cb5b9d537242ad1"
+    },
+    {
+      "path": "meridian/migrations/015_evidence_sender.sql",
+      "sha256": "6bcff2d1239fc736301851717102ed69b3ebd2251988578bc7cb246ccc96e3a0"
+    },
+    {
+      "path": "meridian/migrations/016_trials.sql",
+      "sha256": "74d69021a5bcf22bbced97ce9311a0622c2c8013feb0063301a55724f2fa515c"
+    },
+    {
+      "path": "meridian/migrations/017_cancellation_actions.sql",
+      "sha256": "b19dc3efbdff75522dc6f561e6e2e3de210e194d6afcec4f282d7b9eb754d2b8"
+    },
+    {
+      "path": "meridian/migrations/018_trial_notifications.sql",
+      "sha256": "9c6ec74ecf70549b9b5e0a636cdb0f27c2e4d295084366741261fbf11a60d31a"
+    },
+    {
+      "path": "meridian/migrations/019_immutable_observations.sql",
+      "sha256": "b91f986805ade7ae6afb24674460887e0de379a31527a3e9bdf39c4d2b6dd063"
+    },
+    {
+      "path": "meridian/migrations/020_account_absence_reconciliation.sql",
+      "sha256": "7d9e300efe7dd9596d579eb15a66e683759dfb0fff2f2d4a55b33470ccafb52b"
+    },
+    {
+      "path": "meridian/migrations/021_commitment_absence_reconciliation.sql",
+      "sha256": "0473ffb49e97a719b37187cca1147546a475413c038b06a378a0a0b68ffd9f2d"
+    },
+    {
+      "path": "meridian/models.py",
+      "sha256": "1e735699e96a467ccc7d1c31f399736dc66a94a08a34e20050897fa0be132e31"
+    },
+    {
+      "path": "meridian/mutations.py",
+      "sha256": "313f27ebf773a6a32943e6fb49d06b75a94887b2d29bff51848644e83058d5ce"
+    },
+    {
+      "path": "meridian/observations.py",
+      "sha256": "f7679ee1172847e8c93487534c9f63aadcbcaadf5b16de06f8a1201892401042"
+    },
+    {
+      "path": "meridian/paycheck.py",
+      "sha256": "d0ac28f35f64e115666be51c2ba11585565d0dde1104ec11e5ec5069dd62d9e1"
+    },
+    {
+      "path": "meridian/paycheck_learning.py",
+      "sha256": "466e1b91e56ab036d0bb720dd24b6409f8fc5db3378d8a839d4a29202ad52232"
+    },
+    {
+      "path": "meridian/payday.py",
+      "sha256": "9ee77093a401e14fea70361893ccecca004646b8d11bb38ae599f4a821f22f13"
+    },
+    {
+      "path": "meridian/policy.py",
+      "sha256": "1e5847826d2e12423c9b45310bc7d3c66a6c4adfc5832fad21c2dc2f74f5f2fd"
+    },
+    {
+      "path": "meridian/proactive.py",
+      "sha256": "bb8a4a51e4c385e97ca4256b3efdcacf17a283c3fa1e2e7baffd01c6611097ce"
+    },
+    {
+      "path": "meridian/providers/__init__.py",
+      "sha256": "447ff8a4c5ed7b705cdf90a8980cb48ce92654b8c103dbe184f9f32070ad0d72"
+    },
+    {
+      "path": "meridian/providers/base.py",
+      "sha256": "0f618cf1db3bf796fc78d448be57c30651455a1bea51acc21dadca8edccb1700"
+    },
+    {
+      "path": "meridian/providers/crew.py",
+      "sha256": "b98a4333c09cedeb8a2bc2d979616308473eddd3008bbe07cbccb7322d29153f"
+    },
+    {
+      "path": "meridian/providers/crewwork.py",
+      "sha256": "f77e8f8169965d457aeb09937a98f441a77114c7bebcdbb35cad00922601b8b5"
+    },
+    {
+      "path": "meridian/providers/lunchflow.py",
+      "sha256": "54a369e5cb2e401fa44ce4e4765f38d51c33218ada4ef436374a12b2183f6960"
+    },
+    {
+      "path": "meridian/providers/simplefin.py",
+      "sha256": "8ba012ac5023c74061673782bf4b535324f1f47e30fdddd83db7e9db0fa94f7a"
+    },
+    {
+      "path": "meridian/providers/splitwise.py",
+      "sha256": "78f1a1cd7c3c04d98e9d5cedb11d1126c5859b788289d071a81de145c7395929"
+    },
+    {
+      "path": "meridian/reconcile.py",
+      "sha256": "acc0eda2636e204fa317db34051b448a82a9e65fcb58ebb6ebf2def30cb0b974"
+    },
+    {
+      "path": "meridian/refresh.py",
+      "sha256": "6bd24417abd2f165f1e1d76f95d5975be8a74f4b49af21660e5ba3ed4bcff55d"
+    },
+    {
+      "path": "meridian/repository.py",
+      "sha256": "29b00ba7ad66c572edf549b336a4c566163f086572829a323dfdc2d0362fafac"
+    },
+    {
+      "path": "meridian/scenarios.py",
+      "sha256": "c8caeef7712463c4ca18963dcefb923dd8fc0ba7d6d761c1950ca731785c8e62"
+    },
+    {
+      "path": "meridian/services/__init__.py",
+      "sha256": "3637b0163a89cdaa6a6d93e05b9ccd7d88462670b74d43dae0cef28fbb0a72ba"
+    },
+    {
+      "path": "meridian/services/accounts.py",
+      "sha256": "884ed7c3954cb10bcc404213513a7778730e5e27c02c13356495f8136bda5d5b"
+    },
+    {
+      "path": "meridian/services/activity.py",
+      "sha256": "7d883ae9c74321a3eca769daafaeeb8febff138fff8f4f448e6f3b525e062bd8"
+    },
+    {
+      "path": "meridian/services/connections.py",
+      "sha256": "4cf535e626ba30f6a941792a5d54e21cba414d0d18804a1fce22f9d423154385"
+    },
+    {
+      "path": "meridian/services/dial.py",
+      "sha256": "9386f9001e30d935455a179ed40c3bfc0c8038ba5fb545bc8840e6336dd21c50"
+    },
+    {
+      "path": "meridian/services/memory.py",
+      "sha256": "260cee96b79964f50ba67e2d3179bbdc8ad53b2878319ad1afd576b70139a634"
+    },
+    {
+      "path": "meridian/services/payday.py",
+      "sha256": "30879a4e0cadb6808110e244fb0d45608912139eaf1598e13d70bb35f9b27302"
+    },
+    {
+      "path": "meridian/services/plan.py",
+      "sha256": "50652028590a1f4f34f59682d690a932f3ed991d11fac7890e5baf1c97874279"
+    },
+    {
+      "path": "meridian/services/today.py",
+      "sha256": "fd6605157abff1205741e15012fde097a5cf7f02adde728573df310745a729f9"
+    },
+    {
+      "path": "meridian/storage.py",
+      "sha256": "b071ccee3f07b7d0dece45c821e3d97b021a088d5d44c72e3e2db7019acd16b6"
+    },
+    {
+      "path": "meridian/sync.py",
+      "sha256": "8e5b1fdd89ba934ab6a74c836c10128a62131b43ce23d64449e4652a1f7806e1"
+    },
+    {
+      "path": "meridian/sync_gate.py",
+      "sha256": "e51983cb3943374645265e7187efaacfbb39cd1cc8ef422953ee8ee26ee13928"
+    },
+    {
+      "path": "meridian/timestamps.py",
+      "sha256": "98ae990a1b10886482b5ee1152e50b9117a1be8daa2c3bd98477183f057bd6b4"
+    },
+    {
+      "path": "meridian/trials.py",
+      "sha256": "b7fea438b7cf68889527255db2ca4f896176a1466a7b2fafda69cb310fc35f2c"
+    },
+    {
+      "path": "meridian/write_routing.py",
+      "sha256": "2b209def90a52078a69c7c894a7678f49b95c7d3ee47b474bf3da42ddca162b0"
+    },
+    {
+      "path": "requirements-dev.txt",
+      "sha256": "8ffdd47751f7019dcbb684cbc55e5efe5531b8bde272c67d7688835cdf19fd44"
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "2b00cda202861c56662c05438339ef12435bb469b85c4f5db16478168b4f8261"
+    },
+    {
+      "path": "run_preview.py",
+      "sha256": "4c64ba2a597a541b48b7fd2c457feb40662e073cc6469c3fecd86e077208a7b7"
+    },
+    {
+      "path": "scripts/build_crew_catalog.py",
+      "sha256": "b2052d81d05ed7d9b645fcd07c99e85cf96b7cd18673304b4b077b6f072b2700"
+    },
+    {
+      "path": "scripts/capture_meridian_matrix.py",
+      "sha256": "1ad4d5930461c9e327812572bf28426fdf38c5410d4a7e20817bf591a8ba5b69"
+    },
+    {
+      "path": "scripts/capture_window.py",
+      "sha256": "eae3d73369296311bcba343a89abfd2a7ecc66fdf8d27bbfd6e8d36f13c98270"
+    },
+    {
+      "path": "scripts/click_helper.py",
+      "sha256": "5303c39c8f142760694f41d2d32b45e3ed23737dd785bf1ccbdd24f64a8e154e"
+    },
+    {
+      "path": "scripts/collect_crew_ops.py",
+      "sha256": "2b59863bd83ffd66b71e7c719912efe6e4e2f37addd2b591eab0c5911227a189"
+    },
+    {
+      "path": "scripts/crew_mitm_capture.py",
+      "sha256": "291a39ca061bc3a91194c00e6844e25bf0f15a20c11ac5c01e1bd28ee8c752b1"
+    },
+    {
+      "path": "scripts/introspect_crew.py",
+      "sha256": "ee1c2110efb77707cadb5b8b7374edf9db3c62b5f448cb83ef1a1166dbbe2a8b"
+    },
+    {
+      "path": "scripts/introspect_crew_live.py",
+      "sha256": "2263880e665cf92a20923dc97231a175f048e79ceafe9136874152d9335cf80a"
+    },
+    {
+      "path": "scripts/meridian_sync_live.py",
+      "sha256": "bacd4f690a1695e9d3abf84ee02492044e22ddba36316bbe258c46cd65d68661"
+    },
+    {
+      "path": "scripts/preview_observatory_dial.py",
+      "sha256": "fcc13055ed3f1344ea3f461184dc04f2b3b6c9fe46800a830e41bc9cfcec310e"
+    },
+    {
+      "path": "scripts/verify_readiness.py",
+      "sha256": "23343f68cd1d17c29c60364818432567d6b29f4774c3bb26b4e81d3c584b1324"
+    },
+    {
+      "path": "seed_preview.py",
+      "sha256": "134d61b75ed0a6b1a2e0108c553f80a86fd2294df10755ff4cb09ee47231bc5b"
+    },
+    {
+      "path": "static/css/components.css",
+      "sha256": "cde3b3b4c4cdee770ac05717666fa77ff559de70b9539bb1ac37ea998d82f558"
+    },
+    {
+      "path": "static/css/main.css",
+      "sha256": "db9a3f4c5c9fe264117695e16c7dd1a93af455470a96912f600368264968b9c9"
+    },
+    {
+      "path": "static/css/meridian/accounts.css",
+      "sha256": "0ec166b172aeb57a5abfd874a41da7b1aa7a8006a273ff248c932951327fa661"
+    },
+    {
+      "path": "static/css/meridian/action-review.css",
+      "sha256": "f4da12f95d280b704cbcbc15cb669d081c3644ef1d402182f8d61f4ddc353d80"
+    },
+    {
+      "path": "static/css/meridian/activity.css",
+      "sha256": "74f689c05784106087fa52a5c4a18dc07e44dad281b07262429ddd022e215de8"
+    },
+    {
+      "path": "static/css/meridian/advisor.css",
+      "sha256": "45f66b658f4606407a741b75a7d76d4aa3d7aba66e6847953236810f3ad1d4a4"
+    },
+    {
+      "path": "static/css/meridian/dial.css",
+      "sha256": "3e6a24a718503eccf7ce529d92ad86567c2870d1be3bbbb901d7993f53a170a5"
+    },
+    {
+      "path": "static/css/meridian/inspector.css",
+      "sha256": "dd82ee97f64023772cb5aea96ce1b5739b82bd96d4fb20a79859c9224ab97426"
+    },
+    {
+      "path": "static/css/meridian/motion.css",
+      "sha256": "c0f21dc73b4c3fc055b572d52e2490a07030684d7fd984314231d68c593ebe54"
+    },
+    {
+      "path": "static/css/meridian/observatory.css",
+      "sha256": "7537010bc83df15adefd1132ca80f51febe11d3e00ba3415bd1c4912814c0a2b"
+    },
+    {
+      "path": "static/css/meridian/plan.css",
+      "sha256": "f31edf08a3f03448b01a3b70689084f98d26c1dc5eb9fa6b2756c5e74859d245"
+    },
+    {
+      "path": "static/css/meridian/settings.css",
+      "sha256": "ebaf44d80900d2774c676eace939450c91dac10c9497eef50b22135df11879e6"
+    },
+    {
+      "path": "static/css/meridian/shell.css",
+      "sha256": "03d4bfad0944e4d86ee11e026e3da2466fbfab29e3bb58e29f7259ba8481150d"
+    },
+    {
+      "path": "static/css/meridian/today.css",
+      "sha256": "5761b60b3cfb34ff7104c570e53e0640c2159b2f480a6218c08e8de038dcaba5"
+    },
+    {
+      "path": "static/css/meridian/tokens.css",
+      "sha256": "e4a5efa9c9ae4043d4754bfd3059384628072027b38efeb276eac7e362695b1d"
+    },
+    {
+      "path": "static/css/meridian/workspaces.css",
+      "sha256": "7790333a4ea3d88b27ab193346ade9f7b1f2509c3ddeb8c41d30ddc2d10643e4"
+    },
+    {
+      "path": "static/css/mobile.css",
+      "sha256": "5dfff2406244ba6e7a73b034b8ecc75039a4205a9581163437dd1781eb5a593c"
+    },
+    {
+      "path": "static/css/modals.css",
+      "sha256": "d9c4845e70302cef92d6891ee5465571b88683faea08821507c5439b1e851757"
+    },
+    {
+      "path": "static/css/navigation.css",
+      "sha256": "698ba8a7c5ff4b5e7f4dd706c19a06e8d1225cb549ba5349948466ba416d0b8e"
+    },
+    {
+      "path": "static/css/polish.css",
+      "sha256": "d54583a0a249dc4c7c7d9cff553154cb11aebf0f103e923b0ddcc24c5137d709"
+    },
+    {
+      "path": "static/debug_functions.html",
+      "sha256": "325b8dece95ab17c2a557df502aa5027fb68f75b3817efe73a877cef0d652ae5"
+    },
+    {
+      "path": "static/images/192.png",
+      "sha256": "7ef23b619d2b25c4b33ae227b0e97bd5692cd1f04886b16f152e7f4d402b50ad"
+    },
+    {
+      "path": "static/images/512.png",
+      "sha256": "6e0975e45fae3bb6e2a3741a81527e05382c7b035c731a73269d33ab9b742ac3"
+    },
+    {
+      "path": "static/images/badge.png",
+      "sha256": "35bc627ae502f8a2da51db22c0acf4bbbe78bc03f3d95522fb39a73b2e2da68a"
+    },
+    {
+      "path": "static/images/favicon.png",
+      "sha256": "d6ddc2042d5ce16d298a2756e9c5262bb83446699cc930f83ac61fec93a41112"
+    },
+    {
+      "path": "static/images/logo.png",
+      "sha256": "7ef23b619d2b25c4b33ae227b0e97bd5692cd1f04886b16f152e7f4d402b50ad"
+    },
+    {
+      "path": "static/images/logo_white.png",
+      "sha256": "77c5e97daea0f823167d0d0345daf967677b3987f00d3b1e6ec88f96400a7640"
+    },
+    {
+      "path": "static/img/meridian/observatory/ASSET_MANIFEST.md",
+      "sha256": "9a766ed96b1c52a131c17e16c8894a0ca7a205232efb01ea99d25a921e5416ba"
+    },
+    {
+      "path": "static/img/meridian/observatory/dial-ornament.svg",
+      "sha256": "6d18adae907255c86ac40604170e9bf8ab56c353a4db9e9ceafa63d310c2f505"
+    },
+    {
+      "path": "static/img/meridian/observatory/dial-plate.png",
+      "sha256": "229a4fb735f4680392bbcd2ef4aebb6e8580ac75a4efad287a3b438e6dd2973c"
+    },
+    {
+      "path": "static/img/meridian/observatory/icons/arrow-left-right.svg",
+      "sha256": "1798b25ce6c59e3aad22aebfff67bc6acef9330c75af59d7b975c453c15653ed"
+    },
+    {
+      "path": "static/img/meridian/observatory/icons/bullseye.svg",
+      "sha256": "8a519b0c8f55d210808e7520c7ef90718bdcdf4e3f9fb5d6d193fbff63a4c0ad"
+    },
+    {
+      "path": "static/img/meridian/observatory/icons/lightning-charge.svg",
+      "sha256": "c76f82f20b31ad3ed18121217502f3618c5b17e708cdafe7b97b5cac7a74dc31"
+    },
+    {
+      "path": "static/img/meridian/observatory/icons/star.svg",
+      "sha256": "2cbf82522b7c9e4d596c5009001424c3b732ec210a4c0f0b6576b71f2d299d73"
+    },
+    {
+      "path": "static/img/meridian/observatory/ink-texture.webp",
+      "sha256": "2e81b4bedf7a2e1e822455cb3020edf8b12cd979a46adcb763cae4c95fa2d8d3"
+    },
+    {
+      "path": "static/img/meridian/observatory/map-ornament.svg",
+      "sha256": "f3e24a6b0c839b74020dafcda933ee8214eec20e29e8656ec6bd7e99caefbf9e"
+    },
+    {
+      "path": "static/img/meridian/observatory/moon-engraving.png",
+      "sha256": "1ad0e828ac325ebf13ad3f06085ecc732b3d5b5beb10741aaaeaa61b05bc9489"
+    },
+    {
+      "path": "static/img/meridian/observatory/observatory-engraving.svg",
+      "sha256": "19fa422861119b0e443cbd40cf56617787786773e09f5206c1b70400084dbe0a"
+    },
+    {
+      "path": "static/img/meridian/observatory/paper-texture.webp",
+      "sha256": "7fbf50dda8745a41d7ac872d0ce63c26cbb29fc440a51dedc3eef6b79278bd40"
+    },
+    {
+      "path": "static/img/meridian/observatory/ticket-corners.svg",
+      "sha256": "8bd7347ea1d9f899122994300f97da23bfea70aefce18139f8a0818e5f6006e3"
+    },
+    {
+      "path": "static/js/api/account.js",
+      "sha256": "38987906626cc63b6dd1192609470db74e53fb710c21f747325a361d21de3659"
+    },
+    {
+      "path": "static/js/api/beacon.js",
+      "sha256": "26ad0e3780baf01ecfc26ecedb8559f1fcb915f2c95f59fce16740b7c42bf0c2"
+    },
+    {
+      "path": "static/js/api/cards.js",
+      "sha256": "895eb18ce3818332adeb1fa24729104f798a71ed3266a3b7b22681a8034a94ff"
+    },
+    {
+      "path": "static/js/api/credit.js",
+      "sha256": "c08dd9c9af2ec0a145d2decc04c3106a9000ab5301bb59f0870b736ef52b6723"
+    },
+    {
+      "path": "static/js/api/expenses.js",
+      "sha256": "36657e3dc061dad061b01b6a54faffe55a2ed7a6f9e5ae345fbc365bd9585729"
+    },
+    {
+      "path": "static/js/api/family.js",
+      "sha256": "08687883de5d95d3346945982666e5b8ffa25b8df162c1039e1da0ee7b4ba12a"
+    },
+    {
+      "path": "static/js/api/goals.js",
+      "sha256": "43dd093efb17cef43442bf196bcc1829a2a8103e1ec4b4d5787910d62c952863"
+    },
+    {
+      "path": "static/js/api/splitwise.js",
+      "sha256": "175a3cbfdc80c899db88e88cf897cd5f93161d7a711d6edf6c7d52bc9114f08e"
+    },
+    {
+      "path": "static/js/api/transactions.js",
+      "sha256": "41f06f3ce7471680f37699ab9176d61a335b080d6161d179a0b4b707704d3d4b"
+    },
+    {
+      "path": "static/js/app.js",
+      "sha256": "f407736e46943a32137e1332bf75bb21b69933463b548d60d88ac9db1e09aed1"
+    },
+    {
+      "path": "static/js/features/autorefresh.js",
+      "sha256": "02bad9d8ff7b361628fe9ffd3aaac7fde403e198847dd71dbbb15fb3e7ff074b"
+    },
+    {
+      "path": "static/js/features/dragdrop.js",
+      "sha256": "3b68e674d67535c315a8f59457ce0e113b235a8083cb63c0de5c0814308e561e"
+    },
+    {
+      "path": "static/js/features/groups.js",
+      "sha256": "bc60d941fa8999563c855a2195b78627c413e6f9742c5ccb224cae086eabc76e"
+    },
+    {
+      "path": "static/js/features/notifications.js",
+      "sha256": "73501b26674d20cc1378051867fa25861c5d97cf0b30b13f0d7097ea8fc145cb"
+    },
+    {
+      "path": "static/js/meridian/absent-bills.js",
+      "sha256": "821a31495edde0f4fa7919c9e8e510fd3a91aef7044facf84a4bda056c85a419"
+    },
+    {
+      "path": "static/js/meridian/accounts.js",
+      "sha256": "42814759126cb1be9d34b56bbea44203a8a9ce2602c7c71a5bc31f37d79764a9"
+    },
+    {
+      "path": "static/js/meridian/action-outcome.js",
+      "sha256": "b2c88be802dc9262305c69e0965150119531787f14000c53002c76a5c08842d4"
+    },
+    {
+      "path": "static/js/meridian/action-review.js",
+      "sha256": "65cbf04397da8925631a6da3f29b1dcd5e807db7b6712d525adc8d895ff7d5fb"
+    },
+    {
+      "path": "static/js/meridian/actions.js",
+      "sha256": "3344b2fdc13c844286ebef0091413a11b031cddf247ada4901ce8aaf520749aa"
+    },
+    {
+      "path": "static/js/meridian/activity.js",
+      "sha256": "8df03f423df865eea1c30ffcc3cf65db49cb10f8709a2faf7912fa9616a2e88d"
+    },
+    {
+      "path": "static/js/meridian/api.js",
+      "sha256": "ee102e0080fc85941aa2d732f8d7b5c60a6de4a68da43a8ed7bbfb44a77fbab3"
+    },
+    {
+      "path": "static/js/meridian/archived-accounts.js",
+      "sha256": "a9338b5347cf741bac9c4dbd78bdef734a464c6312fce2ebfece1094002f8d9b"
+    },
+    {
+      "path": "static/js/meridian/connections.js",
+      "sha256": "eb2f9059e963eea0cffa11dc69c1322eef29dfc8c4d87063e25ccab99e54dd41"
+    },
+    {
+      "path": "static/js/meridian/dial.js",
+      "sha256": "8252cca2cc9b85e21a6871c1ffef418b67999e8584075794a90243d5c5ec6d18"
+    },
+    {
+      "path": "static/js/meridian/format.js",
+      "sha256": "dfa8d8a8d3217cba5470634d8201d7f4e140b0967cf07a21252339b0ce69a08a"
+    },
+    {
+      "path": "static/js/meridian/haptics.js",
+      "sha256": "c6e4ddd49702e8602731e25fdf310b025044ce34e25353a2688efa2626725329"
+    },
+    {
+      "path": "static/js/meridian/memory-manage.js",
+      "sha256": "44c1b98c8660be04ef4fad860952cbff959e3c9e2efa4a32a7898d023212aa11"
+    },
+    {
+      "path": "static/js/meridian/memory.js",
+      "sha256": "deb0b017d3dae9052323dc956c5c6ab48efd553b3889f705d3c8d73d36132030"
+    },
+    {
+      "path": "static/js/meridian/payday.js",
+      "sha256": "7487d3cfe9e339275b1789ecadc3c81ae241a1e10c04e8ce01286cc623a59103"
+    },
+    {
+      "path": "static/js/meridian/plan.js",
+      "sha256": "fcb51bf16db6c09057ff2c1be98c7411e9879aa7f3772c95861837baa28335e3"
+    },
+    {
+      "path": "static/js/meridian/review.js",
+      "sha256": "42640ecde7d021fbff1f37295871b825abea52d79e523aa228543c6456171b10"
+    },
+    {
+      "path": "static/js/meridian/security.js",
+      "sha256": "27eb9757ce84ae02c1b7c4cfb5c8196f1ef41c72fa889fe72e3f400db5880506"
+    },
+    {
+      "path": "static/js/meridian/shell.js",
+      "sha256": "1fb884c689133f3cee09e9cd63bc9eee0d103effd367ce29879e4abb399dff34"
+    },
+    {
+      "path": "static/js/meridian/theme.js",
+      "sha256": "c16c64cef40dbc76a3832ed3cff8dd6d43d5ede0a0a16233ccb9d99421df6e5c"
+    },
+    {
+      "path": "static/js/meridian/today.js",
+      "sha256": "a684885b56fb56fa5094cf8380b9cb809defbef477021e8a167961703344f05b"
+    },
+    {
+      "path": "static/js/meridian/transaction-inspector.js",
+      "sha256": "ee96f07dba60a7b5e3eb544532e03e6fa839886e27a46e77686298767bba9c07"
+    },
+    {
+      "path": "static/js/meridian/trials.js",
+      "sha256": "384b8bfe3d231a667ff8fd53bfe9ecfb15c3e4b840081cdc1880ad5a5348a73a"
+    },
+    {
+      "path": "static/js/state.js",
+      "sha256": "fa8ee482d112afb8d24b7e351b2609875a00027832becb7b138ef3290831df68"
+    },
+    {
+      "path": "static/js/ui/advisor_fab.js",
+      "sha256": "e3e30cc2a6d4e622d059faf5b382787bc75eb1ba9a2d5835da2d4f8e3bf8a135"
+    },
+    {
+      "path": "static/js/ui/dialogs.js",
+      "sha256": "511ad304fa787ac6de0c72691846bb85318483db326f01ae80fad5efe977e318"
+    },
+    {
+      "path": "static/js/ui/filters.js",
+      "sha256": "6e19add8683272c8206672f28b733b9bdbc9c2bcb504d4ccf8e76d3487205814"
+    },
+    {
+      "path": "static/js/ui/modals.js",
+      "sha256": "646242610b82168945496b63a240061aed0ee1066af13b220a9615ecd621c4e0"
+    },
+    {
+      "path": "static/js/ui/navigation.js",
+      "sha256": "124f6f9ee047be7d1792a7e6af667c17dcfe9f9659b7f3a6ab5e5352fedc2d53"
+    },
+    {
+      "path": "static/js/ui/rendering.js",
+      "sha256": "2fe1818446e45cfa4affaf90680ff78a5d5df957946af19b882d255b9513d59b"
+    },
+    {
+      "path": "static/js/utils/formatters.js",
+      "sha256": "eb319176acc8ad96e0edd41604c2b96d30cb6696825dd39e1bf6023bce464524"
+    },
+    {
+      "path": "static/js/utils/helpers.js",
+      "sha256": "41032dad154a1d1f542f150fe566105c8f302b7a61040dbd2c7f55fc8509f517"
+    },
+    {
+      "path": "static/manifest.json",
+      "sha256": "4515897bb0aa9416a5e2716a777ce62919ce1c5dd997ccd02ed9d0e39f1d538b"
+    },
+    {
+      "path": "static/meridian-observatory-preview.html",
+      "sha256": "8d35cb57a5198981fc0a6324c323a10a4f2202ce1e21acab54ae7c5c8bd18832"
+    },
+    {
+      "path": "static/sw.js",
+      "sha256": "c9f283c567ab79581241abdd11a801aa6067615157b20a42520c4e04a9890b3d"
+    },
+    {
+      "path": "templates/base.html",
+      "sha256": "bfb54ec4a323cba38deebb12dc54d4d687be63a93ae1e65fb3b49e66b2ced63f"
+    },
+    {
+      "path": "templates/debug.html",
+      "sha256": "5c3a09ee4d5b53939f2b1bd62b72dd573d0d36effe8e6bc54b5344871e2ba342"
+    },
+    {
+      "path": "templates/index.html",
+      "sha256": "5848f7e995b33dd98a5256bd7cf4071020984c88d0fc002880d8a5b47a36785d"
+    },
+    {
+      "path": "templates/login.html",
+      "sha256": "358c8695c211dc15c6804245239cfe1d272e5af12b9144aa29e11bbaee2f0397"
+    },
+    {
+      "path": "templates/meridian/index.html",
+      "sha256": "6fd78d6a049c700ee996db0596833b70d051256eee180ad92986d0d3fc4bda3a"
+    },
+    {
+      "path": "templates/meridian/partials/accounts.html",
+      "sha256": "7f1033b91a043e2ac4b96de87646598da4c1e44a69d38ea603fd4ca1a6edc39b"
+    },
+    {
+      "path": "templates/meridian/partials/actions.html",
+      "sha256": "e50f79f3e268da858551093cb82aec7d37eabd5cff330759c091088b627b8473"
+    },
+    {
+      "path": "templates/meridian/partials/activity.html",
+      "sha256": "22d96aa71a60e709b61e0225f039b6135a68c622d18e1ee0a1e2fa5d1383d20b"
+    },
+    {
+      "path": "templates/meridian/partials/connections.html",
+      "sha256": "63f92915d97d0a0789055ce3d9f704f88a838cbc21b430139b742b1bf75ba215"
+    },
+    {
+      "path": "templates/meridian/partials/navigation.html",
+      "sha256": "906002ac52d0bd3f87a7fae18725d40595e103ae7439ba9c8d4e153afbc86878"
+    },
+    {
+      "path": "templates/meridian/partials/payday-funding.html",
+      "sha256": "efebd6b96afbde3ee0558ed5c23c4087fbb48d2cb10a676f63e391d364f5a36f"
+    },
+    {
+      "path": "templates/meridian/partials/plan.html",
+      "sha256": "7231a68543d8758e8a17314eae9c17742c93fab1a40dcc81871bc4f9d5fb2cc7"
+    },
+    {
+      "path": "templates/meridian/partials/security.html",
+      "sha256": "989829d4e6f27e03b79499486dfce20ec429c7ca8443b8dcc1ecf08627cc8e26"
+    },
+    {
+      "path": "templates/meridian/partials/settings-navigation.html",
+      "sha256": "761b3f80e25426fd3b3f99b0f33138fd94cd2dca5a819de3759b9d78cbff6770"
+    },
+    {
+      "path": "templates/meridian/partials/today.html",
+      "sha256": "280c53d6e3206004b57e57085b8bc6d19572780dd6844297dec13f98d0c5f1e5"
+    },
+    {
+      "path": "templates/meridian/partials/transaction-inspector.html",
+      "sha256": "ece6c77c7ac340dc5f1933bf83234dda29fc3cd533c0cb97ae807267f09bd87b"
+    },
+    {
+      "path": "templates/meridian/partials/trials.html",
+      "sha256": "4da0bc83a216cc9f7613e7ff3319b34349ce25aca2c8b59f3bdda7f68b38d500"
+    },
+    {
+      "path": "templates/meridian/settings.html",
+      "sha256": "f67326e10f87f23411baea162b2b8805ce436945b0f985ddee7d766fb09b64bd"
+    },
+    {
+      "path": "templates/onboarding.html",
+      "sha256": "1bd1b650c259b0ebba5d7b189885f23b76711757d572d86124a1218ccad4e349"
+    },
+    {
+      "path": "templates/partials/advisor_fab.html",
+      "sha256": "b696470255d3a6ab6a7e1bfb52514c7132660094d1aa107f2de4003082a0cd32"
+    },
+    {
+      "path": "templates/partials/header.html",
+      "sha256": "8a0d5bd042be150ec462ff2bfdda35c337a9887716eaffb8b3b57fb1e2d664ea"
+    },
+    {
+      "path": "templates/partials/modals/app_dialog.html",
+      "sha256": "269838ced4750e676cfe5bdf3a66546dba95fb207ff8768c03a560615999f276"
+    },
+    {
+      "path": "templates/partials/modals/bill.html",
+      "sha256": "0e76f0024fea7fd04708ab667ec14ffa86e8144d6588835a1d58538dce6bd3f0"
+    },
+    {
+      "path": "templates/partials/modals/group_mgmt.html",
+      "sha256": "e082dedde5d564a6edddeadb038f6cd93509880804d766929078155a22ac9ce9"
+    },
+    {
+      "path": "templates/partials/modals/move_money.html",
+      "sha256": "12cebd6baa49bd0dc34edc8d8d46dc2f786f7a1939206866b4d6ba601a2fc109"
+    },
+    {
+      "path": "templates/partials/modals/pocket.html",
+      "sha256": "315614a1be95bbf250853e2f83851c18b10dd2e93cc8862966a403d38383bd10"
+    },
+    {
+      "path": "templates/partials/modals/transaction.html",
+      "sha256": "fc3273d30e23be31de453cc73f8a2b447623c6dfec2110d99842681449e52788"
+    },
+    {
+      "path": "templates/partials/navigation.html",
+      "sha256": "9a443e19ca7021c96e97b07c939852f51397a515bb617d40b76fd69c9e2fe86a"
+    },
+    {
+      "path": "templates/partials/sidebar.html",
+      "sha256": "2ed79a64bb5642a13db0499620dcc7b029e84077dae19253747f824c37237546"
+    },
+    {
+      "path": "templates/partials/views/account.html",
+      "sha256": "ceb5626dd81cf000dd378744ac3b916ef24767c03756c1c81de452657fdc175f"
+    },
+    {
+      "path": "templates/partials/views/activity.html",
+      "sha256": "e9657432aff8b155702b149b727d10b40ebc6e58e368bf03ba03f4340efdf062"
+    },
+    {
+      "path": "templates/partials/views/cards.html",
+      "sha256": "9bc261c98fb48126e377f5adf26096e77628056c601a9ba1fba8445bf829e1e7"
+    },
+    {
+      "path": "templates/partials/views/credit.html",
+      "sha256": "cda44fc5c7fc1b44a89375685a5172010ee5daa83b7192a1f0678a57c7f63d4e"
+    },
+    {
+      "path": "templates/partials/views/expenses.html",
+      "sha256": "92d93ca9cb57077869df8a8acd43fa7e58093c30f3e5a4dbcd2d40279210fb24"
+    },
+    {
+      "path": "templates/partials/views/family.html",
+      "sha256": "e9495be78d258a7dcdfc4440ee98964f76f1fbecd2c827bb3252b157fa0fa2fe"
+    },
+    {
+      "path": "templates/partials/views/pockets.html",
+      "sha256": "35e841151218f34960babdb9ab3e296e960027f91299b0d875d3abf0aab715a5"
+    },
+    {
+      "path": "templates/partials/views/splitwise.html",
+      "sha256": "e0cf04a584b2998bf4a42b35754e7ecac598845b7f44f44bdaa30abe66583451"
+    },
+    {
+      "path": "templates/register.html",
+      "sha256": "e705c0caeee3ec521b03d16ae4a1238a6070ded112f2f8515734fe7a548e118c"
+    },
+    {
+      "path": "tests/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/browser/capture_contract.py",
+      "sha256": "4498efa7d1b55eb5a0418503a74f2c8c174de13eb5f2d32589a081ff59491b9f"
+    },
+    {
+      "path": "tests/browser/conftest.py",
+      "sha256": "df031128f1d5976bc91435453d1fe16f71a543ad918895beb54507cc684e39e4"
+    },
+    {
+      "path": "tests/browser/fixtures/observatory-dial.html",
+      "sha256": "1c834424ae3df24d489be058eb08ade8b733de687ea660896b052f3cf3408b08"
+    },
+    {
+      "path": "tests/browser/test_accounts.py",
+      "sha256": "55e9d2ee1fc0b9cb00a7936a5a340db92e82fa9e9a58565d038d0e2a45c6aecf"
+    },
+    {
+      "path": "tests/browser/test_activity.py",
+      "sha256": "e45073291498459a152ebe246416551a0d858262230648f45ebc7883e82ff673"
+    },
+    {
+      "path": "tests/browser/test_asset_contract_management.py",
+      "sha256": "b635372fb40cfca1f112054e1d829b753800e9b206d00d9718b972e771f46b70"
+    },
+    {
+      "path": "tests/browser/test_atlas_fidelity.py",
+      "sha256": "029bd4068b34db490ebb10a9a49e2940bd549bf988a3d253321a6d52a616723e"
+    },
+    {
+      "path": "tests/browser/test_capability_parity.py",
+      "sha256": "8dda26ad5ff457b7653ef1dd26087eb2e903d03057595dc4c9642a0e3362d592"
+    },
+    {
+      "path": "tests/browser/test_contextual_advisor.py",
+      "sha256": "56fbee2ed708dba61c32cae831dd9e1939e96d5e2b50eee8c01547feaf60a43b"
+    },
+    {
+      "path": "tests/browser/test_dial_fidelity.py",
+      "sha256": "40f25402f8605c1ca69a688dee054700083fb651e3d1e6b1889a0f4e577568e9"
+    },
+    {
+      "path": "tests/browser/test_document_intelligence.py",
+      "sha256": "75ed271b95e871cf10f86cd3025f70dbe45c3dfa2228a62098703dc21d6818fe"
+    },
+    {
+      "path": "tests/browser/test_evidence_memory.py",
+      "sha256": "21c0e96c7d66ed8f000dd35d1d5b5c0ee6852497490a09888fe531c6d873fbd4"
+    },
+    {
+      "path": "tests/browser/test_meridian_shell.py",
+      "sha256": "50246b61e706c76933e47e6f57aa97617353ba9bd81cc912dc2f744e2d8bee7c"
+    },
+    {
+      "path": "tests/browser/test_observatory_dial.py",
+      "sha256": "7a5b09c2e5179abf65bf645fc196b4159b3353ccfd3bf9cdaabfab7dbcd7bdcc"
+    },
+    {
+      "path": "tests/browser/test_plan.py",
+      "sha256": "b48e5de774e1a28cb07a7474d0d0f201dfb469dde98dc0ecaf73e4e1128030c0"
+    },
+    {
+      "path": "tests/browser/test_recovery_journeys.py",
+      "sha256": "d948ecce063cb7183283cca5f4bdc3852318b30a36ffe277305f9598457d3172"
+    },
+    {
+      "path": "tests/browser/test_responsive_parity.py",
+      "sha256": "929d91cbf5c6a8aeb21870cddce9c47cdfa0a26b0c96043056f67e850243d831"
+    },
+    {
+      "path": "tests/browser/test_settings_connections.py",
+      "sha256": "74ba1f8138c0ebd2f9d4361085b064182bb16f85c905bf352a860b2ddd3f9819"
+    },
+    {
+      "path": "tests/browser/test_smoke.py",
+      "sha256": "11276f4ba417c5fddda3ff36fb4e789527308444263f8d32f844fd7e48647d1b"
+    },
+    {
+      "path": "tests/browser/test_transaction_inspector.py",
+      "sha256": "4694854adb3b196e0d3ed9542cc9e78203bed65e49e0063f24564b58725161cc"
+    },
+    {
+      "path": "tests/browser/test_transaction_review.py",
+      "sha256": "84a4ff825374e2010bc8a1473aab67f24ac6d24946cfab1be25a5a8c660eaf60"
+    },
+    {
+      "path": "tests/browser/visual_baselines/README.md",
+      "sha256": "d1510548e687140593b3e697b58b167e359ac887d6d43c48133c27e240299191"
+    },
+    {
+      "path": "tests/browser/visual_baselines/current/accounts-desktop.png",
+      "sha256": "ea6ba40b582ac3df5f7e24ddaab508cd80125c4859978ce641bb84df3a472e55"
+    },
+    {
+      "path": "tests/browser/visual_baselines/current/accounts-mobile-s.png",
+      "sha256": "02b0ac7c7cefa104e3df6861fe3f9649de40de644a46ec26dfb735b6c34fa0b4"
+    },
+    {
+      "path": "tests/browser/visual_baselines/current/activity-desktop.png",
+      "sha256": "3ad374b6209206f0918f293af394c7f35a68bc0c279d59d9b07448892a834462"
+    },
+    {
+      "path": "tests/browser/visual_baselines/current/activity-mobile-s.png",
+      "sha256": "3a41f50dce6257c3536857306fafe38e8ced898561be4dca5a2dcaa50c94a438"
+    },
+    {
+      "path": "tests/browser/visual_baselines/current/plan-desktop.png",
+      "sha256": "06916afcc13b47c44a33bcda88530e16de6bc8852681abc83bf26ce24dab8fb6"
+    },
+    {
+      "path": "tests/browser/visual_baselines/current/plan-mobile-s.png",
+      "sha256": "0505a2904b43b2f160c12a1c33653bc22fc77acc66012b47df516fe17c5fd7df"
+    },
+    {
+      "path": "tests/browser/visual_baselines/current/today-desktop.png",
+      "sha256": "3b7ffacd842dead21199eadbf761cc852fb16fb0fcd7f8b6c56b15751109dbc5"
+    },
+    {
+      "path": "tests/browser/visual_baselines/current/today-mobile-s.png",
+      "sha256": "542ece806071662888cc833cabb7a6bb122080f8b77a5df4a380536eaac0f630"
+    },
+    {
+      "path": "tests/crew/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/crew/test_actions.py",
+      "sha256": "2d16e542085231149fa0cebbfadb2e6f94839a35c8a0fb29b83cfda6f445480e"
+    },
+    {
+      "path": "tests/crew/test_advisor.py",
+      "sha256": "b50978102610898c8474e96083a9e7f42cbeb690914b42e151e37b4b8f95ba5a"
+    },
+    {
+      "path": "tests/crew/test_advisor_failover.py",
+      "sha256": "9c525c5573cbd5ef2c522bf391e17d6115057b8acb7489ed4742df7d8c3147cf"
+    },
+    {
+      "path": "tests/crew/test_assistant.py",
+      "sha256": "d1b06c2cc2b86c4398d028b2181bac9b4c2f4971c1040abade1a87827cc18023"
+    },
+    {
+      "path": "tests/crew/test_beacon.py",
+      "sha256": "73b274e1d1c49416bd63283ffbde178eb1a0310b72497e6f2f2207e4dcdba24c"
+    },
+    {
+      "path": "tests/crew/test_broker.py",
+      "sha256": "c428387eab56e95ad3125c0d1be4a1062fb505b5536491e069c0e27b6c2d01dc"
+    },
+    {
+      "path": "tests/crew/test_broker_entrypoint.py",
+      "sha256": "cbc7682a27be7d0b74f999d2782b7c243a09ef30c732be1692ca0a961a11afb9"
+    },
+    {
+      "path": "tests/crew/test_browser_capture.py",
+      "sha256": "7112c711f82e0f2d569fd72f3bd5a3a68331b545da3922e5f5f302f3d121bc76"
+    },
+    {
+      "path": "tests/crew/test_client.py",
+      "sha256": "715913c66ac0defbf15adaacb54b96364a4e8c57acda0b3ab2bd556e3db602bc"
+    },
+    {
+      "path": "tests/crew/test_credentials.py",
+      "sha256": "fac3803bf7b3606f7dddaa1cae967eff45e827500b00fdf2610571c115d94b82"
+    },
+    {
+      "path": "tests/crew/test_executors.py",
+      "sha256": "c94cd218f0146e81a0ac39025352efb3ca34d2ead1cffb5f63aa50ec7dd5431e"
+    },
+    {
+      "path": "tests/crew/test_health.py",
+      "sha256": "06c73c850f554f4acadaf20a78fb7f0d9e576eb4e86088d8963531a70f2d1c8f"
+    },
+    {
+      "path": "tests/crew/test_mac_secrets.py",
+      "sha256": "3daaef6724b5d4321e774c4f2ed7e9dc1f851002cc598080df063e9ce63825de"
+    },
+    {
+      "path": "tests/crew/test_proposals.py",
+      "sha256": "a227f2e5f0937bf471bd1118a5293d270aaae517801c512bae44b1f13ea8d952"
+    },
+    {
+      "path": "tests/crew/test_renewal.py",
+      "sha256": "0741cbea8727c94a837a895b75fbfdccfc0b0c7bce04f6bbcd8f5dad195c20b3"
+    },
+    {
+      "path": "tests/crew/test_session_credentials.py",
+      "sha256": "fde05736b33281b384d7aed0cb89e74d220fab4b026d5c972b1e639d83006393"
+    },
+    {
+      "path": "tests/crew/test_transports.py",
+      "sha256": "a81bbc09695bcef03c80dac1abfdb9e86c67ba730dffe710f21e85aab480266e"
+    },
+    {
+      "path": "tests/meridian/__init__.py",
+      "sha256": "e6fc52f27309a7947140fc9800e68c11f9f89d32f68f7c25eaccf0b5a5526f85"
+    },
+    {
+      "path": "tests/meridian/ai/__init__.py",
+      "sha256": "75728e2e099281edeabd4edccc873c271dbcec275d5c72d7937730cc71ef3dad"
+    },
+    {
+      "path": "tests/meridian/ai/test_advisor.py",
+      "sha256": "c3663105d447caa6abeb6b2c812b5ab6b66d419f28ee6380149af9177175434f"
+    },
+    {
+      "path": "tests/meridian/ai/test_classifier.py",
+      "sha256": "c90f983ce474d8607a9d4b1540bf8d7edc91b39dd686d238b6972fc2b1c86019"
+    },
+    {
+      "path": "tests/meridian/connectors/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/meridian/connectors/test_calendar.py",
+      "sha256": "adca6dd57c1f90998f81767a162f2fa0555ed53e74c678353b3c3fbcd4d09c49"
+    },
+    {
+      "path": "tests/meridian/connectors/test_email.py",
+      "sha256": "54b145c08aed6b15a81f9fd562c2162a6ca08761ccb78b00adfb727887a28fcd"
+    },
+    {
+      "path": "tests/meridian/connectors/test_gmail_read.py",
+      "sha256": "bc8202fc0404a9cd9074ba6bee62f0587e9be61bad01f179bd86de88aa6af73f"
+    },
+    {
+      "path": "tests/meridian/connectors/test_google_auth.py",
+      "sha256": "26e3c15561cd0a97e9fdbb12afc95d1bb20192790156019b1f46a23138eb2774"
+    },
+    {
+      "path": "tests/meridian/connectors/test_icloud_mail.py",
+      "sha256": "33531b4644fd21fcefdfc0dc4991c1e160259b2cd03ba8d47f8dc1e1c4380d7d"
+    },
+    {
+      "path": "tests/meridian/documents/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/meridian/documents/test_extract.py",
+      "sha256": "5b8c5aa6ad46df1aa2008d70acefefbc929ac53ad25beb57e6ebde2c9fc2294c"
+    },
+    {
+      "path": "tests/meridian/documents/test_reconcile.py",
+      "sha256": "fabe879c72e38a2a85c516573a43d101946835bb047784c73f51bb2a46f40cd4"
+    },
+    {
+      "path": "tests/meridian/documents/test_safety.py",
+      "sha256": "794b1938622feb542467ebfd82ebffbe7814906dbd615c72e18dafae345abacd"
+    },
+    {
+      "path": "tests/meridian/providers/__init__.py",
+      "sha256": "1fb15fd211b532a1bf8d74876694f96199566c47d9c260564cfa1ad2e2a4af51"
+    },
+    {
+      "path": "tests/meridian/providers/test_crew.py",
+      "sha256": "5844fe7cf2286c9d833c107cc87fc10510dd92ef80a3ea013210a5378f5deeb5"
+    },
+    {
+      "path": "tests/meridian/providers/test_crewwork.py",
+      "sha256": "896c420fd6e321cf6dfa67a959d912991be7812a4ed2f611d3a8124fda62e4b8"
+    },
+    {
+      "path": "tests/meridian/providers/test_external.py",
+      "sha256": "490eb2be4c814d958b21f71a40898122ab3ae0ec395346db07a90ea76a4df899"
+    },
+    {
+      "path": "tests/meridian/services/__init__.py",
+      "sha256": "c5d09f00d54dabda1d5ad2f5a8e3b77552c74cc2278afc71f504d53d8e70fe47"
+    },
+    {
+      "path": "tests/meridian/services/test_accounts.py",
+      "sha256": "413ed730ac94a776ba0390ffbe54516bba84ed453773c9b20c0c0bfed56c2b3d"
+    },
+    {
+      "path": "tests/meridian/services/test_connections.py",
+      "sha256": "adce614cdf40bf9b5d25af5f877a12ec637bac6b56e183861ec61ee63b061c08"
+    },
+    {
+      "path": "tests/meridian/services/test_dial.py",
+      "sha256": "4d9078a9fb6aa10713fda1d1686543bb70829d81699279753e218edc067d92cb"
+    },
+    {
+      "path": "tests/meridian/services/test_memory.py",
+      "sha256": "1e83bab50d2a6dcff18a7dff6d3531a5d68b834af7dc64cf01c0e41db6abc24f"
+    },
+    {
+      "path": "tests/meridian/services/test_plan.py",
+      "sha256": "ec15c5ed82c4010030172c04ea99465f34bd8ec490fd7d1dae8c7c73ea850b93"
+    },
+    {
+      "path": "tests/meridian/services/test_today.py",
+      "sha256": "d871bee0e7ca37066d58e82d61c99d02de44915a6f8d3db972062aa0c630596a"
+    },
+    {
+      "path": "tests/meridian/test_absent_bills.py",
+      "sha256": "cd743326030736a0b16655d54fb541bc4cc15cf47151ad1ec9dfde01890fbfcc"
+    },
+    {
+      "path": "tests/meridian/test_account_activity.py",
+      "sha256": "c81005f877aa9afdb81621680fd406854f4422f4015fd2ef76e35ad335671390"
+    },
+    {
+      "path": "tests/meridian/test_accounts_observatory.py",
+      "sha256": "81147082f22fe3474e902e1dddc4a7447a6cb88684a887cf7db19415c39696fd"
+    },
+    {
+      "path": "tests/meridian/test_action_history.py",
+      "sha256": "98d225a5dd0f3decd26f71e6b58fb587dd8ba7a5819a0e92e6a48974db87c59b"
+    },
+    {
+      "path": "tests/meridian/test_action_outcome_js.py",
+      "sha256": "0fe14ecee11d9999dfb3183706bde1ab0ff1ec432142169e29aa6d121bba4acc"
+    },
+    {
+      "path": "tests/meridian/test_action_review_js.py",
+      "sha256": "1bf89dc4ed6a24ec046e2518d7c4cd1158fc1970aca8dde8e4d45efdd8a05028"
+    },
+    {
+      "path": "tests/meridian/test_activity_patterns.py",
+      "sha256": "dd01f25c508234f658c67f2cf46d596272e4658935b7714e183b0bdc8e1c75d1"
+    },
+    {
+      "path": "tests/meridian/test_api.py",
+      "sha256": "1b0ca5ba1c4cd716fd8371e19849889794b58df51741834a5e32ee98748bab04"
+    },
+    {
+      "path": "tests/meridian/test_archived_accounts.py",
+      "sha256": "9e1db5b1c99ac1a51c5b7530ece6bfcb6512bcd05333f4b3347549c4adb7f726"
+    },
+    {
+      "path": "tests/meridian/test_assets.py",
+      "sha256": "cbf6af7f1a33dedbd1fe1e20ff341bc64a469d08ecaa1e3220a1141d850a6138"
+    },
+    {
+      "path": "tests/meridian/test_auth_branding.py",
+      "sha256": "8275ff6203da4f2c9e7a18a0f87c399355742ce94ed9703d028861bcb5de5196"
+    },
+    {
+      "path": "tests/meridian/test_beacon.py",
+      "sha256": "3896fa7f510cb8302c13b8b8590564ee1c8d2b4a0115750e476529045256ae71"
+    },
+    {
+      "path": "tests/meridian/test_bill_absence_reconciliation.py",
+      "sha256": "383b8dde9dd022fa8285844aa2714e6bf1cd48b57604a7a50bdcfee43c552973"
+    },
+    {
+      "path": "tests/meridian/test_biller_monitor.py",
+      "sha256": "a07694181688701aa1641dfd2745f6617681f745c214044297b1a5fd95c44ecf"
+    },
+    {
+      "path": "tests/meridian/test_cancellation_brief.py",
+      "sha256": "5f2d5ae362c554fc8880bf806cfa3b82b9fc705677a80e4b3a7495fcb90739b5"
+    },
+    {
+      "path": "tests/meridian/test_cancellation_evidence.py",
+      "sha256": "d59a49a4da012ec58cab31ba7be68525e7251b599d7b15924f8b7cc707404ed6"
+    },
+    {
+      "path": "tests/meridian/test_cancellation_repository.py",
+      "sha256": "08db556febc0a95699b1ff63f3236b89a49f0fcf3ea1f0a037a6341a6bf4a7d0"
+    },
+    {
+      "path": "tests/meridian/test_cancellation_workflow.py",
+      "sha256": "197d5e076350fb911f333313fab815b69fa65bed30dec2437c3d9a4a8cbc4f94"
+    },
+    {
+      "path": "tests/meridian/test_classify.py",
+      "sha256": "ecc0e8394f660135e3465b2f5e1157a340fad8f196d93bd906f34fe0b8d50a44"
+    },
+    {
+      "path": "tests/meridian/test_commitments.py",
+      "sha256": "0138445f54a14940b51f03f1594b9f4ce785f3d8795fccfea4e6608680156b93"
+    },
+    {
+      "path": "tests/meridian/test_connection_jobs.py",
+      "sha256": "522336bcb6039e50fb639b2bbc3239bcf2b4984433514dcbe0d254fc9c3fe3e2"
+    },
+    {
+      "path": "tests/meridian/test_connections.py",
+      "sha256": "3a32efcc77f62baa4858b204f7b09aee87771304ed6efb687d37f2726fc6e233"
+    },
+    {
+      "path": "tests/meridian/test_connections_overlay.py",
+      "sha256": "54f49db9ade07d59419032b97f3c0b30f32666898d0495075b1b95376f2965e4"
+    },
+    {
+      "path": "tests/meridian/test_context.py",
+      "sha256": "9f42fad0f61fbc4add546a2649010040773e372b773ed040a934aa54e118301a"
+    },
+    {
+      "path": "tests/meridian/test_contracts.py",
+      "sha256": "1456d339032e05448882b1d10df97cc51d09ed1780a2daa214d3322aaf523a67"
+    },
+    {
+      "path": "tests/meridian/test_crew_commands.py",
+      "sha256": "8db3f3aae6be712aa2c6a1520ab766e01ccdd45348088805208329551603c048"
+    },
+    {
+      "path": "tests/meridian/test_crew_write.py",
+      "sha256": "5a60a10790cb657923b2712334963f86cbb62cac880f3e13572af0b9b3088980"
+    },
+    {
+      "path": "tests/meridian/test_crew_write_actions.py",
+      "sha256": "179f19be5f4e92f1a43ec2810019054ed74c7723baada36bfd42cd564be3e4e9"
+    },
+    {
+      "path": "tests/meridian/test_deposit_discovery.py",
+      "sha256": "e0d812f358f2c4afabdbf235363e7f5252fd03ddf4b5cd4b4ccb64eb3f8c25fc"
+    },
+    {
+      "path": "tests/meridian/test_dial_js.py",
+      "sha256": "b038ec1d933081f8c039bd3721369be209297b9538d22d85b0ec92d257cb4fa3"
+    },
+    {
+      "path": "tests/meridian/test_evidence.py",
+      "sha256": "562b355c303b684b3ee6278326fd4dc8fe4265b3b9cdbdf943d84500914243ef"
+    },
+    {
+      "path": "tests/meridian/test_format_js.py",
+      "sha256": "3ab6ff17a60110a6dce9cd84df2340debb6f66baad2d27714ca50a1ad6ed75a3"
+    },
+    {
+      "path": "tests/meridian/test_funding.py",
+      "sha256": "2648b0f6cff03c04183a7a753456c9cb01e91ec92f1d716867ab07345494b095"
+    },
+    {
+      "path": "tests/meridian/test_funding_proposals.py",
+      "sha256": "c79e8826ef34f636d9a597ee0e66c5682232e45f70a425ee03073cf6997d0a38"
+    },
+    {
+      "path": "tests/meridian/test_gmail_intake.py",
+      "sha256": "b1dd9090ba8c361e35e448cabfbc3308daf76cb7387fbb03ec9a8645bf4d77a2"
+    },
+    {
+      "path": "tests/meridian/test_haptics_js.py",
+      "sha256": "88b7ca0b7cfb1341d971c12afa351136898df34af1c873c6df23cf3a194d3c87"
+    },
+    {
+      "path": "tests/meridian/test_ingest.py",
+      "sha256": "e7e17ece2eaf549d9a882901fcb65398cfdfd2e87aa7783eeef8b7837890c54a"
+    },
+    {
+      "path": "tests/meridian/test_legacy_migration.py",
+      "sha256": "88a7c318cb104c9c1a0b8874370ba7b698ed9e8a7c3401ccaccad4084933fe6c"
+    },
+    {
+      "path": "tests/meridian/test_live.py",
+      "sha256": "9ab8727b86b5b9485562795190839c7a36aa917ebd18b11b6a413d12fe80360a"
+    },
+    {
+      "path": "tests/meridian/test_memory_action_outcome_js.py",
+      "sha256": "21a7c6d91239eedd5758853460174948803669c710169c90e9c81fd0c09fc401"
+    },
+    {
+      "path": "tests/meridian/test_memory_actions.py",
+      "sha256": "9e52c740b51fb70087b9f20d4e6a68e6f56b4ee8fc4b4294e14c985617d6c6ea"
+    },
+    {
+      "path": "tests/meridian/test_memory_api.py",
+      "sha256": "15703a31102da6310571c67243847291ac83bf97914bc81b46b7b23050efb648"
+    },
+    {
+      "path": "tests/meridian/test_memory_management_api.py",
+      "sha256": "93d65abb16243226cf9f77d700fac0ac722f1ea03a36fbd2c6a04c07e9443cc6"
+    },
+    {
+      "path": "tests/meridian/test_migrations.py",
+      "sha256": "cf0f8e292cfa1f565aea901c4db9cea1ab2ab7234f0e6fc83a787bb8014dfaf1"
+    },
+    {
+      "path": "tests/meridian/test_mutations.py",
+      "sha256": "cf294eb19b0b02d6748b407590ea82eb12b1fbf6bcb07fb4bdbe9cc497934d5d"
+    },
+    {
+      "path": "tests/meridian/test_observations.py",
+      "sha256": "5301c58644319fb66728ef7bd1ed09a00012d8674235c170ef08b6de07e1d165"
+    },
+    {
+      "path": "tests/meridian/test_paycheck.py",
+      "sha256": "5efe25c4aef0bd0a03ee3a100e225f9e6e20e5033179c3a2b931bcbc5ba4cf81"
+    },
+    {
+      "path": "tests/meridian/test_paycheck_learning.py",
+      "sha256": "1b3fbaf517e04e902e322f9b2735b0eedecc5436035b7743b83b2f6d695f3ef3"
+    },
+    {
+      "path": "tests/meridian/test_payday.py",
+      "sha256": "4707b2e9b355602a5b17e7645ad3cfc9d0a58f6dbcead523a38463f46a055e00"
+    },
+    {
+      "path": "tests/meridian/test_plan_observatory.py",
+      "sha256": "9cadc9ec186d71891dc82b246bec2ad24607ab3df799294959c2f67f9e4890bd"
+    },
+    {
+      "path": "tests/meridian/test_policy.py",
+      "sha256": "f0ba8b42e26003f1dc1a8093a5c61afd4f3a3212d99a60b7b8b6f95d7d30607f"
+    },
+    {
+      "path": "tests/meridian/test_proactive.py",
+      "sha256": "ce87eb14ab9612ed5684a6071093636fec95a9280cbe004fdcb719cba94ba6ff"
+    },
+    {
+      "path": "tests/meridian/test_recipe_catalog.py",
+      "sha256": "ec9154814d75e04d6f42af65e0c4e3bd5f65c5f1ba098b7c2ba3b6abe82f135f"
+    },
+    {
+      "path": "tests/meridian/test_reconcile.py",
+      "sha256": "b24a32dd64dbde3747604e214e11316ad40a561dfca326a7609c404679955302"
+    },
+    {
+      "path": "tests/meridian/test_reconciliation_audit.py",
+      "sha256": "f038b6af1a731a9a34626ffefb96156d88bd345dc1af4c63ba2839f54d47c007"
+    },
+    {
+      "path": "tests/meridian/test_refresh.py",
+      "sha256": "ffbfa21c8251b0aa18562b4d1a0f45e8a7f8acaa513047e8a4117e8b18986622"
+    },
+    {
+      "path": "tests/meridian/test_repository.py",
+      "sha256": "457746eed353a132e9124179a61284348048f5d780d82370c257fcc891e7bdfa"
+    },
+    {
+      "path": "tests/meridian/test_reserve_integrity.py",
+      "sha256": "10c2f3d20e21bffde6d713dfc363a39a91df1a52fb3bcdafda12facd47991de6"
+    },
+    {
+      "path": "tests/meridian/test_scenarios.py",
+      "sha256": "f4811a529589272626d61f7aed597ac275026048fd6205ef8fac8288562c5ad6"
+    },
+    {
+      "path": "tests/meridian/test_security_settings.py",
+      "sha256": "33bcb3c9ce2a095ca4e414413e126cf991e8dbee261218167b7789e3784e2524"
+    },
+    {
+      "path": "tests/meridian/test_settings_payday.py",
+      "sha256": "266b4795b06c30e65ab95018fc17e5b99f0f6595a9fa2d612fc9d9c896d662c4"
+    },
+    {
+      "path": "tests/meridian/test_storage.py",
+      "sha256": "aed1dbdf6e5538d002e863ac3b8d05b0fe8773e54ef17b760d41215ca101f650"
+    },
+    {
+      "path": "tests/meridian/test_sync.py",
+      "sha256": "0840c266a6ede923124b67180914b6e1dfe14d3ae310adaf4c570a0ebf8af70b"
+    },
+    {
+      "path": "tests/meridian/test_sync_gate.py",
+      "sha256": "eebdcc8e399453259c850f2547a38e7ca5697a645f8e3ea8865764d8f3f46835"
+    },
+    {
+      "path": "tests/meridian/test_sync_reconciliation.py",
+      "sha256": "121a283617453dec4a0848125e8be229ff5725bf2fd4fd52069651b90cdb7e5b"
+    },
+    {
+      "path": "tests/meridian/test_transaction_source_stamp.py",
+      "sha256": "b1d0e2ad4aa90d9fbb2a6ce9aad411d3ffea6370af304635be7995ddca8cd670"
+    },
+    {
+      "path": "tests/meridian/test_trials.py",
+      "sha256": "ba12125795b2fa04fe88cd8ba0527dde5fe23ff6fef000c80e4e5bcb6ccf5140"
+    },
+    {
+      "path": "tests/meridian/test_write_routing.py",
+      "sha256": "c01a78c752cd25ef00a7a30d52856ce8b0fd9520954f51a8333f6641a36db94f"
+    },
+    {
+      "path": "tests/test_app_crew_integration.py",
+      "sha256": "6f88e94366974f8693668ae383077d801123c195f8d0497f0aaf793510d1c3c0"
+    },
+    {
+      "path": "tests/test_app_evidence_integration.py",
+      "sha256": "69248be5d8cccb77c0519ead3a73c6952b7aa614c9f1d6919890c2913e25ae63"
+    },
+    {
+      "path": "tests/test_capture_contract.py",
+      "sha256": "3fcb8eaa3ad0bae9f3c277c0135b9ed1b2a326224d4edb41d0e7bb8314bfb671"
+    },
+    {
+      "path": "tests/test_legacy_redirects.py",
+      "sha256": "5a75878ca1d1b57c86fe79bbdd427db0e31ebf4435686a1232a9acaf9a68108a"
+    },
+    {
+      "path": "tests/test_meridian_workspace_invariant.py",
+      "sha256": "d9e1463c107ecebde03792c66a60971c1b49f173848afbc98ba62f5aecf26ab5"
+    },
+    {
+      "path": "tests/test_preview_template_refresh.py",
+      "sha256": "0949d5a39f09c31bd3bb1916530cb703b364fa94883aa82e7b075004190f215b"
+    },
+    {
+      "path": "tests/test_production_config.py",
+      "sha256": "e5b9ae25874bfc57d52badf2cae7cb81aa3d71fd1ad43362c6186eb4f27b7105"
+    },
+    {
+      "path": "tests/test_seed_preview.py",
+      "sha256": "43ea0ce8858740dc018883c9b5b459659a9f1798a43b8c25aa0a8dac57fccf0e"
+    }
+  ],
+  "excluded_paths": [
+    ".dockerignore",
+    ".env.example",
+    ".github/workflows/docker-image.yml",
+    ".gitignore",
+    "AGENTS.md",
+    "LICENSE",
+    "Meridian Project Documents.zip",
+    "Meridian Project Documents/01 - Product Design Specification.md",
+    "Meridian Project Documents/01 - Product Design Specification.pdf",
+    "Meridian Project Documents/02 - Implementation Roadmap.md",
+    "Meridian Project Documents/02 - Implementation Roadmap.pdf",
+    "Meridian Project Documents/03 - Model and Token Strategy.md",
+    "Meridian Project Documents/03 - Model and Token Strategy.pdf",
+    "Meridian Project Documents/04 - Project Memory.md",
+    "Meridian Project Documents/04 - Project Memory.pdf",
+    "Meridian Project Documents/05 - IP and Commercialization Brief.md",
+    "Meridian Project Documents/05 - IP and Commercialization Brief.pdf",
+    "Meridian Project Documents/06 - Task 1 Engineering Report.md",
+    "Meridian Project Documents/07 - Task 2 Engineering Report.md",
+    "Meridian Project Documents/08 - Task 3 Engineering Report.md",
+    "Meridian Project Documents/09 - Meridian Design Atlas.html",
+    "Meridian Project Documents/README.md",
+    "README.md",
+    "artifacts/design-audit-2026-08-30/atlas-appframe/accounts-desktop.png",
+    "artifacts/design-audit-2026-08-30/atlas-appframe/activity-desktop.png",
+    "artifacts/design-audit-2026-08-30/atlas-appframe/plan-desktop.png",
+    "artifacts/design-audit-2026-08-30/atlas-appframe/today-desktop.png",
+    "artifacts/design-audit-2026-08-30/atlas/accounts-desktop.png",
+    "artifacts/design-audit-2026-08-30/atlas/accounts-mobile.png",
+    "artifacts/design-audit-2026-08-30/atlas/activity-desktop.png",
+    "artifacts/design-audit-2026-08-30/atlas/activity-mobile.png",
+    "artifacts/design-audit-2026-08-30/atlas/plan-desktop.png",
+    "artifacts/design-audit-2026-08-30/atlas/plan-mobile.png",
+    "artifacts/design-audit-2026-08-30/atlas/today-desktop.png",
+    "artifacts/design-audit-2026-08-30/atlas/today-mobile.png",
+    "artifacts/design-audit-2026-08-30/current/accounts-desktop.png",
+    "artifacts/design-audit-2026-08-30/current/accounts-mobile.png",
+    "artifacts/design-audit-2026-08-30/current/activity-desktop.png",
+    "artifacts/design-audit-2026-08-30/current/activity-mobile.png",
+    "artifacts/design-audit-2026-08-30/current/plan-desktop.png",
+    "artifacts/design-audit-2026-08-30/current/plan-mobile.png",
+    "artifacts/design-audit-2026-08-30/current/today-desktop.png",
+    "artifacts/design-audit-2026-08-30/current/today-mobile.png",
+    "artifacts/design-audit-2026-08-30/current/transaction-inspector-desktop.png",
+    "artifacts/design-audit-2026-08-30/final/README.md",
+    "artifacts/design-audit-2026-08-30/final/accounts-desktop-live.png",
+    "artifacts/design-audit-2026-08-30/final/accounts-desktop.png",
+    "artifacts/design-audit-2026-08-30/final/accounts-mobile.png",
+    "artifacts/design-audit-2026-08-30/final/activity-desktop-live.png",
+    "artifacts/design-audit-2026-08-30/final/activity-desktop.png",
+    "artifacts/design-audit-2026-08-30/final/activity-mobile.png",
+    "artifacts/design-audit-2026-08-30/final/plan-desktop-live.png",
+    "artifacts/design-audit-2026-08-30/final/plan-desktop.png",
+    "artifacts/design-audit-2026-08-30/final/plan-mobile.png",
+    "artifacts/design-audit-2026-08-30/final/today-desktop-live.png",
+    "artifacts/design-audit-2026-08-30/final/today-desktop.png",
+    "artifacts/design-audit-2026-08-30/final/today-mobile.png",
+    "artifacts/design-audit-2026-08-30/iterations/today-pass-1/today-live-desktop-1440x900.png",
+    "artifacts/design-audit-2026-08-30/iterations/today-pass-1/today-live-mobile-390x844.png",
+    "artifacts/design-audit-2026-08-30/iterations/today-pass-1/today-live-mobile-full.png",
+    "artifacts/design-audit-2026-08-30/iterations/today-pass-2/today-live-desktop.png",
+    "artifacts/design-audit-2026-08-30/iterations/today-pass-2/today-live-mobile.png",
+    "artifacts/design-audit-2026-08-30/iterations/today-pass-3/today-desktop-comparison.png",
+    "artifacts/design-audit-2026-08-30/iterations/today-pass-3/today-live-desktop.png",
+    "artifacts/design-audit-2026-08-30/iterations/today-pass-3/today-live-mobile.png",
+    "artifacts/design-audit-2026-08-31/settings-connections/desktop-pass-1/connections-desktop-1440x900.png",
+    "artifacts/gameplan-2026-09-13/document-validation.json",
+    "artifacts/gameplan-2026-09-13/guardrail-probes.json",
+    "artifacts/gameplan-2026-09-13/inventory.json",
+    "config/com.simplecrew.crew-broker.plist.template",
+    "design-qa.md",
+    "design/logos/1-shield-crew.svg",
+    "design/logos/2-orbit-pocket.svg",
+    "design/logos/2-orbit-pocket.svg.png",
+    "design/logos/3-sc-monogram.svg",
+    "design/logos/4-beacon.svg",
+    "design/logos/5-wordmark.svg",
+    "design/logos/index.html",
+    "docker-compose.yml.template",
+    "docs/project/captures/.gitkeep",
+    "docs/project/crew_mutations.json",
+    "output/pdf/meridian-ip-and-commercialization-brief.pdf",
+    "output/pdf/meridian-model-and-token-strategy.pdf",
+    "output/pdf/meridian-overhaul-implementation-plan.pdf",
+    "output/pdf/meridian-product-overhaul-design.pdf",
+    "output/pdf/meridian-project-memory.pdf",
+    "ruff.toml",
+    "run_preview_local.sh",
+    "scripts/install_crew_broker_launchagent.sh",
+    "scripts/meridian_capture_login.sh",
+    "scripts/meridian_live_login.sh",
+    "static/img/meridian/observatory/icons/LICENSE",
+    "templates/index.html.backup"
+  ],
+  "secret_pattern_paths_excluded": [],
+  "note": "Only allowlisted tracked source plus this audit tool; no live data/config copied. Heuristic source scan is not a comprehensive secret audit."
+}

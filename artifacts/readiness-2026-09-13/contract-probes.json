@@ -1,0 +1,45 @@
+{
+  "source_sha": "fddc229faa576b0ae5cebccc7a9282e5e681ba3a",
+  "synthetic_only": true,
+  "provider_calls": 0,
+  "unencrypted_pdf": {
+    "accepted": false,
+    "reason": "possible encrypted PDF; no unsafe parse fallback"
+  },
+  "blob_write_failure": {
+    "returned_quarantined": false,
+    "metadata_persisted": true
+  },
+  "reserve_settings_no_local_id": {
+    "ok": null,
+    "check": "crew-bill-reserve-readback",
+    "provider_truth": false,
+    "reason": "provider readback is incomplete or has no bill identity",
+    "requested": {
+      "name": "Synthetic"
+    }
+  },
+  "partial_readback_missing_bill": {
+    "ok": null,
+    "check": "crew-bill-readback",
+    "provider_truth": false,
+    "reason": "the requested bill was not present in the readback; deletion is unconfirmed",
+    "requested": {
+      "name": "Synthetic bill",
+      "amount": null
+    },
+    "observed": null
+  },
+  "missing_facets_complete_flag": {
+    "normalized_complete": true,
+    "existing_bill_marked_absent": false
+  },
+  "calendar": {
+    "monthly_second": "2026-03-31",
+    "semimonthly_next": "2026-01-31"
+  },
+  "scenario": {
+    "starting_cash_changed": true,
+    "coverage_horizons_unchanged": true
+  }
+}

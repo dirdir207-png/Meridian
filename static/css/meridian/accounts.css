@@ -1,0 +1,612 @@
+/* Accounts workspace composition (visual recovery Task 6).
+   Net-position financial structure: editorial command header, available-cash
+   and liability summaries, provider-neutral account identity rows, and a
+   connection-health rail. Loaded after workspaces.css so workspace rules win. */
+
+/* The shell renders a generic kicker/heading/subline before every workspace
+   except Today. Accounts carries its own editorial command header inside the
+   partial, so the shell's copy is visually hidden but stays in the a11y tree
+   (it is still the section's aria-labelledby anchor and focus target). */
+#workspace-accounts > .m-workspace-kicker,
+#workspace-accounts > .m-workspace-heading,
+#workspace-accounts > .m-workspace-subline {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Accounts root ---------- */
+
+.m-accounts {
+  display: grid;
+  gap: var(--m-space-6);
+}
+
+/* ---------- Command header ---------- */
+
+.m-accounts-command {
+  gap: var(--m-space-6);
+}
+
+.m-accounts-command-copy {
+  min-width: 0;
+}
+
+.m-accounts-connect {
+  flex: none;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--m-space-2);
+}
+
+.m-accounts-connect svg {
+  flex: none;
+}
+
+/* ---------- Net-position summary cards ---------- */
+
+.m-accounts-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--m-space-4);
+}
+
+.m-accounts-liabilities {
+  margin-top: var(--m-space-4);
+}
+
+@media (max-width: 700px) {
+  .m-accounts-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Parchment summary panel (concept 04) ---------- */
+
+/* The kit names parchment-ticket.png for an "account summary". The ticket uses a
+   dedicated archive-building cutout so the Accounts document motif does not reuse
+   the Today dial's hilltop observatory. Nine-slice keeps the scalloped ends and
+   corner rivets fixed while the panel reflows, and `fill` carries the blank face,
+   so the figure and its provenance note stay code-owned HTML.
+
+   The kit is explicit about this surface: "On parchment, use dark navy text; do not
+   carry pale lilac/mint text over without checking contrast." The figure's signal
+   colouring is therefore deliberately suppressed here -- it is a cash total, not a
+   warning, and pale mint would not survive the parchment. */
+.m-accounts-summary .m-accounts-ticket {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-4);
+  padding: var(--m-space-4);
+  border: 20px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 fill / 20px round;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  /* Concept 04 sets the whole ticket at an angle. Measured two independent features
+     inside it -- the ticket's own top edge (-3.7deg over 656 columns) and the brass rule
+     under the amount (-3.21deg over 104 columns). The rule is the cleaner, purely
+     internal feature, so the panel takes its angle. The text tilts with the panel,
+     because that is what the concept draws. */
+  transform: rotate(-3.2deg);
+  /* A rotated box is wider than the box that laid out: 388x164 at -3.2deg gives a
+     bounding width of ~397px against a 388px column. The page's own 16px gutters absorb
+     that, so it cannot reach the viewport edge -- verified at all five governed viewports
+     with zero horizontal overflow. */
+  transform-origin: center;
+  /* The concept's fine dotted border, inset from the edge. `outline-offset` does this
+     without a third pseudo-element, and an outline is decorative by nature, so it adds
+     nothing to the accessibility tree. */
+  outline: 1px dotted var(--obs-brass);
+  outline-offset: -14px;
+}
+
+/* The concept's punched notches: a semicircle bitten out of each side at mid-height, as a
+   real ticket has. Drawn in the page background colour rather than cut with a mask, so it
+   needs no mask-composite support and rotates with the panel. Absolutes are placed
+   against the PADDING box, which sits 20px inside the border-image edge, hence -38px
+   (20px border + 18px half-notch) to centre each bite on the outer edge.
+
+   The notch is 36px, LARGER than the ~25px the concept's own notch measures. That is
+   deliberate and measured: the concept's ticket edge is smooth, so a 25px bite reads
+   instantly, while the kit's `parchment-ticket.png` already carries ~10px scallops down
+   the same edge, and a concept-sized notch disappears into them -- verified at 22px, where
+   it read as a missing scallop rather than a punched hole. Enlarging it is what makes the
+   concept's gesture legible on the kit's edge, and it is recorded here rather than left as
+   an unexplained size. */
+.m-accounts-summary .m-accounts-ticket::before,
+.m-accounts-summary .m-accounts-ticket::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 36px;
+  height: 36px;
+  margin-top: -18px;
+  border-radius: 50%;
+  background: var(--obs-bg);
+  pointer-events: none;
+}
+
+.m-accounts-summary .m-accounts-ticket::before {
+  left: -38px;
+}
+
+.m-accounts-summary .m-accounts-ticket::after {
+  right: -38px;
+}
+
+.m-accounts-ticket-art {
+  flex: 0 0 auto;
+  width: clamp(92px, 28%, 188px);
+  aspect-ratio: 1;
+  background: url("/static/img/meridian/observatory/accounts-ticket-building.png") center / contain no-repeat;
+}
+
+.m-accounts-ticket-figure {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Specificity note: `.m-accounts-net-card .m-section-label` sets the muted colour at
+   the same (0,2,0) weight and appears LATER in this file, so a two-class selector here
+   loses and the label rendered pale lilac on the parchment — the exact contrast failure
+   the kit warns about. Three classes is deliberate, not decorative. */
+.m-accounts-summary .m-accounts-ticket .m-section-label {
+  color: #7a5a2e;
+}
+
+.m-accounts-ticket .m-accounts-figure,
+.m-accounts-ticket .m-accounts-figure[data-signal] {
+  color: #20263b;
+}
+
+.m-accounts-ticket .m-accounts-figure-note {
+  color: #5c5136;
+}
+
+.m-accounts-net-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: var(--m-space-2);
+}
+
+.m-accounts-net-card .m-section-label {
+  color: var(--m-ink-muted);
+}
+
+.m-accounts-figure {
+  display: block;
+  font-family: var(--m-font-serif);
+  font-weight: 500;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+  font-variant-numeric: tabular-nums;
+  color: var(--m-ink);
+}
+
+/* Value-aware signal: green only for healthy positive money; red for negative;
+   neutral (default ink) for zero so a $0.00 never reads as a strong positive. */
+.m-accounts-figure[data-signal="positive"] { color: var(--m-healthy); }
+.m-accounts-figure[data-signal="negative"] { color: var(--m-risk); }
+.m-accounts-figure[data-signal="attention"] { color: var(--m-caution); }
+.m-accounts-figure[data-signal="neutral"] { color: var(--m-ink-faint); }
+
+.m-accounts-figure-note {
+  margin: var(--m-space-1) 0 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+  line-height: 1.45;
+}
+
+/* ---------- Account structure + connection-health layout ---------- */
+
+.m-accounts-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--m-space-6);
+  align-items: start;
+}
+
+.m-accounts-primary {
+  min-width: 0;
+  display: grid;
+  gap: var(--m-space-6);
+}
+
+/* Account structure sheet (white rounded card) */
+.m-account-list-sheet {
+  width: 100%;
+  min-width: 0;
+  padding: var(--m-space-3) var(--m-space-5);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+  box-shadow: var(--m-elevation-1);
+}
+
+.m-account-group {
+  padding: var(--m-space-4) 0 0;
+}
+
+.m-account-group + .m-account-group {
+  margin-top: var(--m-space-2);
+}
+
+.m-account-group > .m-section-label {
+  margin: 0 0 var(--m-space-2);
+  color: var(--m-ink-faint);
+}
+
+.m-account-list {
+  border-top: 1px solid var(--m-border);
+}
+
+.m-account-row,
+.m-connection-row,
+.m-section-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--m-space-4);
+}
+
+.m-account-row {
+  min-width: 0;
+  padding: var(--m-space-4) 0;
+  border-bottom: 1px solid var(--m-border);
+}
+
+.m-account-row:last-child {
+  border-bottom: 0;
+}
+
+/* Account medallion (concept 04). The kit's medallion-frame.png is a brass double ring
+   with four rivets, specified as a "decorative frame above a code-owned colored disk and
+   semantic SVG icon" -- so the ring is supplied art layered above a disk whose tint we
+   own, with the role's line icon keeping its meaning on top. The frame image carries a
+   large transparent centre, so it can sit over the ink without masking it. */
+.m-account-icon {
+  position: relative;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--medallion-tint, var(--m-surface-muted));
+  color: #20263b;
+}
+
+.m-account-icon::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/medallion-frame.png") center / contain no-repeat;
+  pointer-events: none;
+}
+
+.m-account-icon[data-tint="lilac"],
+.m-account-row[data-tint="lilac"] {
+  --medallion-tint: #c1a9e2;
+}
+
+.m-account-icon[data-tint="mint"],
+.m-account-row[data-tint="mint"] {
+  --medallion-tint: #a5d4bf;
+}
+
+.m-account-icon[data-tint="apricot"],
+.m-account-row[data-tint="apricot"] {
+  --medallion-tint: #f3b272;
+}
+
+.m-account-icon[data-tint="coral"],
+.m-account-row[data-tint="coral"] {
+  --medallion-tint: #e8a48c;
+}
+
+.m-account-icon[data-tint="slate"],
+.m-account-row[data-tint="slate"] {
+  --medallion-tint: #b9c2d2;
+}
+
+.m-account-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---------- Connector rail (concept 04) ---------- */
+
+/* The concept threads its account rows on a dashed rail with a small node per row, so
+   the medallions read as one constellation rather than a stack of separate tiles. The
+   rail lives in the row's left gutter, clear of the medallion, and it is decorative. The
+   line stops at the medallion centres on the first and last rows instead of dangling
+   past them. Archived rows carry no medallion, so they are excluded rather than given a
+   node that marks nothing. */
+.m-account-row {
+  position: relative;
+  padding-left: 30px;
+}
+
+.m-account-list .m-account-row:not(.m-account-row-archived)::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed var(--m-border-strong);
+  pointer-events: none;
+}
+
+.m-account-list .m-account-row:first-child::before {
+  top: 50%;
+}
+
+.m-account-list .m-account-row:last-child::before {
+  bottom: 50%;
+}
+
+.m-account-list .m-account-row:not(.m-account-row-archived)::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--medallion-tint, var(--m-ink-faint));
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.m-account-identity {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.m-account-name {
+  margin: 0;
+  font: 500 var(--m-text-md)/1.3 var(--m-font-sans);
+  color: var(--m-ink);
+}
+
+.m-account-source,
+.m-section-copy {
+  margin: var(--m-space-1) 0 0;
+  font-size: var(--m-text-xs);
+  color: var(--m-ink-muted);
+}
+
+.m-account-balance {
+  flex: none;
+  font-size: var(--m-text-lg);
+  font-variant-numeric: tabular-nums;
+  color: var(--m-ink);
+}
+
+.m-account-activity {
+  flex: none;
+  min-height: 36px;
+  padding: var(--m-space-1) var(--m-space-3);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-pill);
+  background: var(--m-surface-muted);
+  color: var(--m-ink-muted);
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-sm);
+  cursor: pointer;
+}
+
+.m-account-activity:hover,
+.m-account-activity:focus-visible {
+  border-color: var(--m-border-strong);
+  color: var(--m-ink);
+}
+
+/* An account a complete read concluded is gone: it keeps its history and is
+   reported with provenance instead of disappearing, so it must not read as a
+   live balance row. */
+.m-account-row-archived {
+  align-items: flex-start;
+  border-bottom-style: dashed;
+}
+
+.m-account-row-archived .m-account-identity {
+  max-width: 60ch;
+}
+
+.m-account-history {
+  margin: var(--m-space-1) 0 0;
+  font-size: var(--m-text-xs);
+  color: var(--m-ink-muted);
+}
+
+@media (max-width: 600px) {
+  /* Keep long account names from colliding with balances and activity actions.
+     The action drops to its own row while retaining a 44px touch target. */
+  .m-account-row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--m-space-3);
+    row-gap: var(--m-space-2);
+  }
+
+  .m-account-icon {
+    grid-row: span 2;
+  }
+
+  .m-account-identity {
+    grid-column: 2;
+  }
+
+  .m-account-balance {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .m-account-activity {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    justify-self: end;
+    min-height: 44px;
+    padding: var(--m-space-2) var(--m-space-3);
+  }
+}
+
+
+/* ---------- Connection-health rail ---------- */
+
+.m-connection-health {
+  position: sticky;
+  top: var(--m-space-6);
+  padding: var(--m-space-5);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+  box-shadow: var(--m-elevation-1);
+  display: grid;
+  gap: var(--m-space-4);
+}
+
+.m-connection-health-head {
+  padding-bottom: var(--m-space-4);
+  border-bottom: 1px solid var(--m-border);
+  display: grid;
+  gap: var(--m-space-2);
+}
+
+.m-connection-status {
+  margin: 0;
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-xl);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.m-connection-list {
+  display: grid;
+  gap: var(--m-space-2);
+}
+
+.m-connection-row {
+  min-width: 0;
+  padding: var(--m-space-3) 0;
+  border-bottom: 1px solid var(--m-border);
+}
+
+.m-connection-row:last-child {
+  border-bottom: 0;
+}
+
+.m-connection-age {
+  flex: none;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.m-connection-last {
+  margin: var(--m-space-2) 0 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+  line-height: 1.5;
+}
+
+.m-connection-actions {
+  display: grid;
+  gap: var(--m-space-2);
+  margin-top: var(--m-space-3);
+}
+
+.m-connection-health .m-button {
+  width: 100%;
+  text-align: center;
+}
+
+.m-connection-actions .m-button[aria-busy="true"] {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+/* ---------- Assets & Contracts (memory management) ---------- */
+
+/* Concept 04 closes the Accounts page with a compact parchment strip for tracked items,
+   and the kit names parchment-ticket.png for exactly that shape of surface ("Evidence,
+   account summary, compact income ticket"), so the strip reuses the same measured
+   80-slice. The concept's engraving on the strip has no counterpart in the kit: the only
+   engraving that would fit is the telescope, which the kit scopes to Activity and
+   Settings, so the strip takes the ticket's material and hierarchy without an invented
+   illustration.
+
+   Specificity note, and the same trap as the summary panel above: `.obs-shell
+   .m-section-label` sets the label colour at (0,2,0), so a two-class selector here ties
+   with it and the winner falls to stylesheet order. Three classes is deliberate. */
+.memory-management {
+  display: grid;
+  gap: var(--m-space-3);
+  padding: var(--m-space-4);
+  border: 20px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 fill / 20px round;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.obs-shell .memory-management .m-section-label {
+  color: #7a5a2e;
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-lg);
+}
+
+.obs-shell .memory-management .m-section-copy {
+  color: #5c5136;
+}
+
+.memory-management__actions {
+  display: flex;
+  gap: var(--m-space-2);
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+  .m-accounts-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .m-connection-health {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .m-accounts-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .m-section-heading-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .m-section-heading-row .m-button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .m-account-list-sheet {
+    padding: var(--m-space-2) var(--m-space-4);
+  }
+}

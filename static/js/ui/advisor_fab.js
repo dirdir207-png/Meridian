@@ -1,8 +1,11 @@
 /**
  * @file advisor_fab.js
- * @description Floating AI Advisor — available on every page.
- * Chat history persists across sessions via localStorage. Proposals still
- * require owner approval in Pending Actions; the advisor can only propose.
+ * @description Meridian contextual advisor — in-context control (desktop right
+ * rail, mobile full-height sheet). Via window.advisorSetOpen() the shell's
+ * in-context [data-open-advisor] buttons open it; the floating trigger is a
+ * discreet secondary entry point. Chat history persists across sessions via
+ * localStorage. Proposals still require owner approval in Pending Actions; the
+ * advisor can only propose.
  */
 
 const ADVISOR_HISTORY_KEY = 'sc_advisor_history_v1';
@@ -27,7 +30,7 @@ function advisorLoadPersisted() {
     if (log) {
         log.innerHTML = '';
         if (advisorFabHistory.length === 0) {
-            advisorBubble('assistant', "Hi! I'm your Crew copilot. Ask about balances, pockets, or spending — or tell me to move money and I'll draft a proposal for your approval.");
+            advisorBubble('assistant', "Hi! I'm Virgil. Ask about your balances, pockets, or spending — or tell me to move money and I'll draft a proposal for your approval.");
         } else {
             for (const m of advisorFabHistory) {
                 if (m && m.content) advisorBubble(m.role, m.content, true);
@@ -46,9 +49,9 @@ function advisorBubble(role, text, skipPersist) {
     const log = _advisorLog();
     if (!log || !text) return;
     const bubble = document.createElement('div');
-    bubble.style.cssText = `max-width:85%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.45;white-space:pre-wrap;word-break:break-word;${role === 'user'
-        ? 'align-self:flex-end;background:var(--simple-blue,#0093E9);color:#fff;'
-        : 'align-self:flex-start;background:var(--bg-elevated,#fff);color:var(--text-dark);border:1px solid var(--border-color);'}`;
+    bubble.className = role === 'user'
+        ? 'm-advisor-bubble m-advisor-bubble--user'
+        : 'm-advisor-bubble m-advisor-bubble--assistant';
     bubble.textContent = text;
     log.appendChild(bubble);
     log.scrollTop = log.scrollHeight;
@@ -59,18 +62,38 @@ function advisorBubble(role, text, skipPersist) {
 
 function advisorSetOpen(open) {
     const panel = document.getElementById('advisor-panel');
-    const fab = document.getElementById('advisor-fab');
     if (!panel) return;
-    panel.style.display = open ? 'flex' : 'none';
-    if (fab) fab.style.display = open ? 'none' : 'flex';
-    try { localStorage.setItem('sc_advisor_open', open ? '1' : '0'); } catch (e) {}
+    const shell = window.MeridianShell || null;
     if (open) {
         if (!advisorFabReady) { advisorLoadPersisted(); advisorFabReady = true; }
         ensureAdvisorStatus();
+        if (shell && typeof shell.openSheet === 'function') {
+            // Reuse the shell's sheet primitive: it handles Escape, inert
+            // background until the final close, and focus restore.
+            shell.openSheet(panel, { modal: true });
+        } else {
+            panel.hidden = false;
+            panel.setAttribute('data-open', '');
+            panel.setAttribute('role', 'dialog');
+            panel.setAttribute('aria-modal', 'true');
+        }
         const input = document.getElementById('advisor-fab-input');
         if (input) input.focus();
+        try { localStorage.setItem('sc_advisor_open', '1'); } catch (e) {}
         const log = _advisorLog();
         if (log) log.scrollTop = log.scrollHeight;
+    } else {
+        if (shell && typeof shell.closeSheet === 'function') {
+            shell.closeSheet();
+        } else {
+            panel.hidden = true;
+            panel.removeAttribute('data-open');
+            panel.removeAttribute('role');
+            panel.removeAttribute('aria-modal');
+            const fab = document.getElementById('advisor-fab');
+            if (fab && typeof fab.focus === 'function') fab.focus();
+        }
+        try { localStorage.setItem('sc_advisor_open', '0'); } catch (e) {}
     }
 }
 
@@ -86,7 +109,7 @@ async function ensureAdvisorStatus() {
         advisorConfigured = !!data.configured;
         if (statusEl) statusEl.textContent = advisorConfigured ? '' : 'not configured';
         if (!advisorConfigured) {
-            advisorBubble('assistant', '⚠️ AI provider not configured yet.\nAdd OPENAI_API_KEY (or OPENROUTER_API_KEY) to your .env and restart.');
+            advisorBubble('assistant', 'AI provider not configured yet.\nAdd OPENAI_API_KEY (or OPENROUTER_API_KEY) to your .env and restart.');
         }
     } catch (e) {
         if (statusEl) statusEl.textContent = 'offline';
@@ -106,11 +129,24 @@ async function advisorFabSend() {
 
     if (sendBtn) sendBtn.disabled = true;
     try {
-        const response = await fetch('/api/advisor/chat', {
+        const contextualNode = document.querySelector('[data-advisor-context]:not([hidden])');
+        const isMeridian = document.querySelector('[data-meridian-shell]') !== null;
+        const context = contextualNode
+            ? {
+                kind: contextualNode.dataset.advisorContext,
+                object_id: contextualNode.dataset.objectId || 'current',
+                evidence_ids: contextualNode.dataset.objectId
+                    ? [`${contextualNode.dataset.advisorContext}:${contextualNode.dataset.objectId}`]
+                    : [],
+            }
+            : { kind: 'forecast', object_id: 'current', evidence_ids: [] };
+        const response = await fetch(isMeridian ? '/api/meridian/advisor' : '/api/advisor/chat', {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, history: advisorFabHistory.slice(-10) }),
+            body: JSON.stringify(isMeridian
+                ? { question: message, context }
+                : { message, history: advisorFabHistory.slice(-10) }),
         });
         const data = await response.json();
         const log = _advisorLog();
@@ -120,11 +156,12 @@ async function advisorFabSend() {
         if (!response.ok) {
             replyText = data.error || 'Advisor error.';
         } else {
-            replyText = data.reply || '';
-            if (data.proposal) {
-                replyText += `\n\n📋 Proposal drafted: ${data.proposal.summary}\nReview it under Account → Pending Actions.`;
+            replyText = isMeridian ? (data.answer || '') : (data.reply || '');
+            const proposal = data.proposal || ((data.proposals || [])[0]);
+            if (proposal) {
+                replyText += `\n\nProposal drafted: ${proposal.summary || proposal.type}\nReview it before approval.`;
                 if (typeof loadPendingActions === 'function') loadPendingActions();
-                haptic([15, 40, 15]);
+                if (typeof haptic === 'function') haptic([15, 40, 15]);
             }
         }
         advisorBubble('assistant', replyText);
@@ -147,7 +184,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const send = document.getElementById('advisor-fab-send');
     const input = document.getElementById('advisor-fab-input');
 
-    if (fab) fab.addEventListener('click', () => { haptic(8); advisorSetOpen(true); });
+    if (fab) fab.addEventListener('click', () => {
+        if (typeof haptic === 'function') haptic(8);
+        advisorSetOpen(true);
+    });
     if (close) close.addEventListener('click', () => advisorSetOpen(false));
     if (send) send.addEventListener('click', advisorFabSend);
     if (input) input.addEventListener('keydown', (e) => { if (e.key === 'Enter') advisorFabSend(); });

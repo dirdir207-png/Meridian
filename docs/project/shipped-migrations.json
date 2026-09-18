@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "note": "Migrations that have shipped. Once a database applies a migration its checksum is frozen, so a listed path may never change or disappear -- ship a new migration instead. New *.sql files are allowed and reported as needing registration. This manifest is deliberately independent of any claim's HEAD.",
+  "frozen_at_sha": "72370de78c529f6b88afa01f79d5ac05a3874b17",
+  "frozen_at": "2026-09-13T07:29:51+00:00",
+  "migration_count": 21,
+  "migrations": {
+    "meridian/migrations/001_financial_graph.sql": "0a185eee376e676356191db9543aef173c4b6cf1db188965b16e2c36c58ab8a1",
+    "meridian/migrations/002_financial_integrity.sql": "90dc2b034138170c1db71e9b30cc957b9ca1218329e7ee1863d6862d380f21dd",
+    "meridian/migrations/003_provider_sync_runs.sql": "fb10f2b7333d0ccc2549c091c63e2392526438fa27446186a763b31a217d3d7e",
+    "meridian/migrations/004_canonical_transaction_timestamps.sql": "c69e8460c7d3edc8a292eec2ff98d1fd47fa818c9bee1032906f193ca512b63c",
+    "meridian/migrations/005_commitments.sql": "99f6ed2e736cb8c6e92fc708e3a54bec06b4cd6bd7a7c34ac655a13cd6965bcd",
+    "meridian/migrations/006_funding_rules.sql": "156591a45c9c79683d87c811d2ab81bc99139839ceb8e8bb5d0e5bc9f376669a",
+    "meridian/migrations/007_transaction_classification.sql": "cafe836e3e10bc761a887b48757b8535f43d8d038c1936559c809f4fd5e0eeab",
+    "meridian/migrations/008_ai_classification_audit.sql": "f87ab0cc520875b79f55bb25ee111d7fa8c0faef97d01feb864309e28a765d2c",
+    "meridian/migrations/009_review_rules.sql": "c8b99436bd527e9545b436574e102fadda1853432549c63b64491b199df023a7",
+    "meridian/migrations/010_provider_reimbursements.sql": "19193f5d85f0a513c34d2d166718463cdcb399ce91f8bfc231ea6c881afb5f57",
+    "meridian/migrations/011_evidence_graph.sql": "7bacc75015272e7b01e76f83ef490911fb0072483d07e56ebaca4c24633afa62",
+    "meridian/migrations/012_context_signals.sql": "8ebfc90b3dcca424fa8720f1854635010922dee0fc9f93cd240f224d8caffdc1",
+    "meridian/migrations/013_assets_contracts.sql": "f61997b9f18036fe50aa716855ebed29c69ae1888fb8bc682d23e392c55ca34d",
+    "meridian/migrations/014_connection_authorizations.sql": "757ea5824c10c991c577575785d3536b6f9b7b1691a7ffcd2cb5b9d537242ad1",
+    "meridian/migrations/015_evidence_sender.sql": "6bcff2d1239fc736301851717102ed69b3ebd2251988578bc7cb246ccc96e3a0",
+    "meridian/migrations/016_trials.sql": "74d69021a5bcf22bbced97ce9311a0622c2c8013feb0063301a55724f2fa515c",
+    "meridian/migrations/017_cancellation_actions.sql": "b19dc3efbdff75522dc6f561e6e2e3de210e194d6afcec4f282d7b9eb754d2b8",
+    "meridian/migrations/018_trial_notifications.sql": "9c6ec74ecf70549b9b5e0a636cdb0f27c2e4d295084366741261fbf11a60d31a",
+    "meridian/migrations/019_immutable_observations.sql": "b91f986805ade7ae6afb24674460887e0de379a31527a3e9bdf39c4d2b6dd063",
+    "meridian/migrations/020_account_absence_reconciliation.sql": "7d9e300efe7dd9596d579eb15a66e683759dfb0fff2f2d4a55b33470ccafb52b",
+    "meridian/migrations/021_commitment_absence_reconciliation.sql": "0473ffb49e97a719b37187cca1147546a475413c038b06a378a0a0b68ffd9f2d"
+  }
+}

@@ -1,0 +1,677 @@
+/* Activity workspace composition (visual recovery Task 5).
+   Loaded after workspaces.css so workspace rules win over the shared base. */
+
+/* The shell renders a generic kicker/heading/subline for every workspace except
+   Today. Activity carries its own editorial command header inside the partial,
+   so the shell's copy is visually hidden but stays in the accessibility tree
+   (it is still the section's aria-labelledby anchor and focus target). */
+#workspace-activity > .m-workspace-kicker,
+#workspace-activity > .m-workspace-heading,
+#workspace-activity > .m-workspace-subline {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.m-activity {
+  display: grid;
+  gap: var(--m-space-5);
+}
+
+/* ---------- Editorial command header ---------- */
+
+.m-activity-command {
+  position: relative;
+  align-items: flex-start;
+}
+
+/* ---------- Telescope vignette (concept 03) ---------- */
+
+/* The kit names this asset for the "Activity top-right vignette" (about 130-170 CSS px
+   wide on mobile) and is explicit that it must not squeeze the heading or a touch
+   target. The header copy was right-aligned on a column flex, which left the concept's
+   station empty; the copy is now left-aligned and the vignette takes that station. At
+   narrow widths our owner-accepted heading is a full sentence rather than the concept's
+   single word, so there is no free right column beside it: the vignette moves into the
+   flow above the Filter button instead of overlapping or squeezing the heading. */
+.m-activity-vignette {
+  width: 148px;
+  aspect-ratio: 1;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/activity-telescope.png") center / contain no-repeat;
+}
+
+@media (min-width: 601px) {
+  .m-activity-vignette {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: clamp(128px, 16vw, 176px);
+    pointer-events: none;
+  }
+
+  .m-activity-command-copy {
+    max-width: calc(100% - clamp(140px, 18vw, 196px));
+  }
+
+  /* The copy moved left, so the control follows it rather than staying centred. */
+  .m-activity-command .m-filter-button {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .m-activity-vignette {
+    align-self: flex-end;
+  }
+}
+
+.m-activity-command .m-editorial-headline {
+  max-width: 15ch;
+}
+
+.m-activity-command .m-editorial-subline {
+  max-width: 52ch;
+}
+
+.m-filter-button {
+  min-width: 44px;
+  flex: 0 0 auto;
+  align-self: center;
+  color: var(--m-ink-muted);
+}
+
+.m-filter-button[aria-expanded="true"] {
+  color: var(--m-ink);
+}
+
+/* ---------- Compact filter controls ---------- */
+
+.m-activity-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--m-space-4);
+  flex-wrap: wrap;
+}
+
+/* Concept 03's mode row is ruled, not pilled: the three labels sit on a brass line and
+   the active one is underlined beneath its label, with the star above it coming from the
+   ornament layer. The pill treatment read as a generic segmented control and put a
+   filled chip where the concept has a label resting on a rule -- which is also the line
+   the concept uses to separate the header from the tab row. */
+.m-activity-toolbar .m-segmented {
+  display: flex;
+  gap: var(--m-space-6);
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--obs-brass);
+  border-radius: 0;
+  background: none;
+}
+
+.m-segmented .m-button {
+  position: relative;
+  min-height: 44px;
+  padding: 0 0 var(--m-space-2);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--m-ink-muted);
+  font-family: var(--m-font-serif);
+}
+
+.m-segmented .m-button:hover {
+  background: none;
+  color: var(--m-ink);
+}
+
+.m-segmented .m-button[aria-pressed="true"] {
+  background: none;
+  color: var(--obs-brass);
+}
+
+.m-segmented .m-button[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--obs-brass);
+}
+
+.m-activity-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--m-space-3);
+  flex-wrap: wrap;
+}
+
+.m-select {
+  min-height: 44px;
+  min-width: 200px;
+  padding: 0 var(--m-space-3);
+  border: 1px solid var(--m-border-strong);
+  border-radius: var(--m-radius-md);
+  background: var(--m-surface);
+  color: var(--m-ink);
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-md);
+}
+
+.m-freshness-chip {
+  align-self: center;
+}
+
+/* ---------- Ledger / detail split ---------- */
+
+.m-activity-body {
+  display: grid;
+  gap: var(--m-space-5);
+}
+
+.m-ledger-card {
+  padding: var(--m-space-4) var(--m-space-5) var(--m-space-5);
+}
+
+.m-ledger-cols {
+  display: flex;
+  gap: var(--m-space-4);
+  margin: 0 0 var(--m-space-2);
+  padding: 0 var(--m-space-2);
+  font-size: var(--m-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--m-ink-faint);
+}
+
+.m-ledger-cols span:nth-child(1) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.m-ledger-cols span:nth-child(2) {
+  flex: 0 0 auto;
+  width: 160px;
+}
+
+.m-ledger-cols span:nth-child(3) {
+  flex: 0 0 auto;
+  min-width: 96px;
+  text-align: right;
+}
+
+/* Reserve room so loading/empty states never collapse the workspace. */
+.m-ledger {
+  min-height: var(--m-space-8);
+}
+
+.m-day-group + .m-day-group {
+  margin-top: var(--m-space-5);
+}
+
+.m-day-heading {
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--m-ink-faint);
+  margin: 0 0 var(--m-space-2);
+}
+
+/* Pattern evidence: human, clickable rows (merchant · date · amount) that open
+   the transaction inspector rather than a bare numeric id. */
+.m-pattern-evidence {
+  display: grid;
+  gap: var(--m-space-1);
+  margin-bottom: var(--m-space-2);
+}
+
+.m-pattern-evidence-label {
+  margin: 0 0 var(--m-space-1);
+  font-size: var(--m-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--m-ink-faint);
+}
+
+.m-pattern-detail {
+  margin: 0 0 var(--m-space-2);
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+  line-height: 1.5;
+}
+
+
+.m-pattern-evidence-link {
+  display: block;
+  width: 100%;
+  padding: var(--m-space-2) var(--m-space-3);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-md);
+  background: var(--m-surface);
+  color: var(--m-ink);
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--m-motion-fast) var(--m-ease-out),
+    background var(--m-motion-fast) var(--m-ease-out);
+}
+
+.m-pattern-evidence-link:hover,
+.m-pattern-evidence-link:focus-visible {
+  border-color: var(--m-border-strong);
+  background: var(--m-surface-muted);
+}
+
+.m-pattern-evidence-link:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus-ring);
+}
+
+.m-transaction-row {
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-4);
+  width: 100%;
+  padding: var(--m-space-3) var(--m-space-2);
+  border-bottom: 1px solid var(--m-border);
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--m-radius-sm);
+}
+
+.m-transaction-row:hover {
+  background: var(--m-surface-muted);
+}
+
+[data-day-rows] > .m-transaction-row:last-child {
+  border-bottom-color: transparent;
+}
+
+.m-row-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.m-row-title {
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-md);
+  font-weight: 500;
+  color: var(--m-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A transaction recorded under an account the provider no longer returns is
+   history. The label says so in words; the row is simply not emphasised. */
+.m-transaction-row[data-account-archived="true"] .m-row-account {
+  color: var(--m-ink-muted);
+}
+
+.m-row-sub {
+  font-size: var(--m-text-xs);
+  color: var(--m-ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m-row-category {
+  flex: 0 0 auto;
+  width: 160px;
+  font-size: var(--m-text-sm);
+  color: var(--m-ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m-row-amount {
+  flex: 0 0 auto;
+  min-width: 96px;
+  text-align: right;
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-md);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.m-row-amount.is-income {
+  color: var(--m-healthy);
+}
+
+.m-row-amount.is-spend {
+  color: var(--m-risk);
+}
+
+.m-row-review-actions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--m-space-2);
+}
+
+/* ---------- Review cards (decision-first) ---------- */
+
+/* ---------- Framed category glyph (concept 03) ---------- */
+
+/* The concept frames each ledger row's category glyph in a ring carrying a small
+   marker dot. The glyph is decorative — it is a mask painted with currentColor so the
+   ring's own ink decides its colour, and it is hidden from assistive tech because the
+   category text beside it is what actually states the classification. */
+.m-review-glyph {
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--m-border-strong);
+  color: var(--m-ink);
+}
+
+.m-review-glyph::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--m-healthy);
+  transform: translateY(-50%);
+}
+
+.m-review-glyph-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background-color: currentColor;
+  -webkit-mask: var(--m-review-icon) center / contain no-repeat;
+  mask: var(--m-review-icon) center / contain no-repeat;
+}
+
+@media (max-width: 600px) {
+  .m-review-glyph {
+    width: 40px;
+    height: 40px;
+  }
+
+  .m-review-glyph-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.m-review-card {
+  display: grid;
+  gap: var(--m-space-3);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--m-space-4);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+  cursor: default;
+  box-sizing: border-box;
+}
+
+.m-review-card:hover {
+  background: var(--m-surface);
+}
+
+.m-review-card + .m-review-card {
+  margin-top: var(--m-space-4);
+}
+
+.m-review-header {
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-3);
+  min-width: 0;
+}
+
+.m-review-name {
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-lg);
+  font-weight: 600;
+  color: var(--m-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m-review-grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.m-review-select {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+}
+
+.m-review-amount {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.m-review-amount.is-income {
+  color: var(--m-healthy);
+}
+
+.m-review-amount.is-spend {
+  color: var(--m-risk);
+}
+
+.m-review-meta {
+  font-size: var(--m-text-sm);
+  color: var(--m-ink-muted);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.m-review-category {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--m-space-2);
+  min-width: 0;
+  font-size: var(--m-text-md);
+  color: var(--m-ink);
+}
+
+.m-review-dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--m-caution);
+}
+
+.m-review-actions {
+  display: flex;
+  gap: var(--m-space-3);
+  flex-wrap: wrap;
+  margin-top: var(--m-space-1);
+}
+
+.m-review-approve {
+  background: var(--m-healthy);
+  border-color: var(--m-healthy);
+  color: var(--m-surface);
+}
+
+.m-review-approve:hover {
+  background: color-mix(in srgb, var(--m-healthy) 88%, var(--m-ink));
+  border-color: transparent;
+}
+
+.m-review-correct {
+  border-color: var(--m-border-strong);
+  color: var(--m-ink);
+}
+
+/* Inline category editor (replaces a native prompt). */
+.m-review-editor {
+  display: flex;
+  gap: var(--m-space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.m-review-editor-input {
+  flex: 1 1 160px;
+  min-height: 40px;
+  padding: var(--m-space-2) var(--m-space-3);
+  border: 1px solid var(--m-border-strong);
+  border-radius: var(--m-radius-md);
+  background: var(--m-surface);
+  color: var(--m-ink);
+  font-family: var(--m-font-sans);
+  font-size: 16px; /* >=16px avoids iOS auto-zoom on focus */
+}
+
+.m-review-editor-input:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus-ring);
+}
+
+.m-review-editor-rule {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--m-space-2);
+  font-size: var(--m-text-sm);
+  color: var(--m-ink-muted);
+  cursor: pointer;
+}
+
+.m-review-editor-rule input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--m-healthy);
+  cursor: pointer;
+}
+
+.m-load-more {
+  width: 100%;
+  margin-top: var(--m-space-4);
+}
+
+/* ---------- Mobile selected-transaction summary ---------- */
+
+.m-selected-summary {
+  display: none;
+  flex-direction: column;
+  gap: var(--m-space-2);
+  padding: var(--m-space-4);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+  box-shadow: var(--m-elevation-1);
+}
+
+.m-selected-summary strong {
+  display: block;
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-lg);
+  font-weight: 500;
+  line-height: 1.2;
+  margin-top: var(--m-space-1);
+}
+
+.m-selected-summary-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--m-space-3);
+  margin: var(--m-space-1) 0 0;
+}
+
+.m-selected-summary-meta span:first-child {
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+}
+
+.m-selected-summary-meta span:last-child {
+  font-variant-numeric: tabular-nums;
+  color: var(--m-ink);
+}
+
+@media (max-width: 600px) {
+  .m-activity-command {
+    align-items: flex-start;
+    flex-direction: column;
+    min-height: 148px;
+    gap: var(--m-space-2);
+  }
+
+  .m-activity-command-copy { max-width: calc(100% - 156px); }
+  .m-activity-vignette { position: absolute; top: 0; right: 0; width: 148px; }
+  .m-filter-button { display: none; }
+
+  .m-activity-body {
+    gap: var(--m-space-4);
+  }
+
+  .m-selected-summary {
+    display: flex;
+  }
+
+  .m-selected-summary .m-button {
+    width: 100%;
+    margin-top: var(--m-space-2);
+    text-align: center;
+  }
+
+  .m-ledger-cols {
+    display: none;
+  }
+
+  .m-row-category {
+    width: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .m-activity-filters .m-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .m-selected-summary {
+    display: flex;
+  }
+
+  .m-sts-figure {
+    font-size: clamp(2.25rem, 12vw, 3rem);
+  }
+
+  .m-select {
+    min-width: 0;
+    flex: 1;
+  }
+}

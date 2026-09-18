@@ -1,0 +1,593 @@
+/* Today workspace composition (visual recovery Task 3).
+   Loaded after workspaces.css so workspace rules win over the shared base. */
+
+/* ---------- Today ---------- */
+
+.m-today {
+  margin: 0;
+  display: grid;
+  gap: var(--m-space-5);
+}
+
+.m-today-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: clamp(var(--m-space-5), 3vw, var(--m-space-7));
+  align-items: start;
+}
+
+.m-today-primary {
+  min-width: 0;
+  display: grid;
+  gap: var(--m-space-5);
+}
+
+/* Editorial command header: a date kicker with the primary action on the same
+   top row, then one dominant serif headline and a subline spanning full width. */
+.m-command-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-space-3);
+}
+
+.m-command-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--m-space-4);
+}
+
+.m-command-top .m-workspace-kicker {
+  color: var(--m-ink-muted);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.m-command-header .m-editorial-headline {
+  max-width: none;
+  font-size: clamp(2.4rem, 3.4vw, 3.1rem);
+}
+
+.obs-today-title {
+  margin: 0;
+  color: var(--obs-paper);
+  font: 400 clamp(2.9rem, 6vw, 4.9rem)/0.95 var(--obs-font-serif);
+  letter-spacing: -0.045em;
+}
+
+.obs-today-orbit-heading {
+  margin: 0;
+  color: var(--obs-paper);
+  font: 400 clamp(1.35rem, 2.7vw, 2rem)/1.15 var(--obs-font-serif);
+}
+
+html[data-theme="light"] .obs-today-title,
+html[data-theme="light"] .obs-today-orbit-heading {
+  color: var(--obs-paper-ink);
+}
+
+.m-today-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr);
+  gap: var(--m-space-4);
+  align-items: stretch;
+}
+
+.m-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--m-space-3);
+}
+
+.m-today-support {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--m-space-4);
+}
+
+/* ---------- Safe-to-spend hero card ---------- */
+
+.m-beacon-card h3 {
+  margin: var(--m-space-3) 0 var(--m-space-2);
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-xl);
+  font-weight: 400;
+}
+
+.m-beacon-change {
+  margin-top: var(--m-space-5);
+  padding-left: var(--m-space-4);
+  border-left: 2px solid var(--m-healthy);
+}
+
+.m-beacon-change strong {
+  display: block;
+  font-size: var(--m-text-md);
+  color: var(--m-ink);
+}
+
+.m-beacon-change p {
+  margin: var(--m-space-2) 0 0;
+}
+
+.m-beacon-card p:not(.m-section-label) {
+  color: var(--m-ink-muted);
+  line-height: 1.5;
+}
+
+.m-section-label,
+.m-sts-label {
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--m-ink-muted);
+  margin: 0;
+}
+
+.m-sts-figure-block {
+  margin: var(--m-space-2) 0 0;
+}
+
+.m-sts-change {
+  display: block;
+  margin-top: var(--m-space-1);
+  font-size: var(--m-text-sm);
+  font-weight: 600;
+}
+
+.m-sts-change[data-state="positive"] {
+  color: var(--m-healthy);
+}
+
+.m-sts-change[data-state="negative"] {
+  color: var(--m-risk);
+}
+
+.m-sts-figure {
+  display: block;
+  font-family: var(--m-font-serif);
+  font-weight: 500;
+  font-size: var(--m-figure-xl);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--m-ink);
+}
+
+/* Value-aware safe-to-spend: green only for positive; red for negative; muted
+   ink for zero so a $0.00 never reads as healthy money it isn't. */
+.m-sts-figure[data-signal="positive"] { color: var(--m-healthy); }
+.m-sts-figure[data-signal="negative"] { color: var(--m-risk); }
+.m-sts-figure[data-signal="zero"] { color: var(--m-ink-faint); }
+
+.m-sts-note {
+  display: inline-block;
+  margin-top: var(--m-space-2);
+  padding: var(--m-space-1) var(--m-space-3);
+  border-radius: var(--m-radius-pill);
+  background: var(--m-information-wash);
+  color: var(--m-information);
+  font-size: var(--m-text-sm);
+  font-weight: 500;
+}
+
+/* ---------- Forecast chart ---------- */
+
+.m-forecast-wrap {
+  margin: var(--m-space-5) 0 0;
+}
+
+.m-forecast {
+  display: block;
+  width: 100%;
+  height: 112px;
+  overflow: visible;
+}
+
+.m-forecast-floor {
+  stroke: var(--m-border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+
+.m-forecast-shade {
+  fill: var(--m-healthy-wash);
+  stroke: none;
+}
+
+.m-forecast-line {
+  fill: none;
+  stroke: var(--m-healthy);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.m-forecast-labels {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  margin-top: var(--m-space-1);
+  color: var(--m-ink-faint);
+  font-size: 0.6rem;
+}
+
+.m-forecast-label {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.m-forecast-label[data-align="start"] {
+  transform: translateX(0);
+}
+
+.m-forecast-label[data-align="end"] {
+  transform: translateX(-100%);
+}
+
+.m-sts-chip-row {
+  margin-top: var(--m-space-4);
+}
+
+/* Observatory safe-to-spend strip: compact, not a full card, so the dial
+   remains the main object on Today. */
+.m-observatory-safe {
+  margin: 0 0 var(--m-space-4);
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.m-observatory-safe .m-sts-figure-block {
+  margin: var(--m-space-1) 0 0;
+}
+
+.m-observatory-safe .m-sts-figure {
+  font-size: clamp(2rem, 7vw, 2.8rem);
+}
+
+.m-observatory-safe-observed {
+  display: block;
+  margin-top: var(--m-space-1);
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+}
+
+
+.m-observatory-safe .m-sts-chip-row {
+  margin-top: var(--m-space-2);
+}
+
+.m-observatory-safe .m-sts-chip-row .m-chip {
+  min-height: 32px;
+}
+
+
+/* ---------- Supporting metrics ---------- */
+
+.m-metric {
+  min-height: 118px;
+  padding: var(--m-space-4);
+}
+
+.m-metric strong,
+.m-metric span {
+  display: block;
+}
+
+.m-metric strong {
+  margin-top: var(--m-space-3);
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-xl);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* Money figures pop in the healthy green so they read as a real number, not a
+   grey placeholder. Runway is a time measure, so it gets the information blue. */
+.m-metric strong {
+  color: var(--m-healthy);
+}
+
+.m-metric [data-runway] {
+  color: var(--m-information);
+}
+
+.m-metric span {
+  margin-top: var(--m-space-1);
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+}
+
+/* Low-key interactive metric cards: a quiet click-to-source affordance that
+   never shouts. Button reset + a subtle hint that appears on focus/hover. */
+.m-metric--link {
+  width: 100%;
+  appearance: none;
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+  color: var(--m-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--m-motion-fast) var(--m-ease-out),
+    background var(--m-motion-fast) var(--m-ease-out);
+}
+
+.m-metric--link:hover,
+.m-metric--link:focus-visible {
+  border-color: var(--m-border-strong);
+  background: var(--m-surface-muted);
+}
+
+.m-metric--link:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus-ring);
+}
+
+.m-metric-hint {
+  margin-top: var(--m-space-3) !important;
+  color: var(--m-ink-faint) !important;
+  font-size: var(--m-text-xs) !important;
+  letter-spacing: 0.03em;
+  opacity: 0.72;
+}
+
+.m-metric--link:hover .m-metric-hint,
+.m-metric--link:focus-visible .m-metric-hint {
+  color: var(--m-forest, var(--m-healthy)) !important;
+  opacity: 1;
+}
+
+/* ---------- Advisor brief rail ---------- */
+
+.m-today-brief {
+  position: sticky;
+  top: var(--m-space-6);
+  align-self: start;
+  padding: var(--m-space-5);
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  box-shadow: var(--m-elevation-1);
+}
+
+.m-today-brief h3 {
+  margin: var(--m-space-2) 0 var(--m-space-3);
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-xl);
+  font-weight: 500;
+}
+
+.m-brief-intro,
+.m-brief-insight p,
+.m-brief-footnote {
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+  line-height: 1.55;
+}
+
+.m-brief-insight {
+  display: grid;
+  grid-template-columns: 2px minmax(0, 1fr);
+  gap: var(--m-space-3);
+  margin: var(--m-space-6) 0;
+}
+
+.m-brief-insight > span {
+  border-radius: var(--m-radius-pill);
+  background: var(--m-healthy);
+}
+
+.m-brief-insight p {
+  margin: var(--m-space-2) 0 0;
+}
+
+.m-brief-footnote {
+  margin-top: var(--m-space-5);
+  font-size: var(--m-text-xs);
+}
+
+/* ---------- Input lists & evidence ---------- */
+
+.m-input-list {
+  list-style: none;
+  margin: var(--m-space-3) 0 0;
+  padding: 0;
+  max-width: none;
+}
+
+.m-input-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--m-space-4);
+  padding: var(--m-space-3) 0;
+  border-bottom: 1px solid var(--m-border);
+}
+
+.m-input-row--more {
+  justify-content: flex-start;
+}
+
+.m-input-label {
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-md);
+}
+
+.m-input-value {
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-lg);
+  font-variant-numeric: tabular-nums;
+}
+
+.m-today-reason {
+  margin: var(--m-space-3) 0 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+  max-width: 60ch;
+}
+
+.m-upcoming [data-upcoming-empty] {
+  margin-top: var(--m-space-3);
+}
+
+.m-evidence-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--m-space-2);
+  margin-top: var(--m-space-3);
+}
+
+.m-evidence-link {
+  color: var(--m-information);
+  font-size: var(--m-text-sm);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+[aria-busy="true"] [data-ledger],
+[aria-busy="true"] .m-sts-figure {
+  opacity: 0.55;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1100px) {
+  .m-today-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .m-today-brief {
+    position: static;
+    align-self: stretch;
+    padding: var(--m-space-5);
+    border: 1px solid var(--m-border);
+    border-radius: var(--m-radius-lg);
+    background: var(--m-surface);
+  }
+}
+
+@media (max-width: 900px) {
+  .m-sts-figure {
+    font-size: clamp(2.25rem, 12vw, 3rem);
+  }
+}
+
+@media (max-width: 600px) {
+  .m-today-hero,
+  .m-today-support {
+    grid-template-columns: 1fr;
+  }
+
+  .m-command-header {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .m-command-header .m-editorial-headline {
+    max-width: 14ch;
+    font-size: 2.25rem;
+  }
+
+  .obs-today-title {
+    font-size: clamp(2.8rem, 14vw, 4rem);
+  }
+
+  .obs-today-orbit-heading {
+    font-size: clamp(1.3rem, 7vw, 1.8rem);
+  }
+
+  .m-today-primary {
+    gap: var(--m-space-4);
+  }
+
+  .m-command-header .m-primary-button {
+    display: none;
+  }
+
+  .m-today-hero {
+    gap: var(--m-space-3);
+  }
+
+  .m-sts,
+  .m-beacon-card,
+  .m-today-brief {
+    padding: var(--m-space-4);
+  }
+
+  .m-metric-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .m-metric {
+    min-height: 106px;
+    padding: var(--m-space-3);
+  }
+
+  .m-metric strong {
+    font-size: var(--m-text-lg);
+  }
+
+  .m-metric .m-section-label {
+    font-size: 0.625rem;
+  }
+
+  .m-today-support {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m-forecast-line,
+  .m-forecast-shade {
+    transition: none;
+  }
+}
+
+/* R20: cash / bills / goals breakdown row. */
+.m-today-breakdown { margin-top: var(--m-space-3); }
+.m-today-breakdown-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--m-space-3);
+}
+.m-today-breakdown-row strong { display: block; font: var(--m-serif-md, inherit); }
+.m-today-breakdown-row [data-breakdown-bills] { color: var(--m-healthy); }
+.m-today-breakdown-row [data-breakdown-goals] { color: var(--m-information); }
+.m-today-breakdown-row [data-breakdown-nextrun] { color: var(--m-ink-muted); }
+@media (max-width: 640px) {
+  .m-today-breakdown-row { grid-template-columns: 1fr; }
+}
+
+/* Observatory dial embedded in Today (read-only). */
+.m-observatory-dial-wrap {
+  margin-top: var(--m-space-6);
+  scroll-margin-top: var(--m-space-5);
+}
+
+.m-observatory-dial-caption {
+  max-width: 60ch;
+  margin: 0 0 var(--m-space-4);
+  color: var(--m-ink-muted);
+  line-height: 1.55;
+}
+
+[data-observatory-dial] .obs-dial-panel {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+}
+
+@media (max-width: 900px) {
+  .m-observatory-dial-wrap {
+    margin-top: var(--m-space-5);
+  }
+
+  [data-observatory-dial] .obs-dial-panel {
+    grid-template-columns: 1fr;
+  }
+}

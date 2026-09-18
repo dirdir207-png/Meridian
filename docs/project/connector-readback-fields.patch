@@ -1,0 +1,31 @@
+--- a/operations/expenses.graphql
++++ b/operations/expenses.graphql
+@@ -2,10 +2,15 @@
+   currentUser {
+     accounts {
+       billReserve {
++        id
+         nextFundingDate
+         totalReservedAmount
+         estimatedNextFundingAmount
+         settings { funding { subaccount { id displayName } } }
++        fundingPlans {
++          id name amount frequency frequencyInterval anchorDate
++          reassignmentRule { id match minAmount maxAmount }
++        }
+         bills {
+           amount anchorDate autoAdjustAmount dayOfMonth daysOverdue
+           estimatedNextFundingAmount frequency frequencyInterval id name
+--- a/operations/family.graphql
++++ b/operations/family.graphql
+@@ -12,6 +12,10 @@
+         scheduledAllowance { id totalAmount }
+       }
+       parents { id isApplying cardColor imageUrl displayedFirstName }
++      reassignmentRules {
++        id match minAmount maxAmount
++        assignmentSubaccount { id displayName }
++      }
+     }
+   }
+ }

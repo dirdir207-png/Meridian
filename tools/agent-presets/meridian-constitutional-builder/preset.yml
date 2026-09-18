@@ -1,0 +1,8 @@
+name: Meridian Constitutional Builder
+description: Creative architecture with anchored, test-driven implementation and strict financial safety gates.
+order: 9
+# Revision identity. Bump on every installed change so a session's loaded
+# revision is checkable rather than inferred. See
+# tools/agent-presets/verify_preset.py for the invariants that gate it.
+version: 2.0.0
+revision: 2026-09-13-admission-boundary

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Activity: the concept's ascending bars. The dock glyph in
+       design/observatory-drafts-2026-09-08/01-today.png is a small column chart that
+       steps upward to the right, so the shape reads as "rising" rather than as a
+       generic bar chart. -->
+  <path d="M5.4 25.6 V17.8" stroke-width="3"/>
+  <path d="M12.6 25.6 V13.4" stroke-width="3"/>
+  <path d="M19.8 25.6 V9.8" stroke-width="3"/>
+  <path d="M27 25.6 V5.6" stroke-width="3"/>
+  <path d="M3.6 27.2 H28.4" stroke-width="1.8"/>
+</svg>

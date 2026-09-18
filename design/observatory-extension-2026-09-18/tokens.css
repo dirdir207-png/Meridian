@@ -1,0 +1,9 @@
+/* Proposed extension tokens; opt in during the approved visual integration slice. */
+.observatory-extension {
+  --obs-action: #e99a48;
+  --obs-action-hover: #f3b272;
+  --obs-action-ink: #20263b;
+  --obs-unknown: #f3b272;
+  --obs-confirmed: #a5d4bf;
+  --obs-selection: #c1a9e2;
+}

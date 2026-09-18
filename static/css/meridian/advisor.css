@@ -1,0 +1,324 @@
+/* Meridian contextual advisor.
+   Desktop: right-rail briefing (right gutter). Mobile: full-height sheet.
+   Branded with the Meridian serif "M" wordmark, grounded in visible context and
+   evidence. The trigger and rail/sheet are deliberately subtle: they never
+   compete with primary financial actions. */
+
+/* ------------------------------------------------------------------ */
+/* Trigger: discreet branded entry point (never a competing floating FAB).
+   The Meridian shell hides the floating control on mobile (where the bottom
+   dock owns the screen) and relies on [data-open-advisor] buttons there; on
+   desktop this stays as the secondary entry point so the advisor is reachable
+   without an in-context button. */
+/* ------------------------------------------------------------------ */
+
+.m-advisor-trigger {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--m-space-2, 8px);
+  min-height: 44px;
+  padding: 0 var(--m-space-4, 16px);
+  border: 1px solid var(--m-border, #e3ded4);
+  border-radius: var(--m-radius-pill, 999px);
+  background: var(--m-surface, #fff);
+  color: var(--m-ink, #201d18);
+  font-family: var(--m-font-sans, system-ui, sans-serif);
+  font-size: var(--m-text-sm, 0.8125rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--m-elevation-1, 0 1px 2px rgba(0, 0, 0, 0.08));
+  transition: background-color var(--m-motion-fast, 120ms) var(--m-ease-out, ease),
+    border-color var(--m-motion-fast, 120ms) var(--m-ease-out, ease),
+    color var(--m-motion-fast, 120ms) var(--m-ease-out, ease);
+}
+
+/* The brand mark: the Meridian serif "V". */
+.m-advisor-trigger-mark {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--m-font-serif, Georgia, serif);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--m-forest, #22453c);
+}
+
+/* Keep the label on the same optical baseline as the mark so the pill reads as
+   a single, evenly centred control (the serif "V" otherwise sits lower). */
+.m-advisor-trigger-label {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  padding-bottom: 0.06em;
+}
+
+.m-advisor-trigger:hover {
+  background: var(--m-surface-muted, #efece4);
+  border-color: var(--m-border-strong, #cfc8ba);
+}
+
+.m-advisor-trigger:active {
+  box-shadow: var(--m-elevation-2, 0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* The Meridian shell uses in-context [data-open-advisor] controls (Today) plus
+   a persistent, low-key branded trigger on every workspace so the advisor is
+   reachable on Today/Plan/Activity/Accounts alike. The trigger sits at a quiet
+   corner and never competes with in-flow financial actions. */
+body:has([data-meridian-shell]) #advisor-fab.m-advisor-trigger {
+  display: inline-flex !important;
+}
+
+/* Mobile: keep the trigger visible as a quiet floating pill above the bottom
+   dock (never competing with in-flow actions, just always reachable). */
+@media (max-width: 900px) {
+  body:has([data-meridian-shell]) #advisor-fab.m-advisor-trigger {
+    display: inline-flex !important;
+    bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 56px);
+  }
+}
+
+/* When the advisor rail/sheet is open, hide the trigger so they never stack. */
+body:has(#advisor-panel[data-open]) #advisor-fab.m-advisor-trigger {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Panel: right-rail briefing on desktop, full-height sheet on mobile. */
+/* ------------------------------------------------------------------ */
+
+#advisor-panel.m-advisor {
+  position: fixed;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: auto;
+  z-index: 60;
+  /* Visibility is driven by [data-open] (set/removed by the shell sheet
+     primitive and the fallback open/close path) so it is correct on both the
+     Meridian shell and the legacy app, independent of any [hidden] rule. */
+  display: none;
+  flex-direction: column;
+  /* A compact card, not a tower: small footprint, minimal chrome. */
+  width: min(18rem, 24vw);
+  max-width: 100vw;
+  max-height: min(60svh, 30rem);
+  border-radius: 12px;
+  background: var(--m-surface, #fff);
+  border: 1px solid var(--m-border, #e3ded4);
+  box-shadow: var(--m-elevation-2, 0 4px 16px rgba(0, 0, 0, 0.12));
+  padding: var(--m-space-3, 12px);
+  gap: var(--m-space-2, 8px);
+  overflow: hidden;
+}
+
+/* On mobile the panel is a compact centered sheet (not a full-height tower). */
+@media (max-width: 900px) {
+  #advisor-panel.m-advisor {
+    left: max(0.75rem, env(safe-area-inset-left));
+    right: max(0.75rem, env(safe-area-inset-right));
+    bottom: auto;
+    top: max(0.75rem, env(safe-area-inset-top));
+    width: auto;
+    max-height: min(70svh, 28rem);
+  }
+}
+
+#advisor-panel.m-advisor[data-open] {
+  display: flex;
+}
+
+/* Header */
+#advisor-panel .m-advisor-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--m-space-3, 12px);
+}
+
+#advisor-panel .m-advisor-heading {
+  min-width: 0;
+}
+
+#advisor-panel .m-advisor-kicker {
+  margin: 0 0 var(--m-space-1, 4px);
+  color: var(--m-ink-muted, #6d675c);
+  font-size: var(--m-text-xs, 0.75rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+#advisor-panel .m-advisor-title {
+  margin: 0;
+  font-family: var(--m-font-serif, Georgia, serif);
+  font-weight: 500;
+  font-size: var(--m-text-md, 0.9375rem);
+  letter-spacing: -0.01em;
+  color: var(--m-ink, #201d18);
+}
+
+#advisor-panel .m-advisor-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-2, 8px);
+  flex: 0 0 auto;
+}
+
+/* Status badge (only shown when non-empty). */
+#advisor-panel .m-advisor-status {
+  font-size: var(--m-text-xs, 0.75rem);
+  color: var(--m-caution, #8a5c12);
+  background: var(--m-caution-wash, rgba(138, 92, 18, 0.12));
+  border-radius: var(--m-radius-sm, 6px);
+  padding: var(--m-space-1, 4px) var(--m-space-2, 8px);
+  white-space: nowrap;
+}
+
+#advisor-panel .m-advisor-status:empty {
+  display: none;
+}
+
+/* Close button */
+#advisor-panel .m-advisor-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border: 0;
+  border-radius: var(--m-radius-md, 10px);
+  background: transparent;
+  color: var(--m-ink-muted, #6d675c);
+  cursor: pointer;
+  transition: background-color var(--m-motion-fast, 120ms) var(--m-ease-out, ease),
+    color var(--m-motion-fast, 120ms) var(--m-ease-out, ease);
+}
+
+#advisor-panel .m-advisor-close:hover {
+  background: var(--m-surface-muted, #efece4);
+  color: var(--m-ink, #201d18);
+}
+
+/* Conversation log */
+#advisor-panel .m-advisor-log {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-space-2, 8px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--m-space-1, 4px) var(--m-space-1, 4px) var(--m-space-2, 8px);
+}
+
+/* Bubbles */
+#advisor-panel .m-advisor-bubble {
+  max-width: 86%;
+  padding: var(--m-space-2, 8px) var(--m-space-3, 12px);
+  border-radius: var(--m-radius-md, 10px);
+  font-size: var(--m-text-sm, 0.8125rem);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#advisor-panel .m-advisor-bubble--assistant {
+  align-self: flex-start;
+  background: var(--m-surface-muted, #efece4);
+  color: var(--m-ink, #201d18);
+  border: 1px solid var(--m-border, #e3ded4);
+}
+
+#advisor-panel .m-advisor-bubble--user {
+  align-self: flex-end;
+  background: var(--m-forest, #22453c);
+  color: var(--m-forest-ink, #f5f2e9);
+  border: 1px solid var(--m-forest-deep, #1c3a32);
+}
+
+/* Composer */
+#advisor-panel .m-advisor-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--m-space-2, 8px);
+  flex: 0 0 auto;
+}
+
+#advisor-panel .m-advisor-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--m-space-2, 8px) var(--m-space-3, 12px);
+  border: 1px solid var(--m-border-strong, #cfc8ba);
+  border-radius: var(--m-radius-md, 10px);
+  background: var(--m-surface, #fff);
+  color: var(--m-ink, #201d18);
+  font-family: var(--m-font-sans, system-ui, sans-serif);
+  /* 16px prevents the iOS auto-zoom that fires when an <input> < 16px gains
+     focus — the root cause of "I have to zoom in every time Virgil opens". */
+  font-size: 16px;
+  line-height: 1.3;
+  transition: border-color var(--m-motion-fast, 120ms) var(--m-ease-out, ease);
+}
+
+#advisor-panel .m-advisor-input::placeholder {
+  color: var(--m-ink-faint, #716a5f);
+}
+
+#advisor-panel .m-advisor-input:focus-visible {
+  outline: none;
+  border-color: var(--m-information, #34628f);
+  box-shadow: var(--m-focus-ring, 0 0 0 2px var(--m-surface), 0 0 0 4px var(--m-information));
+}
+
+#advisor-panel .m-advisor-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: var(--m-radius-md, 10px);
+  background: var(--m-forest, #22453c);
+  color: var(--m-forest-ink, #f5f2e9);
+  cursor: pointer;
+  transition: background-color var(--m-motion-fast, 120ms) var(--m-ease-out, ease),
+    opacity var(--m-motion-fast, 120ms) var(--m-ease-out, ease);
+}
+
+#advisor-panel .m-advisor-send:hover {
+  background: var(--m-forest-deep, #1c3a32);
+}
+
+#advisor-panel .m-advisor-send:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile composition: full-height sheet. */
+/* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/* Motion: respect reduced-motion preferences. */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .m-advisor-trigger,
+  #advisor-panel .m-advisor-close,
+  #advisor-panel .m-advisor-input,
+  #advisor-panel .m-advisor-send {
+    transition: none;
+  }
+}

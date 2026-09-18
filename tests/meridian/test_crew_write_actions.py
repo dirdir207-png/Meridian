@@ -1,0 +1,1529 @@
+"""Tests for Crew write-back executors plugged into the action pipeline."""
+
+import pytest
+
+from crew.actions import ActionStore
+from crew.executors import ExecutorSpec, IllegalTransitionError
+from meridian.crew_write_actions import crew_write_executors
+
+
+def test_executors_register_all_verified_write_types(tmp_path):
+    db = str(tmp_path / "m.db")
+    specs = crew_write_executors(db)
+    assert set(specs) == {
+        "update_crew_bill",
+        "update_crew_bill_reserve_settings",
+        "create_crew_autopilot_rule",
+        "create_crew_bill",
+        "archive_crew_bill",
+        "create_crew_pocket",
+        "delete_crew_pocket",
+        "crew_initiate_transfer",
+        "create_crew_paycheck_funding_plan",
+        "update_crew_paycheck_funding_plan",
+        "delete_crew_paycheck_funding_plan",
+        "top_up_crew_reserve",
+        "delete_crew_autopilot_rule",
+        "create_crew_pocket_reassignment_rule",
+        "delete_crew_pocket_reassignment_rule",
+        "set_crew_spend_pocket",
+        "create_crew_virtual_card",
+    }
+    for spec in specs.values():
+        assert callable(spec[0])
+
+
+def _created_pocket_snapshot(pocket_id="Pocket:created", name="Emergency Fund", complete=True):
+    snapshot = {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+                "complete": complete, "captured_at": "2026-09-13T21:00:00Z",
+                "data": {"pockets": {"data": {"currentUser": {"accounts": [
+                    {"id": "Account:1", "subaccounts": [{"id": pocket_id,
+                     "displayName": name, "isPrimary": False, "overallBalance": 0,
+                     "clearedBalance": 0}]}]}}}}}
+    return snapshot
+
+
+def _created_bill_snapshot(bill_id="Bill:created", name="Rent", amount_cents=12500, complete=True):
+    snapshot = _readback_dashboard(bill_id, name, amount_cents)
+    snapshot["complete"] = complete
+    return snapshot
+
+
+def test_create_bill_readback_confirms_complete_provider_state(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "Bill:created"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_bill_snapshot())
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_bill",))
+    request = store.propose("create_crew_bill", {"name": "Rent", "amount": 12500}, "Create bill", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_bill"]
+    outcome = execute_approved_action(store, request["id"], {"create_crew_bill": ExecutorSpec(execute=execute, verifier=verifier)})
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == ["create_bill"]
+
+
+def test_create_bill_missing_readback_is_unresolved_and_non_retryable(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "Bill:created"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_bill_snapshot("Other:1", complete=False))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_bill",))
+    request = store.propose("create_crew_bill", {"name": "Rent", "amount": 12500}, "Create bill", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_bill"]
+    spec = {"create_crew_bill": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["create_bill"]
+
+
+def test_delete_pocket_readback_confirms_absence(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_pocket_snapshot("Other:1", "Other"))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("delete_crew_pocket",))
+    request = store.propose("delete_crew_pocket", {"id": "Pocket:old"}, "Delete pocket", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["delete_crew_pocket"]
+    outcome = execute_approved_action(store, request["id"], {"delete_crew_pocket": ExecutorSpec(execute=execute, verifier=verifier)})
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == ["delete_subaccount"]
+
+
+def test_delete_pocket_partial_readback_stays_unresolved_without_resubmit(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_pocket_snapshot("Other:1", "Other", complete=False))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("delete_crew_pocket",))
+    request = store.propose("delete_crew_pocket", {"id": "Pocket:old"}, "Delete pocket", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["delete_crew_pocket"]
+    spec = {"delete_crew_pocket": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["delete_subaccount"]
+
+
+def test_create_pocket_readback_confirms_provider_state(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "Pocket:created"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_pocket_snapshot())
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_pocket",))
+    request = store.propose("create_crew_pocket", {"name": "Emergency Fund"}, "Create pocket", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_pocket"]
+    outcome = execute_approved_action(store, request["id"], {"create_crew_pocket": ExecutorSpec(execute=execute, verifier=verifier)})
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == ["create_subaccount"]
+
+
+def test_create_pocket_incomplete_readback_stays_unresolved_without_resubmit(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "Pocket:created"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _created_pocket_snapshot(complete=False))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_pocket",))
+    request = store.propose("create_crew_pocket", {"name": "Emergency Fund"}, "Create pocket", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_pocket"]
+    spec = {"create_crew_pocket": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["create_subaccount"]
+
+
+def test_propose_approve_execute_roundtrip(tmp_path, monkeypatch):
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=set(crew_write_executors(db)))
+    executors = {
+        key: ExecutorSpec(execute=fn, verifier=vf)
+        for key, (fn, vf) in crew_write_executors(db).items()
+    }
+
+    # Registry the real execute_crew_write is mocked so the subprocess is safe.
+    from meridian import crew_write, crew_write_actions
+
+    def fake(operation, input_payload, **kwargs):
+        return {"ok": True, "result": {"id": "bill-1"}, "retry_allowed": False}
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", fake)
+    monkeypatch.setattr(crew_write, "execute_crew_write", fake)
+
+    # The readback verifier must not shell out to the real crew-readonly in
+    # this roundtrip test; simulate an unavailable readback so the action ends
+    # EXECUTED (the dedicated A06 tests cover matched/mismatch readbacks).
+    import meridian.live as live
+
+    monkeypatch.setattr(
+        live,
+        "capture_crew_snapshot",
+        lambda: (_ for _ in ()).throw(RuntimeError("readback unavailable in test")),
+    )
+
+    from crew.executors import execute_approved_action
+
+    request = store.propose(
+        "update_crew_bill",
+        {
+            "billId": "QmlsbDox",
+            "name": "Verizon",
+            "amount": 9500,
+            "frequency": "MONTHLY",
+            "frequencyInterval": 1,
+            "anchorDate": "2026-01-22",
+        },
+        "Rename/live Crew bill",
+        requested_by="owner",
+    )
+    store.approve(request["id"], decided_by="owner")
+    result = execute_approved_action(store, request["id"], executors)
+    assert result["state"] in ("executed", "verified")
+    assert result.get("result", {}).get("success") is True
+    assert result.get("result", {}).get("crew", {}).get("ok") is True
+
+
+def test_unknown_write_type_rejected_by_store(tmp_path):
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=set(crew_write_executors(db)))
+    try:
+        store.propose("delete_everything", {}, "nope", requested_by="owner")
+    except ValueError:
+        return
+    raise AssertionError("unknown action type must be rejected")
+
+
+@pytest.mark.parametrize(
+    ("connector_outcome", "expected"),
+    [
+        (
+            {
+                "ok": False,
+                "error": "uncertain",
+                "message": "Outcome unknown; verify in Crew.",
+                "retry_allowed": False,
+                "verify_state": True,
+            },
+            {
+                "success": False,
+                "error": "Outcome unknown; verify in Crew.",
+                "error_code": "uncertain",
+                "retry_allowed": False,
+                "verify_state": True,
+            },
+        ),
+        (
+            {
+                "ok": False,
+                "error": "blocked",
+                "message": "Input did not pass the connector gate.",
+                "retry_allowed": False,
+            },
+            {
+                "success": False,
+                "error": "Input did not pass the connector gate.",
+                "error_code": "blocked",
+                "retry_allowed": False,
+                "verify_state": False,
+            },
+        ),
+        (
+            {
+                "ok": False,
+                "error": "rejected",
+                "message": "Crew rejected the operation.",
+                "retry_allowed": False,
+            },
+            {
+                "success": False,
+                "error": "Crew rejected the operation.",
+                "error_code": "rejected",
+                "retry_allowed": False,
+                "verify_state": False,
+            },
+        ),
+    ],
+)
+def test_executor_preserves_structured_connector_failures(
+    tmp_path, monkeypatch, connector_outcome, expected
+):
+    from meridian import crew_write_actions
+
+    monkeypatch.setattr(
+        crew_write_actions,
+        "execute_crew_write",
+        lambda operation, input_payload: connector_outcome,
+    )
+    executor = crew_write_actions.crew_write_executors(str(tmp_path / "m.db"))[
+        "update_crew_bill"
+    ][0]
+
+    assert executor({"billId": "Bill:1"}) == expected
+
+
+def test_uncertain_connector_outcome_is_persisted_without_retry(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions
+
+    calls = []
+
+    def uncertain(operation, input_payload):
+        calls.append((operation, input_payload))
+        return {
+            "ok": False,
+            "error": "uncertain",
+            "message": "Outcome unknown; verify in Crew.",
+            "retry_allowed": False,
+            "verify_state": True,
+        }
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", uncertain)
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("update_crew_bill",))
+    execute, verifier = crew_write_actions.crew_write_executors(db)["update_crew_bill"]
+    request = store.propose(
+        "update_crew_bill",
+        {"billId": "Bill:1", "name": "Rent"},
+        "Update the bill",
+        requested_by="owner",
+    )
+    store.approve(request["id"], decided_by="owner")
+
+    outcome = execute_approved_action(
+        store,
+        request["id"],
+        {"update_crew_bill": ExecutorSpec(execute=execute, verifier=verifier)},
+    )
+
+    assert calls == [("update_bill", {"billId": "Bill:1", "name": "Rent"})]
+    assert outcome["state"] == "failed"
+    assert outcome["result"] == {
+        "success": False,
+        "error": "Outcome unknown; verify in Crew.",
+        "error_code": "uncertain",
+        "retry_allowed": False,
+        "verify_state": True,
+    }
+
+
+def test_verifier_less_crew_write_stays_executed_and_is_never_claimed_verified(
+    tmp_path, monkeypatch
+):
+    """The remaining verifier-less Crew write (reserve top-up).
+
+    `crew_initiate_transfer` gained a readback verifier on 2026-09-14 (matched on
+    the provider-returned transfer id), so `top_up_crew_reserve` is the last
+    registered type with no verifier. A provider acceptance must not be reported
+    as a verified outcome.
+    """
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions
+
+    calls = []
+
+    def accepted(operation, input_payload):
+        calls.append(operation)
+        return {"ok": True, "result": {"id": "xfer-1"}, "retry_allowed": False}
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", accepted)
+    db = str(tmp_path / "m.db")
+    specs = crew_write_actions.crew_write_executors(db)
+    for action_type in ("top_up_crew_reserve",):
+        assert specs[action_type][1] is None, f"{action_type} unexpectedly has a verifier"
+
+        store = ActionStore(db, allowed_types=(action_type,))
+        execute, verifier = specs[action_type]
+        request = store.propose(action_type, {"amount": 100}, "Move money", requested_by="owner")
+        store.approve(request["id"], decided_by="owner")
+
+        outcome = execute_approved_action(
+            store, request["id"], {action_type: ExecutorSpec(execute=execute, verifier=verifier)}
+        )
+
+        assert outcome["state"] == "executed", action_type
+        assert outcome["verification"] is None, action_type
+        assert outcome["result"]["verification"]["check"] == "no-verifier-registered"
+
+    assert calls == ["top_up_reserve"]
+
+
+def test_archive_crew_bill_readback_confirms_provider_state(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    def readback_always_matches(params, result):
+        calls.append(("readback", params.get("billReserveId")))
+        return {"ok": True, "check": "crew-bill-readback", "provider_truth": True,
+                "requested": {"name": params.get("name"), "amount": params.get("amount")}}
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append((op, payload)) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: {**_readback_dashboard("Bill:1", "Verizon", 9500),
+                                 "data": {"expenses": {"data": {"currentUser": {"accounts": []}}}}})
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("archive_crew_bill",))
+    request = store.propose("archive_crew_bill",
+                            {"billReserveId": "Bill:1"},
+                            "Archive the bill", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"archive_crew_bill": ExecutorSpec(
+        *crew_write_executors(db)["archive_crew_bill"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == [("archive_bill", {"billReserveId": "Bill:1"})]
+
+
+def test_archive_crew_bill_readback_missing_bill_is_unresolved(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: {**_readback_dashboard("Other:1", "Other", 100), "complete": False})
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("archive_crew_bill",))
+    request = store.propose("archive_crew_bill",
+                            {"billReserveId": "Bill:1"},
+                            "Archive the bill", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"archive_crew_bill": ExecutorSpec(
+        *crew_write_executors(db)["archive_crew_bill"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    assert calls == ["archive_bill"]
+
+
+def test_archive_crew_bill_verifier_exception_is_unresolved_after_restart(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("archive_crew_bill",))
+    request = store.propose("archive_crew_bill",
+                            {"billReserveId": "Bill:1"},
+                            "Archive the bill", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"archive_crew_bill": ExecutorSpec(
+        *crew_write_executors(db)["archive_crew_bill"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["retry_allowed"] is False
+    with pytest.raises(IllegalTransitionError):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["archive_bill"]
+
+
+def test_autopilot_rule_executor_enriches_formula_before_write(tmp_path, monkeypatch):
+    """The create-autopilot executor must inject real accountId into the action so
+    Crew never rejects a null accountId."""
+    from meridian import crew_write_actions
+
+    seen = {}
+    def fake_execute(operation, input_payload):
+        seen["operation"] = operation
+        seen["payload"] = input_payload
+        return {"ok": True, "result": {}}
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", fake_execute)
+    specs = crew_write_actions.crew_write_executors(str(tmp_path / "m.db"))
+    executor = specs["create_crew_autopilot_rule"][0]
+    executor({
+        "name": "Zz Diag",
+        "account_id": "Acct:checking",
+        "subaccount_id": "Sub:fts",
+        "formula": {
+            "name": "Zz Diag",
+            "triggers": ["ACCOUNT_DEPOSIT_RECEIVED"],
+            "actions": [{"roundUpTransfer": {"roundToNearest": 100}}],
+        },
+    })
+    assert seen["operation"] == "create_autopilot_rule"
+    formula = seen["payload"]["formula"]
+    action = formula["actions"][0]["roundUpTransfer"]
+    assert action["accountId"] == "Acct:checking"
+    assert action["accountType"] == "ACCOUNT"
+    assert action["roundToNearest"] == 100
+
+
+def test_set_spend_pocket_executor_reaches_write(tmp_path, monkeypatch):
+    """set_crew_spend_pocket executor passes user/subaccount ids to the CLI."""
+    from meridian import crew_write_actions
+
+    seen = {}
+    def fake_execute(operation, input_payload):
+        seen["operation"] = operation
+        seen["payload"] = input_payload
+        return {"ok": True, "result": {}}
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", fake_execute)
+    specs = crew_write_actions.crew_write_executors(str(tmp_path / "m.db"))
+    executor = specs["set_crew_spend_pocket"][0]
+    executor({"user_id": "User:1", "subaccount_id": "Sub:2"})
+    assert seen["operation"] == "set_spend_pocket"
+    assert seen["payload"]["user_id"] == "User:1"
+    assert seen["payload"]["subaccount_id"] == "Sub:2"
+
+
+def test_create_virtual_card_executor_reaches_write(tmp_path, monkeypatch):
+    """create_crew_virtual_card executor passes the card input to the CLI."""
+    from meridian import crew_write_actions
+    seen = {}
+    def fake_execute(operation, input_payload):
+        seen["operation"] = operation
+        seen["payload"] = input_payload
+        return {"ok": True, "result": {}}
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", fake_execute)
+    specs = crew_write_actions.crew_write_executors(str(tmp_path / "m.db"))
+    executor = specs["create_crew_virtual_card"][0]
+    executor({"user_id": "User:1", "name": "Zz Card", "subaccount_id": "Sub:2", "card_color": "TEAL"})
+    assert seen["operation"] == "create_virtual_card"
+    assert seen["payload"]["user_id"] == "User:1"
+    assert seen["payload"]["name"] == "Zz Card"
+
+
+# --- A12: an approved Crew bill write must still match the reviewed record ---
+
+
+def _migrated_db(tmp_path):
+    from meridian.db import run_migrations
+
+    db = str(tmp_path / "m.db")
+    run_migrations(db)
+    return db
+
+
+def _seed_bill(db, bill_id="QmlsbDox", name="Verizon", amount=95.0):
+    from meridian.commitments import CommitmentRepository, CommitmentType
+
+    repo = CommitmentRepository(db)
+    repo.create(
+        type=CommitmentType.BILL,
+        name=name,
+        amount=amount,
+        recurrence="monthly",
+        legacy_source="crew",
+        legacy_id=bill_id,
+    )
+    return repo.get_commitment_by_legacy("crew", bill_id)
+
+
+def test_capture_base_state_records_only_the_reviewed_fields(tmp_path):
+    from meridian.crew_write_actions import capture_base_state
+
+    db = _migrated_db(tmp_path)
+    _seed_bill(db, bill_id="QmlsbDox", name="Verizon", amount=95.0)
+
+    state = capture_base_state(
+        "update_crew_bill",
+        {"billId": "QmlsbDox", "name": "Verizon", "amount": 9500},
+        db,
+    )
+
+    assert state["source"] == "commitment"
+    assert state["crew_bill_id"] == "QmlsbDox"
+    assert state["observed_at"]
+    # The wire amount is cents; the reviewed record is local dollars, and the
+    # precondition compares local against local — never params against local.
+    assert state["values"] == {"name": "Verizon", "amount": 95.0}
+
+
+def test_capture_base_state_is_absent_for_unknown_records_and_types(tmp_path):
+    from meridian.crew_write_actions import capture_base_state
+
+    db = _migrated_db(tmp_path)
+
+    assert capture_base_state("update_crew_bill", {"billId": "Missing"}, db) is None
+    _seed_bill(db, bill_id="QmlsbDox", name="Verizon", amount=95.0)
+    assert capture_base_state("create_crew_pocket", {"name": "x"}, db) is None
+
+
+def _prepare_approved_bill_write(tmp_path, monkeypatch):
+    from crew.actions import ActionStore
+    from meridian import crew_write_actions
+
+    db = _migrated_db(tmp_path)
+    bill = _seed_bill(db, bill_id="QmlsbDox", name="Verizon", amount=95.0)
+
+    calls = []
+    monkeypatch.setattr(
+        crew_write_actions,
+        "execute_crew_write",
+        lambda op, payload: calls.append((op, payload)) or {"ok": True},
+    )
+
+    base_state = crew_write_actions.capture_base_state(
+        "update_crew_bill",
+        {"billId": "QmlsbDox", "name": "Verizon", "amount": 9500},
+        db,
+    )
+    assert base_state is not None
+
+    store = ActionStore(db, allowed_types=("update_crew_bill",))
+    request = store.propose(
+        "update_crew_bill",
+        {"billId": "QmlsbDox", "name": "Verizon", "amount": 9500},
+        "Update the bill",
+        requested_by="owner",
+        base_state=base_state,
+    )
+    store.approve(request["id"], decided_by="owner")
+    return db, bill, calls, store, request["id"]
+
+
+def _bill_executors(db):
+    from crew.executors import ExecutorSpec
+    from meridian.crew_write_actions import (
+        crew_write_executors,
+        crew_write_preconditions,
+    )
+
+    execute = crew_write_executors(db)["update_crew_bill"][0]
+    return {
+        "update_crew_bill": ExecutorSpec(
+            execute=execute,
+            precondition=crew_write_preconditions(db)["update_crew_bill"],
+        )
+    }
+
+
+def test_a_changed_bill_is_refused_and_never_reaches_crew(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian.commitments import CommitmentRepository
+
+    db, bill, calls, store, action_id = _prepare_approved_bill_write(tmp_path, monkeypatch)
+
+    # Another surface edits the bill between approval and execution.
+    CommitmentRepository(db).update(bill.id, name="Verizon (changed)")
+
+    outcome = execute_approved_action(store, action_id, _bill_executors(db))
+
+    assert calls == [], "the stale write must never reach Crew"
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["error_code"] == "precondition_conflict"
+    assert outcome["result"]["sent_to_provider"] is False
+    assert outcome["result"]["retry_allowed"] is False
+    assert outcome["result"]["precondition"]["reviewed"] == {
+        "name": "Verizon",
+        "amount": 95.0,
+    }
+    assert outcome["result"]["precondition"]["current"] == {
+        "name": "Verizon (changed)",
+        "amount": 95.0,
+    }
+
+
+def test_an_unchanged_bill_executes_normally(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+
+    db, bill, calls, store, action_id = _prepare_approved_bill_write(tmp_path, monkeypatch)
+
+    outcome = execute_approved_action(store, action_id, _bill_executors(db))
+
+    assert calls == [
+        ("update_bill", {"billId": "QmlsbDox", "name": "Verizon", "amount": 9500})
+    ]
+    # This spec has no verifier, so a successful write stays EXECUTED, never
+    # VERIFIED — the check here is that the precondition allowed it to run.
+    assert outcome["state"] == "executed"
+
+
+
+# --- A06: an update_crew_bill is verified by a provider readback, not local state ---
+
+
+def _readback_dashboard(bill_id, name, amount_cents):
+    return {
+        "mode": "read-only",
+        "source": "crew",
+        "complete": True,
+        "captured_at": "2026-09-11T21:00:00Z",
+        "data": {
+            "expenses": {
+                "data": {
+                    "currentUser": {
+                        "accounts": [
+                            {
+                                "billReserve": {
+                                    "bills": [
+                                        {
+                                            "id": bill_id,
+                                            "name": name,
+                                            "amount": amount_cents,
+                                            "anchorDate": "2026-01-22",
+                                            "frequency": "MONTHLY",
+                                            "reservedAmount": amount_cents,
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+    }
+
+
+def _bill_write_executor(db):
+    from crew.executors import ExecutorSpec
+    from meridian.crew_write_actions import crew_write_executors
+
+    execute, verify = crew_write_executors(db)["update_crew_bill"]
+    return execute, {"update_crew_bill": ExecutorSpec(execute=execute, verifier=verify)}
+
+
+def _seed_approved_bill(db, bill_id="Bill:1", name="Verizon", amount=9500):
+    from crew.actions import ActionStore
+
+    store = ActionStore(db, allowed_types=("update_crew_bill",))
+    request = store.propose(
+        "update_crew_bill",
+        {"billId": bill_id, "name": name, "amount": amount},
+        "Update the bill",
+        requested_by="owner",
+    )
+    store.approve(request["id"], decided_by="owner")
+    return store, request["id"]
+
+
+def test_crew_bill_readback_confirms_the_provider_state(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", lambda op, p: {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _readback_dashboard("Bill:1", "Verizon", 9500))
+
+    db = str(tmp_path / "m.db")
+    store, action_id = _seed_approved_bill(db)
+    execute, executors = _bill_write_executor(db)
+
+    outcome = execute_approved_action(store, action_id, executors)
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-bill-readback"
+    assert outcome["verification"]["provider_truth"] is True
+
+
+def test_crew_bill_readback_fails_a_write_that_does_not_land(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", lambda op, p: {"ok": True})
+    # Crew now reports a different name and amount than what was requested.
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _readback_dashboard("Bill:1", "T-Mobile", 17500))
+
+    db = str(tmp_path / "m.db")
+    store, action_id = _seed_approved_bill(db)
+    execute, executors = _bill_write_executor(db)
+
+    outcome = execute_approved_action(store, action_id, executors)
+
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["error_code"] == "verification_failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert outcome["result"]["verification"]["requested"]["name"] == "Verizon"
+    assert outcome["result"]["verification"]["observed"]["name"] == "T-Mobile"
+
+
+def test_reserve_settings_readback_confirms_fresh_provider_state(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append((op, payload)) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: _readback_dashboard("Bill:1", "Verizon", 9500))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("update_crew_bill_reserve_settings",))
+    request = store.propose("update_crew_bill_reserve_settings",
+                            {"billReserveId": "Bill:1", "reservedAmount": 9500},
+                            "Update reserve", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    outcome = execute_approved_action(store, request["id"], {
+        "update_crew_bill_reserve_settings": ExecutorSpec(
+            *crew_write_executors(db)["update_crew_bill_reserve_settings"])
+    })
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == [("update_bill_reserve_settings", {"billReserveId": "Bill:1", "reservedAmount": 9500})]
+
+
+@pytest.mark.parametrize("snapshot", [
+    {"mode": "read-only", "source": "crew", "mutations_enabled": False, "complete": False, "data": {}},
+    {"mode": "read-only", "source": "crew", "mutations_enabled": False, "complete": True, "data": {}},
+    {"mode": "read-only", "source": "crew", "mutations_enabled": False, "complete": True, "freshness": "stale", "data": {}},
+    {"mode": "read-only", "source": "crew", "mutations_enabled": False, "complete": True, "data": {"expenses": "bad"}},
+])
+def test_reserve_settings_inconclusive_readback_is_unresolved_and_not_retried(
+    tmp_path, monkeypatch, snapshot
+):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: snapshot)
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("update_crew_bill_reserve_settings",))
+    request = store.propose("update_crew_bill_reserve_settings",
+                            {"billReserveId": "Bill:1", "reservedAmount": 9500},
+                            "Update reserve", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"update_crew_bill_reserve_settings": ExecutorSpec(
+        *crew_write_executors(db)["update_crew_bill_reserve_settings"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["update_bill_reserve_settings"]
+
+
+def test_reserve_settings_verifier_exception_is_unresolved_after_restart(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("update_crew_bill_reserve_settings",))
+    request = store.propose("update_crew_bill_reserve_settings",
+                            {"billReserveId": "Bill:1", "reservedAmount": 9500},
+                            "Update reserve", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"update_crew_bill_reserve_settings": ExecutorSpec(
+        *crew_write_executors(db)["update_crew_bill_reserve_settings"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    restarted = ActionStore(db, allowed_types=("update_crew_bill_reserve_settings",)).get(request["id"])
+    assert outcome["state"] == restarted["state"] == "executed"
+    assert restarted["result"]["verification"]["ok"] is None
+    assert restarted["result"]["verification"]["retry_allowed"] is False if "retry_allowed" in restarted["result"]["verification"] else True
+    assert calls == ["update_bill_reserve_settings"]
+
+
+def test_reserve_settings_missing_bill_is_unresolved_not_deleted(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: _readback_dashboard("Other:1", "Other", 100))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("update_crew_bill_reserve_settings",))
+    request = store.propose("update_crew_bill_reserve_settings",
+                            {"billReserveId": "Bill:1", "reservedAmount": 9500},
+                            "Update reserve", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    spec = {"update_crew_bill_reserve_settings": ExecutorSpec(
+        *crew_write_executors(db)["update_crew_bill_reserve_settings"])}
+    outcome = execute_approved_action(store, request["id"], spec)
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert calls == ["update_bill_reserve_settings"]
+
+
+def test_crew_bill_readback_that_cannot_be_read_stays_executed(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write", lambda op, p: {"ok": True})
+
+    def unavailable():
+        raise RuntimeError("crew-readonly snapshot timed out")
+
+    monkeypatch.setattr(live, "capture_crew_snapshot", unavailable)
+
+    db = str(tmp_path / "m.db")
+    store, action_id = _seed_approved_bill(db)
+    execute, executors = _bill_write_executor(db)
+
+    outcome = execute_approved_action(store, action_id, executors)
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["check"] == "crew-bill-readback"
+
+
+# --- C4: virtual-card and autopilot-rule readback ----------------------------
+# Both facets were already returned by the connector and discarded by Meridian.
+# Absence confirms a deletion but never a creation.
+
+
+def _facet_dashboard(cards=None, rules=None, complete=True, with_cards=None, with_rules=None):
+    data = {}
+    if with_cards is not False:
+        data["virtual_cards"] = {"data": {"currentUser": {"family": {
+            "children": [{"id": "user:1", "virtualDebitCards": cards or []}], "parents": []}}}}
+    if with_rules is not False:
+        data["autopilot"] = {"data": {"currentUser": {"family": {"rules": rules or []}}}}
+    return {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+            "complete": complete, "captured_at": "2026-09-13T12:00:00Z", "data": data}
+
+
+def _run_crew_action(tmp_path, monkeypatch, action_type, params, dashboard, result):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": result})
+    monkeypatch.setattr(live, "capture_crew_snapshot", lambda: dashboard)
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=(action_type,))
+    request = store.propose(action_type, params, "C4 readback", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)[action_type]
+    spec = {action_type: ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+    return db, store, spec, outcome, calls
+
+
+def test_virtual_card_readback_confirms_the_provider_card(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[{"id": "card:1", "name": "Zz Card", "color": "TEAL"}])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_virtual_card",
+        {"user_id": "user:1", "name": "Zz Card", "subaccount_id": "Sub:2", "card_color": "TEAL"},
+        dashboard, {"id": "card:1"},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["provider_truth"] is True
+    assert outcome["verification"]["check"] == "crew-card-create-readback"
+    assert calls == ["create_virtual_card"]
+
+
+def test_virtual_card_not_yet_visible_is_unresolved_and_never_resubmitted(tmp_path, monkeypatch):
+    """A card absent from one read is unresolved: propagation is indistinguishable
+    from failure, so it must not be reported as a confirmed failure."""
+    dashboard = _facet_dashboard(cards=[])
+
+    db, store, spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_virtual_card",
+        {"user_id": "user:1", "name": "Zz Card", "card_color": "TEAL"},
+        dashboard, {"id": "card:1"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    with pytest.raises(Exception):
+        from crew.executors import execute_approved_action
+        execute_approved_action(store, outcome["id"], spec)
+    assert calls == ["create_virtual_card"]
+    assert ActionStore(db, allowed_types=("create_crew_virtual_card",)).get(outcome["id"])["state"] == "executed"
+
+
+def test_virtual_card_with_a_different_colour_is_a_provider_contradiction(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[{"id": "card:1", "name": "Zz Card", "color": "PINK"}])
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_virtual_card",
+        {"user_id": "user:1", "name": "Zz Card", "card_color": "TEAL"},
+        dashboard, {"id": "card:1"},
+    )
+
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["error_code"] == "verification_failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert "card_color" in outcome["result"]["verification"]["reason"]
+
+
+def test_an_unobserved_card_facet_never_confirms_a_creation(tmp_path, monkeypatch):
+    """The facet the connector could not read must not read as 'no card exists'."""
+    dashboard = _facet_dashboard(cards=[{"id": "card:1", "name": "Zz Card"}], with_cards=False)
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_virtual_card",
+        {"user_id": "user:1", "name": "Zz Card", "card_color": "TEAL"},
+        dashboard, {"id": "card:1"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+
+
+def test_autopilot_rule_create_readback_confirms_the_provider_rule(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(rules=[{"id": "rule:1", "name": "Zz Diag", "isPaused": False}])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_autopilot_rule",
+        {"name": "Zz Diag", "account_id": "Acct:1", "subaccount_id": "Sub:1"},
+        dashboard, {"id": "rule:1"},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-autopilot-rule-create-readback"
+    assert calls == ["create_autopilot_rule"]
+
+
+def test_autopilot_rule_not_yet_visible_is_unresolved(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(rules=[])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_autopilot_rule",
+        {"name": "Zz Diag", "account_id": "Acct:1"},
+        dashboard, {"id": "rule:1"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert calls == ["create_autopilot_rule"]
+
+
+def test_autopilot_rule_delete_readback_confirms_absence(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(rules=[{"id": "rule:other", "name": "Other"}])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_autopilot_rule",
+        {"rule_id": "rule:1"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-autopilot-rule-delete-readback"
+    assert calls == ["delete_rule"]
+
+
+def test_a_rule_still_present_after_delete_is_a_provider_contradiction(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(rules=[{"id": "rule:1", "name": "Zz Diag"}])
+
+    db, store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_autopilot_rule",
+        {"rule_id": "rule:1"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert "still present" in outcome["result"]["verification"]["reason"]
+    assert calls == ["delete_rule"]
+
+
+def test_autopilot_delete_with_an_unreadable_facet_stays_unresolved(tmp_path, monkeypatch):
+    """An unread facet cannot confirm a  absence must never be assumed."""
+    dashboard = _facet_dashboard(with_rules=False)
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_autopilot_rule",
+        {"rule_id": "rule:1"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    assert calls == ["delete_rule"]
+
+
+def test_new_readback_verifiers_survive_an_exception_and_restart(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "rule:1"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_autopilot_rule",))
+    request = store.propose("create_crew_autopilot_rule",
+                            {"name": "Zz Diag", "account_id": "Acct:checking",
+                             "subaccount_id": "Sub:fts"},
+                            "r", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_autopilot_rule"]
+    spec = {"create_crew_autopilot_rule": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+
+    restarted = ActionStore(db, allowed_types=("create_crew_autopilot_rule",)).get(request["id"])
+    assert outcome["state"] == restarted["state"] == "executed"
+    assert restarted["result"]["verification"]["ok"] is None
+    assert restarted["result"]["verification"]["retry_allowed"] is False
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["create_autopilot_rule"]
+
+
+def _spend_card(selected_id, is_child=False, card_id="card:1"):
+    config = {"id": "cfg:1"}
+    config["selectedSpendSubaccount"] = {"id": selected_id} if selected_id else None
+    return {"id": card_id, "name": "Card", "color": "TEAL",
+            "user": {"id": "user:1", "isChild": is_child, "userSpendConfig": config}}
+
+
+def test_spend_pocket_readback_confirms_the_provider_selection(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[_spend_card("Sub:spend")])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-spend-pocket-readback"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == ["set_spend_pocket"]
+
+
+def test_spend_pocket_still_pointing_elsewhere_is_a_provider_contradiction(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[_spend_card("Sub:other")])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert outcome["result"]["verification"]["observed"]["selected"] == "Sub:other"
+    assert calls == ["set_spend_pocket"]
+
+
+def test_spend_pocket_with_conflicting_cards_is_unresolved_and_not_resubmitted(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[_spend_card("Sub:a", card_id="c1"),
+                                       _spend_card("Sub:b", card_id="c2")])
+
+    db, store, spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert "conflicting" in outcome["result"]["verification"]["reason"]
+    with pytest.raises(Exception):
+        from crew.executors import execute_approved_action
+        execute_approved_action(store, outcome["id"], spec)
+    assert calls == ["set_spend_pocket"]
+    assert ActionStore(db, allowed_types=("set_crew_spend_pocket",)).get(outcome["id"])["state"] == "executed"
+
+
+def test_spend_pocket_with_an_unobserved_facet_is_unresolved(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(with_cards=False)
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+
+
+def test_spend_pocket_with_no_visible_selection_is_unresolved(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[_spend_card(None)])
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+
+
+def test_spend_pocket_ignores_a_childs_selection(tmp_path, monkeypatch):
+    dashboard = _facet_dashboard(cards=[_spend_card("Sub:spend", card_id="c1"),
+                                       _spend_card("Sub:child", is_child=True, card_id="c2")])
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "set_crew_spend_pocket",
+        {"user_id": "acct:1", "subaccount_id": "Sub:spend"}, dashboard, {},
+    )
+
+    assert outcome["state"] == "verified"
+
+
+def test_spend_pocket_verifier_exception_stays_unresolved_after_restart(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {}})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("set_crew_spend_pocket",))
+    request = store.propose("set_crew_spend_pocket",
+                            {"user_id": "acct:1", "subaccount_id": "Sub:spend"},
+                            "r", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["set_crew_spend_pocket"]
+    spec = {"set_crew_spend_pocket": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+
+    restarted = ActionStore(db, allowed_types=("set_crew_spend_pocket",)).get(request["id"])
+    assert outcome["state"] == restarted["state"] == "executed"
+    assert restarted["result"]["verification"]["ok"] is None
+    assert restarted["result"]["verification"]["retry_allowed"] is False
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["set_spend_pocket"]
+
+
+# --- C4: funding plans and reassignment rules (connector fields added bd7d8b1) ---
+
+
+def _plan_facet(plans=None, reserve_id="res:1", complete=True, with_facet=True):
+    data = {}
+    if with_facet:
+        data["expenses"] = {"data": {"currentUser": {"accounts": [
+            {"id": "acct:1", "billReserve": {"id": reserve_id,
+                                             "totalReservedAmount": 1000,
+                                             "fundingPlans": plans or []}}]}}}
+    return {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+            "complete": complete, "captured_at": "2026-09-14T12:00:00Z", "data": data}
+
+
+def _rules_facet(rules=None, complete=True, with_facet=True):
+    data = {}
+    if with_facet:
+        data["family"] = {"data": {"currentUser": {"family": {"reassignmentRules": rules or []}}}}
+    return {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+            "complete": complete, "captured_at": "2026-09-14T12:00:00Z", "data": data}
+
+
+def test_funding_plan_create_readback_confirms_the_plan(tmp_path, monkeypatch):
+    dashboard = _plan_facet(plans=[{"id": "plan:1", "name": "Cash App", "amount": 42720}])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_paycheck_funding_plan",
+        {"billReserveId": "res:1", "name": "Cash App", "amount": 42720,
+         "frequency": "WEEKLY", "frequencyInterval": 2, "anchorDate": "2026-09-04"},
+        dashboard, {"id": "plan:1"},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-funding-plan-create-readback"
+    assert outcome["verification"]["provider_truth"] is True
+    assert calls == ["create_paycheck_funding_plan"]
+
+
+def test_funding_plan_create_absent_is_unresolved_not_a_failure(tmp_path, monkeypatch):
+    dashboard = _plan_facet(plans=[])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_paycheck_funding_plan",
+        {"billReserveId": "res:1", "name": "Cash App", "amount": 42720},
+        dashboard, {"id": "plan:1"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    assert calls == ["create_paycheck_funding_plan"]
+
+
+def test_funding_plan_create_without_a_provider_id_stays_unresolved(tmp_path, monkeypatch):
+    """Create verification depends on the write returning the plan id.
+
+    If the connector returns no id there is nothing to attribute, so the receipt
+    must stay unresolved rather than fall back to guessing by name.
+    """
+    dashboard = _plan_facet(plans=[{"id": "plan:1", "name": "Cash App", "amount": 42720}])
+
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_paycheck_funding_plan",
+        {"billReserveId": "res:1", "name": "Cash App", "amount": 42720},
+        dashboard, {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert "identity" in outcome["result"]["verification"]["reason"]
+
+
+def test_funding_plan_update_readback_confirms_and_contradicts(tmp_path, monkeypatch):
+    matching = _plan_facet(plans=[{"id": "plan:1", "name": "Cash App", "amount": 42720}])
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "update_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan:1", "name": "Cash App", "amount": 42720}, matching, {},
+    )
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-funding-plan-update-readback"
+
+    differing = _plan_facet(plans=[{"id": "plan:1", "name": "Cash App", "amount": 99999}])
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "update_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan:1", "name": "Cash App", "amount": 42720}, differing, {},
+    )
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert "amount" in outcome["result"]["verification"]["reason"]
+
+
+def test_funding_plan_delete_readback_confirms_absence_and_flags_presence(tmp_path, monkeypatch):
+    gone = _plan_facet(plans=[{"id": "plan:other", "name": "Other", "amount": 1}])
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan:1"}, gone, {},
+    )
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-funding-plan-delete-readback"
+    assert calls == ["delete_paycheck_funding_plan"]
+
+    still_there = _plan_facet(plans=[{"id": "plan:1", "name": "Cash App", "amount": 42720}])
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan:1"}, still_there, {},
+    )
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+    assert "still present" in outcome["result"]["verification"]["reason"]
+
+
+def test_funding_plan_delete_with_an_unobserved_facet_stays_unresolved(tmp_path, monkeypatch):
+    """An unread facet must never be allowed to confirm a deletion."""
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan:1"}, _plan_facet(with_facet=False), {},
+    )
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+
+
+def test_reassignment_rule_create_readback_uses_provider_identity(tmp_path, monkeypatch):
+    dashboard = _rules_facet(rules=[{"id": "rule:1", "match": "Example"}])
+
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_pocket_reassignment_rule",
+        {"match": "Example", "account_id": "acct:1", "assignment_subaccount_id": "sub:1"},
+        dashboard, {"id": "rule:1"},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-reassignment-rule-create-readback"
+    assert calls == ["create_pocket_reassignment_rule"]
+
+
+def test_reassignment_rule_create_absent_is_unresolved(tmp_path, monkeypatch):
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "create_crew_pocket_reassignment_rule",
+        {"match": "Example", "account_id": "acct:1", "assignment_subaccount_id": "sub:1"},
+        _rules_facet(rules=[]), {"id": "rule:1"},
+    )
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+
+
+def test_reassignment_rule_delete_readback_confirms_absence_and_flags_presence(tmp_path, monkeypatch):
+    gone = _rules_facet(rules=[{"id": "rule:other", "match": "Other"}])
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_pocket_reassignment_rule",
+        {"reassignment_rule_id": "rule:1"}, gone, {},
+    )
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-reassignment-rule-delete-readback"
+    assert calls == ["delete_pocket_reassignment_rule"]
+
+    present = _rules_facet(rules=[{"id": "rule:1", "match": "Example"}])
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_pocket_reassignment_rule",
+        {"reassignment_rule_id": "rule:1"}, present, {},
+    )
+    assert outcome["state"] == "failed"
+    assert outcome["result"]["verification"]["provider_truth"] is True
+
+
+def test_reassignment_rule_delete_on_an_empty_observed_list_is_verified(tmp_path, monkeypatch):
+    """An observed-empty list is a real statement that no rules exist."""
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "delete_crew_pocket_reassignment_rule",
+        {"reassignment_rule_id": "rule:1"}, _rules_facet(rules=[]), {},
+    )
+    assert outcome["state"] == "verified"
+
+
+def test_new_plan_and_rule_verifiers_never_resubmit_after_an_exception(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "plan:1"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("create_crew_paycheck_funding_plan",))
+    request = store.propose("create_crew_paycheck_funding_plan",
+                            {"billReserveId": "res:1", "name": "Cash App", "amount": 42720},
+                            "r", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["create_crew_paycheck_funding_plan"]
+    spec = {"create_crew_paycheck_funding_plan": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+
+    restarted = ActionStore(db, allowed_types=("create_crew_paycheck_funding_plan",)).get(request["id"])
+    assert outcome["state"] == restarted["state"] == "executed"
+    assert restarted["result"]["verification"]["ok"] is None
+    assert restarted["result"]["verification"]["retry_allowed"] is False
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["create_paycheck_funding_plan"]
+
+
+# --- C4: crew_initiate_transfer verified by the provider's transfer id ---------
+# The connector returns the transfer id (`initiateTransfer { result { id } }`) and
+# the transactions facet already selects `transfer { id type status }`. Identity is
+# the only honest match: presence confirms, absence from a single page cannot.
+
+
+def _transfer_dashboard(transfer_ids=(), complete=True, with_facet=True):
+    edges = [
+        {"node": {
+            "id": f"txn:{index}",
+            "occurredAt": "2026-09-14T12:00:00Z",
+            "subaccount": {"id": "sub:from", "displayName": "Checking"},
+            "transfer": {"id": tid, "type": "INTERNAL", "status": "COMPLETED"},
+        }}
+        for index, tid in enumerate(transfer_ids)
+    ]
+    data = {}
+    if with_facet:
+        data["transactions"] = {"data": {"account": {
+            "id": "acct:1",
+            "cashTransactions": {"edges": edges, "pageInfo": {"hasNextPage": False}},
+        }}}
+    return {"mode": "read-only", "source": "crew", "mutations_enabled": False,
+            "complete": complete, "captured_at": "2026-09-14T12:00:00Z", "data": data}
+
+
+def test_transfer_readback_confirms_the_provider_transfer_id(tmp_path, monkeypatch):
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "crew_initiate_transfer",
+        {"accountFromId": "sub:from", "accountToId": "sub:to", "amount": 2500, "memo": ""},
+        _transfer_dashboard(transfer_ids=("xfer:9",)), {"id": "xfer:9"},
+    )
+
+    assert outcome["state"] == "verified"
+    assert outcome["verification"]["check"] == "crew-transfer-readback"
+    assert outcome["verification"]["provider_truth"] is True
+    assert outcome["verification"]["observed"]["transfer_id"] == "xfer:9"
+    assert calls == ["initiate_transfer"]
+
+
+def test_transfer_readback_absence_is_unresolved_never_failed(tmp_path, monkeypatch):
+    """The core rule: one page cannot prove absence, so absence is unresolved.
+
+    A false FAILED here would tell the owner a transfer did not happen when it may
+    simply be on a page that was never fetched — the failure mode this design
+    refuses.
+    """
+    _db, _store, _spec, outcome, calls = _run_crew_action(
+        tmp_path, monkeypatch, "crew_initiate_transfer",
+        {"accountFromId": "sub:from", "accountToId": "sub:to", "amount": 2500, "memo": ""},
+        _transfer_dashboard(transfer_ids=("xfer:other",)), {"id": "xfer:9"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert outcome["result"]["verification"]["provider_truth"] is False
+    assert outcome["result"]["verification"]["retry_allowed"] is False
+    assert "cannot prove" in outcome["result"]["verification"]["reason"]
+    assert calls == ["initiate_transfer"]
+
+
+def test_transfer_readback_without_a_write_transfer_id_is_unresolved(tmp_path, monkeypatch):
+    """No transfer id in the write result means nothing to match on — never a guess."""
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "crew_initiate_transfer",
+        {"accountFromId": "sub:from", "accountToId": "sub:to", "amount": 2500, "memo": ""},
+        _transfer_dashboard(transfer_ids=("xfer:9",)), {},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert "no transfer identity" in outcome["result"]["verification"]["reason"]
+
+
+def test_transfer_readback_with_an_unobserved_transactions_facet_is_unresolved(tmp_path, monkeypatch):
+    """An unread transactions facet can never confirm a transfer."""
+    _db, _store, _spec, outcome, _calls = _run_crew_action(
+        tmp_path, monkeypatch, "crew_initiate_transfer",
+        {"accountFromId": "sub:from", "accountToId": "sub:to", "amount": 2500, "memo": ""},
+        _transfer_dashboard(with_facet=False), {"id": "xfer:9"},
+    )
+
+    assert outcome["state"] == "executed"
+    assert outcome["result"]["verification"]["ok"] is None
+    assert "not observed" in outcome["result"]["verification"]["reason"]
+
+
+def test_transfer_readback_never_resubmits_after_a_snapshot_exception(tmp_path, monkeypatch):
+    from crew.executors import execute_approved_action
+    from meridian import crew_write_actions, live
+
+    calls = []
+    monkeypatch.setattr(crew_write_actions, "execute_crew_write",
+                        lambda op, payload: calls.append(op) or {"ok": True, "result": {"id": "xfer:9"}})
+    monkeypatch.setattr(live, "capture_crew_snapshot",
+                        lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    db = str(tmp_path / "m.db")
+    store = ActionStore(db, allowed_types=("crew_initiate_transfer",))
+    request = store.propose("crew_initiate_transfer",
+                            {"accountFromId": "sub:from", "accountToId": "sub:to",
+                             "amount": 2500, "memo": ""},
+                            "Transfer", requested_by="owner")
+    store.approve(request["id"], decided_by="owner")
+    execute, verifier = crew_write_executors(db)["crew_initiate_transfer"]
+    spec = {"crew_initiate_transfer": ExecutorSpec(execute=execute, verifier=verifier)}
+    outcome = execute_approved_action(store, request["id"], spec)
+
+    restarted = ActionStore(db, allowed_types=("crew_initiate_transfer",)).get(request["id"])
+    assert outcome["state"] == restarted["state"] == "executed"
+    assert restarted["result"]["verification"]["ok"] is None
+    assert restarted["result"]["verification"]["retry_allowed"] is False
+    with pytest.raises(Exception):
+        execute_approved_action(store, request["id"], spec)
+    assert calls == ["initiate_transfer"]

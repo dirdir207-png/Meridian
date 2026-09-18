@@ -1,0 +1,26 @@
+{
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--network",
+    "none",
+    "--read-only",
+    "--tmpfs",
+    "/tmp:rw,exec,size=1g",
+    "-v",
+    "/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/readiness-2026-09-13:/evidence",
+    "-e",
+    "READINESS_NETWORK_NONE=1",
+    "-e",
+    "READINESS_IMAGE_ID=sha256:26210e35c22a2a1163dbf9addbf1309e85fe7803658eec28441ee790426bba56",
+    "sha256:26210e35c22a2a1163dbf9addbf1309e85fe7803658eec28441ee790426bba56",
+    "python",
+    "scripts/verify_readiness.py",
+    "restore",
+    "--output",
+    "/evidence/restore-02.json"
+  ],
+  "exit_code": 0,
+  "image_id": "sha256:26210e35c22a2a1163dbf9addbf1309e85fe7803658eec28441ee790426bba56"
+}

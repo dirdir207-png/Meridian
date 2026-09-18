@@ -1,0 +1,30 @@
+{
+  "event_id_stable_across_time": true,
+  "observed_at_is_fresh": true,
+  "event_bytes": 1216,
+  "within_max_event_bytes": true,
+  "queues_claims": [],
+  "queues_ready": [],
+  "workflow_phase": "IMPLEMENT",
+  "tracks": {
+    "D": "active",
+    "I": "active",
+    "C": "active"
+  },
+  "malformed_tasks": {
+    "health": "degraded",
+    "errors": [
+      "tasks source is malformed"
+    ]
+  },
+  "unknown_schema_version": {
+    "raised_instead_of_degrading": "unknown or malformed tasks version"
+  },
+  "rejects_secret_shaped_input": true,
+  "out_of_order": {
+    "health": "degraded",
+    "errors": [
+      "producer timestamp is newer than observation"
+    ]
+  }
+}

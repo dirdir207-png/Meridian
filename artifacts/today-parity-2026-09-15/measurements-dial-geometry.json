@@ -1,0 +1,204 @@
+{
+  "desktop": {
+    "panel": {
+      "tag": "div",
+      "cls": "obs-dial-panel",
+      "x": 251,
+      "right": 1339,
+      "w": 1088,
+      "text": "FRI, SEP 11Electric$84.00Reser"
+    },
+    "events_column": {
+      "tag": "div",
+      "cls": "obs-dial-events",
+      "x": 949,
+      "right": 1339,
+      "w": 390,
+      "text": "Friday, September 11, 2026Upco"
+    },
+    "list": {
+      "tag": "ul",
+      "cls": "obs-event-list obs-event-list--orbit",
+      "x": 949,
+      "right": 1333,
+      "w": 384,
+      "text": "Sep 11ElectricReserved\u2212$84.00S"
+    },
+    "card": {
+      "tag": "li",
+      "cls": "",
+      "x": 949,
+      "right": 1333,
+      "w": 384,
+      "text": "Sep 11ElectricReserved\u2212$84.00"
+    },
+    "card_children": [
+      {
+        "tag": "button",
+        "cls": "obs-event-item",
+        "x": 949,
+        "right": 1333,
+        "w": 384,
+        "text": "Sep 11ElectricReserved\u2212$84.00"
+      },
+      {
+        "tag": "span",
+        "cls": "obs-event-kind",
+        "x": 949,
+        "right": 993,
+        "w": 44,
+        "text": ""
+      },
+      {
+        "tag": "img",
+        "cls": "",
+        "x": 960,
+        "right": 982,
+        "w": 22,
+        "text": ""
+      },
+      {
+        "tag": "span",
+        "cls": "obs-event-body",
+        "x": 1007,
+        "right": 1333,
+        "w": 326,
+        "text": "Sep 11ElectricReserved"
+      },
+      {
+        "tag": "span",
+        "cls": "obs-event-date",
+        "x": 1007,
+        "right": 1333,
+        "w": 326,
+        "text": "Sep 11"
+      },
+      {
+        "tag": "span",
+        "cls": "obs-event-title",
+        "x": 1007,
+        "right": 1333,
+        "w": 326,
+        "text": "Electric"
+      },
+      {
+        "tag": "span",
+        "cls": "obs-event-meta",
+        "x": 1007,
+        "right": 1333,
+        "w": 326,
+        "text": "Reserved"
+      },
+      {
+        "tag": "strong",
+        "cls": "obs-event-amount",
+        "x": 1007,
+        "right": 1333,
+        "w": 326,
+        "text": "\u2212$84.00"
+      }
+    ],
+    "doc_width": 1440
+  },
+  "mobile": {
+    "panel": {
+      "tag": "div",
+      "cls": "obs-dial-panel",
+      "x": 16,
+      "right": 414,
+      "w": 398,
+      "text": "FRI, SEP 11Electric$84.00Reser"
+    },
+    "events_column": {
+      "tag": "div",
+      "cls": "obs-dial-events",
+      "x": 298,
+      "right": 414,
+      "w": 116,
+      "text": "Friday, September 11, 2026Upco"
+    },
+    "list": {
+      "tag": "ul",
+      "cls": "obs-event-list obs-event-list--orbit",
+      "x": 298,
+      "right": 408,
+      "w": 110,
+      "text": "Sep 11ElectricReserved\u2212$84.00S"
+    },
+    "card": {
+      "tag": "li",
+      "cls": "",
+      "x": 298,
+      "right": 408,
+      "w": 110,
+      "text": "Sep 11ElectricReserved\u2212$84.00"
+    },
+    "card_children": [
+      {
+        "tag": "button",
+        "cls": "obs-event-item",
+        "x": 298,
+        "right": 408,
+        "w": 110,
+        "text": "Sep 11ElectricReserved\u2212$84.00"
+      },
+      {
+        "tag": "span",
+        "cls": "obs-event-kind",
+        "x": 298,
+        "right": 328,
+        "w": 30,
+        "text": ""
+      },
+      {
+        "tag": "img",
+        "cls": "",
+        "x": 305,
+        "right": 322,
+        "w": 17,
+        "text": ""
+      },
+      {
+        "tag": "span",
+        "cls": "obs-event-body",
+        "x": 0,
+        "right": 0,
+        "w": 0,
+        "text": "Sep 11ElectricReserved"
+      },
+      {
+        "tag": "span",
+        "cls": "obs-event-date",
+        "x": 335,
+        "right": 408,
+        "w": 73,
+        "text": "Sep 11"
+      },
+      {
+        "tag": "span",
+        "cls": "obs-event-title",
+        "x": 298,
+        "right": 408,
+        "w": 110,
+        "text": "Electric"
+      },
+      {
+        "tag": "span",
+        "cls": "obs-event-meta",
+        "x": 298,
+        "right": 408,
+        "w": 110,
+        "text": "Reserved"
+      },
+      {
+        "tag": "strong",
+        "cls": "obs-event-amount",
+        "x": 298,
+        "right": 408,
+        "w": 110,
+        "text": "\u2212$84.00"
+      }
+    ],
+    "doc_width": 430
+  }
+}

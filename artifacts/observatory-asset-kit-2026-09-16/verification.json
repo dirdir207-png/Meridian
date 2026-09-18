@@ -1,0 +1,66 @@
+{
+  "date": "2026-09-16",
+  "scope": "Standalone artwork kit, documentation and current synthetic-preview inspection",
+  "source_head_at_inspection": "d90b2398cf24ecdef173dc95ec1a2952e002ade1",
+  "concurrent_head_after_inspection": "4037e08ffed46f8089afde2c7cb3e5a8ba677d5f",
+  "pdf_appendix_pixel_matches": 7,
+  "asset_checks": {
+    "png_count": 8,
+    "all_rgba": true,
+    "all_have_zero_alpha_and_visible_pixels": true,
+    "sha256_matches_manifest": true
+  },
+  "icons": {
+    "count": 22,
+    "svg_xml_parse": true,
+    "no_script_elements": true,
+    "mit_license_present": true
+  },
+  "fonts": {
+    "count": 2,
+    "ttf_magic_valid": true,
+    "ofl_licenses_present": true,
+    "browser_loaded": true,
+    "fonttools_check": "not run; optional package unavailable"
+  },
+  "gallery": {
+    "desktop": {
+      "viewport": [
+        1200,
+        900
+      ],
+      "requested_dpr": 3,
+      "all_images_loaded": true,
+      "fonts_loaded": true,
+      "console_errors": 0,
+      "horizontal_overflow": false,
+      "visually_inspected_backgrounds": [
+        "indigo",
+        "white"
+      ]
+    },
+    "mobile": {
+      "viewport": [
+        420,
+        912
+      ],
+      "all_images_loaded": true,
+      "horizontal_overflow": false,
+      "visual_capture": "After resetting viewport and reloading, accepted initial-viewport capture asset-board-mobile-accepted.png inspected at 420x912. Earlier asset-board-mobile.png is rejected due to capture scaling."
+    }
+  },
+  "production_preview": {
+    "today": "inspected",
+    "plan": "inspected",
+    "activity_review": "inspected, different fixture from concept",
+    "accounts": "inspected, different fixture from concept",
+    "settings": "404 in isolated preview"
+  },
+  "limits": [
+    "Focused inspection is not the governed parity matrix.",
+    "No production application changes or deployment.",
+    "Raster assets are reconstructed from flattened source art; not exact layered extraction.",
+    "Candidate fonts and library glyphs are not asserted exact concept identities.",
+    "Moon orbit is decorative and low contrast on white."
+  ]
+}

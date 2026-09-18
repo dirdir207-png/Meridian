@@ -1,0 +1,1212 @@
+{
+  "schema_version": 1,
+  "project": "ORSC Meridian",
+  "source_of_truth": "docs/project/MERIDIAN_OS_ARCHITECTURE.md",
+  "tasks": [
+    {
+      "id": "OS-001",
+      "title": "Reconcile current implementation and select first vertical slice",
+      "phase": "audit",
+      "status": "ready",
+      "priority": "critical",
+      "dependencies": [],
+      "authority_impact": "none",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Current governing documents and implementation are reconciled",
+        "Exactly one safe first slice is selected"
+      ],
+      "evidence": {
+        "review": "docs/project/MERIDIAN_SECOND_ROADMAP_REVIEW_2026-09-11.md",
+        "baseline_commit": "a20702716046f2beadfd1d6c1f3801585a9beeeb",
+        "scope": "Informed second-roadmap review and targeted synthetic verification; full audit contract reconciliation remains pending. V1.1 is proposed, not implemented or deployed."
+      }
+    },
+    {
+      "id": "OS-002",
+      "title": "Immutable financial observation foundation",
+      "phase": "digital-twin",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-001"
+      ],
+      "authority_impact": "none",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Observations preserve provenance and timestamps",
+        "Actual and simulated values cannot mix"
+      ]
+    },
+    {
+      "id": "OS-003",
+      "title": "Constitution policy evaluator",
+      "phase": "safety",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-002"
+      ],
+      "authority_impact": "policy model only; activation owner-gated",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "Policy decisions identify rules, evidence, assumptions, and recovery"
+      ]
+    },
+    {
+      "id": "OS-004",
+      "title": "Repair shell markup and restore the four-workspace navigation invariant",
+      "phase": "correctness",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-001"
+      ],
+      "authority_impact": "none; UI structure only, no authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Rendered shell contains exactly four workspace sections with intact attributes",
+        "Primary navigation exposes exactly four workspaces",
+        "Trials remains reachable as a Settings section without API or safety changes",
+        "Regression guards fail against the corrupted markup (negative control)"
+      ],
+      "evidence": {
+        "commit": "dbdca2f",
+        "verification": "tests/test_meridian_workspace_invariant.py (13 checks), 566 tests passed, Ruff clean, git diff --check clean"
+      }
+    },
+    {
+      "id": "OS-005",
+      "title": "Proactive financial weather and grouped meaningful events",
+      "phase": "proactive",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-002",
+        "OS-003"
+      ],
+      "authority_impact": "none; read-only projection over the dial model, no authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Near-term dial events are grouped and capped with omitted counts (noise control)",
+        "Zero, duplicate, and unparseable events are suppressed rather than rendered",
+        "Weather fails to unknown when freshness is not fresh or the available balance is unknown (missing data is not zero)",
+        "Amounts are never added across currencies",
+        "Every state and group carries a plain-language explanation",
+        "Read-only GET /api/meridian/weather exposes the model and writes no repository rows"
+      ],
+      "evidence": {
+        "commit": "768c7e4",
+        "verification": "tests/meridian/test_proactive.py (12), API weather cases in tests/meridian/test_api.py, tests/meridian 563 passed, Ruff clean, git diff --check clean"
+      }
+    },
+    {
+      "id": "OS-006",
+      "title": "Bill funding target respects an existing reserve",
+      "phase": "financial-event-model",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-002"
+      ],
+      "authority_impact": "none; pure projection math, no authority or mutation change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "A bill's existing funded_amount reduces the amount a funding rule still projects",
+        "A fully reserved bill projects no further contributions",
+        "An over-reserved bill never yields a negative target or shortfall",
+        "Red->Green coverage proves the previous behaviour over-allocated"
+      ],
+      "evidence": {
+        "commit": "44bf73b",
+        "verification": "tests/meridian/test_funding.py (21 passed, 3 new), tests/meridian 566 passed, Ruff clean, git diff --check clean"
+      }
+    },
+    {
+      "id": "OS-007",
+      "title": "Plan renders durable action outcomes instead of HTTP success",
+      "phase": "action-truth",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-001"
+      ],
+      "authority_impact": "none; presentation only, no routing or mutation change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Verified is the only direct outcome rendered as successful",
+        "Executed and executing remain visibly pending verification",
+        "Failed, rejected, expired, unknown, and uncertain outcomes never receive success styling",
+        "Uncertain outcomes tell the owner to verify Crew state before retrying",
+        "Plan refreshes after a mutation only when the durable state is verified",
+        "All Plan mutation call sites share one pure state interpreter"
+      ],
+      "evidence": {
+        "commit": "57ba383",
+        "verification": "RED->GREEN tests/meridian/test_action_outcome_js.py (3); Node exercises all durable states; tests/meridian 569 passed; Node syntax, Ruff, git diff --check clean"
+      }
+    },
+    {
+      "id": "OS-008",
+      "title": "Memory retains and explains failed action outcomes",
+      "phase": "action-truth",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-007"
+      ],
+      "authority_impact": "none; presentation and refresh gating only, no execution change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Memory parses the durable action returned by the execute endpoint",
+        "Only verified execution removes the pending row and refreshes Accounts memory",
+        "Failed, uncertain, rejected, expired, executing, executed, and malformed outcomes remain visible",
+        "A returned durable outcome cannot expose a blind resend through the same Execute control"
+      ],
+      "evidence": {
+        "commit": "72b6bc0",
+        "verification": "RED->GREEN tests/meridian/test_memory_action_outcome_js.py (3); focused integration 11 passed; tests/meridian 572 passed; Node syntax, Ruff, git diff --check clean"
+      }
+    },
+    {
+      "id": "OS-009",
+      "title": "Action reviews show exact recorded parameters safely",
+      "phase": "action-truth",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-008"
+      ],
+      "authority_impact": "none; review presentation only, no approval or mutation change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Every approval/history surface displays all stored operation parameters",
+        "Secret-shaped values are recursively redacted and never written with innerHTML",
+        "Missing reviewed before/after evidence is labelled not recorded rather than inferred",
+        "Missing preserved-field evidence is labelled not recorded rather than inferred",
+        "The slice does not claim A12 base-state capture or conflict preconditions are implemented"
+      ],
+      "evidence": {
+        "commit": "f27f553",
+        "verification": "RED->GREEN tests/meridian/test_action_review_js.py (4); focused 15 passed; tests/meridian 576 passed; browser shell/smoke 18 passed; Node syntax, Ruff, git diff --check clean"
+      }
+    },
+    {
+      "id": "OS-010",
+      "title": "Preserve structured Crew write failure outcomes",
+      "phase": "write-integrity",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-009"
+      ],
+      "authority_impact": "none; failure classification and persistence only, with no routing, mutation, or retry change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Blocked, rejected, and uncertain Crew connector outcomes remain distinguishable in the durable action result",
+        "Timeouts, unreadable responses, and uncertain outcomes require provider-state readback and never permit automatic retry",
+        "A failed connector outcome invokes the executor once and skips post-execution verification",
+        "The slice adds no mutation, authority path, automated reconciliation, or live financial test"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN connector/pipeline coverage; 34 focused passed; tests/meridian 581 passed; full suite 811 passed, 64 skipped; Ruff and git diff --check clean; independent review no findings"
+      }
+    },
+    {
+      "id": "OS-011",
+      "title": "Meridian identity on auth and first-run surfaces",
+      "phase": "identity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-010"
+      ],
+      "authority_impact": "none; template, manifest, and service-worker branding only, no routing, mutation, or credential change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The first-run landing page rendered by /login with an empty users table identifies the app as Meridian",
+        "No template or manifest still names another product for Home Screen installation",
+        "The service worker never serves a cached manifest and its cache version is bumped",
+        "Register and login form ids, endpoints, payloads, and error handling are unchanged"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN tests/meridian/test_auth_branding.py (13); empty-DB first-run /login returns Meridian - Setup with 0 SimpleCrew occurrences; full suite 826 passed, 64 skipped; Ruff, git diff --check, node --check, manifest JSON clean"
+      }
+    },
+    {
+      "id": "OS-012",
+      "title": "Accepted is not verified for verifier-less operations",
+      "phase": "action-truth",
+      "status": "complete",
+      "priority": "critical",
+      "dependencies": [
+        "OS-010"
+      ],
+      "authority_impact": "none; outcome classification only, no routing, retry, mutation, or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "An action with no registered verifier never reaches verified",
+        "Such an action stays executed and records that no readback verifier is registered",
+        "An explicit verifier still reaches verified and a failing verifier still reaches failed",
+        "An executed action cannot be claimed and executed a second time",
+        "The change introduces no new state, schema, or mutation path",
+        "A destructive Plan control cannot create a second request after a durable outcome for a verifier-less operation"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN 4 new tests plus 1 destructive-control guard (negative control verified); corrected 1 pre-existing verified expectation; registry audit showed 15 of 27 action types have no verifier; full suite 832 passed, 64 skipped; Ruff, git diff --check, node --check clean"
+      }
+    },
+    {
+      "id": "OS-013",
+      "title": "Reconcile accounts a complete provider read no longer returns",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-002"
+      ],
+      "authority_impact": "none; local read-model archival only, no provider write, no routing, retry, or mutation path added",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Only a complete, error-free provider read may conclude that an account is gone",
+        "A conclusion of absence is scoped to the reading provider's own connection",
+        "An absent account keeps its row, its transactions and its transaction links; nothing is deleted",
+        "An absent account stops being a current observation and stops pinning or rescuing workspace freshness",
+        "An account the provider returns again is reactivated and its absence evidence is cleared",
+        "Absence is recorded once per observation and is not re-stamped by later reads",
+        "An unreconciled frozen account, and a connection with no observed accounts, still report stale",
+        "Account reads tolerate a database that has not yet applied migration 020"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN 12 tests in tests/meridian/test_sync_reconciliation.py plus 1 migration test pinning both account-column tolerance branches on a database stopped before 020; 7 mutation checks confirm the tests are load-bearing (no reconciliation, unguarded freshness join, no reactivation, re-stamped absence, completeness gate ignored, unconditional absence reset, untolerated account columns); full suite 845 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff clean on changed paths, git diff --check clean; verified end to end on a copy of the owner's database with a live complete read-only Crew snapshot: the one pocket Crew no longer returns was archived with absent_since, its 19 historical transactions were retained, and freshness moved stale -> fresh"
+      }
+    },
+    {
+      "id": "OS-014",
+      "title": "An archived account is reported with provenance, never as a current balance",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-013"
+      ],
+      "authority_impact": "none; read-model and presentation only, no new control, no mutation path",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "An account a complete read concluded is gone is reported in the Accounts read model instead of disappearing",
+        "The report carries provenance: provider, account type, absent_since, last observation and how much history survives",
+        "No amount is exposed for an archived account, because a last known balance is not a current balance",
+        "Archived accounts never appear in the current account structure, the summary maths, or the Account filter options",
+        "The archived list is bounded and ordered by conclusion time, not row id",
+        "A database that has not applied migration 020 reports no archived accounts rather than failing",
+        "Activity labels the account each transaction belongs to and marks transactions of archived accounts",
+        "The archived surface adds no interactive control and ships collapsed when empty"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN 11 tests in tests/meridian/test_archived_accounts.py (executable label checks through node) plus 4 API/rendered-page tests in tests/meridian/test_api.py; mutations caught: ordering by row id, rendering a balance in an archived row, dropping the ledger account label; full suite 860 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff, git diff --check and node --check clean; verified end to end on a copy of the owner's database with a live complete read-only Crew snapshot: 6 current accounts, 1 archived with 19 retained transactions and no amount exposed, 0 current rows wrongly archived"
+      }
+    },
+    {
+      "id": "OS-015",
+      "title": "An approved Crew write is refused when the reviewed state changed (A12)",
+      "phase": "write-integrity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-007",
+        "OS-009",
+        "OS-010",
+        "OS-012"
+      ],
+      "authority_impact": "narrows; a stale approval no longer reaches the provider",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "A proposal records the state its reviewer approved, not only the requested parameters",
+        "Execution re-checks that reviewed state after the atomic claim and before any provider call",
+        "A changed record is refused as precondition_conflict with sent_to_provider false and retry_allowed false",
+        "A missing or unreadable reviewed state refuses as precondition_unverifiable (fail closed)",
+        "A refusal is terminal and cannot be retried or silently re-run",
+        "Only update_crew_bill is guarded; every other action type behaves as before",
+        "The refusal payload records provider_truth false rather than implying a provider readback"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN 7 engine tests (tests/crew/test_executors.py) plus 4 wired tests (tests/meridian/test_crew_write_actions.py); neutralising the guard turns 5 red including the never-reaches-Crew assertion; full suite 875 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean"
+      }
+    },
+    {
+      "id": "OS-016",
+      "title": "One canonical Crew connector (C06)",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-013"
+      ],
+      "authority_impact": "none; read path only, removes a competing connection identity",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "Every Crew sync entry point writes the single connection identity crew-work-assistant",
+        "The client-based CrewReadAdapter is no longer wired into the sync path",
+        "No second connection identity can be created by a sync run",
+        "The legacy /api/savings refresh, the cadence gate and the live loop share one connector",
+        "sync_provider remains the sync engine inside meridian/sync, used by the snapshot adapter"
+      ],
+      "evidence": {
+        "verification": "Routing test asserts the legacy path calls meridian.live.sync_live_crew on the app DB, so reverting to the client adapter fails; two tests patching the removed sync_provider name were repointed; full suite 875 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean"
+      }
+    },
+    {
+      "id": "OS-017",
+      "title": "Crew bill writes verified against the provider, not local state (A06)",
+      "phase": "action-truth-review",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-012",
+        "OS-015"
+      ],
+      "authority_impact": "narrows; verification now requires provider truth or stays unconfirmed",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "update_crew_bill is confirmed by a fresh Crew snapshot readback, not the local commitment",
+        "A matched readback records provider_truth true and reaches VERIFIED",
+        "A mismatched or vanished bill fails as verification_failed with requested and observed recorded",
+        "An unreadable snapshot leaves the action EXECUTED (verification pending), never VERIFIED or FAILED",
+        "A verifier returning ok None is treated as pending, not failure, for every operation",
+        "No automatic retry of a failed verification"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN 1 engine test plus 3 wired tests (matched/mismatch/unreadable); neutralising the ok-is-None branch turns 2 red including the unreadable-stays-executed assertion; full suite 879 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean"
+      }
+    },
+    {
+      "id": "OS-018",
+      "title": "A complete Crew read concludes absence for bills it no longer returns (C02 for bills)",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-013",
+        "OS-016"
+      ],
+      "authority_impact": "none; read-model reconciliation archived bills, nothing deleted",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "A complete, error-free Crew read archives bills it no longer returns",
+        "An incomplete or failed read never concludes absence",
+        "An empty bill enumeration is never read as 'every bill disappeared'",
+        "Absence is scoped to the reading provider's own bills (legacy_source)",
+        "Absence is recorded once, and the row, funded amount and transactions are kept",
+        "Re-observation reactivates a concluded-absent bill but never an owner-archived one",
+        "A bill with no provider identity is never concluded absent"
+      ],
+      "evidence": {
+        "verification": "RED->GREEN 9 tests (repository scoping, idempotence, no-provider-identity, reactivation, owner-archive protection, two end-to-end sync tests through the real adapter); neutralising the completeness gate turns the incomplete-read test red; full suite 888 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean"
+      }
+    },
+    {
+      "id": "OS-019",
+      "title": "An absent bill stays visible in Plan with provenance (OS-014 parallel)",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-018",
+        "OS-014"
+      ],
+      "authority_impact": "none; read-model presentation only",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The Plan payload reports bills a complete read concluded are gone",
+        "An absent bill is never presented with an amount, funded figure or currency",
+        "An absent bill is absent from the live commitment list it used to sit in",
+        "The section stays hidden until something is actually reported",
+        "The row carries no control the owner could act on",
+        "The label logic is executable in tests rather than asserted as file text"
+      ],
+      "evidence": {
+        "verification": "10 Python tests plus 1 authenticated API test plus 1 Node label test; mutation dropping the absence filter turns 2 red; full suite 898 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff, git diff --check, node --check and a Jinja parse clean",
+        "verification_gap": "No browser/viewport/accessibility check: playwright is unavailable in this environment, so all 56 browser tests skip and the section has not been seen rendered"
+      }
+    },
+    {
+      "id": "OS-020",
+      "title": "An unreported reserve is not a zero reserve (C01)",
+      "phase": "sync-convergence",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-013"
+      ],
+      "authority_impact": "narrows; removes a silent overwrite of known state, adds no capability",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "An absent reservedAmount reads as unknown, not as zero",
+        "An explicitly reported zero still reads as zero",
+        "A read that omits the reserve no longer erases the known funded amount",
+        "A new bill with no reported reserve still starts at zero",
+        "amount keeps its non-nullable behaviour (out of scope, deliberately)"
+      ],
+      "evidence": {
+        "verification": "4 new tests (2 targeting the fix, 2 regression guards); reverting the fix turns the 2 target tests red; full suite 902 passed, 56 skipped, 1 pre-existing playwright-unavailable failure; Ruff and git diff --check clean",
+        "followups": [
+          "update_bill_reserve_settings has no documented parameter contract and no fail-closed guard; it needs one before any UI derives a reserve value from local state",
+          "An absent bill amount still conflates to 0.0 and aborts the whole refresh tick via local validation"
+        ]
+      }
+    },
+    {
+      "id": "OS-021",
+      "title": "Emit sanitized deterministic Meridian status event for Harness handoff",
+      "phase": "integration-boundary",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-001"
+      ],
+      "authority_impact": "none; read-only projection and no transport",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Known versioned schema and deterministic event identity",
+        "Approved sources only with degraded handling for missing, malformed, stale, or conflicting data",
+        "Credential-free bounded CLI output with no mutation or provider/control calls",
+        "Contract and Harness handoff documentation committed"
+      ],
+      "evidence": {
+        "implementation": "meridian/status_emitter.py and scripts/emit_meridian_status.py",
+        "tests": "tests/meridian/test_status_emitter.py",
+        "docs": "docs/project/MERIDIAN_STATUS_EMITTER_CONTRACT.md and MERIDIAN_STATUS_EMITTER.md"
+      }
+    },
+    {
+      "id": "VIRGIL-A0",
+      "title": "Approve Virgil contracts and establish the compatible iOS toolchain",
+      "phase": "virgil-foundation",
+      "status": "ready",
+      "priority": "high",
+      "dependencies": [
+        "OS-002",
+        "OS-003"
+      ],
+      "authority_impact": "none; contracts, threat model, and local development toolchain only",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "Owner accepts or amends the Virgil north star, roadmap addendum, and threat-model reconciliation",
+        "Request, response, device-action, task, authentication, audit, and error contracts are versioned",
+        "A compatible full Xcode, iOS SDK, simulator runtime, simctl, and signing state are verified",
+        "No public endpoint, live credential issuance, provider change, deployment, or authority activation occurs"
+      ],
+      "evidence": {
+        "north_star": "docs/virgil/VIRGIL_IOS_NORTH_STAR.md",
+        "roadmap": "docs/virgil/VIRGIL_ROADMAP_ADDENDUM.md",
+        "reconciliation": "docs/virgil/VIRGIL_IOS_RECONCILIATION.md",
+        "toolchain_verified_at": "2026-09-15",
+        "toolchain": {
+          "macos": "26.4.1 (25E253)",
+          "xcode": "26.6 (17F113)",
+          "developer_directory": "/Applications/Xcode.app/Contents/Developer",
+          "iphoneos_sdk": "26.5",
+          "iphonesimulator_sdk": "26.5",
+          "simulator_runtime": "iOS 26.5 (23F77)",
+          "simulator_smoke_test": "iPhone Air booted, reported runtime 26.5, and simctl captured a 1260 x 2736 display image; clean terminal boot remains to be recorded after first-boot migration",
+          "first_launch_status": "complete",
+          "signing": "0 valid identities; account, certificate, profile, App ID, and device enrollment remain owner-gated"
+        }
+      }
+    },
+    {
+      "id": "VIRGIL-A1",
+      "title": "Authenticated read-only Virgil voice vertical slice",
+      "phase": "virgil-reactive",
+      "status": "blocked",
+      "priority": "high",
+      "dependencies": [
+        "VIRGIL-A0"
+      ],
+      "authority_impact": "none; evidence-backed read and conversation continuity only",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "C-V1 trustworthy evidence and I.1 envelope/permissions are explicitly accepted as adequate",
+        "Shortcut or Vocal Shortcut reaches the authenticated Virgil client interface",
+        "One Meridian question returns a cited spoken and displayed answer",
+        "Follow-up state is server-authoritative and no proposal, mutation, arbitrary tool, or background autonomy is exposed"
+      ]
+    },
+    {
+      "id": "VIRGIL-A2",
+      "title": "Typed deterministic iPhone actions beginning with Apple Maps",
+      "phase": "virgil-device-actions",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "VIRGIL-A1"
+      ],
+      "authority_impact": "bounded local-device capability; no financial authority",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "The iOS client accepts only a versioned allowlisted device-action schema",
+        "open_maps_route@1 validates and displays the destination before invocation",
+        "Arbitrary URLs, Shortcut names, app targets, calls, sends, purchases, and security controls fail closed",
+        "Simulator and physical-device results are recorded separately"
+      ]
+    },
+    {
+      "id": "VIRGIL-A3",
+      "title": "Virgil-to-Meridian proposal bridge",
+      "phase": "virgil-controlled-operations",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "VIRGIL-A2",
+        "OS-015",
+        "OS-017"
+      ],
+      "authority_impact": "proposal initiation only; approval and execution authority remain separate",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "C-V3 command-contract and executor release gates are explicitly accepted",
+        "Voice and model output can create only ai_interpreted proposals and can never select owner_direct",
+        "Approval occurs in a separate authenticated owner surface",
+        "Execution submits once and Virgil reports provider-verified or unresolved state without automatic retry"
+      ]
+    },
+    {
+      "id": "VIRGIL-A4",
+      "title": "Proactive Virgil and bounded long-running Harness tasks",
+      "phase": "virgil-proactive",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "VIRGIL-A3",
+        "OS-005",
+        "OS-021"
+      ],
+      "authority_impact": "none beyond approved notification and read-only task scopes",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "C-V4 suppression/feedback behavior and one useful I.2 role are explicitly accepted",
+        "One meaningful Meridian event and one bounded read-only Harness investigation work end to end",
+        "Tasks capture evidence, permissions, budget, expiry, cancellation, and sanitized progress",
+        "Unchanged state stays quiet and consequential output remains a proposal"
+      ]
+    },
+    {
+      "id": "VIRGIL-A5",
+      "title": "Rich conversational Virgil client and capability expansion",
+      "phase": "virgil-expansion",
+      "status": "blocked",
+      "priority": "low",
+      "dependencies": [
+        "VIRGIL-A4"
+      ],
+      "authority_impact": "capability-specific; each new action retains its own confirmation and policy boundary",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "A1-A4 are measured and stable before streaming, persistent voice, widgets, or Live Activities expand",
+        "Each new device, communications, context, research, or Home capability is added and verified independently",
+        "Native polish, provider routing, and proactive behavior never widen authority implicitly"
+      ]
+    },
+    {
+      "id": "OS-022",
+      "title": "Observatory shared identity: self-hosted type, accented wordmark, kit navigation glyphs",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-001"
+      ],
+      "authority_impact": "none; presentation-only chrome, no route, data or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The bundled licensed pairing is self-hosted and both the shell and Observatory token layers resolve to it",
+        "One shared wordmark partial renders the apricot accent in the desktop rail and both mobile headers",
+        "The four workspace entries pair their supplied glyph with a visible label and are never icon-only",
+        "The current entry keeps a non-colour cue alongside the lilac treatment",
+        "Governed captures cover all four workspaces with zero overflow and zero console errors",
+        "Consumed kit file hashes match the kit manifest"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 handoff step 2 (shared type/header/navigation)",
+        "tests": "tests/meridian/test_observatory_identity.py (9 checks, RED->GREEN), full non-browser suite 1131 passed / 1 skipped",
+        "capture": "artifacts/observatory-identity-2026-09-16/manifest.json (40 records: 4 workspaces x 5 viewports x 2 themes)",
+        "artifacts": "artifacts/observatory-identity-2026-09-16/identity-evidence.json",
+        "limits": "No workspace geometry. Settings is absent from the isolated preview, so no Settings parity is claimed. Not deployed."
+      }
+    },
+    {
+      "id": "OS-023",
+      "title": "Today step 3 batch 1: semantic event badges, prominent pointer, mobile callout legibility",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-022"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Each callout badge resolves a semantic glyph from the kit instead of repeating the kind glyph",
+        "Badges carry the concept anatomy: coloured disk, brass rim, rivets",
+        "The selection pointer is a prominent mint needle with a rimmed tip, updated in both render and repaint paths",
+        "Ordinary words no longer split in the mobile callout column",
+        "The pre-existing dial fidelity failures are attributed and resolved, not baselined"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 handoff step 3, batch 1 (concept 06, 01 supporting)",
+        "tests": "tests/meridian/test_dial_js.py 28 passed; full non-browser suite 1137 passed / 1 skipped; tests/browser/test_dial_fidelity.py 17 passed (was 3 failed / 14 passed at HEAD 1a9599f)",
+        "capture": "artifacts/observatory-today-step3-2026-09-16/ (Today, 4 viewports x 2 themes)",
+        "artifacts": "design-qa.md Today section",
+        "limits": "Connector geometry remains open. medallion-frame.png measured and deliberately unused at badge scale (48px native stroke collapses to ~1.7px at 44px). Not deployed."
+      }
+    },
+    {
+      "id": "OS-024",
+      "title": "Today step 3 batch 2: shaped evidence ticket from the supplied parchment asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-023"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The evidence ticket uses the supplied shaped asset rather than four bracket corners",
+        "Corner features stay fixed as the HTML content reflows, and the centre stays blank for code-owned text",
+        "The 260px ticket height cap and the no-overflow assertions still hold at every governed viewport",
+        "Money, dates and status remain HTML with provenance, never baked into the artwork"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 handoff step 3, batch 2 (concept 06)",
+        "tests": "tests/meridian/test_dial_js.py 29 passed; full non-browser suite 1138 passed / 1 skipped; tests/browser/test_dial_fidelity.py 17 passed",
+        "capture": "artifacts/observatory-today-ticket-2026-09-16/ (Today, 4 viewports x 2 themes, full-page included)",
+        "artifacts": "design-qa.md Today shaped-ticket section",
+        "limits": "Coordinate-anchored connectors still not built. Not deployed."
+      }
+    },
+    {
+      "id": "OS-025",
+      "title": "Today step 3 batch 3: coordinate-anchored connector runs from dial markers to callouts",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-024"
+      ],
+      "authority_impact": "none; presentation-only decoration. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Each run starts at its own marker's projected dial coordinate, not a fixed offset",
+        "Each run ends at its own callout row's left edge and midline",
+        "Runs re-anchor when the event rows are replaced and when either side resizes",
+        "The layer is decorative: aria-hidden, pointer-events none, clipped, and cannot widen the document",
+        "A run with no clear path is skipped rather than drawn back through the instrument"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 handoff step 3, batch 3 (concept 06)",
+        "tests": "tests/meridian/test_dial_js.py 30 passed; tests/browser/test_dial_fidelity.py 18 passed incl. an endpoint-geometry proof; full non-browser suite 1139 passed / 1 skipped",
+        "capture": "artifacts/observatory-today-connectors-2026-09-16/ (Today, 4 viewports x 2 themes)",
+        "artifacts": "design-qa.md Today connector section",
+        "limits": "Closes the Today items the handoff names. Plan (02) is next. Not deployed."
+      }
+    },
+    {
+      "id": "OS-026",
+      "title": "Plan: folded allocation map with code-owned medallions from the supplied asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-025"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The allocation map is installed below the tabs, ahead of the coverage/funding summary",
+        "The map keeps the supplied asset's aspect ratio and is never stretched",
+        "Each allocation segment reaches a medallion with its own kit glyph, label and amount in HTML",
+        "A medallion's station is fixed by the concept; no station is sized by an amount",
+        "The art, the leader rules and the compass rose are decorative and never money-bearing",
+        "The consumed kit asset matches its manifest hash"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Plan (concept 02), allocation map",
+        "tests": "tests/meridian/test_plan_map.py 6 guards; full non-browser suite 1145 passed / 1 skipped; tests/browser/test_plan.py updated to assert the medallions (APP_URL-gated, unexecuted here)",
+        "capture": "artifacts/observatory-plan-map-2026-09-16/ (Plan, 5 viewports x 2 themes; zero overflow, zero console errors)",
+        "artifacts": "design-qa.md Plan section",
+        "limits": "Per-medallion status tags not claimed: the service exposes no per-segment status. Row scale lines, perforated income strip, bottom CTA and exact header/tab order remain open. Not deployed."
+      }
+    },
+    {
+      "id": "OS-027",
+      "title": "Plan: next-income strip from the supplied parchment ticket asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-026"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The next-income strip reuses the kit ticket asset the kit names for a compact income ticket",
+        "Nine-slice preserves the scalloped ends and corner rivets instead of stretching the border",
+        "The date, amount and caption remain code-owned HTML on the ticket's blank centre",
+        "Text on the parchment uses ticket ink, and the dark surface hover lift is dropped",
+        "The card's existing data hooks survive the restyle unchanged"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Plan (concept 02), next-income strip",
+        "tests": "tests/meridian/test_plan_map.py 7 guards; full non-browser suite 1146 passed / 1 skipped",
+        "capture": "artifacts/observatory-plan-income-2026-09-16/ (Plan, 5 viewports x 2 themes)",
+        "artifacts": "design-qa.md Plan next-income section; computed-style probe at 420px and 1440px",
+        "limits": "Copy deliberately unchanged (owner accepts live wording, so the label reads 'Next paycheck'). Row scale lines, bottom CTA and header/tab order remain open. Not deployed."
+      }
+    },
+    {
+      "id": "OS-028",
+      "title": "Plan: primary action plate from the supplied apricot button asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-027"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The primary action uses the kit's action plate behind a real button, not an image of a button",
+        "Slice offsets are measured from the asset, whose plate sits behind transparent padding",
+        "The label stays code-owned HTML on the plate's blank centre",
+        "The control meets the kit's 44px minimum target with no document overflow"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Plan (concept 02), primary action plate",
+        "tests": "tests/meridian/test_plan_map.py 8 guards; full non-browser suite 1147 passed / 1 skipped",
+        "capture": "artifacts/observatory-plan-cta-2026-09-16/ (Plan, 5 viewports x 2 themes)",
+        "artifacts": "design-qa.md Plan action-plate section; computed-style probe at 420px and 1440px (222x58, dark plate ink, zero overflow)",
+        "limits": "The concept places the plate as a full-width bottom CTA; it stays in the command header, which is a layout decision. Row scale lines and header/tab order remain open. Not deployed."
+      }
+    },
+    {
+      "id": "OS-029",
+      "title": "Activity: header vignette from the supplied telescope asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-028"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The kit's telescope asset is installed as the Activity top-right vignette",
+        "The vignette is decorative and cannot intercept a click meant for a header control",
+        "The art never squeezes the heading or a touch target, at any governed viewport",
+        "The vignette stays inside the kit's stated 130-170 CSS px mobile band",
+        "The header copy is left-aligned to the concept's composition instead of hard right"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Activity (concept 03), header vignette",
+        "tests": "tests/meridian/test_activity_vignette.py 3 new guards; full non-browser suite 1150 passed / 1 skipped",
+        "capture": "artifacts/observatory-activity-vignette-2026-09-16/ (Activity, 5 viewports x 2 themes)",
+        "artifacts": "design-qa.md Activity vignette section; header geometry probe at 1440/1024/420/390",
+        "limits": "At mobile the vignette sits in flow above the Filter button rather than beside the heading, because the owner-accepted heading is a full sentence and the kit forbids squeezing it. Parchment review strip, framed category glyphs and the underlined tab treatment remain open. Not deployed."
+      }
+    },
+    {
+      "id": "OS-030",
+      "title": "Activity: framed category glyph on ledger rows from the kit icon set",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-029"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Each review row carries its category glyph inside the concept's ring with a marker dot",
+        "The glyph is decorative and hidden from assistive tech; the category text stays authoritative",
+        "The glyph colour follows the ring's own ink, so it stays legible in both themes",
+        "The kit's electricity-versus-Internet distinction survives a shared broad category",
+        "An unrecognised row keeps a neutral mark instead of borrowing a meaning"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Activity (concept 03), framed row glyphs",
+        "tests": "tests/meridian/test_activity_glyph.py 3 new guards, including a Node round-trip over ten resolver cases; full non-browser suite 1153 passed / 1 skipped",
+        "capture": "artifacts/observatory-activity-glyph-2026-09-16/ (Activity review mode via --ui-state-selector, 5 viewports x 2 themes)",
+        "artifacts": "design-qa.md Activity glyph section; static/js/meridian/kit-icons.js",
+        "limits": "The parchment 'N categories to review' strip is not built: the payload has no awaiting-review field, so the count would require inventing a confidence threshold and would present a derived figure as a fact. The apricot plate on the row action and the underlined tab treatment also remain open. Not deployed."
+      }
+    },
+    {
+      "id": "OS-031",
+      "title": "Accounts: parchment summary panel from the supplied ticket and dome assets",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-030"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The cash figure sits on the kit's parchment ticket, the asset the kit names for an account summary",
+        "The kit's Accounts decorative vignette is installed beside the figure",
+        "Nine-slice preserves the scalloped ends and corner rivets rather than stretching the border",
+        "The figure and its provenance note remain code-owned HTML on the ticket's blank face",
+        "No existing figure is dropped, and parchment text obeys the kit's dark-ink contrast rule"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Accounts (concept 04), parchment summary panel",
+        "tests": "tests/meridian/test_accounts_ticket.py 3 new guards; full non-browser suite 1156 passed / 1 skipped",
+        "capture": "artifacts/observatory-accounts-ticket-2026-09-16/ (Accounts, 5 viewports x 2 themes; zero overflow, zero console errors)",
+        "artifacts": "design-qa.md Accounts panel section",
+        "limits": "The concept's panel is full width; here it takes 2.1fr beside the Liabilities card so no figure is dropped. Coloured account medallions with their connector rail, the connection strip and the Assets & documents ticket remain open. Not deployed."
+      }
+    },
+    {
+      "id": "OS-032",
+      "title": "Accounts: account medallion from the supplied frame asset",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-031"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Each account row carries the supplied medallion frame asset, not a redrawn approximation",
+        "The kit's stated anatomy holds: supplied frame above a code-owned coloured disk and semantic icon",
+        "The disk tint follows the concept's role colours, with no invented signal for unseen roles",
+        "The semantic role icons are preserved rather than traded for a weaker kit mapping",
+        "The glyph stays decorative alongside a visible label"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Accounts (concept 04), account medallion",
+        "tests": "tests/meridian/test_accounts_medallion.py 3 new guards, one of which fails if the treatment regresses to the previous rounded square; full non-browser suite 1159 passed / 1 skipped",
+        "capture": "artifacts/observatory-accounts-medallion-2026-09-16/ (Accounts, 5 viewports x 2 themes; zero overflow, zero console errors)",
+        "artifacts": "design-qa.md Accounts medallion section",
+        "limits": "The connector rail linking the medallions, the connection strip and the Assets & documents ticket remain open. Not deployed."
+      }
+    },
+    {
+      "id": "OS-033",
+      "title": "Accounts: connector rail linking the account medallions",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-032"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Account rows are threaded on the concept's dashed rail with a node per medallion",
+        "The rail stops at the first and last medallion centres rather than dangling past them",
+        "Rows that carry no medallion are excluded instead of being given a node that marks nothing",
+        "The node colour derives from the row's own tint rather than a second colour table",
+        "The rail is decorative and its gutter does not overflow at any governed viewport"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Accounts (concept 04), connector rail",
+        "tests": "tests/meridian/test_accounts_rail.py 3 new guards; full non-browser suite 1162 passed / 1 skipped",
+        "capture": "artifacts/observatory-accounts-rail-2026-09-16/ (Accounts, 5 viewports x 2 themes; zero overflow, zero console errors)",
+        "artifacts": "design-qa.md Accounts rail section",
+        "limits": "The connection strip and the Assets & documents ticket remain open. Not deployed."
+      }
+    },
+    {
+      "id": "OS-034",
+      "title": "Accounts: closing parchment strip, plus handoff reconciliation",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-033"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "The tracked-items section uses the kit's ticket material and hierarchy",
+        "No unsanctioned asset reuse: the telescope stays scoped to Activity and Settings",
+        "Parchment text obeys the kit's dark-ink contrast rule at a specificity that actually wins",
+        "MERIDIAN_ROADMAP.md states the concept set and the kit as separate authorities",
+        "The stale blanket lane claim is released rather than left active"
+      ],
+      "evidence": {
+        "slice": "2026-09-16 Track D, Accounts (concept 04), closing strip + handoff reconciliation",
+        "tests": "tests/meridian/test_accounts_assets_strip.py 3 new guards; full non-browser suite 1165 passed / 1 skipped",
+        "capture": "artifacts/observatory-accounts-assets-2026-09-16/ (Accounts, 5 viewports x 2 themes; zero overflow, zero console errors)",
+        "artifacts": "design-qa.md Accounts closing-strip section; MERIDIAN_ROADMAP.md Track D authority split",
+        "limits": "The concept's strip engraving is omitted because the kit supplies no counterpart and scopes the telescope elsewhere. Settings (concept 05) remains blocked on its absent preview route; Activity's parchment review strip remains owner-gated. Not deployed."
+      }
+    },
+    {
+      "id": "OS-035",
+      "title": "Today: complete the instrument's vertical centring",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; presentation-only. No route, data, financial or authority change",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Space above and below the instrument are within a few px of each other at 390/420/430px",
+        "Measured, not eyeballed",
+        "align-self must target the grid item .obs-dial-instrument, NOT .obs-dial-svg-wrap (the wrap lives inside it; aligning it changes nothing)",
+        "The event list keeps its current vertical rhythm"
+      ],
+      "notes": "Owner-reported: 'isn't centered top to bottom, there is a much larger gap below the dial than above.' Row height is driven by the event list column.",
+      "evidence": {
+        "slice": "2026-09-17 measured verdict; the existing align-self already satisfies this, so no code change was required",
+        "measurement": "The instrument IS centred in its own grid row at every governed mobile width: 420x912 -> 29.2px above / 29.1px below; 390x844 -> 30.0 / 30.0; 430x932 -> 24.2 / 24.1. Desktop and tablet -> 0.0 / 0.0. The 233px the owner measured is measured from the WRAP to the PANEL bottom, and the panel has a second grid row below the instrument (.obs-dial-controls + .obs-evidence-ticket); the gap from the dial to those controls is 45px. align-self cannot move that, because it is a separate grid row rather than slack inside the instrument's row.",
+        "residual_gap_reclassified": "The dial's real distance from the concept is SIZE, not position. Live ring 267px = 63.6% of viewport width against the concept's 82.5%, while the vertical balance already matches (concept above/below ratio 0.51, live 0.50). Raising the dial to the concept's proportion requires moving the mobile callout column (a hard 130px floor, so 'arrangement' does not split mid-word) out from beside the dial. That is a composition decision carrying a real information cost, so it is escalated for the owner rather than guessed at.",
+        "capture": "artifacts/observatory-title-rule-2026-09-17/ shows the unchanged geometry; the numbers come from tmp/probe_dial_centre.py and tmp/probe_centre_sweep.py",
+        "limits": "Not deployed. No route, data, financial or authority change.",
+        "correction_2026_09_18": "The `align-self: center` added for this task is REVERTED, and the task's earlier 'no code change required' verdict is corrected. Two measured reasons. (1) It did not fix the owner's report: the documented 29px above / 233px below becomes 0px above / 262px below, because the void the owner is looking at is the SECOND panel row (controls + evidence ticket), which align-self cannot reach at all. (2) It made the dial's vertical position depend on the event-list length: at 390px a 12-event horizon centres a 240px dial in a 300px row and pushes it 30px below the panel top, which is precisely what test_long_event_list_does_not_push_dial_down_or_split_amounts fails on. A layout whose position moves with the list length is the regression, not the fix. Removing it turned 3 of the 9 pre-existing tests/browser failures green.",
+        "rail_cap": "Removing the centring exposed the second half of the same test: `rail.height <= dial.height + 48`. `.obs-dial-events` was capped at `calc(100vw - 90px)`, which is 12px taller than that bound at 390/420/430px. The cap is now derived rather than guessed: the dial's height equals its wrap's width, which is the panel width minus the 130px callout column minus the 12px gap plus the 24px bleed, and the panel is `100vw - 32px`, so the dial is `100vw - 150px` and the bound `+ 48px` gives `calc(100vw - 102px)` = 288/318/328px against dials of 240/270/280px. All 3 widths pass.",
+        "still_open": "The owner's actual complaint -- a large void under the dial -- is a COMPOSITION question, not a centring one, and remains open. The dial is 63.6% of viewport width against the concept's 82.5%, and the callout column is a hard 130px floor, so closing it needs the callouts relocated rather than a CSS value changed. Escalated for the owner."
+      }
+    },
+    {
+      "id": "OS-036",
+      "title": "Today: connector runs terminate on nothing",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; presentation-only",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Every connector run ends on its own event row, verified by measuring both endpoints",
+        "No connector is left drawn against empty space when a day has no event",
+        "Lead: renderConnectors re-anchors runs after the rows are replaced (dial.js update())"
+      ],
+      "notes": "Owner-reported: 'the connecting lines also run straight down connecting to nothing, several lines.'",
+      "evidence": {
+        "investigation": "2026-09-17, read-only, no code change. Every connector run was measured end-to-end against the DOM at three governed viewports (420x912, 390x844) using tmp/probe_connectors.py. The run's end lands on its own row at the row's exact vertical centre in every case: at 420px the three runs end at y=235.0/349.8/464.6 against row centres 235.0/349.8/464.5, each 4.0px left of its row's left edge. No run was drawn against empty space, and no run was drawn for an event with no row. The existing browser guard test_connector_runs_start_on_the_dial_and_end_at_their_own_row passes.",
+        "not_reproduced": "The reported symptom does not reproduce on the synthetic fixture at any governed mobile width, so this is NOT closed and NOT reclassified: the owner saw it on a device. Two candidate causes remain untested and both need the owner's data. (a) A longer event list than the fixture's three: the events column is internally scrollable (max-height: calc(100vw - 90px)), so a row whose centre falls below the visible scroll viewport would have its run end outside the painted rail. (b) A stale cached JS bundle on the device, which OS-037 already flags as a trap for the same workspace.",
+        "how_to_reproduce": "The fixture is scripts/preview_observatory_dial.py with exactly three upcoming events. A repro needs the owner's real event count and the device screenshot, or the fixture extended past the rail's scroll height with the run endpoints re-measured.",
+        "limits": "Unchanged behaviour. No route, data, financial or authority change.",
+        "resolution_2026_09_18": "REPRODUCED and fixed. The missing condition was the one recorded as untested: a longer event list. The rail (`.obs-dial-events`) is internally scrollable (`max-height: calc(100vw - 102px)`), so with a 14-event horizon the rail's content is 1591px tall inside a 330px client box. Before the fix all 14 rows got a run, and 11 of those rows sat below the rail's visible box; their runs left the dial, ran down past the rail to y=1754, and were cut off by the connector layer's own `overflow: hidden` at y=746.9 -- dashed lines ending in mid-air, which is exactly the owner's 'running straight down connecting to nothing, several lines'. Fixed in two parts: a run is only drawn when its row's centre is inside the rail's visible box, and the rail re-runs renderConnectors on scroll so the surviving runs follow their rows. After the fix the same page draws 3 runs, each ending exactly on its own visible row (0 anomalies), and scrolling the rail to the middle and the bottom re-anchors to ev-7/8/9 and ev-11/12/13 with every run still on a visible row.",
+        "tests_added": "tests/meridian/test_dial_js.py::test_dial_connector_runs_never_target_a_row_the_rail_does_not_show (source guard) and tests/browser/test_dial_fidelity.py::test_connector_runs_do_not_target_rows_the_scrolled_rail_does_not_show (behavioural guard over a 14-event horizon at three rail scroll positions). The behavioural guard was verified to FAIL without the fix ('runs are being drawn for hidden rows', 14 runs for 11 hidden rows), so it genuinely catches the regression rather than describing it."
+      }
+    },
+    {
+      "id": "OS-037",
+      "title": "Today: pointer does not visibly move on Next day",
+      "phase": "design-fidelity",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; presentation-only",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "Reproduced on the owner's data range before any code changes",
+        "Isolated preview moves the pointer correctly on Next day (angle -120deg -> -60deg over 2 steps), so the fixture does NOT reproduce it",
+        "Rule out a stale cached JS bundle on the device first (hard refresh)",
+        "Do not read x1 as 'pinned': sin(-120) == sin(-60), so equal x values across two steps are a coincidence"
+      ],
+      "notes": "Owner-reported. Needs a device-specific repro; blocked pending that or confirmation that a hard refresh clears it."
+    },
+    {
+      "id": "OS-038",
+      "title": "Reconcile the remaining concept-vs-current gaps (all four workspaces)",
+      "phase": "design-fidelity",
+      "status": "open",
+      "priority": "medium",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; presentation-only",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Lilac wavy title underline on Today/Activity/Accounts (the concepts show none on Plan)",
+        "Accounts connectors rebuilt as curved dashed paths with a node at each end, colour-matched per row, plus star-tipped row separators",
+        "Accounts ticket: rotated, punched notch edges, inset dotted border",
+        "Plan tab row: one bordered bar, three cells, active cell parchment-filled with a brass star medallion",
+        "All measurements are in artifacts/astra-fidelity-review-2026-09-16/README.md Finding 4"
+      ],
+      "notes": "Concept measurements recorded; each item is a separate bounded slice.",
+      "progress": "3 of 5 items delivered: the lilac wavy title rule (2026-09-17), the Plan bordered tab bar (2026-09-18) and the rotated/notched/notted Accounts ticket (2026-09-18). 2 remain: the Accounts connectors as curved dashed paths with an end node each and star-tipped separators, and richer medallion glyphs -- the last of which Finding 4 records as an ASSET decision for Astra, not a CSS fix.",
+      "evidence": {
+        "slices": [
+          {
+            "slice": "2026-09-17 the lilac wavy title rule \u2014 Today/Activity/Accounts, deliberately not Plan",
+            "measurement": "Measured from the concepts before drawing. Concept 01 rule 141x18 px, stroke 8.1, peak-to-peak 10.0; concept 03 rule 130x17, stroke 7.4, peak-to-peak 9.5. The scale-independent ratio the concepts agree on is peak-to-stroke 1.23-1.28; the asset draws 1.25 (a 4-unit stroke, a 5-unit wave, a 24-unit half-period). Held at a constant 72x12 CSS px rather than scaled with the title, because the concepts size it as a fixed ornament: 0.40x Today's cap height but 1.57x Activity's.",
+            "tests": "tests/meridian/test_title_rule.py, 4 new guards (asset geometry and colour, install on the three concepts, absence on Plan, CSS wiring). Full non-browser suite 1181 passed / 1 skipped.",
+            "capture": "artifacts/observatory-title-rule-2026-09-17/ (3 workspaces x 5 governed viewports x 2 themes = 30 files; zero overflow, zero console errors; light/dark luminance deltas 147-182). Verified at 420x912: the rendered rule measures peak-to-stroke 1.25 in the capture against the concepts' 1.24 and 1.28.",
+            "artifacts": "static/img/meridian/observatory/title-rule.svg (new), its ASSET_MANIFEST row, static/css/meridian/workspaces.css, templates/meridian/partials/{today,activity,accounts}.html, design-qa.md",
+            "traps": "A 3x capture cannot be compared to a concept by absolute pixel size: the first version looked correct in the capture while its amplitude was ~1.8x the concept's relative to its stroke. Only peak-to-stroke and CSS-pixel size (device px / DPR) are comparable. Separately, `--` is illegal inside an XML comment and silently made the first asset unparseable.",
+            "limits": "Not deployed. Presentation only: no route, data, financial or authority change."
+          },
+          {
+            "item": "Plan tab row: one bordered bar, three cells, active cell parchment-filled with a brass star medallion",
+            "delivered": "2026-09-18",
+            "measurement": "Measured on concept 02 (852px wide, so 0.493 to a 420px viewport): the container spans ~733x82px -> ~361x40px; the active cell is 254px, an equal third of the container; the medallion is ~70px -> ~34px; the cells are divided by thin brass vertical rules. The app had three pills in a muted trough, which is a different construction rather than a different shade.",
+            "built": "One rounded container with a `var(--obs-brass)` border and `overflow: hidden` so the active cell's parchment clips to the rounded ends; three cells divided by a 1px brass left border on every cell after the first; the active cell parchment-filled (`--obs-paper`) with the ticket ink (`--obs-paper-ink`) the kit requires on parchment; and the medallion as a dark disc ringed in brass with a brass star mask, at the active cell's left edge rather than above its label. Built to 44px rather than the concept's 40px because the cells are buttons and 44px is the touch-target floor -- a 4px deviation recorded, not a target quietly missed.",
+            "defects_found_and_fixed_while_verifying": "The cells were NOT equal thirds (148/119/119): with `box-sizing: border-box` a zero flex basis is floored by the active cell's own 42px medallion gutter. A one-third percentage basis fixed it at the base rule, but a `flex: 1` inside the existing `@media (max-width: 600px)` block re-imposed `1 1 0%` at exactly the widths the concept's equal cells matter. Both are now correct and both are guarded: measured 118.7/118.7/118.7 at 390px, 128.7 at 420px and 132 at 430px, with labels fitting and zero horizontal overflow.",
+            "tests": "tests/meridian/test_plan_map.py: test_plan_tabs_are_the_concepts_bordered_bar_not_pills and test_plan_mobile_rule_does_not_reintroduce_the_unequal_cells (the latter strips CSS comments before checking, so it does not fire on its own documentation).",
+            "capture": "artifacts/observatory-plan-tabs-2026-09-18/ -- 10 files, Plan x five governed viewports x two themes, zero console errors, zero horizontal overflow."
+          },
+          {
+            "item": "Accounts ticket: rotated, punched notch edges, inset dotted border",
+            "delivered": "2026-09-18",
+            "measurement": "The angle is measured, not guessed. Two independent features INSIDE the concept ticket agree: its own top edge (-3.7deg over 656 columns, robust fit) and the brass rule under the amount (-3.21deg over 104 columns). The rule is the cleaner, purely internal feature, so the panel takes -3.2deg. The concept also punches a semicircular notch out of each side at mid-height and insets a fine dotted brass border from the edge; Finding 4 had recorded ours as 'axis-aligned, square-cornered and plain'.",
+            "built": "`transform: rotate(-3.2deg)` on the ticket -- the text tilts with the panel, because that is what the concept draws; the dotted inset border as `outline: 1px dotted var(--obs-brass)` with `outline-offset: -14px`, which needs no third pseudo-element and stays out of the accessibility tree; and the two notches as ::before/::after circles in `var(--obs-bg)` at mid-height, so they rotate with the panel and need no mask-composite support. The kit's nine-slice, scalloped edges and corner rivets are preserved -- the treatments are ADDED to that panel, not a replacement.",
+            "deviation_recorded": "The notch is 36px, LARGER than the ~25px the concept's own notch measures. That is deliberate and was arrived at by measurement: the concept's ticket edge is smooth, so a concept-sized bite reads instantly, while the kit's `parchment-ticket.png` already carries ~10px scallops down the same edge, and at 22px the notch read as a missing scallop rather than a punched hole. Enlarging it is what makes the concept's gesture legible on the kit's edge.",
+            "overflow": "A rotated box is wider than the box that laid out: 388x164 at -3.2deg gives a bounding width of ~397px against a 388px column. Verified zero horizontal overflow at 390/420/430px (measured bounding x=11.7 and widths 366.6/396.5/406.5), and the governed capture confirms it at all five viewports in both themes.",
+            "tests": "tests/meridian/test_accounts_ticket.py::test_accounts_ticket_takes_the_concepts_angle_notches_and_dotted_inset, which also asserts the kit's nine-slice SURVIVES the change.",
+            "capture": "artifacts/observatory-accounts-ticket-2026-09-18/ -- 10 files, Accounts x five governed viewports x two themes, zero console errors, zero horizontal overflow."
+          }
+        ],
+        "also_measured": "OS-035 is not a defect: the instrument is already centred in its own grid row at every governed mobile width (420px 29.2 above / 29.1 below; 390px 30.0/30.0). The 233px the owner measured is the SECOND panel row (controls + evidence ticket), which align-self cannot touch. The dial's real gap to the concept is size: 63.6% of viewport width against the concept's 82.5%, because the callout column is a hard 130px floor."
+      }
+    },
+    {
+      "id": "OS-039",
+      "title": "Accounts: the rotunda engraving differs from the concept",
+      "phase": "asset-gap",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; art only",
+      "owner_decision_required": false,
+      "acceptance_criteria": [
+        "Requires new art from Astra: the concept draws a colonnaded domed rotunda on a rocky knoll",
+        "The kit's observatory-landscape.png is a different engraving and must not be presented as a match",
+        "No CSS approximation of the engraving, per the handoff's rule"
+      ],
+      "notes": "Was blocked on art supply, not on effort. Art was supplied by the owner on 2026-09-18; the blocker is cleared.",
+      "evidence": {
+        "resolution": "The owner supplied a dedicated Accounts illustration, `static/img/meridian/observatory/accounts-ticket-building.png` (1254x1254 RGBA), described as 'a new asset for the accounts page, the missing one'. It is a colonnaded domed archive building -- classical columns, arched entrance, gilt dome -- with scrolls, a wax-sealed document and an open ledger, which is the Accounts page's document/structure motif. It replaced the kit's provisional scoping of observatory-landscape.png (the Today dial's hilltop observatory) to this surface.",
+        "what_it_is_not": "It is not a literal match for the concept's 'colonnaded domed rotunda on a rocky knoll': the building sits on a flat plinth among foliage and scrolls rather than on a rocky knoll. It is recorded as the owner-supplied governing art for this surface, not as a reproduction of the concept engraving, and the concept comparison is not claimed as pixel-equivalent.",
+        "verified": "Real transparency confirmed by decoding the PNG: alpha range 0..255, 56.2% of pixels fully transparent, all four corners (0,0,0,0). Rendered at 420x912 DPR 3 in the isolated synthetic preview, the art box measures 92x92 (its clamp(92px, 28%, 188px) minimum) in a 1:1 box, the background image resolves to the new asset, and the engraving reads cleanly on the parchment ticket with the parchment showing through.",
+        "tests": "tests/meridian/test_accounts_assets_strip.py reconciled: the guard that asserts Accounts does not borrow the Activity telescope now also asserts it does not borrow Today's observatory-landscape.png, and that the dedicated Accounts asset is present and on disk. tests/meridian/test_accounts_ticket.py already asserted the new asset (committed by the parallel lane).",
+        "artifacts": "static/img/meridian/observatory/ASSET_MANIFEST.md (new row with provenance and measured alpha), templates/meridian/partials/accounts.html (stale comment corrected), design-qa.md",
+        "limits": "The launch asset is 2.0MB for a display slot of at most 188 CSS px. That is within the project's existing precedent (dial-plate.png is 3.0MB) and its alpha is correct, so it is shipped as supplied; a downscale is recorded as an optional follow-up rather than applied to the owner's art without being asked. Not deployed."
+      }
+    },
+    {
+      "id": "OS-040",
+      "title": "Bottom dock: taller, with the concepts' ornate glyphs",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "medium",
+      "dependencies": [
+        "OS-034"
+      ],
+      "authority_impact": "none; presentation only. No route, data, financial, provider or authority change",
+      "owner_decision_required": false,
+      "requested_by": "owner, 2026-09-18: 'Taller icon dock at the bottom I noticed as well, in the concept. Also with more ornate icons'",
+      "acceptance_criteria": [
+        "The dock is taller, measured against the concept rather than nudged",
+        "The glyphs are the concepts' ornate engravings, not 16px silhouettes",
+        "The desktop rail is unchanged",
+        "No horizontal overflow at any governed viewport"
+      ],
+      "evidence": {
+        "measurement": "Measured before changing anything, on the governing concept design/observatory-drafts-2026-09-08/01-today.png (853px wide): the dock panel spans y=1672..1823, so 152px tall = 17.8% of the frame's width; it is a rounded panel inset from the screen edges (x=17..836, i.e. 2.0% each side) ending 2.5% above the bottom; each item stacks its glyph above its label; the ringed compass glyph is ~72px = 8.4% of the width, about 34px at a 420px viewport; the current workspace is marked by a lilac rule UNDER its label with no fill behind the item. Live at 420px before: dock 65px = 15.5% of width, glyphs 20px, labels 12px, item laid out as a ROW with the glyph beside the label, and the marker a bar ABOVE the glyph.",
+        "delivered": "The dock stacks glyph over label (which is most of the height), glyphs 20px -> 34px, labels 12px -> 15px, item floor 56px -> 64px, and the panel became a rounded inset floating dock with a hairline border and hairline rules between workspaces, as the concept draws it. Measured after: 76px = 18.1% of a 420px viewport against the concept's 17.8%, a ratio of 1.02. The active marker moved under the label and the lilac fill behind the active item was removed, both because the concept draws neither.",
+        "glyphs": "Four glyphs drawn in-repo in static/img/meridian/observatory/nav/, matching the concept's engravings: compass-rose.svg (ring, inner ring, four-point star, four cardinal ticks), charted-map.svg (folded three-panel map, dotted route, cross and waypoint), rising-bars.svg (four ascending columns on a baseline), ringed-profile.svg (ring, head, shoulders). They stay single-colour CSS masks driven by currentColor, which is the existing documented mechanism; the concept inks the active glyph lilac and the rest muted, which is exactly what that does.",
+        "scope_limit": "The kit's Bootstrap glyphs remain on disk and are still used elsewhere (the Activity row glyphs); only the dock's mapping changed. The desktop rail is untouched and re-measured: 150px rail, row layout, 20px glyphs, no inset, zero overflow.",
+        "tests": "tests/meridian/test_nav_dock.py, 4 new guards (at least three drawn elements per glyph and no embedded raster; the stacked, larger, inset dock; the marker under the label with no fill; and that the kit glyphs are superseded rather than deleted). tests/meridian/test_observatory_identity.py::test_shell_maps_each_workspace_to_its_supplied_kit_glyph was reconciled and renamed to ..._to_its_own_glyph_and_the_file_exists, because it hard-coded the kit's filenames; it now guards the invariant (one workspace, one real glyph, both mask properties) instead of one path, which is what made it brittle. Full non-browser suite 1186 passed, 1 skipped.",
+        "capture": "artifacts/observatory-dock-2026-09-18/ - 40 files, four workspaces x five governed viewports x two themes, zero console errors, zero horizontal overflow, light/dark luminance deltas 151-159.",
+        "limits": "At 390px the dock is 19.5% of the viewport width against the concept's 17.8%, because the glyph and label are a fixed size while the viewport narrows; the concept is a single fixed-width composition, so this is recorded rather than chased. Not deployed."
+      }
+    },
+    {
+      "id": "OS-041",
+      "title": "Today: place the dial evenly in its band (reverse the align-self revert)",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-035",
+        "OS-036"
+      ],
+      "authority_impact": "none; presentation only. No route, data, financial, provider or authority change",
+      "owner_decision_required": false,
+      "requested_by": "owner, 2026-09-18: 'I am much less concerned with the size of the dial, I just want it evenly placed vertically' -- which also RESOLVES OS-035's open composition question: the size is not the complaint, the vertical placement is.",
+      "acceptance_criteria": [
+        "The space above the dial matches the space below it in the band it shares with the callouts",
+        "The dial's position does not drift with the event-list length",
+        "The desktop rail layout is unchanged"
+      ],
+      "evidence": {
+        "what_the_owner_saw": "Measured at 420x912 with `align-items: start`: the dial sat 0px from the panel top with all 48px of its row's slack beneath it, and 252.3px from the dial's bottom to the panel's bottom. 0 above / 252 below is the worst possible arrangement for 'evenly placed', and it was produced by the align-self revert in d0e0cd6 on the previous slice -- that revert was correct about the OLD rule failing to fix the owner's report, and wrong about what the owner actually wanted.",
+        "what_the_concept_does": "Concept 01 is the authority and settles it. Its dial spans ~435px inside a band whose callouts span ~490px, i.e. roughly 25px above and 30px below -- CENTRED, not pinned to the top. The concept has almost no slack because its two columns are near-equal height; our 48px of slack is an artefact of the rail cap (`100vw - 102px` = 318px) being taller than the dial (270px), and with `align-items: start` every pixel of it fell below.",
+        "delivered": "`[data-observatory-dial] .obs-dial-instrument { align-self: center; }` in the <=700px block. Measured after: 24px above / 228px below to the panel, which is 24/24 INSIDE the band -- matching the concept's 25/30. Unchanged at 1024px and 1440px, where the dial (486/620px) is taller than the rail (418px), so the band has no slack and centring is a no-op.",
+        "why_the_earlier_objection_no_longer_holds": "The revert's second reason was that centring made the dial's vertical position track the event-list length, because the row grew with the list. d0e0cd6 also capped the rail, so the band height is now bounded at `100vw - 102px` and the offset is a derived 24px rather than one that drifts. The objection was true against the uncapped rail and is not true now.",
+        "test_reconciled": "`tests/browser/test_dial_fidelity.py::test_long_event_list_does_not_push_dial_down_or_split_amounts` asserted `dial.y - panel.y <= 8` with the message 'The event list must not vertically center the dial' -- it DEMANDED the arrangement the owner has now rejected. Its mechanism was superseded by the owner's requirement; its REASON (no drift with list length) is preserved. It now asserts the dial sits at the band's centre, `abs(centred - band_slack/2) <= 2`, which fails both on pinned-to-top (0) and pushed-down-by-the-list (more than the slack). Back to 3 passing; browser file is 6 failed / 13 passed, the same 6 pre-existing failures unrelated to the dial.",
+        "capture": "artifacts/observatory-dial-centring-2026-09-18/ -- 10 files, Today x five governed viewports x two themes, zero console errors, zero horizontal overflow.",
+        "limits": "This balances the dial inside its own band. It does NOT equalise the space above and below across the WHOLE panel, which measures 24 above / 228 below: the controls row and the evidence ticket sit below the band and `align-self` cannot reach them. Panel-level equalisation would need the dial's column to span all three rows, which would squeeze the controls and the 130px-wide callouts into one narrow column -- recorded as a composition question, not attempted. The concept also has substantial content below its dial band (the 'Bills reserved' strip), so content below is not itself the defect. Not deployed."
+      }
+    },
+    {
+      "id": "OS-042",
+      "title": "Today: start the day arc clear of the dial's building art",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-041"
+      ],
+      "authority_impact": "none; presentation and input mapping only, both derived from one pair of constants. No route, data, financial, provider or authority change",
+      "owner_decision_required": false,
+      "requested_by": "owner, 2026-09-18: 'Can we modify the dial so that the lowest point on the left hand side is still above the building imagery? It defaults into the building for today and is not visually appealing. Where the hand sits per day that is to say.' Owner then chose the arc shift over the narrow hand-clamp and the full concept-arc rework.",
+      "acceptance_criteria": [
+        "The hand never overlaps the dial's building art, on any day of the horizon",
+        "Every day keeps a full-length hand",
+        "Day positions and the drag mapping stay consistent with each other"
+      ],
+      "evidence": {
+        "root_cause": "The arc ran -120deg..+120deg, so day 0 -- today -- sat at -120deg, placing the hand at (129,399). That is exactly where the kit's `dial-plate.png` draws its observatory. This is a convention difference, not a bug in one widget: the concept's own dial has NO building (verified in both lower quadrants of 01-today.png), so the observatory is the kit's addition and there is no authority for how a hand should treat it.",
+        "measurement_of_the_building": "Measured on the plate (1254px, ring centre 626,632 -> viewBox 300,300) by ray-casting from the centre and requiring an 8-sample run of light pixels, so the sky's star sparkles are not mistaken for it (a first pass without the run test reported intrusions on the right side where there is no building). The building intrudes into the sky disc ONLY between -140deg and -110deg, reaching inward to r=150-182 against a hand that runs r=118-198. Its inner edge jumps from 165 at -110deg to 283 at -105deg -- a near-vertical roofline.",
+        "delivered": "`ARC_START` -120 -> -100; `ARC_END` unchanged at 120. Sweep narrows 240deg -> 220deg, which also stops the visible rim arc short of the roofline. The hand's r=198 tip now clears the building's nearest edge (r=283 at that angle) by 85 units on every day, with a full-length hand throughout. Day 0 now sits at -100deg, day 1 at -91.5deg, day 2 at -83.1deg.",
+        "why_this_option": "Three were measured and offered. The narrow option (clamp the hand's outer radius at the roofline) was rejected because the hand would visibly change length for the 1-2 days in that band -- at 14 days only day 0 is affected, so it would read as a glitch. The full concept-arc rework (today near the top, sweeping clockwise to ~+200deg) was declined as too large a relocation. The shift keeps every day reachable, keeps a constant hand, and narrows the arc in the same direction the concept points.",
+        "test": "tests/meridian/test_dial_js.py::test_the_day_arc_starts_clear_of_the_dials_building_art READS ARC_START out of the source and fails below -105, the measured roofline, rather than matching a literal. Proved to bite: re-setting ARC_START to -120 fails it with the exact diagnosis. The existing geometry round-trip had three assertions updated for the new endpoints (-100/120).",
+        "capture": "artifacts/observatory-dial-arc-2026-09-18/ -- 10 files, Today x five governed viewports x two themes, zero console errors, zero horizontal overflow.",
+        "limits": "The day ARC_POSITIONS all moved by up to 20deg at the lower-left end; the arc is now asymmetric about the top (midpoint +10 rather than 0). This is visible and intended. Drag input clamps to the same new range, so scrubbing and the rendered positions cannot disagree. Not deployed."
+      }
+    },
+    {
+      "id": "OS-043",
+      "title": "All pages: one surface colour, not a lighter tint per box",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [],
+      "authority_impact": "none; presentation only",
+      "owner_decision_required": false,
+      "requested_by": "owner, 2026-09-18: 'Universally the more lightly colored boxes on all pages need to be removed. Take a look at accounts, checking, emergency, etc have a separate and cloying lighter colored box separating them. On the concept on all pages, it is the same unified deeper color we corrected for before.'",
+      "acceptance_criteria": [
+        "Every content surface resolves to the page colour",
+        "No page introduces a second background value",
+        "Separation is drawn with hairlines/engraving, not fills"
+      ],
+      "evidence": {
+        "measurement": "The concepts have exactly ONE background value. Sampled against each page's own background: concept 04 page rgb(20,26,49) vs account rows rgb(21,27,50) = delta 1; concept 01 page rgb(22,27,50) vs dock rgb(22,27,49) = delta 0; concept 01 page vs topbar rgb(21,26,50) = delta 0; concept 02 page rgb(21,26,50) vs dock = delta 0. Even the dock and topbar are the page colour.",
+        "what_was_wrong": "0b8fdaa corrected the page background to the measured mean #141b32 but left the surface tokens lighter: --obs-surface #202b40 = rgb(32,43,64) (+12/+16/+14) and --obs-surface-raised #26334a = rgb(38,51,74) (+18/+24/+24). Those feed --m-surface / --m-surface-muted at the .obs-shell remap, read by ~68 rules -- the Accounts CASH/SAVINGS sheet, Plan commitments, Activity review cards.",
+        "delivered": "Both tokens now resolve to var(--obs-bg) and stay declared so all consumers keep working. A translucent --obs-wash rgba(238,228,207,0.05) replaces the hover/focus fills that the flattening turned into no-ops. Light edition unified by the same principle: --m-surface was #fffaf0 (+11/+14/+17 over its canvas) and --m-surface-muted was #ead8b5, the PAPER colour.",
+        "leftover_override_fixed": "0b8fdaa corrected dial.css's Today shell rule from #101a28 to #161c34 but MISSED the Today topbar rule two rules later, which stayed #101a28 -- Today's bar measured rgb(20,27,50) against a rgb(22,28,52) page. That rule is deleted and Today's --m-surface set to its own canvas.",
+        "near_miss": "The first attempt set --m-surface on an unscoped `.obs-shell:has(...)` selector, which carries three attribute-level specificity and so BEAT the light edition's `html[data-theme=\"light\"] .obs-shell` remap -- painting a #161c34 topbar on the light parchment canvas. Caught only by probing BOTH themes; the rule is now scoped to html[data-theme=\"dark\"].",
+        "guard": "tests/meridian/test_observatory_identity.py::test_observatory_surfaces_are_the_page_colour_not_a_lighter_tint asserts both tokens resolve to var(--obs-bg) AND that the old literals are absent, so reintroducing a tint fails. Verified across four workspaces x both themes: 0 of 8 shell/topbar combinations mismatched, 0 horizontal overflow.",
+        "coordination_finding": "This working tree has a CONCURRENT WRITER. meridian/classify.py, meridian/repository.py, static/js/meridian/{activity,kit-icons,review}.js and tests/meridian/test_{activity_glyph,repository}.py are modified, plus new untracked meridian/category_catalog.py and tests/meridian/test_category_expansion.py -- mtimes 11:45-11:48, interleaved with this slice's 11:47-11:50. That work is NOT in this commit; three paths were staged by name and verified. There is no file overlap. The full-suite run and the governed capture therefore ran against a tree containing that uncommitted work.",
+        "limits": "Not deployed. Activity captures may show the concurrent lane's in-flight icons."
+      }
+    }
+  ]
+}

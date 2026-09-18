@@ -1,0 +1,15 @@
+{
+  "exit_code": 0,
+  "document": "docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md",
+  "baseline": "9d8107ff50e61c3edd9340edb4acb9aedcecd64b",
+  "checks": [
+    "D1-D8 present",
+    "required closing sections present",
+    "20 absent-server ref rows present",
+    "versioned input blobs resolve",
+    "no unresolved table placeholder",
+    "balanced fences",
+    "diff whitespace clean"
+  ],
+  "line_count": 427
+}

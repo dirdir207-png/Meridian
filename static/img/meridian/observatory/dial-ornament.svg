@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="presentation" focusable="false" aria-hidden="true">
+  <defs>
+    <radialGradient id="dialGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c1a9e2" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#c1a9e2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="300" cy="300" r="270" fill="url(#dialGlow)" stroke="none"/>
+  <circle cx="300" cy="300" r="246" fill="none" stroke="#ead8b5" stroke-opacity="0.12" stroke-width="1"/>
+  <circle cx="300" cy="300" r="178" fill="none" stroke="#ead8b5" stroke-opacity="0.06" stroke-width="1"/>
+  <circle cx="300" cy="300" r="92" fill="none" stroke="#ead8b5" stroke-opacity="0.08" stroke-width="1"/>
+  <g stroke="#ead8b5" stroke-opacity="0.10" stroke-width="1" fill="none">
+    <path d="M300 60 L360 180 L480 140"/>
+    <path d="M300 60 L240 180 L120 140"/>
+    <path d="M300 540 L360 420 L480 460"/>
+    <path d="M300 540 L240 420 L120 460"/>
+  </g>
+  <g fill="#ead8b5" fill-opacity="0.20">
+    <circle cx="360" cy="180" r="3"/>
+    <circle cx="480" cy="140" r="2"/>
+    <circle cx="240" cy="180" r="3"/>
+    <circle cx="120" cy="140" r="2"/>
+    <circle cx="360" cy="420" r="2"/>
+    <circle cx="480" cy="460" r="3"/>
+    <circle cx="240" cy="420" r="2"/>
+    <circle cx="120" cy="460" r="3"/>
+    <circle cx="300" cy="92" r="2.5"/>
+    <circle cx="300" cy="508" r="2.5"/>
+  </g>
+</svg>

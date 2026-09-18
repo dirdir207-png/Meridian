@@ -1,0 +1,650 @@
+/* Meridian responsive application shell.
+   Desktop: 150px forest rail | flexible canvas | optional inspector rail.
+   Mobile: identity bar on top, workspace dock at the bottom (safe-area aware). */
+
+[data-meridian-shell] {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "rail canvas inspector"
+    "rail canvas inspector";
+  min-height: 100dvh;
+  background: var(--m-canvas);
+  color: var(--m-ink);
+}
+
+/* The hidden attribute always wins, even over component display values. */
+[hidden] {
+  display: none !important;
+}
+
+/* Meridian exposes the advisor through a persistent, low-key branded trigger
+   (advisor.css) plus in-context controls on Today. The trigger must remain
+   reachable on every workspace, so it is NOT hidden here. */
+
+/* ---------- Theme support ---------- */
+
+.m-theme-light {
+  /* Light tokens are in :root */
+}
+
+.m-theme-dark {
+  /* Dark tokens are in @media (prefers-color-scheme: dark) */
+}
+
+/* ---------- Primary navigation: rail on desktop, dock on mobile ---------- */
+
+.m-nav {
+  grid-area: rail;
+  align-self: start;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: var(--m-space-2);
+  padding: var(--m-space-6) var(--m-space-4) var(--m-space-5);
+  background: var(--m-forest);
+  border-right: 1px solid var(--m-forest-deep);
+}
+
+/* Forest/brand treatment: a soft aurora wash and a faint vertical hairline
+   texture sit behind the wordmark, not a flat fill. */
+.m-nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 18% 4%, rgba(85, 184, 139, 0.18), transparent 60%),
+    linear-gradient(180deg, var(--m-forest) 0%, var(--m-forest-deep) 100%);
+  border-radius: inherit;
+}
+
+.m-nav > * {
+  position: relative;
+}
+
+.m-brand {
+  width: auto;
+  height: auto;
+  display: block;
+  margin-bottom: var(--m-space-5);
+  font-family: var(--m-font-serif);
+  font-size: clamp(1.4rem, 2.1vw, 1.9rem);
+  line-height: 0.95;
+  color: var(--m-forest-ink);
+  text-decoration: none;
+}
+
+/* Shared wordmark (partials/wordmark.html). The dotless letter anchors the apricot
+   four-point star to the glyph rather than the line box, and the star is a
+   pseudo-element so the mark adds no text to the accessibility tree. */
+.m-wordmark {
+  display: inline-block;
+  font-family: var(--m-font-serif);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.m-wordmark-accent {
+  position: relative;
+}
+
+.m-wordmark-accent::after {
+  content: "";
+  position: absolute;
+  width: 0.18em;
+  height: 0.18em;
+  top: 0.1em;
+  left: 0.1em;
+  background: var(--m-apricot, #f3b272);
+  clip-path: polygon(
+    50% 0,
+    63% 36%,
+    100% 50%,
+    63% 64%,
+    50% 100%,
+    36% 64%,
+    0 50%,
+    36% 36%
+  );
+}
+
+.m-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.m-nav-item {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--m-space-2);
+  padding: var(--m-space-2) var(--m-space-3);
+  border-radius: var(--m-radius-md);
+  color: var(--m-forest-muted);
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-xs);
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: background-color var(--m-motion-fast) var(--m-ease-out),
+    color var(--m-motion-fast) var(--m-ease-out);
+}
+
+.m-nav-item svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
+/* Observatory shared identity: the four glyphs render as CSS masks so the link's own
+   `currentColor` drives them, which an external <img> could not inherit. The glyph is
+   decoration beside a visible label and is never the only name for a workspace.
+
+   The glyphs live in `observatory/nav/` and are drawn in-repo from the governing
+   concepts, replacing the kit's 16px Bootstrap silhouettes. The concept's dock icons
+   are line engravings with real detail -- a ringed compass rose with cardinal ticks, a
+   folding map carrying a dotted route to a cross, rising columns, a ringed profile --
+   and they read at 20px as nothing but blobs. They are single-colour masks by design:
+   the concept inks the active icon lilac and the rest muted, which is exactly what
+   `currentColor` already does. */
+[data-nav-icon] {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  background-color: currentColor;
+  -webkit-mask: var(--m-nav-icon) center / contain no-repeat;
+  mask: var(--m-nav-icon) center / contain no-repeat;
+}
+
+[data-workspace-icon="today"] {
+  --m-nav-icon: url("/static/img/meridian/observatory/nav/compass-rose.svg");
+}
+
+[data-workspace-icon="plan"] {
+  --m-nav-icon: url("/static/img/meridian/observatory/nav/charted-map.svg");
+}
+
+[data-workspace-icon="activity"] {
+  --m-nav-icon: url("/static/img/meridian/observatory/nav/rising-bars.svg");
+}
+
+[data-workspace-icon="accounts"] {
+  --m-nav-icon: url("/static/img/meridian/observatory/nav/ringed-profile.svg");
+}
+
+.m-nav-item:hover {
+  background: var(--m-forest-wash);
+  color: var(--m-forest-ink);
+}
+
+.m-nav-item[aria-current="page"] {
+  color: var(--m-forest-ink);
+}
+
+/* Editorial active state: an accent bar in the healthy green, muted-ink label,
+   no boxy chip. */
+.m-nav-item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--m-space-3));
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: var(--m-radius-pill);
+  background: var(--m-healthy);
+}
+
+/* ---------- Canvas ---------- */
+
+.m-topbar {
+  display: none;
+}
+
+.m-topbar-date {
+  display: none;
+}
+
+.m-nav-profile {
+  margin-top: auto;
+  padding: var(--m-space-4) var(--m-space-2) var(--m-space-2);
+  border-top: 1px solid rgba(245, 242, 233, 0.22);
+  color: var(--m-forest-ink);
+  font-size: var(--m-text-xs);
+}
+
+.m-nav-profile strong,
+.m-nav-profile span {
+  display: block;
+}
+
+.m-nav-profile span {
+  margin-top: var(--m-space-1);
+  opacity: 0.66;
+}
+
+/* Theme toggle: editorial switch that reads as a quiet control, never a
+   competing primary action. */
+.m-theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-2);
+  min-height: 44px;
+  padding: var(--m-space-2) var(--m-space-3);
+  border: 0;
+  border-radius: var(--m-radius-md);
+  background: var(--m-forest-wash);
+  color: var(--m-forest-muted);
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-xs);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+
+.m-theme-toggle:hover {
+  color: var(--m-forest-ink);
+}
+
+.m-theme-toggle[aria-pressed="true"] {
+  color: var(--m-forest-ink);
+}
+
+.m-theme-toggle-track {
+  position: relative;
+  width: 30px;
+  height: 18px;
+  border-radius: var(--m-radius-pill);
+  background: rgba(245, 242, 233, 0.22);
+  transition: background-color var(--m-motion-fast) var(--m-ease-out);
+}
+
+.m-theme-toggle[aria-pressed="true"] .m-theme-toggle-track {
+  background: var(--m-healthy);
+}
+
+.m-theme-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--m-radius-pill);
+  background: currentColor;
+  transition: transform var(--m-motion-fast) var(--m-ease-spring);
+}
+
+.m-theme-toggle[aria-pressed="true"] .m-theme-toggle-thumb {
+  transform: translateX(12px);
+}
+
+.m-theme-toggle-label {
+  min-width: 3.5ch;
+  text-align: left;
+}
+
+.m-main {
+  grid-area: canvas;
+  min-width: 0;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--m-space-6) clamp(var(--m-space-4), 3.2vw, var(--m-space-7));
+}
+
+.m-workspace-kicker {
+  margin: 0 0 var(--m-space-2);
+  color: var(--m-healthy);
+  font-size: var(--m-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.m-workspace-heading {
+  font-family: var(--m-font-serif);
+  font-weight: 500;
+  font-size: var(--m-text-xl);
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--m-space-2);
+}
+
+.m-workspace-heading:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus-ring);
+  border-radius: var(--m-radius-sm);
+}
+
+.m-workspace-subline {
+  font-size: var(--m-text-sm);
+  color: var(--m-ink-muted);
+  margin: 0 0 var(--m-space-6);
+}
+
+/* Empty-state used until a slice fills a workspace */
+.m-empty-note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--m-space-2);
+  padding: var(--m-space-3) var(--m-space-4);
+  border: 1px dashed var(--m-border-strong);
+  border-radius: var(--m-radius-md);
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+}
+
+/* ---------- Inspector rail (optional, desktop) ---------- */
+
+.m-inspector,
+[data-inspector-rail] {
+  grid-area: inspector;
+  width: min(400px, 34vw);
+  background: var(--m-surface);
+  border-left: 1px solid var(--m-border);
+  padding: var(--m-space-6) var(--m-space-5);
+}
+
+.m-inspector[hidden],
+[data-inspector-rail][hidden] {
+  display: none;
+}
+
+/* ---------- Mobile composition ---------- */
+
+@media (max-width: 900px) {
+  [data-meridian-shell] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "topbar"
+      "canvas"
+      "dock";
+    row-gap: 0;
+    /* The shell is exactly one viewport tall and the canvas owns scrolling, so
+       the dock keeps its own grid row and cannot overlay content. With
+       min-height the shell grew past the viewport, the dock's in-flow position
+       moved to the document end, and sticky pinned it over the canvas — which
+       measurably occluded the inline advisor control on first paint. */
+    height: 100svh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .m-main {
+    /* Owns the scrolling now that the dock reserves its own row. Nothing in the
+       Meridian client listens for window scroll, and scrollIntoView() walks up to
+       the nearest scrollable ancestor, so this is the whole behavioural change. */
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+
+  .m-nav {
+    grid-area: dock;
+    position: static;
+    top: auto;
+    bottom: auto;
+    z-index: 30;
+    height: auto;
+    flex-direction: row;
+    /* The concept's dock is a floating rounded panel inset from the screen edges, not a
+       full-bleed bar: measured on 01-today.png the panel spans x=17..836 of 853 (2.0%
+       inset each side) and ends 21px above the bottom of a 1844px frame (2.5%), with a
+       hairline border all the way round and a rounded corner. */
+    margin: 0 2% max(2.5%, env(safe-area-inset-bottom));
+    padding: var(--m-space-1) var(--m-space-2);
+    border: 1px solid var(--m-border);
+    border-radius: var(--m-radius-lg);
+    background: var(--m-surface);
+  }
+
+  /* The forest brand treatment belongs to the desktop rail, not the dock. */
+  .m-nav::before {
+    background: none;
+  }
+
+  .m-nav .m-brand {
+    display: none;
+  }
+
+  .m-nav-profile {
+    display: none;
+  }
+
+  .m-nav .m-theme-toggle,
+  .m-nav .m-settings-link {
+    display: none;
+  }
+
+  .m-nav-list {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .m-nav-list > li {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* The concept separates the four workspaces with a hairline rule between them. */
+  .m-nav-list > li + li {
+    border-left: 1px solid var(--m-border);
+  }
+
+  .m-nav-item {
+    width: auto;
+    flex: 1;
+    /* The concept stacks the glyph above its label; the rail lays them side by side.
+       Stacking is most of what makes the dock taller, and it is what the concept shows:
+       measured on 01-today.png the dock panel is 152px tall in an 853px-wide frame, i.e.
+       17.8% of the width, against 15.5% before this change. */
+    flex-direction: column;
+    gap: 3px;
+    min-height: 64px;
+    padding: 4px;
+    border-radius: var(--m-radius-sm);
+    color: var(--m-ink-muted);
+    justify-content: center;
+  }
+
+  /* The dock glyphs are drawn far larger than the rail's. Measured on the concept, the
+     ringed compass spans ~72px of 853, i.e. 8.4% of the width -- about 34px at 420px,
+     against the 20px the rail uses. */
+  .m-nav-item [data-nav-icon] {
+    width: 34px;
+    height: 34px;
+  }
+
+  .m-nav-item .m-nav-label {
+    font-size: 15px;
+  }
+
+  .m-nav-item:hover,
+  .m-nav-item[aria-current="page"] {
+    background: var(--m-surface-muted);
+    color: var(--m-ink);
+  }
+
+  /* The concept marks the current workspace with a lilac rule UNDER its label, not a bar
+     above the glyph, so the marker moves to match. It stays a physical, non-colour cue:
+     the geometry is still owned here and only the ink comes from observatory.css. */
+  .m-nav-item[aria-current="page"]::before {
+    left: 25%;
+    right: 25%;
+    top: auto;
+    bottom: 3px;
+    width: auto;
+    height: 3px;
+    background: var(--m-healthy);
+  }
+
+  .m-topbar {
+    grid-area: topbar;
+    display: flex;
+    align-items: center;
+    gap: var(--m-space-3);
+    padding: calc(var(--m-space-2) + env(safe-area-inset-top))
+      max(var(--m-space-4), env(safe-area-inset-right)) var(--m-space-2)
+      max(var(--m-space-4), env(safe-area-inset-left));
+    background: var(--m-surface);
+    border-bottom: 1px solid var(--m-border);
+  }
+
+  .m-brand--compact {
+    margin-bottom: 0;
+    height: 44px;
+    width: auto;
+    padding: 0 var(--m-space-2);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--m-space-2);
+    font-size: 1.45rem;
+    color: var(--m-ink);
+  }
+
+  .m-topbar-spacer {
+    flex: 1;
+  }
+
+  .m-topbar-settings {
+    font-family: var(--m-font-sans);
+    font-size: var(--m-text-sm);
+    color: var(--m-ink-muted);
+    text-decoration: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: var(--m-space-2) var(--m-space-3);
+    gap: var(--m-space-2);
+  }
+
+  .m-topbar-settings-icon {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    flex: 0 0 auto;
+    background-color: currentColor;
+    -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/gear.svg") center / contain no-repeat;
+    mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/gear.svg") center / contain no-repeat;
+  }
+
+  .m-topbar-settings:hover,
+  .m-topbar-settings[aria-current="page"] {
+    color: var(--m-ink);
+  }
+
+  .m-theme-toggle--compact {
+    padding: var(--m-space-1) var(--m-space-2);
+    background: var(--m-surface-muted);
+    color: var(--m-ink-muted);
+  }
+
+  .m-theme-toggle--compact:hover,
+  .m-theme-toggle--compact[aria-pressed="true"] {
+    color: var(--m-ink);
+  }
+
+  .m-topbar .m-theme-toggle--compact {
+    width: 44px;
+    justify-content: center;
+    padding: 4px;
+  }
+
+  .m-topbar .m-theme-toggle-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .m-main {
+    padding: var(--m-space-5) var(--m-space-4)
+      calc(var(--m-space-7) + var(--m-space-6) + env(safe-area-inset-bottom));
+  }
+
+  .m-inspector,
+  [data-inspector-rail] {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    width: 100%;
+    border-left: none;
+    overflow-y: auto;
+    padding: calc(var(--m-space-5) + env(safe-area-inset-top))
+      max(var(--m-space-4), env(safe-area-inset-right))
+      calc(var(--m-space-5) + env(safe-area-inset-bottom))
+      max(var(--m-space-4), env(safe-area-inset-left));
+  }
+}
+
+/* Shared focus treatment */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus-ring);
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  left: var(--m-space-4);
+  top: var(--m-space-2);
+  z-index: 100;
+  transform: translateY(-200%);
+  padding: var(--m-space-2) var(--m-space-4);
+  background: var(--m-surface);
+  color: var(--m-ink);
+  border: 1px solid var(--m-border-strong);
+  border-radius: var(--m-radius-md);
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-sm);
+  text-decoration: none;
+  transition: transform var(--m-motion-fast) var(--m-ease-out);
+}
+
+.skip-link:focus-visible,
+.skip-link:focus {
+  transform: none;
+}
+
+.m-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Task 9 a11y: visible close alternative for gesture-only sheets (haptics.js). */
+.m-sheet-haptic-close,
+[data-sheet] .m-sheet-haptic-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  margin-top: var(--m-space-2);
+  padding: var(--m-space-1) var(--m-space-2);
+  border: 1px solid var(--m-border, #3a3a3a);
+  border-radius: var(--m-radius-1, 6px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.m-sheet-haptic-close:hover { background: var(--m-surface-2, rgba(255,255,255,0.06)); }

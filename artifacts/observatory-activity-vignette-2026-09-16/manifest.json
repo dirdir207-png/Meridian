@@ -1,0 +1,204 @@
+{
+  "captures": [
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/03-activity.png",
+      "current_path": "artifacts/observatory-activity-vignette-2026-09-16/activity-desktop-light-full.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "activity:default",
+      "full_page": true,
+      "commit": "0192f180d0d8238d49424a5b5106d44c89d23827",
+      "captured_at": "2026-09-16T07:16:35.161869Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-desktop-light-viewport.png",
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-desktop-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/03-activity.png",
+      "current_path": "artifacts/observatory-activity-vignette-2026-09-16/activity-desktop-dark-full.png",
+      "viewport": "desktop",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "activity:default",
+      "full_page": true,
+      "commit": "0192f180d0d8238d49424a5b5106d44c89d23827",
+      "captured_at": "2026-09-16T07:16:36.314301Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-desktop-dark-viewport.png",
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-desktop-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/03-activity.png",
+      "current_path": "artifacts/observatory-activity-vignette-2026-09-16/activity-tablet-light-full.png",
+      "viewport": "tablet",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "activity:default",
+      "full_page": true,
+      "commit": "0192f180d0d8238d49424a5b5106d44c89d23827",
+      "captured_at": "2026-09-16T07:16:37.439530Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-tablet-light-viewport.png",
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-tablet-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/03-activity.png",
+      "current_path": "artifacts/observatory-activity-vignette-2026-09-16/activity-tablet-dark-full.png",
+      "viewport": "tablet",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "activity:default",
+      "full_page": true,
+      "commit": "0192f180d0d8238d49424a5b5106d44c89d23827",
+      "captured_at": "2026-09-16T07:16:38.476612Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-tablet-dark-viewport.png",
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-tablet-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/03-activity.png",
+      "current_path": "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-light-full.png",
+      "viewport": "mobile",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "activity:default",
+      "full_page": true,
+      "commit": "0192f180d0d8238d49424a5b5106d44c89d23827",
+      "captured_at": "2026-09-16T07:16:40.077810Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-light-viewport.png",
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/03-activity.png",
+      "current_path": "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-dark-full.png",
+      "viewport": "mobile",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "activity:default",
+      "full_page": true,
+      "commit": "0192f180d0d8238d49424a5b5106d44c89d23827",
+      "captured_at": "2026-09-16T07:16:41.693091Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-dark-viewport.png",
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/03-activity.png",
+      "current_path": "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-small-light-full.png",
+      "viewport": "mobile-small",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "activity:default",
+      "full_page": true,
+      "commit": "0192f180d0d8238d49424a5b5106d44c89d23827",
+      "captured_at": "2026-09-16T07:16:43.178285Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-small-light-viewport.png",
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-small-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/03-activity.png",
+      "current_path": "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-small-dark-full.png",
+      "viewport": "mobile-small",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "activity:default",
+      "full_page": true,
+      "commit": "0192f180d0d8238d49424a5b5106d44c89d23827",
+      "captured_at": "2026-09-16T07:16:44.651235Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-small-dark-viewport.png",
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-small-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/03-activity.png",
+      "current_path": "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-air-light-full.png",
+      "viewport": "mobile-air",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "activity:default",
+      "full_page": true,
+      "commit": "0192f180d0d8238d49424a5b5106d44c89d23827",
+      "captured_at": "2026-09-16T07:16:46.415699Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-air-light-viewport.png",
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-air-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/03-activity.png",
+      "current_path": "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-air-dark-full.png",
+      "viewport": "mobile-air",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "activity:default",
+      "full_page": true,
+      "commit": "0192f180d0d8238d49424a5b5106d44c89d23827",
+      "captured_at": "2026-09-16T07:16:48.302999Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-air-dark-viewport.png",
+        "artifacts/observatory-activity-vignette-2026-09-16/activity-mobile-air-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    }
+  ]
+}

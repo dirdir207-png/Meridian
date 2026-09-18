@@ -1,0 +1,257 @@
+{
+  "mobile-air": {
+    "doc_width": 420,
+    "overflow": 0,
+    "amounts": [
+      {
+        "text": "\u2212$84.00",
+        "clientWidth": 110,
+        "scrollWidth": 110,
+        "overflowPx": 0,
+        "rect": {
+          "x": 288,
+          "y": 326,
+          "right": 398,
+          "bottom": 345,
+          "w": 110,
+          "h": 19
+        }
+      },
+      {
+        "text": "\u2212$65.00",
+        "clientWidth": 110,
+        "scrollWidth": 110,
+        "overflowPx": 0,
+        "rect": {
+          "x": 288,
+          "y": 442,
+          "right": 398,
+          "bottom": 461,
+          "w": 110,
+          "h": 19
+        }
+      },
+      {
+        "text": "+$1,660.00",
+        "clientWidth": 110,
+        "scrollWidth": 110,
+        "overflowPx": 0,
+        "rect": {
+          "x": 288,
+          "y": 558,
+          "right": 398,
+          "bottom": 577,
+          "w": 110,
+          "h": 19
+        }
+      }
+    ],
+    "nav": null,
+    "virgil_controls": [
+      {
+        "cls": "m-primary-button",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "right": 0,
+          "bottom": 0,
+          "w": 0,
+          "h": 0
+        }
+      },
+      {
+        "cls": "obs-control",
+        "rect": {
+          "x": 244,
+          "y": 844,
+          "right": 404,
+          "bottom": 888,
+          "w": 160,
+          "h": 44
+        }
+      },
+      {
+        "cls": "m-primary-button",
+        "rect": {
+          "x": 33,
+          "y": 1642,
+          "right": 185,
+          "bottom": 1686,
+          "w": 152,
+          "h": 44
+        }
+      }
+    ],
+    "colliding_with_nav": []
+  },
+  "mobile": {
+    "doc_width": 430,
+    "overflow": 0,
+    "amounts": [
+      {
+        "text": "\u2212$84.00",
+        "clientWidth": 110,
+        "scrollWidth": 110,
+        "overflowPx": 0,
+        "rect": {
+          "x": 298,
+          "y": 327,
+          "right": 408,
+          "bottom": 345,
+          "w": 110,
+          "h": 19
+        }
+      },
+      {
+        "text": "\u2212$65.00",
+        "clientWidth": 110,
+        "scrollWidth": 110,
+        "overflowPx": 0,
+        "rect": {
+          "x": 298,
+          "y": 443,
+          "right": 408,
+          "bottom": 461,
+          "w": 110,
+          "h": 19
+        }
+      },
+      {
+        "text": "+$1,660.00",
+        "clientWidth": 110,
+        "scrollWidth": 110,
+        "overflowPx": 0,
+        "rect": {
+          "x": 298,
+          "y": 558,
+          "right": 408,
+          "bottom": 577,
+          "w": 110,
+          "h": 19
+        }
+      }
+    ],
+    "nav": null,
+    "virgil_controls": [
+      {
+        "cls": "m-primary-button",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "right": 0,
+          "bottom": 0,
+          "w": 0,
+          "h": 0
+        }
+      },
+      {
+        "cls": "obs-control",
+        "rect": {
+          "x": 254,
+          "y": 846,
+          "right": 414,
+          "bottom": 890,
+          "w": 160,
+          "h": 44
+        }
+      },
+      {
+        "cls": "m-primary-button",
+        "rect": {
+          "x": 33,
+          "y": 1644,
+          "right": 185,
+          "bottom": 1688,
+          "w": 152,
+          "h": 44
+        }
+      }
+    ],
+    "colliding_with_nav": []
+  },
+  "mobile-small": {
+    "doc_width": 390,
+    "overflow": 0,
+    "amounts": [
+      {
+        "text": "\u2212$84.00",
+        "clientWidth": 110,
+        "scrollWidth": 110,
+        "overflowPx": 0,
+        "rect": {
+          "x": 258,
+          "y": 326,
+          "right": 368,
+          "bottom": 345,
+          "w": 110,
+          "h": 19
+        }
+      },
+      {
+        "text": "\u2212$65.00",
+        "clientWidth": 110,
+        "scrollWidth": 110,
+        "overflowPx": 0,
+        "rect": {
+          "x": 258,
+          "y": 442,
+          "right": 368,
+          "bottom": 461,
+          "w": 110,
+          "h": 19
+        }
+      },
+      {
+        "text": "+$1,660.00",
+        "clientWidth": 110,
+        "scrollWidth": 110,
+        "overflowPx": 0,
+        "rect": {
+          "x": 258,
+          "y": 558,
+          "right": 368,
+          "bottom": 577,
+          "w": 110,
+          "h": 19
+        }
+      }
+    ],
+    "nav": null,
+    "virgil_controls": [
+      {
+        "cls": "m-primary-button",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "right": 0,
+          "bottom": 0,
+          "w": 0,
+          "h": 0
+        }
+      },
+      {
+        "cls": "obs-control",
+        "rect": {
+          "x": 214,
+          "y": 814,
+          "right": 374,
+          "bottom": 858,
+          "w": 160,
+          "h": 44
+        }
+      },
+      {
+        "cls": "m-primary-button",
+        "rect": {
+          "x": 33,
+          "y": 1651,
+          "right": 185,
+          "bottom": 1695,
+          "w": 152,
+          "h": 44
+        }
+      }
+    ],
+    "colliding_with_nav": []
+  }
+}

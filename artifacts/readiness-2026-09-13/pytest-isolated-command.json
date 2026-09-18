@@ -1,0 +1,21 @@
+{
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--network",
+    "none",
+    "--read-only",
+    "--tmpfs",
+    "/tmp:rw,exec,size=1g",
+    "-v",
+    "/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/readiness-2026-09-13:/evidence",
+    "sha256:005f924d58f64cc468c8ac748156cee4b9a6c45039f3c41e239e13a5927976bb",
+    "sh",
+    "-c",
+    "mkdir -p /tmp/meridian-synthetic && python -m pytest tests --ignore=tests/browser -q -p no:cacheprovider --junitxml=/evidence/pytest-isolated.xml"
+  ],
+  "image_id": "sha256:005f924d58f64cc468c8ac748156cee4b9a6c45039f3c41e239e13a5927976bb",
+  "exit_code": 1,
+  "log": "artifacts/readiness-2026-09-13/pytest-isolated.log"
+}

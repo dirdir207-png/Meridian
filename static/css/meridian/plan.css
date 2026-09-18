@@ -1,0 +1,1272 @@
+/* Plan workspace: summary-first hierarchy — editorial command header, coverage
+   orbit, next-paycheck allocation, compact commitment table, and the shared
+   rule inspector. Loaded after workspaces.css so these rules win the base. */
+
+.m-plan {
+  display: grid;
+  gap: var(--m-space-6);
+}
+
+/* The shell renders a generic kicker/heading/subline before the partial; the
+   Plan workspace carries its own editorial command header, so the generic ones
+   are replaced for this section only (heading stays focusable + announceable). */
+[data-workspace-section="plan"] > .m-workspace-kicker,
+[data-workspace-section="plan"] > .m-workspace-subline {
+  display: none;
+}
+
+[data-workspace-section="plan"] > .m-workspace-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Command header ---------- */
+
+.m-plan-command {
+  align-items: flex-start;
+}
+
+/* The two command actions read as one cohesive toolbar rather than two separate
+   full-width buttons stacked under the intro. */
+.m-plan-create-actions .m-plan-new {
+  align-self: flex-start;
+}
+
+.m-plan-create-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--m-space-3);
+}
+
+/* Secondary (autopilot rule) controls sit next to the primary (commitment) with a
+   lighter treatment and the same compact height. */
+.m-plan-new-rule {
+  padding: var(--m-space-2) var(--m-space-3);
+  font-size: var(--m-text-sm);
+}
+
+.m-plan-command-copy {
+  max-width: 60ch;
+}
+
+.m-plan-command .m-editorial-headline {
+  max-width: 18ch;
+}
+
+.m-plan-new {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--m-space-2);
+  flex: none;
+  white-space: nowrap;
+}
+
+/* Concept 02's primary action plate. The kit specifies apricot-button.png for exactly
+   this ("Primary action plate ... Use behind a real button/link. HTML label and arrow;
+   at least 44px target. Nine-slice for variable width."). Slice offsets were measured
+   from the asset rather than guessed: the plate occupies y 171-515 of a 724px canvas
+   behind ~170px of transparent padding, and its chamfered end caps — the parts
+   carrying the four rivets — are ~230px wide. The label stays HTML on the plate's
+   blank centre, and the border box keeps a 44px target. */
+.m-plan-create-actions .m-plan-new.m-primary-button {
+  border: 10px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/apricot-button.png") 190 230 190 230 fill / 10px 34px round;
+  border-radius: 0;
+  background: none;
+  min-height: 44px;
+  padding: var(--m-space-2) calc(var(--m-space-4) + 12px);
+}
+
+/* ---------- Summary grid ---------- */
+
+.m-plan-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--m-space-4);
+  align-items: stretch;
+}
+
+.m-plan-coverage-card,
+.m-plan-funding-card {
+  min-width: 0;
+  transition:
+    border-color var(--m-motion-fast) var(--m-ease-out),
+    box-shadow var(--m-motion-fast) var(--m-ease-out);
+}
+
+.m-plan-coverage-card:hover,
+.m-plan-funding-card:hover {
+  border-color: var(--m-border-strong);
+  box-shadow: var(--m-elevation-2);
+}
+
+/* ---------- Next-income strip (concept 02) ---------- */
+
+/* The kit's parchment ticket — whose stated role is "Evidence, account summary,
+   compact income ticket" — becomes the income strip. Nine-slice keeps the scalloped
+   ends, cut corners and corner rivets fixed while the band reflows, and `fill` carries
+   the blank centre so the date, amount and caption stay code-owned HTML. Text on the
+   parchment takes the ticket ink rather than the shell's cream, matching the evidence
+   ticket on Today. Copy is deliberately unchanged: the owner accepts the live wording. */
+.m-plan-summary-grid .m-plan-funding-card {
+  position: relative;
+  padding: var(--m-space-3) var(--m-space-4);
+  border: 20px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 fill / 20px round;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* A parchment band does not take the dark surface's lift on hover. */
+.m-plan-summary-grid .m-plan-funding-card:hover {
+  box-shadow: none;
+}
+
+/* The concept flanks the strip with a small compass star. Decorative only. */
+.m-plan-summary-grid .m-plan-funding-card::before,
+.m-plan-summary-grid .m-plan-funding-card::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translateY(-50%);
+  background-color: #a9863f;
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/star.svg") center / contain no-repeat;
+  pointer-events: none;
+}
+
+.m-plan-summary-grid .m-plan-funding-card::before {
+  left: 2px;
+}
+
+.m-plan-summary-grid .m-plan-funding-card::after {
+  right: 2px;
+}
+
+.m-plan-funding-card .m-section-label {
+  color: #7a5a2e;
+}
+
+.m-plan-funding-card .m-plan-next-title {
+  color: #2f2a20;
+  font-size: 1.5rem;
+}
+
+.m-plan-funding-card .m-plan-funding-date {
+  color: #6b5a3a;
+}
+
+.m-plan-funding-card .m-plan-funding-amount {
+  color: #1f4d3d;
+  font-size: 2rem;
+}
+
+.m-plan-funding-card .m-plan-funding-caption {
+  color: #5c5136;
+}
+
+.m-plan-funding-card .m-plan-shortfall {
+  color: #8a3b12;
+}
+
+/* ---------- Coverage orbit ---------- */
+
+.m-coverage {
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-5);
+}
+
+.m-coverage-orbit {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  flex: none;
+}
+
+.m-coverage-orbit-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.m-coverage-orbit-track {
+  fill: none;
+  stroke: var(--m-surface-muted);
+  stroke-width: 11;
+}
+
+.m-coverage-orbit-fill {
+  fill: none;
+  stroke: var(--m-healthy);
+  stroke-width: 11;
+  stroke-linecap: round;
+  transition: stroke-dashoffset var(--m-motion-slow) var(--m-ease-out);
+}
+
+.m-coverage-orbit-value {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-xl);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--m-healthy);
+}
+
+.m-coverage-copy {
+  min-width: 0;
+}
+
+.m-coverage-detail {
+  margin: 0;
+  font-size: var(--m-text-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.m-coverage-projection {
+  margin: var(--m-space-1) 0 0;
+  font-size: var(--m-text-sm);
+  color: var(--m-ink-muted);
+}
+
+.m-plan-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--m-space-3) var(--m-space-4);
+  margin: var(--m-space-4) 0 0;
+}
+
+.m-plan-stats dt {
+  font-size: var(--m-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--m-ink-faint);
+}
+
+.m-plan-stats dd {
+  margin: var(--m-space-1) 0 0;
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-lg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Color the coverage figures so the funding picture reads at a glance:
+   funded = healthy green, unfunded = caution amber, next due = information blue. */
+.m-plan-stats [data-plan-funded] { color: var(--m-healthy); }
+.m-plan-stats [data-plan-unfunded] { color: var(--m-caution); }
+.m-plan-stats [data-plan-next-due] { color: var(--m-information); }
+
+/* ---------- Funding schedule card ---------- */
+
+.m-plan-next-title {
+  margin: var(--m-space-2) 0 0;
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-lg);
+  font-weight: 500;
+}
+
+.m-plan-funding-figure {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--m-space-4);
+  margin-top: var(--m-space-2);
+}
+
+.m-plan-funding-date {
+  font-size: var(--m-text-md);
+  color: var(--m-ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.m-plan-funding-amount {
+  font-family: var(--m-font-serif);
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--m-healthy);
+}
+
+.m-plan-funding-caption {
+  margin: var(--m-space-3) 0 0;
+  font-size: var(--m-text-sm);
+  color: var(--m-ink-muted);
+}
+
+.m-plan-shortfall {
+  margin: var(--m-space-4) 0 0;
+  padding: var(--m-space-3) var(--m-space-4);
+  background: var(--m-caution-wash);
+  color: var(--m-caution);
+  border-radius: var(--m-radius-md);
+  font-size: var(--m-text-sm);
+}
+
+/* ---------- Commitment table ---------- */
+
+.m-plan-table-section {
+  min-width: 0;
+}
+
+.m-plan-table {
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+  overflow: hidden;
+}
+
+.m-plan-table-head,
+.m-plan-table-row {
+  display: grid;
+  /* Keep the funded + next figures comfortably close to the bill name rather
+     than shoved to the far edge of an oversized name column. */
+  grid-template-columns: minmax(0, 1fr) minmax(80px, 120px) minmax(60px, 110px) auto;
+  gap: var(--m-space-4);
+  align-items: center;
+}
+
+.m-plan-table-head {
+  padding: var(--m-space-3) var(--m-space-5);
+  border-bottom: 1px solid var(--m-border);
+  background: var(--m-surface-muted);
+  color: var(--m-ink-faint);
+  font-size: var(--m-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.m-plan-table-row {
+  padding: var(--m-space-3) var(--m-space-5);
+  border-bottom: 1px solid var(--m-border);
+  cursor: pointer;
+  transition: background var(--m-motion-fast) var(--m-ease-out);
+}
+
+.m-plan-table-row:last-child {
+  border-bottom: none;
+}
+
+.m-plan-table-row:hover {
+  background: var(--m-surface-muted);
+}
+
+.m-plan-table-row:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus-ring);
+  border-radius: var(--m-radius-sm);
+}
+
+.m-plan-table-cell {
+  min-width: 0;
+}
+
+.m-plan-cell-commitment {
+  display: grid;
+  gap: var(--m-space-1);
+}
+
+.m-plan-cell-name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--m-space-2);
+}
+
+.m-commitment-name {
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-md);
+  font-weight: 600;
+  margin: 0;
+  color: var(--m-ink);
+}
+
+.m-commitment-type {
+  font-size: var(--m-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--m-ink-faint);
+}
+
+.m-commitment-facts {
+  margin: 0;
+  font-size: var(--m-text-sm);
+  color: var(--m-ink-muted);
+}
+
+/* Low-key funding progress bar on each commitment card. */
+.m-commitment-progress {
+  width: 100%;
+  max-width: 220px;
+}
+
+.m-commitment-progress-track {
+  display: block;
+  height: 6px;
+  border-radius: var(--m-radius-pill);
+  background: var(--m-surface-muted);
+  overflow: hidden;
+}
+
+.m-commitment-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--m-radius-pill);
+  background: var(--m-healthy);
+  transition: width var(--m-motion-fast) var(--m-ease-out);
+}
+
+/* Clickable invoice evidence on a bill card (e.g. a Verizon bill email). */
+.m-invoice-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--m-space-1);
+  width: fit-content;
+  max-width: 100%;
+  margin-top: var(--m-space-2);
+  padding: var(--m-space-1) var(--m-space-3);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-pill);
+  background: var(--m-surface-muted);
+  color: var(--m-information);
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: border-color var(--m-motion-fast) var(--m-ease-out),
+    background var(--m-motion-fast) var(--m-ease-out);
+}
+
+.m-invoice-link:hover,
+.m-invoice-link:focus-visible {
+  border-color: var(--m-border-strong);
+  background: var(--m-surface);
+}
+
+.m-invoice-link:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus-ring);
+}
+
+/* R33: subtle per-bill attention badge on the existing Plan card. */
+.m-bill-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  font-size: var(--m-text-xs);
+  font-weight: 600;
+  line-height: 1.4;
+  border-radius: 999px;
+  vertical-align: text-top;
+}
+.m-bill-badge--unfunded {
+  color: var(--m-ink-muted);
+  background: var(--m-surface-raised);
+  border: 1px solid var(--m-ink-faint);
+}
+.m-bill-badge--due_soon {
+  color: var(--m-ink-strong, var(--m-ink));
+  background: color-mix(in oklab, var(--m-warn, #b8860b) 16%, transparent);
+  border: 1px solid color-mix(in oklab, var(--m-warn, #b8860b) 40%, transparent);
+}
+.m-bill-badge--changed {
+  color: var(--m-ink-strong, var(--m-ink));
+  background: color-mix(in oklab, var(--m-danger, #c0392b) 14%, transparent);
+  border: 1px solid color-mix(in oklab, var(--m-danger, #c0392b) 40%, transparent);
+}
+
+.m-plan-cell-funded,
+.m-plan-cell-next {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--m-text-md);
+}
+
+.m-plan-cell-funded {
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-sm);
+  font-weight: 600;
+  color: var(--m-healthy);
+}
+
+.m-plan-cell-next {
+  color: var(--m-information);
+  font-weight: 500;
+}
+
+.m-plan-cell-action {
+  text-align: right;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--m-space-2);
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.m-plan-cell-action .m-button {
+  width: auto;
+}
+
+.m-plan-cell-action .m-action-note {
+  flex-basis: 100%;
+}
+
+.m-plan-table-footer {
+  margin: var(--m-space-3) 0 0;
+  font-size: var(--m-text-sm);
+  color: var(--m-ink-muted);
+}
+
+/* ---------- Allocation + timeline support ---------- */
+
+.m-plan-support {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--m-space-4);
+  align-items: start;
+}
+
+.m-plan-timeline-section {
+  min-width: 0;
+}
+
+/* ---------- Allocation map (concept 02) ---------- */
+
+/* The kit's folded-map art is the allocation backdrop. It carries no money and no
+   labels, and its constellations encode nothing, so every figure is HTML and each
+   medallion's station is fixed by the concept rather than by its amount. Text on the
+   parchment uses the same dark ink the ticket uses, not the shell's cream --m-ink. */
+.m-plan-map-section {
+  margin-bottom: var(--m-space-5);
+}
+
+.m-plan-map {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+  aspect-ratio: 1536 / 1024;
+}
+
+.m-plan-map-art {
+  position: absolute;
+  inset: 0;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/plan-map.png") center / contain no-repeat;
+}
+
+.m-plan-map-links {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.m-plan-map-links line {
+  stroke: rgba(146, 118, 66, 0.75);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.m-plan-map-medallions {
+  position: absolute;
+  inset: 0;
+}
+
+.m-plan-medallion {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  max-width: 34%;
+  text-align: center;
+  /* Production labels are far longer than the fixture's short ones ("Committed to
+     commitments"), so the block must wrap inside its station instead of running off
+     the parchment. The left/right stations sit low enough to keep the wrapped stack
+     inside the map's silhouette. */
+  overflow-wrap: anywhere;
+}
+
+.m-plan-medallion-disk {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #c1a9e2;
+  color: #20263b;
+  border: 2px solid #c6aa71;
+  box-shadow: inset 0 0 0 1px #20263b, inset 0 0 0 2px #c6aa71;
+}
+
+.m-plan-medallion.is-right .m-plan-medallion-disk {
+  background: #20263b;
+  color: #ead8b5;
+}
+
+.m-plan-medallion.is-available .m-plan-medallion-disk,
+.m-plan-medallion.is-extra .m-plan-medallion-disk {
+  background: #c6aa71;
+}
+
+.m-plan-medallion-glyph {
+  display: block;
+  width: 26px;
+  height: 26px;
+  background-color: currentColor;
+  -webkit-mask: var(--m-medallion-icon) center / contain no-repeat;
+  mask: var(--m-medallion-icon) center / contain no-repeat;
+}
+
+.m-plan-medallion-label,
+.m-plan-medallion-amount {
+  color: #2f2a20;
+  font-family: var(--m-font-serif);
+}
+
+.m-plan-medallion-label {
+  font-size: 1.05rem;
+  line-height: 1.15;
+}
+
+.m-plan-medallion-amount {
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.m-plan-map-hub {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #20263b;
+  border: 3px solid #c6aa71;
+  box-shadow: 0 0 0 3px rgba(32, 38, 59, 0.85);
+}
+
+.m-plan-map-hub-rose {
+  display: block;
+  width: 30px;
+  height: 30px;
+  background-color: #c6aa71;
+  -webkit-mask: var(--m-medallion-icon) center / contain no-repeat;
+  mask: var(--m-medallion-icon) center / contain no-repeat;
+}
+
+@media (max-width: 560px) {
+  .m-plan-medallion-disk {
+    width: 42px;
+    height: 42px;
+  }
+
+  .m-plan-medallion-glyph {
+    width: 20px;
+    height: 20px;
+  }
+
+  .m-plan-medallion-label {
+    font-size: 0.8rem;
+  }
+
+  .m-plan-medallion-amount {
+    font-size: 1.15rem;
+  }
+
+  .m-plan-map-hub {
+    width: 48px;
+    height: 48px;
+  }
+
+  .m-plan-map-hub-rose {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.m-timeline {
+  list-style: none;
+  margin: var(--m-space-3) 0 0;
+  padding: 0;
+}
+
+.m-timeline li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--m-space-4);
+  padding: var(--m-space-3) 0;
+  border-bottom: 1px solid var(--m-border);
+  font-size: var(--m-text-md);
+}
+
+.m-timeline li:last-child {
+  border-bottom: none;
+}
+
+.m-timeline .m-timeline-date {
+  color: var(--m-ink-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.m-timeline .m-timeline-amount {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Document discrepancies + memory ---------- */
+
+.m-plan-commitments {
+  display: grid;
+  gap: var(--m-space-3);
+}
+
+.m-commitment-list {
+  list-style: none;
+  margin: var(--m-space-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--m-space-3);
+}
+
+.m-commitment-card {
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+  padding: var(--m-space-4) var(--m-space-5);
+}
+
+.m-plan-memory {
+  display: grid;
+  gap: var(--m-space-3);
+}
+
+.m-plan-memory .memory-items,
+.m-plan-memory .memory-empty,
+.m-plan-memory .memory-error {
+  margin-top: 0;
+}
+
+/* ---------- Shared rule inspector (desktop rail / mobile sheet) ---------- */
+
+[data-inspector-rail] [data-plan-inspector] {
+  display: none;
+}
+
+[data-inspector-rail][data-plan-mode] [data-plan-inspector] {
+  display: flex;
+}
+
+[data-inspector-rail][data-plan-mode] [data-inspector-body] {
+  display: none;
+}
+
+/* The Plan rule inspector reads best at a slimmer rail than the transaction one. */
+[data-inspector-rail][data-plan-mode] {
+  width: min(300px, 26vw);
+}
+
+/* ---------- Funding editor ---------- */
+
+/* Dynamic editors are appended to body by the shell sheet primitive. Keep
+   them in the viewport so an action never appears to do nothing at page end. */
+.m-sheet.m-funding-editor {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  z-index: 60;
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: min(90svh, 48rem);
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  background: var(--m-surface);
+  box-shadow: var(--m-elevation-3, 0 16px 48px rgba(0, 0, 0, 0.2));
+}
+
+.m-funding-editor {
+  grid-column: 1 / -1;
+  margin-top: var(--m-space-4);
+  padding: var(--m-space-4);
+  border: 1px dashed var(--m-border-strong);
+  border-radius: var(--m-radius-md);
+  display: grid;
+  gap: var(--m-space-3);
+}
+
+.m-editor-title {
+  margin: 0;
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--m-ink-muted);
+}
+
+.m-field {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--m-space-1);
+}
+
+.m-field-label {
+  font-size: var(--m-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--m-ink-muted);
+}
+
+.m-input {
+  min-height: 44px;
+  padding: 0 var(--m-space-3);
+  border: 1px solid var(--m-border-strong);
+  border-radius: var(--m-radius-md);
+  background: var(--m-surface);
+  color: var(--m-ink);
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-md);
+}
+
+.m-editor-preview {
+  margin: 0;
+  font-size: var(--m-text-sm);
+  color: var(--m-information);
+}
+
+.m-editor-actions {
+  display: flex;
+  gap: var(--m-space-3);
+  flex-wrap: wrap;
+}
+
+.m-editor-note {
+  margin: 0;
+  font-size: var(--m-text-sm);
+  color: var(--m-healthy);
+}
+
+.m-button--quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--m-ink-muted);
+}
+
+.m-button--small {
+  min-height: 44px;
+  padding: var(--m-space-2) var(--m-space-3);
+  font-size: var(--m-text-sm);
+}
+
+/* Destructive action (e.g. delete a Crew bill) — risk tint, quiet surface. */
+.m-button--danger {
+  color: var(--m-risk, #c0392b);
+  background: color-mix(in oklab, var(--m-risk, #c0392b) 10%, transparent);
+  border-color: color-mix(in oklab, var(--m-risk, #c0392b) 24%, transparent);
+}
+
+.m-button--danger:hover,
+.m-button--danger:focus-visible {
+  color: var(--m-risk, #c0392b);
+  border-color: var(--m-risk, #c0392b);
+}
+
+/* Inline result note under a row's actions (e.g. a delete outcome). Compact,
+   wraps within the card, and never bleeds into the card below. */
+.m-action-note {
+  margin: 0;
+  font-size: var(--m-text-sm);
+  line-height: 1.35;
+  color: var(--m-ink-muted);
+  max-width: var(--m-actions-note-max, 48ch);
+  word-break: break-word;
+}
+
+.m-action-note[data-state="ok"] {
+  color: var(--m-healthy);
+}
+
+.m-action-note[data-state="pending"] {
+  color: var(--m-caution);
+}
+
+.m-action-note[data-state="error"] {
+  color: var(--m-risk, #c0392b);
+}
+
+.m-state-line {
+  margin: 0;
+  font-size: var(--m-text-md);
+  color: var(--m-ink-muted);
+}
+
+.m-empty-note {
+  margin-block: var(--m-space-3) 0;
+}
+
+/* Verified Crew mutation capture status (read-only coverage panel). */
+.m-plan-capture-status {
+  margin-top: var(--m-space-4);
+}
+
+.m-capture-status-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--m-space-2);
+  margin: var(--m-space-2) 0 var(--m-space-1);
+}
+
+.m-capture-status-line {
+  margin: 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+}
+
+.m-capture-status-figure {
+  font-size: var(--m-text-md);
+  font-weight: 600;
+  color: var(--m-healthy);
+}
+
+.m-capture-status-track {
+  display: flex;
+  height: 8px;
+  border-radius: var(--m-radius-sm);
+  overflow: hidden;
+  background: var(--m-surface-muted);
+  margin: var(--m-space-2) 0;
+}
+
+.m-capture-status-fill {
+  display: block;
+  height: 100%;
+  background: var(--m-healthy);
+  transition: width var(--m-motion-slow) var(--m-ease-out);
+}
+
+.m-capture-status-note {
+  margin: 0;
+  color: var(--m-ink-faint);
+  font-size: var(--m-text-xs);
+}
+
+/* Crew write actions panel: the individual action forms read as one cohesive
+   set of tidy cards (not stacked unstyled boxes), each with a label + a compact
+   pill button and consistent rhythm. */
+.m-plan-actions {
+  display: grid;
+  gap: var(--m-space-4);
+  margin-top: var(--m-space-4);
+}
+
+.m-action-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-space-3);
+  padding: var(--m-space-4);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+}
+
+.m-action-form .m-input,
+.m-action-form .m-select {
+  width: 100%;
+}
+
+.m-action-form .m-button {
+  align-self: flex-start;
+}
+
+/* Plan's view switch is the concept's bordered tab bar, not three pills.
+   Concept 02 draws ONE rounded container with a brass border, divided into three equal
+   cells by thin vertical rules; the active cell is parchment-filled with a brass star
+   medallion at its left edge, and that container's top edge doubles as the separator
+   between the header and the tabs. Activity keeps the ruled-underline treatment, which
+   concept 03 shows -- the two workspaces are deliberately different.
+
+   Measured on the concept (852px wide, so 0.493 to a 420px viewport): the container spans
+   ~733x82px, i.e. ~361x40px; the active cell is 254px, an equal third of the container;
+   the medallion is ~70px, i.e. ~34px. The bar is built to 44px rather than the concept's
+   40px because its cells are buttons and 44px is the touch-target floor -- a 4px
+   deviation recorded rather than a target quietly missed. */
+.m-plan-seg {
+  display: flex;
+  width: 100%;
+  gap: 0;
+  margin: 0 0 var(--m-space-4);
+  padding: 0;
+  border: 1px solid var(--obs-brass);
+  border-radius: var(--m-radius-pill);
+  background: transparent;
+  /* Clips the active cell's parchment to the container's rounded ends. */
+  overflow: hidden;
+}
+
+.m-seg-tab {
+  position: relative;
+  /* An explicit one-third basis, not `flex: 1 1 0`. Every cell is `box-sizing: border-box`,
+     so a zero basis is floored by the cell's own padding: the active cell's 42px medallion
+     gutter made it 148px against 119px for the other two. A percentage basis is the same
+     for all three, so the padding sits inside an equal share and the cells are true thirds,
+     which is what the concept draws. */
+  flex: 1 1 33.3333%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 var(--m-space-3);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--obs-paper);
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--m-motion-fast) var(--m-ease-out),
+    color var(--m-motion-fast) var(--m-ease-out);
+}
+
+/* The concept's thin vertical rules: one per cell boundary, drawn on the left edge of
+   every cell after the first so the container's own border is never doubled. */
+.m-seg-tab + .m-seg-tab {
+  border-left: 1px solid var(--obs-brass);
+}
+
+.m-seg-tab.is-active {
+  /* Parchment-filled, in the ticket ink the kit requires on parchment, with room at the
+     left for the medallion so the label never sits under it. */
+  background: var(--obs-paper);
+  color: var(--obs-paper-ink);
+  box-shadow: none;
+  padding-left: 42px;
+}
+
+/* The medallion: a dark disc ringed in brass, carrying a brass star -- the concept puts
+   it at the active cell's left edge, not above the label. */
+.m-seg-tab.is-active::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  border: 1px solid var(--obs-brass);
+  border-radius: 50%;
+  background: var(--obs-bg);
+}
+
+.m-seg-tab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  background-color: var(--obs-brass);
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-16/icons/star.svg") center / contain no-repeat;
+  pointer-events: none;
+}
+
+.m-plan-view[hidden] {
+  display: none;
+}
+
+/* Crew-style modular rule card (name + pause + delete + a one-line summary). */
+.m-plan-rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--m-space-3);
+}
+
+.m-rule-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--m-space-2);
+  padding: var(--m-space-4);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+}
+
+.m-rule-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--m-space-2);
+}
+
+.m-rule-card-name {
+  margin: 0;
+  font-size: var(--m-text-md);
+  font-weight: 600;
+}
+
+.m-rule-card-body {
+  margin: 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+}
+
+@media (max-width: 600px) {
+  .m-plan-seg {
+    width: 100%;
+  }
+  .m-seg-tab {
+    /* No `flex` here. It used to be `flex: 1`, i.e. `1 1 0%`, which overrode the equal
+       one-third basis above and reintroduced the padding-driven asymmetry at every width
+       this rule matches -- which is every mobile viewport, exactly where the concept's
+       equal cells matter. The basis belongs in one place. */
+    text-align: center;
+  }
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+  .m-plan-summary-grid,
+  .m-plan-support {
+    grid-template-columns: 1fr;
+  }
+
+  .m-coverage {
+    gap: var(--m-space-4);
+  }
+}
+
+@media (max-width: 600px) {
+  /* Keep the command action visible on mobile (the shared base hides it). */
+  .m-command-header .m-primary-button.m-plan-new {
+    display: inline-flex !important;
+  }
+
+  .m-plan {
+    gap: var(--m-space-5);
+  }
+
+  .m-plan-command .m-editorial-headline {
+    font-size: 2.25rem;
+  }
+
+  .m-plan-table-head {
+    display: none;
+  }
+
+  .m-plan-table {
+    border-radius: var(--m-radius-lg);
+  }
+
+  .m-plan-table-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "name name"
+      "funded next"
+      "action action";
+    gap: var(--m-space-2);
+    padding: var(--m-space-3);
+    border-radius: var(--m-radius-md);
+  }
+
+  .m-plan-table-row + .m-plan-table-row {
+    margin-top: var(--m-space-2);
+    border: 1px solid var(--m-border);
+  }
+
+  /* Name + type + badge span the card; facts and the progress bar run beneath. */
+  .m-plan-cell-commitment {
+    grid-area: name;
+  }
+
+  .m-plan-cell-name {
+    flex-wrap: wrap;
+  }
+
+  .m-plan-cell-funded {
+    grid-area: funded;
+  }
+
+  .m-plan-cell-next {
+    grid-area: next;
+    justify-self: end;
+    text-align: right;
+  }
+
+  .m-plan-cell-funded::before,
+  .m-plan-cell-next::before {
+    content: "";
+    display: block;
+    font-size: var(--m-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--m-ink-faint);
+    margin-bottom: var(--m-space-1);
+  }
+
+  .m-plan-cell-funded::before {
+    content: "Funded";
+    color: var(--m-healthy);
+  }
+
+  .m-plan-cell-next::before {
+    content: "Next";
+    color: var(--m-information);
+  }
+
+  .m-plan-cell-funded,
+  .m-plan-cell-next {
+    font-size: var(--m-text-md);
+  }
+
+  /* Actions become one quiet row, right-aligned and compact. */
+  .m-plan-cell-action {
+    grid-area: action;
+    display: flex;
+    gap: var(--m-space-2);
+    justify-content: flex-end;
+    padding-top: var(--m-space-2);
+    border-top: 1px solid var(--m-border);
+  }
+
+  .m-plan-cell-action .m-button {
+    width: auto;
+    min-height: 40px;
+    padding: var(--m-space-2) var(--m-space-3);
+    font-size: var(--m-text-sm);
+  }
+
+  .m-plan-coverage-card,
+  .m-plan-funding-card {
+    padding: var(--m-space-4);
+  }
+}
+
+/* ---------- Motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .m-coverage-orbit-fill,
+  .m-plan-table-row {
+    transition: none;
+  }
+}

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Meridian Observatory — Preview</title>
+  <link rel="stylesheet" href="css/meridian/observatory.css">
+  <link rel="stylesheet" href="css/meridian/dial.css">
+  <style>
+    /* Preview-only safety banner; not part of the product. */
+    .obs-preview-note {
+      max-width: 1280px;
+      margin: 16px auto 0;
+      padding: 10px 16px;
+      color: #f3b272;
+      font-size: 14px;
+      border: 1px solid rgba(243, 178, 114, 0.3);
+      border-radius: 10px;
+      background: rgba(243, 178, 114, 0.08);
+    }
+    .obs-observatory-image {
+      max-height: 180px;
+      width: 100%;
+      object-fit: cover;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body class="obs-shell">
+  <a class="obs-visually-hidden" href="#preview-main">Skip to content</a>
+  <p class="obs-preview-note">
+    Observatory preview — synthetic fixtures only. No live financial data is loaded and nothing here mutates anything.
+  </p>
+  <header class="obs-header">
+    <span class="obs-wordmark">Meridian</span>
+    <span class="obs-kicker" style="margin:0 0 0 8px;">Observatory</span>
+    <a class="obs-settings-link" href="#">Settings</a>
+  </header>
+  <div class="obs-layout">
+    <nav class="obs-nav" aria-label="Primary">
+      <a href="#preview-main" aria-current="page">Today</a>
+      <a href="#preview-main">Plan</a>
+      <a href="#preview-main">Activity</a>
+      <a href="#preview-main">Accounts</a>
+    </nav>
+    <main id="preview-main" class="obs-main">
+      <p class="obs-kicker" data-date-label>Today</p>
+      <h1 class="obs-page-title">Your money on the horizon</h1>
+      <p class="obs-subline">
+        Turn the dial to explore upcoming obligations and projected effects.
+        This is a visual preview; the numbers below are deliberately synthetic.
+      </p>
+
+      <div style="margin:24px 0;" class="obs-panel">
+        <img class="obs-observatory-image obs-art" src="img/meridian/observatory/observatory-engraving.svg" alt="" width="600" height="360">
+      </div>
+
+      <div class="obs-grid">
+        <section class="obs-panel obs-panel--paper" aria-labelledby="preview-hero-heading">
+          <p class="obs-section-label">Current available to spend</p>
+          <p class="obs-amount obs-amount--hero" style="margin:0;">$1,284.52</p>
+          <p class="obs-source" style="margin:8px 0 0;">Observed today · Free to Spend pocket · Crew</p>
+        </section>
+      </div>
+
+      <div data-observatory-dial id="observatory-dial" aria-label="Observatory date dial preview"></div>
+    </main>
+    <aside class="obs-main obs-evidence-ticket-placeholder" aria-label="Detail">
+      <!-- The dial renderer draws the selected evidence ticket beside the dial. -->
+    </aside>
+  </div>
+
+  <script type="module">
+    import { renderDial } from "./js/meridian/dial.js";
+
+    /* Synthetic fixture for the isolated preview. All amounts are integer
+       minor units (cents) and every value is clearly fictional. */
+    const fixture = {
+      timezone: "America/Los_Angeles",
+      today: "2026-09-08",
+      horizonEnd: "2026-10-16",
+      availableToSpend: { minor: 128452, currency: "USD" },
+      freshness: "fresh",
+      observedAt: "Sep 8, 2026, 9:41 AM",
+      events: [
+        {
+          id: "bill-electric",
+          date: "2026-09-11",
+          kind: "bill",
+          title: "Electric bill",
+          amount: { minor: 8400, currency: "USD" },
+          fundingStatus: "reserved",
+          reserved: { minor: 8400, currency: "USD" },
+          source: "crew",
+          observedAt: "Sep 8, 2026, 9:41 AM",
+          evidenceIds: ["elec-1"],
+          detailHref: "#"
+        },
+        {
+          id: "income-paycheck",
+          date: "2026-09-14",
+          kind: "income",
+          title: "Paycheck",
+          amount: { minor: 248000, currency: "USD" },
+          fundingStatus: "unknown",
+          source: "crew",
+          observedAt: "Sep 8, 2026, 9:41 AM",
+          evidenceIds: ["paycheck-1"],
+          detailHref: "#"
+        },
+        {
+          id: "bill-rent",
+          date: "2026-09-16",
+          kind: "bill",
+          title: "Rent",
+          amount: { minor: 150000, currency: "USD" },
+          fundingStatus: "partial",
+          reserved: { minor: 120000, currency: "USD" },
+          source: "crew",
+          observedAt: "Sep 8, 2026, 9:41 AM",
+          evidenceIds: ["rent-1", "rent-lease"],
+          detailHref: "#"
+        },
+        {
+          id: "goal-car",
+          date: "2026-09-24",
+          kind: "goal",
+          title: "Car fund goal",
+          amount: { minor: 40000, currency: "USD" },
+          fundingStatus: "unfunded",
+          source: "manual",
+          observedAt: "Sep 8, 2026, 9:41 AM",
+          evidenceIds: [],
+          detailHref: "#"
+        },
+        {
+          id: "bill-insurance",
+          date: "2026-10-01",
+          kind: "bill",
+          title: "Insurance",
+          amount: { minor: 9600, currency: "USD" },
+          fundingStatus: "unfunded",
+          source: "crew",
+          observedAt: "Sep 8, 2026, 9:41 AM",
+          evidenceIds: ["insurance-1"],
+          detailHref: "#"
+        },
+        {
+          id: "income-paycheck-2",
+          date: "2026-09-28",
+          kind: "income",
+          title: "Paycheck",
+          amount: { minor: 248000, currency: "USD" },
+          fundingStatus: "unknown",
+          source: "crew",
+          observedAt: "Sep 8, 2026, 9:41 AM",
+          evidenceIds: ["paycheck-2"],
+          detailHref: "#"
+        }
+      ],
+      projections: [
+        { date: "2026-09-08", balance: { minor: 128452, currency: "USD" } },
+        { date: "2026-09-11", balance: { minor: 120052, currency: "USD" } },
+        { date: "2026-09-14", balance: { minor: 368052, currency: "USD" } },
+        { date: "2026-09-16", balance: { minor: 218052, currency: "USD" } },
+        { date: "2026-10-01", balance: { minor: 208452, currency: "USD" } }
+      ]
+    };
+
+    window.MeridianObservatoryDialModel = fixture;
+    const container = document.querySelector("[data-observatory-dial]");
+    renderDial(container, fixture);
+  </script>
+</body>
+</html>

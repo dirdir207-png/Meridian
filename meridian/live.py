@@ -1,0 +1,104 @@
+"""Live Crew snapshot collector for automatic refresh.
+
+Provides a single ``sync_live_crew(db_path)`` callable that the
+MeridianRefreshService invokes on its cadence. It shells out to the
+CrewWorkAssistant ``crew-readonly snapshot`` CLI (the Keychain-backed
+mobile/API auth that Crew supports) and syncs the normalized result into
+the Meridian graph. Never logs or returns credential material.
+"""
+
+import ast
+import subprocess
+from typing import Optional
+
+from .sync import SyncReport
+
+# The CrewWorkAssistant connector ships with its own venv; this binary is the
+# sanctioned read-only snapshot producer on this Mac.
+CREW_READONLY = (
+    "/Users/stephenwest/Applications/CrewWorkAssistantOTP/.venv/bin/crew-readonly"
+)
+
+
+def capture_crew_snapshot(binary: str = CREW_READONLY, timeout_seconds: int = 120) -> dict:
+    """Run the crew-readonly snapshot CLI and parse its dashboard payload."""
+    if not binary:
+        # Importing here so the helper can be constructed without the binary.
+
+        raise RuntimeError("crew-readonly binary path is not configured")
+    try:
+        result = subprocess.run(
+            [binary, "snapshot"], capture_output=True, text=True, timeout=timeout_seconds
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("crew-readonly snapshot timed out") from exc
+    except OSError as exc:
+        raise RuntimeError("crew-readonly binary is not available") from exc
+    if result.returncode != 0:
+        raise RuntimeError("crew-readonly snapshot failed")
+    try:
+        return ast.literal_eval(result.stdout)
+    except (ValueError, SyntaxError) as exc:
+        raise RuntimeError("crew-readonly returned an invalid snapshot") from exc
+
+
+def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str = CREW_READONLY) -> SyncReport:
+    """Pull a live Crew snapshot (or accept one) and sync into ``db_path``."""
+    from .commitments import CommitmentRepository, CommitmentType
+    from .providers.crewwork import CrewWorkSnapshotAdapter
+    from .repository import FinancialRepository
+    from .sync import sync_provider
+
+    dashboard = snapshot if snapshot is not None else capture_crew_snapshot(binary=binary)
+    adapter = CrewWorkSnapshotAdapter(dashboard)
+    repository = FinancialRepository(db_path)
+    report = sync_provider(adapter, repository)
+    # sync_provider (singular) persists accounts/transactions but not the
+    # snapshot's commitment candidates; apply live bills so Plan shows real
+    # money obligations (idempotent upsert keyed by Crew bill id). R33: carry
+    # the bill's due_date (anchorDate), recurrence (frequency), and funded
+    # amount (reservedAmount) so Plan reflects Crew's authoritative per-bill data.
+    snap = adapter.fetch_snapshot()
+    commitment_repository = CommitmentRepository(repository.db_path)
+    for candidate in snap.commitment_candidates:
+        existing = commitment_repository.get_commitment_by_legacy(adapter.provider_name, candidate.external_id)
+        if existing is None:
+            commitment_repository.create(
+                type=CommitmentType.BILL,
+                name=candidate.name,
+                amount=candidate.amount,
+                currency=candidate.currency,
+                recurrence=candidate.recurrence or "monthly",
+                due_date=candidate.due_date,
+                target_amount=candidate.amount,
+                funded_amount=(candidate.funded_amount if candidate.funded_amount is not None else 0.0),                legacy_source=adapter.provider_name,
+                legacy_id=candidate.external_id,
+            )
+        else:
+            commitment_repository.update(
+                existing.id,
+                name=candidate.name,
+                amount=candidate.amount,
+                currency=candidate.currency,
+                due_date=candidate.due_date or existing.due_date,
+                recurrence=candidate.recurrence or existing.recurrence,
+                funded_amount=(
+                    candidate.funded_amount
+                    if candidate.funded_amount is not None
+                    else existing.funded_amount
+                ),            )
+    # A complete, error-free read may conclude that a bill Crew no longer returns
+    # is gone; the row and its history are kept.
+    if snap.is_complete and not snap.errors:
+        commitment_repository.mark_absent_bills(
+            provider=adapter.provider_name,
+            observed_external_ids=tuple(c.external_id for c in snap.commitment_candidates),
+        )
+    return report
+
+
+def build_sync_once(db_path: str, *, binary: str = CREW_READONLY):
+    """Zero-arg callable for MeridianRefreshService tied to ``db_path``."""
+    def sync_once() -> SyncReport:
+        return sync_live_crew(db_path, binary=binary)
+    return sync_once

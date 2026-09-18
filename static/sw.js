@@ -1,4 +1,4 @@
-const CACHE_NAME = 'simple-finance-v12';
+const CACHE_NAME = 'simple-finance-v13';
 
 // Only pre-cache truly static assets (images, manifest) — NOT JS/CSS
 // JS and CSS are always fetched fresh from the network
@@ -57,13 +57,16 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // ── JS, CSS, HTML navigation ───────────────────────────────
+    // ── JS, CSS, manifest, HTML navigation ─────────────────────
     // Always network first so deploys are picked up immediately.
-    // Cache the response so the app still works offline.
+    // The manifest is included here because the Home Screen app name is read
+    // from it: serving a cached copy would keep an old product name installed
+    // indefinitely. Cache the response so the app still works offline.
     if (
         event.request.mode === 'navigate' ||
         url.pathname.startsWith('/static/js/') ||
-        url.pathname.startsWith('/static/css/')
+        url.pathname.startsWith('/static/css/') ||
+        url.pathname === '/manifest.json'
     ) {
         event.respondWith(
             fetch(event.request)
@@ -79,7 +82,7 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // ── Everything else (images, fonts, manifest) ──────────────
+    // ── Everything else (images, fonts) ────────────────────────
     // Cache first — these never change between deploys.
     event.respondWith(
         caches.match(event.request)
@@ -91,7 +94,7 @@ self.addEventListener('fetch', event => {
 
 self.addEventListener('push', event => {
     let notificationData = {
-        title: 'SimpleCrew',
+        title: 'Meridian',
         body: 'New notification',
         icon: '/static/images/192.png',
         badge: '/static/images/badge.png'
@@ -112,7 +115,7 @@ self.addEventListener('push', event => {
             body: notificationData.body,
             icon: notificationData.icon,
             badge: notificationData.badge,
-            tag: 'simplecrew-sync',
+            tag: 'meridian-sync',
             requireInteraction: false,
             vibrate: [200, 100, 200]
         })

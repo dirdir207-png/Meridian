@@ -1,0 +1,812 @@
+/* Meridian Observatory — visual layer.
+   The Observatory direction: midnight indigo, parchment, engraved instruments,
+   lilac, sea-glass and apricot. This file is intentionally additive and uses
+   `.obs-*` primitives so it can be introduced alongside the current Meridian
+   shell without breaking existing selectors.
+
+   Keep text real HTML, keep financial diagrams SVG/code-owned, and never make
+   decorative imagery carry meaning. */
+
+:root {
+  /* Measured from the governing concepts, which agree closely across all four pages:
+     Today #161c34, Plan #131830, Activity #131b30, Accounts #151c34 -> mean (20,27,50).
+     The previous #172334 was both lighter and greener than every one of them. */
+  --obs-bg: #141b32;
+  /* Surfaces are the PAGE COLOUR, not a lighter tint of it. Measured on the governing
+     concepts, every region is one colour -- there is no second, lighter background value
+     anywhere in them:
+        concept 04  page rgb(20,26,49) | account rows rgb(21,27,50)  -> delta 1
+        concept 01  page rgb(22,27,50) | dock rgb(22,27,49)          -> delta 0
+        concept 01  page rgb(22,27,50) | topbar rgb(21,26,50)        -> delta 0
+        concept 02  page rgb(21,26,50) | dock rgb(21,26,50)          -> delta 0
+     Separation in the concepts is drawn with HAIRLINES and engraving, never with a fill.
+     These two were #202b40 / #26334a -- rgb(32,43,64) and rgb(38,51,74), i.e. +12/+16/+14
+     and +18/+24/+24 over the page. Owner, 2026-09-18: "the more lightly colored boxes on
+     all pages need to be removed... a separate and cloying lighter colored box separating
+     them. On the concept on all pages, it is the same unified deeper color we corrected
+     for before."
+
+     They stay as TOKENS rather than being deleted, so the ~68 rules that reference them
+     keep working and a future block that genuinely needs to sit above the page (a modal,
+     a floating panel) has a named value to reach for. */
+  --obs-surface: var(--obs-bg);
+  --obs-surface-raised: var(--obs-bg);
+  /* A hover/focus wash, because flattening the surfaces made every `:hover` that used to
+     paint a lighter fill a no-op. Translucent, so it lightens whatever it sits on by a few
+     percent rather than introducing a second box colour. */
+  --obs-wash: rgba(238, 228, 207, 0.05);
+  --obs-wash-strong: rgba(238, 228, 207, 0.09);
+  --obs-ink: #eee4cf;
+  --obs-muted: #b7b8cb;
+  --obs-lilac: #c1a9e2;
+  --obs-mint: #a5d4bf;
+  --obs-apricot: #f3b272;
+  --obs-brass: #c6aa71;
+  --obs-paper: #ead8b5;
+  --obs-paper-ink: #20263b;
+  --obs-danger: #f1a29a;
+  --obs-space-1: 4px;
+  --obs-space-2: 8px;
+  --obs-space-3: 12px;
+  --obs-space-4: 16px;
+  --obs-space-5: 24px;
+  --obs-space-6: 32px;
+  --obs-radius-sm: 8px;
+  --obs-radius-md: 14px;
+  --obs-radius-lg: 22px;
+  --obs-radius-pill: 999px;
+  /* The Observatory layer sets its own font tokens, so it must resolve to the same
+     self-hosted pairing as the shell or `.obs-shell` would render in host fallbacks. */
+  --obs-font-serif: "Meridian Serif", "Iowan Old Style", Baskerville, Georgia, "Times New Roman", serif;
+  --obs-font-sans: "Meridian Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --obs-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --obs-motion-fast: 120ms;
+  --obs-motion-base: 200ms;
+}
+
+.obs-shell {
+  min-height: 100dvh;
+  margin: 0;
+  background:
+    url("/static/img/meridian/observatory/ink-texture.webp") center / 256px 256px repeat,
+    radial-gradient(140% 90% at 20% -10%, rgba(193, 169, 226, 0.10), transparent 45%),
+    radial-gradient(120% 80% at 95% 10%, rgba(165, 212, 191, 0.06), transparent 45%),
+    var(--obs-bg);
+  color: var(--obs-ink);
+  font-family: var(--obs-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.obs-shell *,
+.obs-shell *::before,
+.obs-shell *::after {
+  box-sizing: border-box;
+}
+
+body.obs-shell {
+  margin: 0;
+}
+
+.obs-header {
+  display: flex;
+  align-items: center;
+  gap: var(--obs-space-4);
+  padding:
+    calc(var(--obs-space-4) + env(safe-area-inset-top))
+    max(var(--obs-space-5), env(safe-area-inset-right))
+    var(--obs-space-4)
+    max(var(--obs-space-5), env(safe-area-inset-left));
+  border-bottom: 1px solid rgba(238, 228, 207, 0.12);
+  background: rgba(23, 35, 52, 0.86);
+  backdrop-filter: blur(8px);
+}
+
+.obs-wordmark {
+  font-family: var(--obs-font-serif);
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--obs-paper);
+}
+
+.obs-settings-link {
+  margin-left: auto;
+  color: var(--obs-muted);
+  font-size: 15px;
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.obs-settings-link:hover {
+  color: var(--obs-ink);
+}
+
+.obs-layout {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) minmax(280px, 420px);
+  gap: var(--obs-space-5);
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--obs-space-5);
+}
+
+.obs-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--obs-space-2);
+  position: sticky;
+  top: var(--obs-space-5);
+  align-self: start;
+}
+
+.obs-nav a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--obs-space-2);
+  padding: var(--obs-space-2) var(--obs-space-3);
+  border-radius: var(--obs-radius-sm);
+  color: var(--obs-muted);
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.obs-nav a:hover {
+  color: var(--obs-ink);
+  background: rgba(193, 169, 226, 0.08);
+}
+
+.obs-nav a[aria-current="page"] {
+  color: var(--obs-lilac);
+  background: rgba(193, 169, 226, 0.10);
+}
+
+.obs-main {
+  min-width: 0;
+}
+
+.obs-kicker {
+  margin: 0 0 var(--obs-space-1);
+  color: var(--obs-lilac);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.obs-page-title {
+  margin: 0;
+  font-family: var(--obs-font-serif);
+  font-size: clamp(2rem, 3.4vw, 2.6rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.obs-subline {
+  max-width: 60ch;
+  margin: var(--obs-space-2) 0 0;
+  color: var(--obs-muted);
+  line-height: 1.55;
+}
+
+.obs-grid {
+  display: grid;
+  gap: var(--obs-space-4);
+}
+
+.obs-panel {
+  padding: var(--obs-space-5);
+  border: 1px solid rgba(238, 228, 207, 0.13);
+  border-radius: var(--obs-radius-lg);
+  background: linear-gradient(180deg, rgba(32, 43, 64, 0.94), rgba(32, 43, 64, 0.82));
+  box-shadow: 0 18px 48px rgba(7, 12, 21, 0.25);
+}
+
+.obs-panel--paper {
+  background:
+    url("/static/img/meridian/observatory/paper-texture.webp") center / 256px 256px repeat,
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 20%),
+    linear-gradient(180deg, var(--obs-paper), #ddc69f);
+  color: var(--obs-paper-ink);
+  border-color: rgba(32, 38, 59, 0.12);
+}
+
+.obs-panel--paper .obs-muted,
+.obs-panel--paper .obs-source,
+.obs-panel--paper .obs-label {
+  color: rgba(32, 38, 59, 0.66);
+}
+
+.obs-section-label {
+  margin: 0 0 var(--obs-space-2);
+  color: var(--obs-mint);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.obs-panel--paper .obs-section-label {
+  color: rgba(32, 38, 59, 0.72);
+}
+
+.obs-amount {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--obs-font-sans);
+  letter-spacing: -0.02em;
+}
+
+.obs-amount--hero {
+  font-size: clamp(2.75rem, 6vw, 3.5rem);
+  font-family: var(--obs-font-serif);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.obs-muted {
+  color: var(--obs-muted);
+}
+
+.obs-source {
+  color: var(--obs-muted);
+  font-size: 13px;
+}
+
+.obs-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--obs-space-2);
+  padding: var(--obs-space-1) var(--obs-space-3);
+  border-radius: var(--obs-radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(193, 169, 226, 0.14);
+  color: var(--obs-lilac);
+}
+
+.obs-tag::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.obs-tag[data-state="fresh"] {
+  background: rgba(165, 212, 191, 0.14);
+  color: var(--obs-mint);
+}
+
+.obs-tag[data-state="stale"],
+.obs-tag[data-state="partial"] {
+  background: rgba(243, 178, 114, 0.16);
+  color: var(--obs-apricot);
+}
+
+.obs-tag[data-state="unavailable"] {
+  background: rgba(241, 162, 154, 0.12);
+  color: var(--obs-danger);
+}
+
+.obs-button {
+  min-height: 44px;
+  padding: var(--obs-space-3) var(--obs-space-4);
+  border: 0;
+  border-radius: var(--obs-radius-md);
+  background: var(--obs-apricot);
+  color: #2c1d0d;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.obs-button:hover {
+  filter: brightness(1.06);
+}
+
+.obs-button:focus-visible,
+.obs-control:focus-visible,
+.obs-nav a:focus-visible,
+.obs-link:focus-visible {
+  outline: 2px solid var(--obs-lilac);
+  outline-offset: 2px;
+}
+
+.obs-button--ghost {
+  background: transparent;
+  color: var(--obs-ink);
+  border: 1px solid rgba(238, 228, 207, 0.25);
+}
+
+.obs-button--danger {
+  background: transparent;
+  color: var(--obs-danger);
+  border: 1px solid rgba(241, 162, 154, 0.35);
+}
+
+.obs-link {
+  color: var(--obs-lilac);
+  text-underline-offset: 2px;
+}
+
+.obs-empty {
+  padding: var(--obs-space-4);
+  border: 1px dashed rgba(238, 228, 207, 0.22);
+  border-radius: var(--obs-radius-md);
+  color: var(--obs-muted);
+  font-size: 15px;
+}
+
+.obs-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Decorative imagery never receives pointer events. */
+.obs-art {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Observatory shell integration.
+   When the Meridian app opts into the Observatory direction by putting
+   `.obs-shell` on <body>, remap the existing editorial tokens to the indigo /
+   parchment / lilac / mint / apricot system. This keeps existing JS, data
+   hooks, and workspace partials working while giving every surface the
+   Observatory character. */
+.obs-shell {
+  --m-canvas: var(--obs-bg);
+  --m-surface: var(--obs-surface);
+  --m-surface-muted: var(--obs-surface-raised);
+  --m-border: rgba(238, 228, 207, 0.13);
+  --m-border-strong: rgba(238, 228, 207, 0.26);
+
+  --m-ink: var(--obs-ink);
+  --m-ink-muted: var(--obs-muted);
+  --m-ink-faint: #9298ad;
+
+  --m-healthy: var(--obs-mint);
+  --m-healthy-wash: rgba(165, 212, 191, 0.14);
+  --m-caution: var(--obs-apricot);
+  --m-caution-wash: rgba(243, 178, 114, 0.14);
+  --m-risk: var(--obs-danger);
+  --m-risk-wash: rgba(241, 162, 154, 0.12);
+  --m-information: var(--obs-lilac);
+  --m-information-wash: rgba(193, 169, 226, 0.14);
+
+  --m-aurora: radial-gradient(
+    120% 90% at 20% 0%,
+    rgba(193, 169, 226, 0.16),
+    transparent 60%
+  );
+
+  --m-forest: #101a28;
+  --m-forest-deep: #0c1420;
+  --m-forest-ink: var(--obs-ink);
+  --m-forest-muted: var(--obs-muted);
+  --m-forest-wash: rgba(193, 169, 226, 0.08);
+
+  --m-elevation-1: 0 1px 2px rgba(5, 9, 17, 0.35), 0 8px 24px rgba(5, 9, 17, 0.28);
+  --m-elevation-2: 0 2px 4px rgba(5, 9, 17, 0.4), 0 4px 12px rgba(5, 9, 17, 0.3);
+  --m-elevation-3: 0 8px 28px rgba(5, 9, 17, 0.5);
+
+  --m-focus-ring: 0 0 0 2px var(--obs-bg), 0 0 0 4px var(--obs-lilac);
+}
+
+.obs-shell [data-meridian-shell] {
+  background: transparent;
+}
+
+
+.obs-shell .m-primary-button {
+  background: var(--obs-apricot);
+  color: #2c1d0d;
+}
+
+.obs-shell .m-secondary-button {
+  background: var(--obs-surface-raised);
+  color: var(--obs-ink);
+  border: 1px solid rgba(238, 228, 207, 0.2);
+}
+
+.obs-shell .m-surface,
+.obs-shell .m-ledger-card,
+.obs-shell .m-selected-summary {
+  background: linear-gradient(180deg, rgba(32, 43, 64, 0.94), rgba(32, 43, 64, 0.82));
+}
+
+.obs-shell .m-workspace-kicker {
+  color: var(--obs-lilac);
+}
+
+.obs-shell .m-section-label {
+  color: var(--obs-lilac);
+}
+
+.obs-shell .m-editorial-headline {
+  color: var(--obs-paper);
+}
+
+.obs-shell .m-editorial-subline {
+  color: var(--obs-muted);
+}
+
+.obs-shell .m-nav {
+  background:
+    radial-gradient(120% 60% at 18% 4%, rgba(193, 169, 226, 0.14), transparent 60%),
+    linear-gradient(180deg, #101a28 0%, #0c1420 100%);
+}
+
+.obs-shell .m-nav-item[aria-current="page"]::before {
+  background: var(--obs-lilac);
+}
+
+/* The concept gives the current workspace a lilac label and glyph in addition to the
+   physical marker, so it reads at a glance without depending on colour alone — the
+   ::before bar above stays the non-colour cue. */
+.obs-shell .m-nav-item[aria-current="page"],
+.obs-shell .m-nav-item[aria-current="page"] [data-nav-icon] {
+  color: var(--obs-lilac);
+}
+
+/* The dock's active item was tinted lilac here. Removed 2026-09-18: the concept marks the
+   current workspace with three cues and no fill — the lilac glyph, the lilac label and a
+   lilac rule under the label — and a tinted block behind the item is a fourth that the
+   concept does not draw. The marker under the label remains the non-colour cue, so the
+   active state still does not depend on colour alone. */
+@media (max-width: 900px) {
+  .obs-shell .m-nav-item[aria-current="page"] {
+    background: none;
+  }
+}
+
+.obs-shell .m-brand {
+  color: var(--obs-paper);
+}
+
+.obs-shell .m-theme-toggle[aria-pressed="true"] .m-theme-toggle-track {
+  background: var(--obs-lilac);
+}
+
+.obs-shell .m-chip[data-state="fresh"] {
+  background: var(--obs-mint);
+  color: #0d2a20;
+}
+
+.obs-shell .m-chip[data-state="stale"] {
+  background: var(--obs-apricot);
+  color: #38240f;
+}
+
+.obs-shell .m-chip[data-state="unavailable"] {
+  background: rgba(238, 228, 207, 0.12);
+  color: var(--obs-muted);
+}
+
+.obs-shell .m-inline-error {
+  color: var(--obs-danger);
+}
+
+/* Ornament in Plan: constellation map behind a real allocation summary. */
+.obs-shell .m-plan-support {
+  position: relative;
+}
+
+.obs-shell .m-plan-support::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: url("/static/img/meridian/observatory/map-ornament.svg") center / contain no-repeat;
+  opacity: 0.28;
+  mix-blend-mode: screen;
+}
+
+.obs-shell .m-plan-support > * {
+  position: relative;
+}
+
+/* Accounts: a quiet constellation behind the command header. It is decorative
+   and never encodes account amounts or connection ownership. */
+.obs-shell .m-accounts-command {
+  position: relative;
+}
+
+.obs-shell .m-accounts-command::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: url("/static/img/meridian/observatory/map-ornament.svg") right center / contain no-repeat;
+  opacity: 0.22;
+  mix-blend-mode: screen;
+}
+
+.obs-shell .m-accounts-command > * {
+  position: relative;
+}
+
+
+/* Plan scenario preview: a quiet read-only instrument. The ornament stays on
+   the map; this card avoids adding more decorative elements. */
+.obs-shell .obs-plan-scenario {
+  margin-top: var(--obs-space-4);
+  padding: var(--obs-space-5);
+  border: 1px solid rgba(238, 228, 207, 0.13);
+  border-radius: var(--obs-radius-lg);
+  background:
+    radial-gradient(120% 70% at 85% 0%, rgba(193, 169, 226, 0.08), transparent 55%),
+    linear-gradient(180deg, rgba(32, 43, 64, 0.92), rgba(32, 43, 64, 0.78));
+}
+
+.obs-shell .obs-plan-scenario .m-section-copy {
+  margin: 0;
+  color: var(--obs-muted);
+  font-size: 14px;
+}
+
+.obs-shell .obs-plan-scenario .obs-plan-scenario-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+  gap: var(--obs-space-5);
+  margin-top: var(--obs-space-4);
+}
+
+.obs-shell .obs-plan-scenario .obs-plan-scenario-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--obs-space-3);
+  align-content: start;
+}
+
+.obs-shell .obs-plan-scenario .obs-plan-scenario-results {
+  padding: var(--obs-space-4);
+  border: 1px solid rgba(238, 228, 207, 0.12);
+  border-radius: var(--obs-radius-md);
+  background: rgba(23, 35, 52, 0.48);
+}
+
+.obs-shell .obs-scenario-readonly-note {
+  margin: 0 0 var(--obs-space-2);
+  color: var(--obs-mint);
+  font-size: 14px;
+}
+
+.obs-shell .obs-scenario-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--obs-space-2) var(--obs-space-4);
+  margin: 0;
+  font-size: 14px;
+}
+
+.obs-shell .obs-scenario-compare dt {
+  color: var(--obs-muted);
+  font-size: 13px;
+}
+
+.obs-shell .obs-scenario-compare dd {
+  margin: 0;
+  color: var(--obs-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.obs-shell .obs-scenario-assumptions {
+  margin: var(--obs-space-3) 0 0;
+  color: var(--obs-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+@media (max-width: 760px) {
+  .obs-shell .obs-plan-scenario .obs-plan-scenario-form {
+    grid-template-columns: 1fr;
+  }
+
+  .obs-shell .obs-plan-scenario .obs-plan-scenario-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .obs-shell .obs-plan-scenario .obs-plan-scenario-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .obs-shell .obs-scenario-compare {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Keep Activity and Accounts quieter than Today: remove glow-heavy gradient
+   and rely on borders plus modest surface tint. */
+.obs-shell .m-activity .m-surface,
+.obs-shell .m-accounts .m-surface {
+  background: rgba(32, 43, 64, 0.78);
+}
+
+
+/* Today command copy follows the selected direction: a clear Today title with
+   the truthful forecast sentence as its orbit subtitle. */
+.obs-shell .obs-today-title {
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+}
+
+.obs-shell .obs-today-orbit {
+  position: relative;
+  margin: 0;
+  max-width: 32ch;
+  color: var(--obs-paper);
+  font-family: var(--obs-font-serif);
+  font-size: clamp(1.55rem, 3.2vw, 2.25rem);
+  line-height: 1.12;
+}
+
+.obs-shell .obs-today-orbit::after {
+  content: "";
+  display: block;
+  width: 120px;
+  height: 10px;
+  margin-top: var(--obs-space-2);
+  border-bottom: 3px solid var(--obs-lilac);
+  border-radius: 50%;
+  transform: rotate(-4deg);
+}
+
+
+/* Today becomes a single Observatory stage on wide screens: the instrument
+   and event rail get the room they have in the concept instead of being
+   compressed beside the Virgil note. */
+@media (min-width: 1101px) {
+  .obs-shell .m-today-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .obs-shell .m-today-primary {
+    width: 100%;
+  }
+
+  .obs-shell .m-today-brief {
+    position: static;
+    justify-self: center;
+    width: min(100%, 760px);
+    margin-top: var(--obs-space-2);
+  }
+}
+
+/* Keyboard/pointer focus plus reduced-motion. */
+@media (prefers-reduced-motion: reduce) {
+  .obs-shell,
+  .obs-shell * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .obs-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .obs-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 600px) {
+  .obs-layout {
+    padding: var(--obs-space-4);
+  }
+
+  .obs-panel {
+    padding: var(--obs-space-4);
+  }
+
+  .obs-wordmark {
+    font-size: 24px;
+  }
+}
+
+/* The Observatory identity has a real light edition, not a second capture of
+   the midnight palette. Geometry and semantic colors stay stable while the
+   canvas, ordinary surfaces, ink hierarchy and borders move to parchment. */
+html[data-theme="light"] .obs-shell {
+  --m-canvas: #f4ecdf;
+  /* The same rule as dark: a surface is the CANVAS, not a lighter tint of it, and
+     separation is drawn with the border tokens below rather than with a fill. These were
+     #fffaf0 (255,250,240) against a canvas of #f4ecdf (244,236,223) -- +11/+14/+17 -- and
+     `--m-surface-muted` was #ead8b5, the paper colour, which made every muted surface a
+     parchment panel. The light edition has no concept of its own to be measured against
+     (all four governing concepts are the midnight palette), so it follows dark's principle
+     rather than inventing a second one. */
+  --m-surface: #f4ecdf;
+  --m-surface-muted: rgba(32, 38, 59, 0.05);
+  --obs-wash: rgba(32, 38, 59, 0.05);
+  --obs-wash-strong: rgba(32, 38, 59, 0.09);
+  --m-border: rgba(32, 38, 59, 0.16);
+  --m-border-strong: rgba(32, 38, 59, 0.3);
+  --m-ink: #20263b;
+  --m-ink-muted: #655d6c;
+  --m-ink-faint: #756d79;
+  --m-healthy: #25644f;
+  --m-healthy-wash: rgba(37, 100, 79, 0.12);
+  --m-caution: #9a4a18;
+  --m-caution-wash: rgba(154, 74, 24, 0.12);
+  --m-risk: #a74444;
+  --m-risk-wash: rgba(167, 68, 68, 0.1);
+  --m-information: #674d86;
+  --m-information-wash: rgba(103, 77, 134, 0.11);
+  --m-elevation-1: 0 1px 2px rgba(52, 40, 24, 0.06), 0 8px 22px rgba(52, 40, 24, 0.08);
+  --m-elevation-2: 0 2px 4px rgba(52, 40, 24, 0.08), 0 10px 28px rgba(52, 40, 24, 0.1);
+  --m-focus-ring: 0 0 0 2px #f4ecdf, 0 0 0 4px #674d86;
+  background:
+    url("/static/img/meridian/observatory/paper-texture.webp") center / 256px 256px repeat,
+    radial-gradient(120% 80% at 10% -10%, rgba(193, 169, 226, 0.16), transparent 48%),
+    #f4ecdf;
+  color: #20263b;
+}
+
+html[data-theme="light"] .obs-shell .m-surface,
+html[data-theme="light"] .obs-shell .m-ledger-card,
+html[data-theme="light"] .obs-shell .m-selected-summary,
+html[data-theme="light"] .obs-shell .m-activity .m-surface,
+html[data-theme="light"] .obs-shell .m-accounts .m-surface {
+  background: rgba(255, 250, 240, 0.9);
+  color: #20263b;
+}
+
+html[data-theme="light"] .obs-shell .m-editorial-headline,
+html[data-theme="light"] .obs-shell .m-workspace-heading,
+html[data-theme="light"] .obs-shell .m-account-name,
+html[data-theme="light"] .obs-shell .m-activity-command h2 {
+  color: #20263b;
+}
+
+html[data-theme="light"] .obs-shell .m-editorial-subline,
+html[data-theme="light"] .obs-shell .m-workspace-subline {
+  color: #655d6c;
+}
+
+html[data-theme="light"] .obs-shell .m-topbar .m-brand,
+html[data-theme="light"] .obs-shell .m-topbar-settings,
+html[data-theme="light"] .obs-shell .m-theme-toggle--compact {
+  color: #20263b;
+}
+
+@media (max-width: 700px) {
+  .obs-shell:has([data-workspace-section="plan"]:not([hidden])) .m-topbar,
+  .obs-shell:has([data-workspace-section="accounts"]:not([hidden])) .m-topbar {
+    min-height: 68px;
+    position: relative;
+    align-items: flex-start;
+    padding-bottom: 14px;
+  }
+
+  .obs-shell:has([data-workspace-section="plan"]:not([hidden])) .m-topbar-date,
+  .obs-shell:has([data-workspace-section="accounts"]:not([hidden])) .m-topbar-date {
+    display: block;
+    position: absolute;
+    left: max(var(--m-space-4), env(safe-area-inset-left));
+    bottom: 5px;
+    color: var(--obs-lilac);
+    font: 600 10px/1.2 var(--obs-font-sans);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+}

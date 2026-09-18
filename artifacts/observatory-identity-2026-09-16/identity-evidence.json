@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "slice": "2026-09-16 handoff step  shared type, header and navigation identity",
+  "authority": {
+    "governing": "docs/project/OBSERVATORY_ASSET_KIT_2026-09-16.md + static/img/meridian/observatory/kit-2026-09-16/",
+    "owner_correction": "The 2026-09-16 handoff and its supplied kit are the implementation specification, not an optional aid.",
+    "composition": {
+      "today": [
+        "06-interactive-observatory-vision.png (functional dial/evidence)",
+        "01-today.png (supporting)"
+      ],
+      "plan": [
+        "02-plan.png"
+      ],
+      "activity": [
+        "03-activity.png"
+      ],
+      "accounts": [
+        "04-accounts.png"
+      ],
+      "settings": [
+        "05-settings.png"
+      ]
+    },
+    "non_governing": "The older Design Atlas does not govern a conflicting layout."
+  },
+  "consuming_revision": "82c5a174550f87370414ae625582b87ba042fd7e",
+  "capture_revision_recorded_by_manifest": "0eae63ed5c9dc8d9a073637294531d656b081697",
+  "capture": {
+    "harness": "scripts/capture_meridian_matrix.py",
+    "app_url": "http://127.0.0.1:8093 (scripts/preview_observatory_dial.py)",
+    "login": " isolated synthetic preview has no authentication",
+    "command": ".venv311/bin/python scripts/capture_meridian_matrix.py --app-url http://127.0.0.1:8093 --output artifacts/observatory-identity-2026-09-16 --concept-dir design/observatory-drafts-2026-09-08 --fixture synthetic-observatory-2026-09-08 --frozen-clock 2026-09-08T09:42:00Z --skip-login --workspaces today plan activity accounts",
+    "records": 40,
+    "workspaces": [
+      "accounts",
+      "activity",
+      "plan",
+      "today"
+    ],
+    "viewports": [
+      "desktop",
+      "mobile",
+      "mobile-air",
+      "mobile-small",
+      "tablet"
+    ],
+    "dprs": [
+      1,
+      3
+    ],
+    "themes": [
+      "dark",
+      "light"
+    ],
+    "total_overflow_px": 0,
+    "total_console_errors": 0,
+    "captured_at": "2026-09-16T05:57:49.130680Z"
+  },
+  "consumed_kit_files": [
+    {
+      "file": "fonts/LibreBaskerville.ttf",
+      "sha256": "05a95421961341c5b2556285e8415df9db27dab4f4abe22b446b3c6a8b916c5d",
+      "matches_kit_manifest": true
+    },
+    {
+      "file": "fonts/SourceSans3.ttf",
+      "sha256": "042fe2cc0b933e328410d7acbd0aa6a1873dca5aef81875f4bc214b08825c7b9",
+      "matches_kit_manifest": true
+    },
+    {
+      "file": "icons/compass.svg",
+      "sha256": "db60e818bbef896202c48403b40e84de59a5d07b2e68a83f3a238819767a6063",
+      "matches_kit_manifest": true
+    },
+    {
+      "file": "icons/map.svg",
+      "sha256": "67a6e177d2788ebf6f5d59f6cd484c70c6e3a537dc5eddee8fa308728543e056",
+      "matches_kit_manifest": true
+    },
+    {
+      "file": "icons/bar-chart.svg",
+      "sha256": "7c96b89a576ef1e955d9b503274b62566f128a1e5148d65435eeaf9016fe91be",
+      "matches_kit_manifest": true
+    },
+    {
+      "file": "icons/person-circle.svg",
+      "sha256": "a485181163a8c91cd1c387d5ae73fe8fd3f84d9c8c5f43c291847f31bb89ee53",
+      "matches_kit_manifest": true
+    }
+  ],
+  "rendered_probe": {
+    "method": "Playwright rendered-property probe against the isolated preview",
+    "desktop_1440x900_dpr1_and_mobile_air_420x912_dpr3": {
+      "navigation_glyphs": "4/4 masked at 20x20, aria-hidden=\"true\", visible labels intact",
+      "active_marker": "lilac bar 3px on the rail / 46.9px on the dock; active label lilac",
+      "wordmark": "accent pseudo-element present; computed family Meridian Serif",
+      "fonts": "Meridian Serif loaded, Meridian Sans loaded",
+      "overflow_px": 0,
+      "page_errors": 0
+    }
+  },
+  "verification": {
+    "focused_tests": "tests/meridian/test_observatory_identity. 9 checks, RED then GREEN",
+    "full_suite": ".venv311/bin/python -m pytest -q --ignore=tests/ 1131 passed, 1 skipped",
+    "ruff": "clean on both changed test files",
+    "diff_check": "git diff --check clean",
+    "secret_scan": "no matches in changed UI files"
+  },
+  "limits": [
+    "Presentation-only: no route, workspace geometry, data, financial, provider or authority change.",
+    "Settings is absent from the isolated preview (404), so no Settings parity is claimed for 05-settings.",
+    "The manifest records the working-tree parent revision at capture time; the consuming revision above is the commit that introduced the reviewed source.",
+    "Full-resolution PNGs are retained locally as archival evidence and are deliberately not committed.",
+    "No deployment, live acceptance or governed parity claim is made by this record."
+  ]
+}

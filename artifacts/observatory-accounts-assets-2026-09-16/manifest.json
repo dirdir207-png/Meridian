@@ -1,0 +1,204 @@
+{
+  "captures": [
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-assets-2026-09-16/accounts-desktop-light-full.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "2aae55c8a52996108384ecbc984f2876283fcef6",
+      "captured_at": "2026-09-16T07:43:58.259531Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-desktop-light-viewport.png",
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-desktop-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-assets-2026-09-16/accounts-desktop-dark-full.png",
+      "viewport": "desktop",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "2aae55c8a52996108384ecbc984f2876283fcef6",
+      "captured_at": "2026-09-16T07:43:59.764211Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-desktop-dark-viewport.png",
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-desktop-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-assets-2026-09-16/accounts-tablet-light-full.png",
+      "viewport": "tablet",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "2aae55c8a52996108384ecbc984f2876283fcef6",
+      "captured_at": "2026-09-16T07:44:01.022968Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-tablet-light-viewport.png",
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-tablet-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-assets-2026-09-16/accounts-tablet-dark-full.png",
+      "viewport": "tablet",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "2aae55c8a52996108384ecbc984f2876283fcef6",
+      "captured_at": "2026-09-16T07:44:02.290883Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-tablet-dark-viewport.png",
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-tablet-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-light-full.png",
+      "viewport": "mobile",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "2aae55c8a52996108384ecbc984f2876283fcef6",
+      "captured_at": "2026-09-16T07:44:04.694032Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-light-viewport.png",
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-dark-full.png",
+      "viewport": "mobile",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "2aae55c8a52996108384ecbc984f2876283fcef6",
+      "captured_at": "2026-09-16T07:44:07.349524Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-dark-viewport.png",
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-small-light-full.png",
+      "viewport": "mobile-small",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "2aae55c8a52996108384ecbc984f2876283fcef6",
+      "captured_at": "2026-09-16T07:44:09.498535Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-small-light-viewport.png",
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-small-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-small-dark-full.png",
+      "viewport": "mobile-small",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "2aae55c8a52996108384ecbc984f2876283fcef6",
+      "captured_at": "2026-09-16T07:44:11.729081Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-small-dark-viewport.png",
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-small-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-air-light-full.png",
+      "viewport": "mobile-air",
+      "theme": "light",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "2aae55c8a52996108384ecbc984f2876283fcef6",
+      "captured_at": "2026-09-16T07:44:14.139787Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-air-light-viewport.png",
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-air-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/04-accounts.png",
+      "current_path": "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-air-dark-full.png",
+      "viewport": "mobile-air",
+      "theme": "dark",
+      "fixture": "synthetic-observatory-2026-09-08",
+      "frozen_clock": "2026-09-08T09:42:00Z",
+      "ui_state": "accounts:default",
+      "full_page": true,
+      "commit": "2aae55c8a52996108384ecbc984f2876283fcef6",
+      "captured_at": "2026-09-16T07:44:16.706652Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-air-dark-viewport.png",
+        "artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-air-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    }
+  ]
+}

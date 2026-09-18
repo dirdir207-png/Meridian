@@ -1,0 +1,132 @@
+<div class="m-today" data-today-root>
+  <div class="m-today-layout">
+    <div class="m-today-primary">
+      <header class="m-command-header">
+        <div class="m-command-top">
+          <p class="m-workspace-kicker" data-today-date>Today</p>
+          <button class="m-primary-button" type="button" data-open-advisor>Ask Virgil</button>
+        </div>
+        <h2 class="obs-today-title">Today</h2>
+        {# The concept's lilac wavy rule sits between the title and the orbit subline.
+           Decorative art, so it stays out of the accessibility tree. #}
+        <span class="m-title-rule" aria-hidden="true"></span>
+        <p class="obs-today-orbit-heading">Your next orbit.</p>
+      </header>
+
+      <div class="m-observatory-overview m-visually-hidden">
+      <dl class="m-observatory-safe m-sts" data-today-safe>
+        <dt class="m-sts-label" data-sts-label>Safe to spend</dt>
+        <dd class="m-sts-figure-block">
+          <span class="m-sts-figure" data-sts-figure aria-live="polite">—</span>
+          <span class="m-sts-change" data-sts-change hidden></span>
+          <span class="m-sts-note" data-sts-note hidden></span>
+        </dd>
+        <dd class="m-observatory-safe-horizon" data-sts-horizon>Horizon unavailable</dd>
+        <dd class="m-observatory-safe-observed" data-sts-observed></dd>
+
+        <dd class="m-sts-chip-row">
+          <span class="m-chip" data-freshness data-state="unavailable"></span>
+        </dd>
+      </dl>
+      <aside class="m-observatory-note">
+        <div class="m-observatory-moon" aria-hidden="true"></div>
+        <p class="obs-today-orbit" data-editorial-headline>Your forecast is unavailable.</p>
+      </aside>
+      </div>
+
+
+      <section class="m-observatory-dial-wrap" aria-labelledby="observatory-dial-heading" data-observatory-dial-wrap>
+        <h2 class="m-visually-hidden" id="observatory-dial-heading">Explore upcoming money moments</h2>
+        <div data-observatory-dial data-model-url="/api/meridian/dial"></div>
+      </section>
+
+      <div class="m-observatory-advice">
+        <button class="obs-control" type="button" data-open-advisor>Ask Virgil about this plan</button>
+      </div>
+      <a class="obs-button obs-explore-plan" href="/meridian?workspace=plan">
+        Explore my plan
+        <span aria-hidden="true">→</span>
+      </a>
+
+
+
+      <div class="m-today-hero" data-today-hero>
+        <section class="m-surface m-beacon-card" aria-labelledby="beacon-heading">
+          <p class="m-section-label">Beacon</p>
+          <h3 id="beacon-heading" data-beacon-title>Your plan is steady</h3>
+          <div class="m-beacon-change">
+            <strong data-beacon-summary>No urgent changes have been detected.</strong>
+            <p data-beacon-detail>Meridian will surface material changes here with their evidence.</p>
+          </div>
+          <div class="m-evidence-links" data-beacon-evidence hidden></div>
+          <button class="m-secondary-button" type="button" data-open-beacon>See the evidence</button>
+        </section>
+      </div>
+
+      <section class="m-metric-grid" aria-label="Financial position" data-metric-grid>
+        <button type="button" class="m-surface m-metric m-metric--link" data-supporting-metric data-go-workspace="plan" aria-label="View next expected income in Plan">
+          <p class="m-section-label">Coming in</p>
+          <strong data-coming-in>—</strong>
+          <span data-coming-in-caption>Next expected income</span>
+          <span class="m-metric-hint">View in Plan</span>
+        </button>
+        <button type="button" class="m-surface m-metric m-metric--link" data-supporting-metric data-go-workspace="plan" aria-label="View commitments in Plan">
+          <p class="m-section-label">Committed</p>
+          <strong data-committed>—</strong>
+          <span>Known obligations</span>
+          <span class="m-metric-hint">View in Plan</span>
+        </button>
+        <button type="button" class="m-surface m-metric m-metric--link" data-supporting-metric data-go-workspace="plan" aria-label="View runway forecast in Plan">
+          <p class="m-section-label">Runway</p>
+          <strong data-runway>—</strong>
+          <span data-runway-note>Confidence unavailable</span>
+          <span class="m-metric-hint">View in Plan</span>
+        </button>
+      </section>
+
+      {# R20: coherent cash / bills / goals breakdown + setup + next run. #}
+      <section class="m-surface m-today-breakdown" aria-label="Cash, bills and goals" data-today-breakdown hidden>
+        <div class="m-today-breakdown-row">
+          <div><p class="m-section-label">Bills</p><strong data-breakdown-bills>—</strong></div>
+          <div><p class="m-section-label">Goals</p><strong data-breakdown-goals>—</strong></div>
+          <div><p class="m-section-label">Next run</p><strong data-breakdown-nextrun>—</strong></div>
+        </div>
+        <p class="m-state-line" data-breakdown-setup></p>
+      </section>
+
+      <div class="m-today-support">
+        <section class="m-surface m-inputs">
+          <h3 class="m-section-label">What this includes</h3>
+          <ul class="m-input-list" data-today-inputs></ul>
+          <p class="m-today-reason" data-today-reason hidden></p>
+        </section>
+
+        <section class="m-surface m-upcoming">
+          <h3 class="m-section-label">Upcoming money moments</h3>
+          <p class="m-empty-note" data-upcoming-empty>No scheduled money moments yet.</p>
+          <ul class="m-input-list" data-upcoming-list></ul>
+        </section>
+      </div>
+    </div>
+
+    <aside class="m-today-brief" data-today-brief aria-labelledby="today-brief-heading">
+      <p class="m-section-label">Virgil</p>
+      <h3 id="today-brief-heading">Virgil's brief</h3>
+      <p class="m-brief-intro">Your plan absorbs the visible horizon. One connection is worth reviewing.</p>
+      <div class="m-brief-insight">
+        <span aria-hidden="true"></span>
+        <div>
+          <strong data-brief-title>A useful connection</strong>
+          <p data-brief-summary>Nothing needs your attention right now.</p>
+        </div>
+      </div>
+      <div class="m-evidence-links" data-brief-evidence hidden></div>
+      <button class="m-primary-button" type="button" data-open-advisor>Explore scenario</button>
+      <p class="m-brief-footnote">Every suggestion links back to source evidence.</p>
+    </aside>
+  </div>
+
+  <p class="m-inline-error" data-today-error role="alert" hidden></p>
+
+  <div data-memory-today aria-label="Today memory items"></div>
+</div>

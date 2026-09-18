@@ -1,0 +1,97 @@
+<div class="m-inspector-inner" data-inspector-body>
+  <div class="m-inspector-head">
+    <span class="m-section-label">Transaction</span>
+    <button
+      type="button"
+      class="m-icon-button"
+      data-inspector-close
+      data-sheet-initial-focus
+      aria-label="Close transaction details"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+        <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="m-inspector-scroll">
+    <p class="m-inspector-kicker">Observation record</p>
+    <h2 class="m-inspector-title" data-inspector-title tabindex="-1"></h2>
+
+    <p class="m-inspector-provider-line">
+      <span data-inspector-provider></span>
+      <span class="m-chip" data-freshness data-state="unavailable"></span>
+    </p>
+
+    <p class="m-inspector-source-stamp">
+      <span class="m-section-label">Source observation</span>
+      <span data-inspector-observed>—</span>
+    </p>
+
+
+    <dl class="m-facts">
+      <div class="m-fact" data-fact="merchant"><dt>Merchant</dt><dd></dd></div>
+      <div class="m-fact" data-fact="description"><dt>Raw description</dt><dd></dd></div>
+      <div class="m-fact m-fact-amount" data-fact="amount"><dt>Amount</dt><dd data-inspector-amount></dd></div>
+      <div class="m-fact" data-fact="date"><dt>Date</dt><dd></dd></div>
+      <div class="m-fact" data-fact="status"><dt>Status</dt><dd></dd></div>
+      <div class="m-fact" data-fact="account"><dt>Account</dt><dd></dd></div>
+    </dl>
+
+    <section class="m-inspector-section" aria-label="Classification">
+      <h3 class="m-section-label">Classification</h3>
+      <div class="m-assignment">
+        <span class="m-assignment-label">AI assignment</span>
+        <span class="m-assignment-value">
+          <span data-category-state>Unassigned</span>
+          <span class="m-confidence" data-confidence-state>Confidence unavailable</span>
+        </span>
+      </div>
+      <p class="m-state-line" data-classification-evidence>No classification evidence</p>
+      <div class="m-inspector-fact">
+        <span class="m-inspector-fact-label">Matched bill</span>
+        <span class="m-inspector-fact-value" data-commitment-state>No linked commitment</span>
+      </div>
+    </section>
+
+    <section class="m-inspector-section" aria-label="Recurrence">
+      <h3 class="m-section-label">Recurrence</h3>
+      <p class="m-state-line" data-recurrence-state>No recurrence detected</p>
+    </section>
+
+    <section class="m-inspector-section" aria-label="Anomalies">
+      <h3 class="m-section-label">Anomalies</h3>
+      <p class="m-state-line" data-anomaly-state>No anomalies detected</p>
+    </section>
+
+    <section class="m-inspector-section" aria-label="Corrections">
+      <h3 class="m-section-label">Corrections</h3>
+      <p class="m-state-line" data-correction-state>No pending corrections</p>
+    </section>
+
+    <section class="m-inspector-section" aria-label="Related transfers">
+      <h3 class="m-section-label">Related transfers</h3>
+      <p class="m-state-line" data-transfers-state>No related transfers</p>
+    </section>
+
+    <section class="m-inspector-section" aria-label="Notes">
+      <h3 class="m-section-label">Notes</h3>
+      <p class="m-state-line" data-notes-state>No notes yet</p>
+    </section>
+
+    <section class="m-inspector-section" aria-label="Forecast impact">
+      <h3 class="m-section-label">Forecast impact</h3>
+      <p class="m-state-line" data-impact-state>
+        Impact appears once Meridian links this transaction to your commitments.
+      </p>
+    </section>
+
+    <section class="m-inspector-section" aria-label="Document evidence" data-document-evidence>
+      <h3 class="m-section-label">Document evidence</h3>
+      <div class="m-evidence-list" data-evidence-list>
+        <p class="m-state-line">No linked documents</p>
+      </div>
+      <p class="m-state-line m-retention-state" data-retention-state></p>
+    </section>
+  </div>
+</div>
