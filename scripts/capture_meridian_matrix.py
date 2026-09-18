@@ -93,11 +93,17 @@ def capture_matrix(
     skip_login: bool = False,
     ui_state: str = "default",
     ui_state_selector: str | None = None,
+    concept_file: str | None = None,
 ) -> list[dict]:
     """Capture the governed matrix.
 
     ``workspaces`` narrows the run (Track D accepts one workspace at a time);
-    default is every governed workspace. ``skip_login`` targets the ISOLATED
+    default is every governed workspace. ``concept_file`` overrides the concept
+    filename inside ``concept_dir`` for a run whose authority is not the default
+    draft set -- the 2026-09-18 extension, for instance, names its concepts
+    ``timeline``/``review``/``settings``/``virgil`` rather than 01-04. Recording a
+    path that does not exist would make the evidence unauditable, so the caller
+    can now name the image it actually compared against. ``skip_login`` targets the ISOLATED
     SYNTHETIC preview (`scripts/preview_observatory_dial.py`), which
     deliberately has no authentication, reads no .env, holds no credentials and
     makes no provider call. That is the correct target for fidelity captures,
@@ -203,7 +209,9 @@ def capture_matrix(
                             current = full_capture
                             artifacts.append(full_capture)
                         metadata = CaptureMetadata(
-                            concept_path=str(concept_dir / CONCEPT_FILES[workspace]),
+                            concept_path=str(
+                                concept_dir / (concept_file or CONCEPT_FILES[workspace])
+                            ),
                             current_path=str(current),
                             viewport=viewport_name,
                             theme=theme,
@@ -253,6 +261,14 @@ def main() -> None:
         "--ui-state-selector",
         default=None,
         help="CSS selector clicked before capture to reach a non-default state",
+    )
+    parser.add_argument(
+        "--concept-file",
+        default=None,
+        help=(
+            "concept filename inside --concept-dir to record as the comparison "
+            "authority (default: the draft-set mapping for each workspace)"
+        ),
     )
     parser.add_argument(
         "--skip-login",

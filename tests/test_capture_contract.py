@@ -78,6 +78,20 @@ def test_capture_script_maps_workspaces_to_governing_concept_files():
         assert concept in source
 
 
+def test_capture_can_record_a_concept_outside_the_default_draft_set():
+    """A run whose authority is not the 01-04 draft set must record what it used.
+
+    The 2026-09-18 extension names its concepts timeline/review/settings/virgil, so
+    defaulting the manifest to 03-activity.png recorded a path that did not exist --
+    evidence that cannot be audited. The override is additive: without it the
+    per-workspace draft mapping still applies.
+    """
+    source = __import__("pathlib").Path("scripts/capture_meridian_matrix.py").read_text()
+
+    assert "concept_file or CONCEPT_FILES[workspace]" in source
+    assert '"--concept-file"' in source
+
+
 def test_full_page_capture_unpins_the_viewport_height_shell():
     """Guard a regression that silently shrank every mobile full-page artifact.
 
