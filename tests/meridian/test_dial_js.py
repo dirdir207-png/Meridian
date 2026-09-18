@@ -374,6 +374,27 @@ def test_dial_connector_runs_use_real_dial_and_row_geometry():
     assert "overflow: hidden" in css
 
 
+def test_dial_connector_runs_never_target_a_row_the_rail_does_not_show():
+    """The owner reported runs "running straight down connecting to nothing, several
+    lines". Reproduced 2026-09-18 with a 14-event horizon: the rail is internally
+    scrollable, so 11 of the 14 rows sat below the rail's visible box while every one of
+    them still got a run. Those runs left the dial, ran down past the rail, and were cut
+    off by the layer's own `overflow: hidden` in mid-air -- a line to nowhere.
+
+    The guard is twofold: a run is only drawn for a row whose centre is inside the rail's
+    visible box, and the rail re-runs the connectors on scroll so the runs that remain
+    keep following their rows instead of staying where those rows used to be."""
+    js = _read("static/js/meridian/dial.js")
+    # The rail's visible box is read, and each row's centre is tested against it.
+    assert 'panel.querySelector(".obs-dial-events")' in js
+    assert "rail.getBoundingClientRect()" in js
+    assert "rowMidY < railBox.top || rowMidY > railBox.bottom" in js
+    # Scrolling the rail must re-anchor the runs. Bound where the rail is created, so the
+    # listener is discarded with the element that update() replaces.
+    assert '"scroll"' in js
+    assert "renderConnectors(state, container)" in js
+
+
 def test_evidence_ticket_uses_the_supplied_shaped_asset():
     """Nuance: tickets use shaped silhouettes, layered hairline borders and subtle
     fibrous paper, with corners fixed as text reflows. The kit's parchment-ticket.png

@@ -65,7 +65,45 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (Accounts: supplied archive-building asset, OS-039 close-out) | `tests/meridian/test_accounts_assets_strip.py`, `templates/meridian/partials/accounts.html`, `static/img/meridian/observatory/ASSET_MANIFEST.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md`, `artifacts/observatory-accounts-building-2026-09-18/**` | 2026-09-18 | **released at this commit**. Reconciles the owner-supplied `accounts-ticket-building.png` (committed by the parallel `builder-trackd` lane at `0b8a3ba`) and closes OS-039. That lane swapped the asset in `accounts.css` but left `test_accounts_assets_strip.py` asserting the *old* asset, so the suite was **red on `HEAD`**; this row fixes that guard while preserving its reuse-restraint intent, and corrects the stale comment and docs that still described `observatory-landscape.png` as the Accounts vignette. `accounts.css` and the asset itself are **not** touched — that lane's declared scope stands. **No** route, data, financial or authority change. |
 
+| Builder (Today: OS-036 connector runs, and the reverted instrument centring) | `static/js/meridian/dial.js`, `static/css/meridian/dial.css`, `tests/meridian/test_dial_js.py`, `tests/browser/test_dial_fidelity.py`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md` | 2026-09-18 | **released at this commit**. Track D Today: reproduces and fixes OS-036 (connector runs drew for rows the scrollable rail does not show, leaving dashed lines cut off in mid-air) and reverts the `align-self: center` that `5c732f9` added to the instrument, which did not fix the owner's report and made the dial's position depend on the event-list length. Turns 3 of the 9 pre-existing `tests/browser` failures green. **No** route, data, financial, provider or authority change; presentation only. |
+
 ## Log (append only — newest first)
+
+### 2026-09-18 — Builder (Today dial) — OS-036 reproduced and fixed; the instrument centring reverted
+
+Claimed `dial.js`, `dial.css`, the two dial test files and the docs.
+
+**OS-036 was not a false alarm.** It was recorded as "could not reproduce; needs the owner's data", with the
+long-event-list case named as the untested candidate. That candidate was the answer. `renderConnectors` drew a
+run for every event in the horizon on the assumption that every row had somewhere on screen to land, but the
+rail is internally scrollable: with a 14-event horizon its content is 1591px inside a 330px box, and 11 of the
+14 rows sat below the visible area while still receiving a run. Those runs ran to `y=1754` and were cut off by
+the connector layer's `overflow: hidden` at `y=746.9` — dashed lines to nowhere, exactly as reported.
+
+The fix is twofold and both halves are needed: only rows whose centre is inside the rail's visible box get a
+run, and the rail re-runs `renderConnectors` on scroll so the survivors keep following their rows. The scroll
+listener is bound where the rail is created, so it dies with the element `update()` replaces rather than
+needing its own teardown. 14 runs became 3, each exactly on its own visible row, and scrolling re-anchors to
+the newly visible rows with none off-screen. The behavioural guard was checked against the unfixed code and
+**fails** there (14 runs for 11 hidden rows), so it is a real guard.
+
+**A previous "fix" in this area is reverted.** `5c732f9` added `align-self: center` to the instrument and
+recorded it as balancing the dial's vertical space. Measured, it does not: the owner's 29px above / 233px
+below only becomes 0/262, because the void is the **second** panel row (controls + evidence ticket), which
+`align-self` cannot reach. What it does do is make the dial's vertical position a function of the event count
+— at 390px a 12-event horizon centres a 240px dial in a 300px row and pushes it 30px down. Reverted. Its
+removal then exposed the other half of the same guard, `rail.height <= dial.height + 48`, which the rail's
+`calc(100vw - 90px)` cap overshot by 12px at every governed mobile width; the cap is now derived from the guard
+(`calc(100vw - 102px)`, with the derivation written into the CSS).
+
+**Net effect:** 3 of the 9 pre-existing `tests/browser/test_dial_fidelity.py` failures are green. The other 6
+are unrelated and named rather than waved at: 4 are the topbar's theme-toggle label measuring 20.86px at
+390/430px where the test wants `<= 1px`, and 2 demand 10px of clearance between the dial wrap and the rail
+where the design deliberately spends the full 12px column gap — a conflict between the test's expectation and
+a documented clearance decision, which needs re-deciding rather than silently satisfying.
+
+**Test state:** non-browser suite 1182 passed, 1 skipped. `ruff` clean on tracked source; `git diff --check`
+clean. No route, data, financial, provider or authority change. Not deployed.
 
 ### 2026-09-18 — Builder (Accounts) — the supplied archive-building asset, and a red suite left behind
 

@@ -53,6 +53,59 @@ left-clipping regression (80px bleed clipped 64px, ~20% of the instrument; now 0
 - Temporary review tooling lives in untracked `tmp/probe_*.py`; `artifacts/` holds all captures and the Astra
   package and is untracked by convention.
 
+## OS-036 reproduced at last, and the instrument centring reverted (2026-09-18)
+
+**The connector bug is real, and the missing condition was the one recorded as untested: a longer event
+list.** `renderConnectors` drew a run for every event in the horizon, on the assumption that every row had
+somewhere on screen to land. The rail (`.obs-dial-events`) is internally scrollable, so with a 14-event
+horizon its content is **1591px** tall inside a **330px** client box, and **11 of those 14 rows** sat below
+the rail's visible area while still receiving a run. Those runs left the dial, ran down past the rail to
+`y=1754`, and were cut off by the connector layer's own `overflow: hidden` at `y=746.9` — dashed lines
+stopping in mid-air. That is the owner's *"running straight down connecting to nothing, several lines"*.
+
+Fixed in two parts: a run is drawn **only** when its row's centre is inside the rail's visible box, and the
+rail re-runs `renderConnectors` **on scroll** so the surviving runs keep following their rows. Bound where
+the rail is created, so the listener is discarded with the element `update()` replaces — no separate binding
+to keep in sync. After the fix the same page draws **3 runs, each ending exactly on its own visible row**,
+and scrolling to the middle and the bottom re-anchors to `ev-7/8/9` and `ev-11/12/13` with every run still on
+a visible row.
+
+The behavioural guard was verified to **fail without the fix** (`14 runs for 11 hidden rows`), so it catches
+the regression rather than describing it.
+
+**The instrument centring is reverted, and the earlier OS-035 verdict corrected.** Commit `5c732f9` added
+`align-self: center` to the instrument to balance the space around the dial. Measured, it does not do that:
+the documented 29px above / 233px below only becomes 0/262, because the void the owner is looking at is the
+**second panel row** (controls + evidence ticket), which `align-self` cannot reach. What it does do is make
+the dial's vertical position depend on the **number of events**: at 390px a 12-event horizon centres a 240px
+dial in a 300px row and pushes it 30px down — exactly what
+`test_long_event_list_does_not_push_dial_down_or_split_amounts` fails on. A layout whose position moves with
+the list length is the regression, not the fix. Removing it, plus the bound below, turned **3 of the 9**
+pre-existing `tests/browser` failures green.
+
+Removing the centring exposed the second half of the same test, `rail.height <= dial.height + 48`. The rail
+was capped at `calc(100vw - 90px)`, 12px taller than that bound at every governed mobile width. The cap is
+now **derived** rather than guessed: the dial's height equals its wrap's width, which is the panel width
+minus the 130px callout column minus the 12px gap plus the 24px bleed; the panel is `100vw - 32px`, so the
+dial is `100vw - 150px` and the bound `+ 48px` gives `calc(100vw - 102px)` — 288/318/328px against dials of
+240/270/280px at 390/420/430px.
+
+**Still open, and not fixed here.** The owner's actual complaint — a large void under the dial — is a
+composition question, not a centring one. The dial is **63.6%** of viewport width against the concept's
+**82.5%**, and the callout column is a hard **130px** floor, so closing that needs the callouts moved rather
+than a CSS value changed. It is escalated for the owner rather than guessed at.
+
+Of the 9 pre-existing `tests/browser/test_dial_fidelity.py` failures, **3 are now green**. The remaining 6 are
+**unrelated to this work** and recorded precisely rather than left vague: **4** are
+`test_dial_layout_in_actual_template_and_stylesheets` failing on the topbar's theme-toggle label being
+**20.86px** wide at 390/430px where the test requires `<= 1px` (a topbar concern, not the dial); **2** are
+`test_iphone_air_dial_and_right_callouts_have_separate_hit_areas` requiring **10px** of clearance between the
+dial wrap's right edge and the rail, where the current design deliberately spends the full 12px column gap
+and lands at 0px — the ring meets the column's box without crossing any callout text, so the test's
+expectation and the documented clearance decision conflict and one of them has to be re-decided.
+
+Verified: non-browser suite **1182 passed, 1 skipped**; `ruff` clean; `git diff --check` clean.
+
 ## The supplied Accounts illustration, and the red suite it left behind (2026-09-18)
 
 **What arrived.** The owner supplied `static/img/meridian/observatory/accounts-ticket-building.png` — "a new asset

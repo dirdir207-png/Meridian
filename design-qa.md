@@ -24,6 +24,31 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Today dial — the runs to nowhere, and the centring that was reverted (2026-09-18)
+
+**The owner's connector report is confirmed, and it only appears once the horizon is long enough to scroll
+the rail.** With 14 events the rail's content is **1591px** in a **330px** box; before the fix all 14 rows got
+a run and **11** of them were below the rail's visible area, so those runs left the dial, ran past the rail to
+`y=1754`, and were sliced off by the connector layer's own `overflow: hidden` at `y=746.9`. Visually: dashed
+lines descending from the dial and simply stopping. That is *"connecting to nothing, several lines"*.
+
+A run is now drawn only when its own row's centre is inside the rail's visible box, and the rail re-anchors
+the runs on scroll. 14 runs became **3**, each ending exactly on its visible row, and scrolling re-anchors to
+the newly visible rows (`ev-7/8/9` mid, `ev-11/12/13` at the bottom) with none left off-screen.
+
+**The centring added on 2026-09-16 is reverted.** It balanced the dial *within its grid row*, which is not
+what the owner reported: the void is the second panel row (controls + evidence ticket), which no `align-self`
+can reach. Worse, it tied the dial's vertical position to the event count — at 390px a 12-event horizon
+pushes a 240px dial 30px down a 300px row — so the layout moved as the list grew. The dial sits at its row's
+top again, and the rail's cap is now derived from the guard `rail.height <= dial.height + 48`
+(`calc(100vw - 102px)`) instead of the 12px-overshooting `calc(100vw - 90px)`.
+
+**What is NOT claimed:** the large void under the dial is still there and is a composition question — the
+dial is 63.6% of viewport width against the concept's 82.5%, and the callout column is a hard 130px floor.
+Fixing it means relocating the callouts, which is the owner's decision, not a tweak. 3 of the 9 pre-existing
+browser failures went green with this work; the other 6 are unrelated (4 are the topbar theme-toggle label,
+2 are a dial/rail clearance expectation that conflicts with the documented clearance decision).
+
 ## Accounts — the supplied archive-building illustration (2026-09-18)
 
 ![Accounts mobile-air dark, the supplied archive-building ticket illustration](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-building-2026-09-18/accounts-mobile-air-dark-viewport.png)

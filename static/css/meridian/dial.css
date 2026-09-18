@@ -952,15 +952,27 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
     align-self: center;
   }
 
-  /* The grid ITEM is the instrument, not the wrap inside it -- aligning the wrap did
-     nothing (verified: the gap stayed 0px above / 262px below). The panel row is as tall
-     as the taller column, which is the event list, so `align-items: start` pinned the
-     instrument to the top of that row. Centring the instrument balances the space. */
-  [data-observatory-dial] .obs-dial-instrument {
-    align-self: center;
-  }
+  /* The instrument stays at the top of its row (`align-items: start` on the panel), so
+     the dial begins level with the first callout instead of floating down the row.
+
+     An `align-self: center` on this grid item was tried here and is REVERTED, for two
+     measured reasons. It did not fix the owner's report -- the documented 29px above /
+     233px below becomes 0/262, because the void the owner is looking at is the SECOND
+     panel row (controls + evidence ticket), which `align-self` cannot reach. And it made
+     the dial's vertical position depend on how many events the horizon holds: at 390px
+     a 12-event horizon centres a 240px dial in a 300px row and pushes it 30px down,
+     which is exactly what `test_long_event_list_does_not_push_dial_down_or_split_amounts`
+     fails on. A layout whose position moves with the list length is the regression.
+     The owner's real gap is a composition question, recorded in the ledger. */
   .obs-dial-center { width: 56%; }
-  .obs-dial-events { z-index: 3; align-self: start; max-height: calc(100vw - 90px); }
+  /* The orbit rail must stay bounded beside the dial, not tower over it. Derived from the
+     chain, not guessed: the dial's height equals its wrap's width, which is the panel
+     width minus the 130px callout column minus the 12px gap plus the 24px bleed; the
+     panel is `100vw - 32px`, so the dial is `100vw - 150px`. The guard is
+     `rail.height <= dial.height + 48`, so the cap is `100vw - 150px + 48px = 100vw - 102px`.
+     At 390/420/430px that is 288/318/328px against dials of 240/270/280px -- inside the
+     bound at each, where the previous `- 90px` overflowed it by 12px. */
+  .obs-dial-events { z-index: 3; align-self: start; max-height: calc(100vw - 102px); }
   .obs-event-list--orbit { grid-template-columns: 1fr !important; gap: 16px; }
   .obs-event-list--orbit .obs-event-item { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 3px 7px; padding: 5px 0; align-items: start; }
   .obs-event-list--orbit .obs-event-kind { width: 30px; height: 30px; min-width: 30px; grid-row: 1; }

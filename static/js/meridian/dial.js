@@ -598,6 +598,11 @@ function renderEventList(state, container) {
   wrap.tabIndex = 0;
   wrap.setAttribute("role", "region");
   wrap.setAttribute("aria-label", "Upcoming money moments; scroll for more events");
+  // The rail scrolls independently of the panel, so the runs must follow it: without
+  // this, scrolling left every run pointing at the position its row used to occupy.
+  // This element is replaced on every update(), so the listener is discarded with it
+  // and there is no separate binding to keep in sync.
+  wrap.addEventListener("scroll", () => renderConnectors(state, container), { passive: true });
 
   const heading = document.createElement("h3");
   heading.className = "obs-dial-date-heading";
@@ -709,6 +714,15 @@ function renderConnectors(state, container) {
   const originX = svgBox.left - panelBox.left;
   const originY = svgBox.top - panelBox.top;
 
+  // The rail is internally scrollable (`max-height: calc(100vw - 90px)`), so with a long
+  // horizon a row can sit in layout far below what the rail actually shows. A run to a
+  // row the reader cannot see is a line to nowhere: it leaves the dial, runs down past
+  // the rail, and is cut off by the layer's own `overflow: hidden` in mid-air. Only rows
+  // whose centre is inside the rail's visible box get a run; the rest appear as soon as
+  // the reader scrolls them into view, because the rail re-runs this on scroll.
+  const rail = panel.querySelector(".obs-dial-events");
+  const railBox = rail ? rail.getBoundingClientRect() : null;
+
   const seen = new Set();
   for (const event of state.model.events) {
     if (event.date < state.model.today || event.date > state.model.horizonEnd) continue;
@@ -722,6 +736,8 @@ function renderConnectors(state, container) {
     const sx = originX + point.x * scale;
     const sy = originY + point.y * scale;
     const rowBox = row.getBoundingClientRect();
+    const rowMidY = rowBox.top + rowBox.height / 2;
+    if (railBox && (rowMidY < railBox.top || rowMidY > railBox.bottom)) continue;
     const tx = rowBox.left - panelBox.left - 4;
     const ty = rowBox.top - panelBox.top + rowBox.height / 2;
     // A run needs somewhere to go; skip rather than draw backwards through the dial.

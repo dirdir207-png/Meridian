@@ -289,3 +289,140 @@ def test_connector_runs_start_on_the_dial_and_end_at_their_own_row(dial_page):
         assert run["onDial"], "a run does not start on the dial"
         assert abs(run["endX"] - (run["rowLeft"] - 4)) <= 1.5, "a run does not end at its own row"
         assert abs(run["endY"] - run["rowMidY"]) <= 1.5, "a run does not end at its row midline"
+
+
+def _long_horizon_model(count):
+    """A horizon long enough that `.obs-dial-events` genuinely overflows and scrolls."""
+    events = []
+    names = ["Electric", "Internet", "Rent", "Payday", "Insurance", "Phone", "Water",
+             "Streaming", "Gym", "Savings", "Credit card", "Groceries"]
+    kinds = ["bill", "income", "goal", "transfer"]
+    for i in range(count):
+        day = 1 + i * 2
+        events.append({
+            "id": f"long-{i}",
+            "date": f"2026-09-{day:02d}",
+            "kind": kinds[i % len(kinds)],
+            "title": f"{names[i % len(names)]} {i + 1}",
+            "amount": {"minor": 1000 + i * 137, "currency": "USD"},
+            "fundingStatus": "reserved" if i % 3 == 0 else "unknown",
+            "source": "Synthetic Crew",
+            "evidenceIds": [],
+            "detailHref": f"#long-{i}",
+        })
+    return {
+        "timezone": "America/New_York",
+        "today": "2026-09-01",
+        "horizonEnd": events[-1]["date"],
+        "availableToSpend": {"minor": 24850, "currency": "USD"},
+        "freshness": "fresh",
+        "observedAt": "2026-09-01T13:42:00Z",
+        "events": events,
+        "projections": [],
+    }
+
+
+@pytest.fixture
+def dial_page_long_horizon(request):
+    """The same isolated fixture, but with a horizon that overflows the events rail.
+
+    The rail is `max-height: calc(100vw - 90px)`, so the stock three-event fixture never
+    scrolls and cannot expose a run that targets a row the rail does not show."""
+    import json
+
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as playwright:
+        browser = getattr(playwright, getattr(request, "param", "chromium")).launch()
+        context = browser.new_context(viewport={"width": 420, "height": 912}, device_scale_factor=1)
+        context.add_init_script("window.setInterval = () => 0;")
+        model = _long_horizon_model(14)
+        # Before the page's own scripts, and non-writable so the fixture's inline
+        # three-event model cannot overwrite it.
+        context.add_init_script(
+            "Object.defineProperty(window, 'MeridianObservatoryDialModel', {value: "
+            + json.dumps(model) + ", writable: false, configurable: false});"
+        )
+        page = context.new_page()
+
+        def fixture_route(route):
+            path = urlparse(route.request.url).path
+            if path == "/":
+                route.fulfill(path=str(FIXTURE), content_type="text/html")
+                return
+            candidate = (ROOT / path.lstrip("/")).resolve()
+            if path.startswith("/static/") and (ROOT / "static") in candidate.parents and candidate.is_file():
+                route.fulfill(path=str(candidate))
+            else:
+                route.abort()
+
+        page.route("**/*", fixture_route)
+        page.goto("http://dial.test/")
+        page.wait_for_selector(".obs-dial-svg")
+        page.wait_for_timeout(400)
+        yield page
+        context.close()
+        browser.close()
+
+
+_CONNECTOR_AUDIT = """() => {
+  const rect = (el) => { const r = el.getBoundingClientRect();
+    return {top: r.top, bottom: r.bottom, cy: (r.top + r.bottom) / 2}; };
+  const panel = document.querySelector('.obs-dial-panel');
+  const rail = panel.querySelector('.obs-dial-events');
+  const railBox = rect(rail);
+  const runs = [...panel.querySelectorAll('path.obs-dial-connector')].map((p) => {
+    const id = p.getAttribute('data-connector-for');
+    const row = panel.querySelector(`.obs-event-item[data-event-id="${id}"]`);
+    const rb = row ? rect(row) : null;
+    return {id, rowCy: rb ? rb.cy : null,
+            visible: rb ? (rb.cy >= railBox.top && rb.cy <= railBox.bottom) : null};
+  });
+  return {
+    runIds: runs.map((r) => r.id),
+    runs,
+    railOverflows: rail.scrollHeight > rail.clientHeight,
+    rowCount: panel.querySelectorAll('.obs-event-item[data-event-id]').length,
+    // Anything the layer would have to clip to render.
+    layerBottom: rect(panel.querySelector('.obs-dial-connectors')).bottom,
+    railBottom: railBox.bottom,
+  };
+}"""
+
+
+def test_connector_runs_do_not_target_rows_the_scrolled_rail_does_not_show(dial_page_long_horizon):
+    """Owner-reported: runs "running straight down connecting to nothing, several lines".
+
+    Before the fix, a 14-event horizon drew 14 runs while 11 of those rows sat below the
+    rail's visible box; those runs left the dial, ran past the rail, and were cut off by
+    the connector layer's own `overflow: hidden` in mid-air. Every drawn run must now
+    target a row the rail actually shows, at the top, the middle and the bottom of the
+    rail's scroll range."""
+    page = dial_page_long_horizon
+    audit = page.evaluate(_CONNECTOR_AUDIT)
+    assert audit["railOverflows"], "the fixture must overflow the rail or it proves nothing"
+    assert audit["rowCount"] == 14
+    assert audit["runs"], "no connector runs were drawn at all"
+    assert len(audit["runs"]) < audit["rowCount"], "runs are being drawn for hidden rows"
+    for run in audit["runs"]:
+        assert run["visible"] is not False, f"a run targets the hidden row {run['id']}"
+        assert run["rowCy"] <= audit["railBottom"], f"run {run['id']} ends below the rail"
+
+    seen = set(audit["runIds"])
+    for target in ("scrollHeight", "scrollHeight / 2", "scrollHeight"):
+        page.evaluate(
+            "() => { const r = document.querySelector('.obs-dial-events'); "
+            f"r.scrollTop = r.{target}; }}"
+        )
+        page.wait_for_timeout(250)
+        after = page.evaluate(_CONNECTOR_AUDIT)
+        assert after["runs"], f"no runs after scrolling to {target}"
+        for run in after["runs"]:
+            assert run["visible"] is not False, (
+                f"after scrolling to {target}, a run targets the hidden row {run['id']}"
+            )
+            assert run["rowCy"] <= after["railBottom"]
+        seen.update(after["runIds"])
+    assert len(seen) > len(audit["runIds"]), (
+        "scrolling the rail did not re-anchor the runs to the newly visible rows"
+    )
