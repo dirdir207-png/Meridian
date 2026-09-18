@@ -1003,6 +1003,16 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
 .m-observatory-advice { display: flex; justify-content: flex-end; margin-top: -12px; }
 .obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab { display: none; }
 .obs-shell:has([data-workspace-section="today"]:not([hidden])) { background: #161c34; }
+/* Today's page is #161c34, its OWN concept's measured background, while the other three are
+   the #141b32 mean. The topbar and every other surface read `--m-surface`, which resolves to
+   #141b32, so on Today alone the bar came out rgb(20,27,50) against a rgb(22,28,52) page.
+   Setting the token here rather than recolouring the bar keeps every one of Today's surfaces
+   on Today's own canvas. */
+/* Scoped to dark on purpose: `.obs-shell:has(...)` carries three attribute-level
+   specificity, so an unscoped declaration here BEATS the light edition's
+   `html[data-theme="light"] .obs-shell` remap and painted a #161c34 topbar on the light
+   parchment canvas -- caught by probing both themes rather than only the dark one. */
+html[data-theme="dark"] .obs-shell:has([data-workspace-section="today"]:not([hidden])) { --m-surface: #161c34; --m-surface-muted: #161c34; }
 html[data-theme="light"] .obs-shell:has([data-workspace-section="today"]:not([hidden])) { background: #f4ecdf; }
 @media (max-width: 700px) {
   [data-observatory-dial] .obs-dial-panel { grid-template-columns: minmax(0, 1fr) 130px; }
@@ -1097,9 +1107,13 @@ body.obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab.
     padding-bottom: 14px;
     border-bottom-color: transparent;
   }
-  html[data-theme="dark"] .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar {
-    background: #101a28;
-  }
+  /* Today's topbar is the PAGE colour, not a darker bar. `0b8fdaa` corrected this block's
+     sibling rule (the shell, above) from #101a28 to the concept's #161c34 and missed this
+     one two rules later, so the topbar stayed #101a28 = rgb(16,26,40) against a page of
+     rgb(22,28,52). Measured on concept 01, the topbar is rgb(21,26,50) against a page of
+     rgb(22,27,50) -- a delta of 1, i.e. the same colour. The rule is deleted rather than
+     recoloured so the bar inherits whatever the shell is, and the `border-bottom-color:
+     transparent` above leaves no separator, exactly as the concept draws it. */
   .obs-shell:has([data-workspace-section="today"]:not([hidden])) .m-topbar-date {
     display: block;
     position: absolute;

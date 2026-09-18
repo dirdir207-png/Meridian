@@ -159,7 +159,14 @@ def test_observatory_light_theme_replaces_dark_canvas_surface_and_ink_tokens():
     css = OBSERVATORY.read_text()
     light = css.split('html[data-theme="light"] .obs-shell', 1)[1]
     assert "--m-canvas: #f4ecdf" in light
-    assert "--m-surface: #fffaf0" in light
+    # The light surface is the CANVAS, not a lighter tint of it. It was #fffaf0 = rgb(255,250,240)
+    # against a canvas of rgb(244,236,223) -- +11/+14/+17 -- and `--m-surface-muted` was #ead8b5,
+    # the paper colour, which turned every muted surface into a parchment panel. Owner,
+    # 2026-09-18: "the more lightly colored boxes on all pages need to be removed". The governing
+    # concepts are all midnight-palette, so the light edition follows dark's principle (one
+    # canvas colour, separation by border) rather than being measured against a light concept.
+    assert "--m-surface: #f4ecdf" in light
+    assert "--m-surface-muted: rgba(32, 38, 59, 0.05)" in light
     assert "--m-ink: #20263b" in light
     assert "--m-ink-muted: #655d6c" in light
     assert "background:" in light
@@ -179,3 +186,32 @@ def test_light_header_keeps_the_wordmark_and_controls_legible():
     css = OBSERVATORY.read_text()
     assert 'html[data-theme="light"] .obs-shell .m-topbar .m-brand' in css
     assert "color: #20263b" in css
+
+
+def test_observatory_surfaces_are_the_page_colour_not_a_lighter_tint():
+    """The concepts have exactly ONE background value; separation is drawn with hairlines.
+
+    Measured on the governing concepts (2026-09-18):
+
+        concept 04  page rgb(20,26,49) | account rows rgb(21,27,50)  -> delta 1
+        concept 01  page rgb(22,27,50) | dock rgb(22,27,49)          -> delta 0
+        concept 01  page rgb(22,27,50) | topbar rgb(21,26,50)        -> delta 0
+        concept 02  page rgb(21,26,50) | dock rgb(21,26,50)          -> delta 0
+
+    `--obs-surface` / `--obs-surface-raised` were #202b40 and #26334a -- rgb(32,43,64) and
+    rgb(38,51,74), i.e. +12/+16/+14 and +18/+24/+24 over the page -- which is what produced
+    the "separate and cloying lighter colored box" the owner reported around the Accounts
+    CASH/SAVINGS rows, the Plan commitments and the Activity review cards.
+
+    They stay declared as tokens (the ~68 rules that read them keep working) but must
+    resolve to the page colour; anything that genuinely floats above the page should use
+    `--obs-surface` deliberately and say so.
+    """
+    css = OBSERVATORY.read_text(encoding="utf-8")
+    assert "--obs-surface: var(--obs-bg);" in css
+    assert "--obs-surface-raised: var(--obs-bg);" in css
+    assert "--obs-surface: #202b40" not in css, "the lighter surface tint is back"
+    assert "--obs-surface-raised: #26334a" not in css, "the raised lighter tint is back"
+    # A wash exists so flattened `:hover` rules still read as feedback without reintroducing
+    # a second box colour.
+    assert "--obs-wash: rgba(238, 228, 207, 0.05);" in css

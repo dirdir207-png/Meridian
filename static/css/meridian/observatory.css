@@ -12,8 +12,30 @@
      Today #161c34, Plan #131830, Activity #131b30, Accounts #151c34 -> mean (20,27,50).
      The previous #172334 was both lighter and greener than every one of them. */
   --obs-bg: #141b32;
-  --obs-surface: #202b40;
-  --obs-surface-raised: #26334a;
+  /* Surfaces are the PAGE COLOUR, not a lighter tint of it. Measured on the governing
+     concepts, every region is one colour -- there is no second, lighter background value
+     anywhere in them:
+        concept 04  page rgb(20,26,49) | account rows rgb(21,27,50)  -> delta 1
+        concept 01  page rgb(22,27,50) | dock rgb(22,27,49)          -> delta 0
+        concept 01  page rgb(22,27,50) | topbar rgb(21,26,50)        -> delta 0
+        concept 02  page rgb(21,26,50) | dock rgb(21,26,50)          -> delta 0
+     Separation in the concepts is drawn with HAIRLINES and engraving, never with a fill.
+     These two were #202b40 / #26334a -- rgb(32,43,64) and rgb(38,51,74), i.e. +12/+16/+14
+     and +18/+24/+24 over the page. Owner, 2026-09-18: "the more lightly colored boxes on
+     all pages need to be removed... a separate and cloying lighter colored box separating
+     them. On the concept on all pages, it is the same unified deeper color we corrected
+     for before."
+
+     They stay as TOKENS rather than being deleted, so the ~68 rules that reference them
+     keep working and a future block that genuinely needs to sit above the page (a modal,
+     a floating panel) has a named value to reach for. */
+  --obs-surface: var(--obs-bg);
+  --obs-surface-raised: var(--obs-bg);
+  /* A hover/focus wash, because flattening the surfaces made every `:hover` that used to
+     paint a lighter fill a no-op. Translucent, so it lightens whatever it sits on by a few
+     percent rather than introducing a second box colour. */
+  --obs-wash: rgba(238, 228, 207, 0.05);
+  --obs-wash-strong: rgba(238, 228, 207, 0.09);
   --obs-ink: #eee4cf;
   --obs-muted: #b7b8cb;
   --obs-lilac: #c1a9e2;
@@ -706,8 +728,17 @@ body.obs-shell {
    canvas, ordinary surfaces, ink hierarchy and borders move to parchment. */
 html[data-theme="light"] .obs-shell {
   --m-canvas: #f4ecdf;
-  --m-surface: #fffaf0;
-  --m-surface-muted: #ead8b5;
+  /* The same rule as dark: a surface is the CANVAS, not a lighter tint of it, and
+     separation is drawn with the border tokens below rather than with a fill. These were
+     #fffaf0 (255,250,240) against a canvas of #f4ecdf (244,236,223) -- +11/+14/+17 -- and
+     `--m-surface-muted` was #ead8b5, the paper colour, which made every muted surface a
+     parchment panel. The light edition has no concept of its own to be measured against
+     (all four governing concepts are the midnight palette), so it follows dark's principle
+     rather than inventing a second one. */
+  --m-surface: #f4ecdf;
+  --m-surface-muted: rgba(32, 38, 59, 0.05);
+  --obs-wash: rgba(32, 38, 59, 0.05);
+  --obs-wash-strong: rgba(32, 38, 59, 0.09);
   --m-border: rgba(32, 38, 59, 0.16);
   --m-border-strong: rgba(32, 38, 59, 0.3);
   --m-ink: #20263b;
