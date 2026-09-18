@@ -53,6 +53,11 @@ Thumbs.db
 # Environment variables (if you add any)
 .env
 .env.local
+# A real credential file, found untracked and unignored on 2026-09-18: it holds
+# GOOGLE_OAUTH_CLIENT_SECRET and ICLOUD_MAIL_APP_PASSWORD, so any `git add -A` would
+# have committed live secrets. `.env.example` stays tracked on purpose -- it is the
+# template -- so this is a named entry rather than a blanket `.env*` pattern.
+.env.save
 .clineignore
 .clinerules
 @schema.graphql
