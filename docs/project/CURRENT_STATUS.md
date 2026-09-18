@@ -23,19 +23,22 @@ left-clipping regression (80px bleed clipped 64px, ~20% of the instrument; now 0
    (`dial.js` `update()`).
 
 3. **OS-038 — remaining concept-reconciliation gaps**, each a bounded slice: the lilac wavy title underline
-   (Today/Activity/Accounts; the concepts show none on Plan), the Accounts connectors as curved dashed paths with
-   an end node each and star-tipped separators, the rotated/notched Accounts ticket, the Plan bordered tab bar with
-   the star medallion in its parchment-filled active cell, and richer medallion glyphs. All measurements live in
-   `artifacts/astra-fidelity-review-2026-09-16/README.md` → Finding 4.
+   (Today/Activity/Accounts; the concepts show none on Plan) — **delivered 2026-09-17** — plus the Accounts
+   connectors as curved dashed paths with an end node each and star-tipped separators, the rotated/notched Accounts
+   ticket, the Plan bordered tab bar with the star medallion in its parchment-filled active cell, and richer
+   medallion glyphs. All measurements live in `artifacts/astra-fidelity-review-2026-09-16/README.md` → Finding 4.
 
 4. **OS-037 — pointer on "Next day", could NOT reproduce, blocked pending the owner.** In the isolated preview the
    pointer *does* move on Next day (angle `-120° → -60°` over two steps). Two traps worth keeping: do not read
    `x1` as "pinned" (equal `x` across steps is just `sin(-120°) == sin(-60°)`), and rule out a stale cached JS
    bundle on the device with a hard refresh before changing code.
 
-5. **OS-039 — the Accounts rotunda engraving**, blocked on new art from Astra. The concept draws a colonnaded
-   domed rotunda; the kit's `observatory-landscape.png` is a different engraving. Do not present it as a match and
-   do not CSS-approximate an engraving.
+5. **OS-039 — the Accounts rotunda engraving: RESOLVED 2026-09-18.** The owner supplied the dedicated Accounts
+   illustration, `accounts-ticket-building.png` (a colonnaded domed archive building with scrolls and an open
+   ledger), which now replaces the provisional reuse of the Today dial's `observatory-landscape.png` on this
+   surface. Recorded precisely rather than overclaimed: it is the owner-supplied governing art, *not* a
+   reproduction of the concept's "rotunda on a rocky knoll". Verified to have real transparency (56.2% of pixels
+   fully transparent, corners `(0,0,0,0)`) and to render at 92×92 in its 1:1 box. See `design-qa.md`.
 
 **Standing traps from this round, all of which cost real time:**
 
@@ -49,6 +52,41 @@ left-clipping regression (80px bleed clipped 64px, ~20% of the instrument; now 0
 - **Luminance, not eyeballing, catches theme-capture failures** — the two passes looked plausible side by side.
 - Temporary review tooling lives in untracked `tmp/probe_*.py`; `artifacts/` holds all captures and the Astra
   package and is untracked by convention.
+
+## The supplied Accounts illustration, and the red suite it left behind (2026-09-18)
+
+**What arrived.** The owner supplied `static/img/meridian/observatory/accounts-ticket-building.png` — "a new asset
+for the accounts page, the missing one". It is a colonnaded domed archive building with an arched entrance, gilt
+dome, scrolls, a wax-sealed document and an open ledger. It closes **OS-039**, which had been recorded as blocked
+because it could not be closed by effort: the kit's only fit for that surface was the **Today dial's** hilltop
+observatory, and presenting that as a match would have been the same unsanctioned reuse the Accounts guard exists
+to prevent.
+
+**Recorded precisely, not overclaimed.** The asset is *not* a reproduction of the concept's "colonnaded domed
+rotunda on a rocky knoll" — this building stands on a flat plinth among foliage and scrolls. It is the
+owner-supplied governing art for this surface, and no pixel-equivalence with the concept engraving is claimed.
+
+**Verified, not assumed.** Decoding the PNG confirms genuine transparency rather than a baked-in backing: alpha
+range 0..255, **56.2%** of pixels fully transparent, all four corners `(0,0,0,0)` (the handoff's "real
+transparency" rule). Rendered at 420×912 DPR 3 in the isolated synthetic preview, the art box measures **92×92**
+(its `clamp(92px, 28%, 188px)` minimum) in a **1:1** box, the resolved background is the new asset, and the
+engraving reads cleanly on the parchment with the parchment showing through.
+
+**A red suite was left behind, and is now green.** A parallel lane swapped the asset and updated
+`test_accounts_ticket.py`, but `test_accounts_assets_strip.py` still asserted that the *old* asset
+(`observatory-landscape.png`) was present in `accounts.css`. The suite therefore failed on `HEAD`. That guard's
+intent is reuse *restraint*, not a particular filename, so it now asserts both restraints — Accounts borrows
+neither the Activity telescope **nor** Today's `observatory-landscape.png` — and that its own asset is present and
+on disk. The module docstring and the `accounts.html` comment that still described the old asset were corrected
+with it.
+
+**A size note, recorded rather than acted on.** The asset is **2.0 MB** for a display slot of at most 188 CSS px.
+That is within existing project precedent (`dial-plate.png` is 3.0 MB) and its alpha is correct, so it ships as
+supplied; downscaling the owner's art is an optional follow-up, not something to do unasked.
+
+Verified: full non-browser suite **1181 passed, 1 skipped** (the previously failing
+`test_accounts_assets_strip` guard now passes); `ruff` clean on tracked source; `git diff --check` clean.
+Presentation and docs only — **no** route, data, financial, provider or authority change. Not deployed.
 
 ## Today dial: the left-clipping regression, and the geometry that caps its size (2026-09-16)
 
@@ -140,6 +178,8 @@ Measured, so the next pass does not have to re-derive it:
   a parchment-filled active cell and a brass star medallion at its left.
 - **The Accounts engraving differs.** The concept draws a colonnaded rotunda; the kit's `observatory-landscape.png`
   is a different engraving. This needs art from Astra — it will not be faked.
+  *Resolved 2026-09-18:* the owner supplied `accounts-ticket-building.png`, the dedicated Accounts illustration,
+  which now serves this surface. See the top of this file.
 
 ## Accounts — the closing parchment strip, and the handoff round closed (2026-09-16)
 
@@ -181,8 +221,10 @@ Six of the kit's assets are now consumed in production, each by the surface the 
 | `plan-map.png` | Plan's folded allocation map |
 | `apricot-button.png` | Plan's primary action plate |
 | `activity-telescope.png` | Activity's header vignette |
-| `observatory-landscape.png` | Accounts' summary vignette |
+| `observatory-landscape.png` | Today's dial layer only. **No longer on Accounts** as of 2026-09-18, when the dedicated asset below replaced it there |
+| `accounts-ticket-building.png` | Accounts' summary-ticket illustration (owner-supplied 2026-09-18) |
 | `medallion-frame.png` | Accounts' account medallions |
+| `title-rule.svg` | The lilac wavy rule under the workspace title on Today/Activity/Accounts (drawn in-repo; not on Plan) |
 
 Two items remain **open and owner-gated**, and are not claimed as done:
 
@@ -261,6 +303,10 @@ Track D reaches the fourth workspace, against concept **04**. Its dominant eleme
 carrying the cash figure, and the kit names both assets for it: `parchment-ticket.png` for an *"account summary"*
 and `observatory-landscape.png` for the *"Accounts decorative vignette"*. The dome-on-a-hill engraving in the
 concept is that second asset — confirmed by opening it, not assumed from its name.
+
+*Superseded 2026-09-18:* that second asset is the **Today dial's** building, and the owner has since supplied
+`accounts-ticket-building.png` as the dedicated Accounts illustration. Accounts no longer uses
+`observatory-landscape.png`. The analysis above stays as the record of what was decided on 2026-09-16.
 
 The "Available cash" card is now that panel: the ticket as a nine-slice at the same measured 80-slice the Today,
 Plan and Activity tickets use, with the dome set beside the figure and the provenance note beneath it. Both

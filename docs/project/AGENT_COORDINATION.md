@@ -61,9 +61,44 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Builder (capture theme fix + Activity ruled tabs) | `scripts/capture_meridian_matrix.py`, `static/css/meridian/activity.css`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md` | 2026-09-16 | **released** at `8d8db80`. Two fixes: the capture script pinned the theme so light captures are genuinely light (the "light" pass had been rendering dark for every workspace after the first, which invalidated part of this session's evidence and produced a wrong diagnosis of the application); and Activity's mode row became the concept's ruled-underline treatment, making green a test the other lane had left failing. **No** route, data, financial or authority change. |
 
-| Builder (Today: lilac wavy title rule, OS-038 first item) | `static/img/meridian/observatory/title-rule.svg` (new), `static/img/meridian/observatory/ASSET_MANIFEST.md`, `static/css/meridian/workspaces.css`, `templates/meridian/partials/{today,activity,accounts}.html`, `tests/meridian/test_title_rule.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-17 | **active**. Track D OS-038, first bounded item: the lilac wavy rule under the workspace title, measured from concepts 01/03/04 and deliberately **not** added to Plan, whose concept 02 shows none. Presentation only: **no** route, data, financial or authority change. This row also records the measured verdict on OS-035 (the instrument is already centred 29/29 in its row; the 233px below is the controls+ticket grid row). |
+| Builder (Today: lilac wavy title rule, OS-038 first item) | `static/img/meridian/observatory/title-rule.svg` (new), `static/img/meridian/observatory/ASSET_MANIFEST.md`, `static/css/meridian/workspaces.css`, `templates/meridian/partials/{today,activity,accounts}.html`, `tests/meridian/test_title_rule.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-17 | **released** at `525fae9`. Track D OS-038, first bounded item: the lilac wavy rule under the workspace title, measured from concepts 01/03/04 and deliberately **not** added to Plan, whose concept 02 shows none. Presentation only: **no** route, data, financial or authority change. The row also records the measured verdict on OS-035 (the instrument is already centred 29/29 in its row; the 233px below is the controls+ticket grid row). |
+
+| Builder (Accounts: supplied archive-building asset, OS-039 close-out) | `tests/meridian/test_accounts_assets_strip.py`, `templates/meridian/partials/accounts.html`, `static/img/meridian/observatory/ASSET_MANIFEST.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `design-qa.md`, `artifacts/observatory-accounts-building-2026-09-18/**` | 2026-09-18 | **released at this commit**. Reconciles the owner-supplied `accounts-ticket-building.png` (committed by the parallel `builder-trackd` lane at `0b8a3ba`) and closes OS-039. That lane swapped the asset in `accounts.css` but left `test_accounts_assets_strip.py` asserting the *old* asset, so the suite was **red on `HEAD`**; this row fixes that guard while preserving its reuse-restraint intent, and corrects the stale comment and docs that still described `observatory-landscape.png` as the Accounts vignette. `accounts.css` and the asset itself are **not** touched — that lane's declared scope stands. **No** route, data, financial or authority change. |
 
 ## Log (append only — newest first)
+
+### 2026-09-18 — Builder (Accounts) — the supplied archive-building asset, and a red suite left behind
+
+Claimed only the reconciliation surface: the stale guard, the stale comment, the manifest row and the docs. The
+parallel `builder-trackd` lane's commit `0b8a3ba` is **not** reverted, re-authored or re-staged; its `accounts.css`
+and its asset are left exactly as shipped.
+
+**What the other lane left.** `0b8a3ba` replaced `observatory-landscape.png` with
+`accounts-ticket-building.png` in `.m-accounts-ticket-art` and updated `test_accounts_ticket.py` — but
+`test_accounts_assets_strip.py` still asserted `"observatory-landscape.png" in css`, so the non-browser suite was
+**red on `HEAD`** (1180 passed, 1 failed). That test file was inside the other lane's own declared claim
+(`docs/project/agent-claims.json` → `builder-trackd-today-parity`), so it was claimed and not reconciled.
+
+**The fix kept the intent, not the filename.** That guard exists to stop *unsanctioned reuse*, and swapping a
+shared building for a dedicated one is the same restraint it protects. It now asserts all three facts: no
+`activity-telescope.png`, no `observatory-landscape.png` (Today's building stays on Today), and
+`accounts-ticket-building.png` present and on disk. A comment that still described the old asset in
+`accounts.html`, and four stale doc references, were corrected the same way.
+
+**Recorded rather than overclaimed.** The supplied art is a colonnaded domed archive building with scrolls and an
+open ledger. It is *not* a reproduction of the concept's "colonnaded domed rotunda on a rocky knoll" — it stands on
+a flat plinth among foliage — so it is recorded as the owner-supplied governing art for this surface, with no
+pixel-equivalence claim. Transparency was **decoded, not assumed**: alpha range 0..255, 56.2% of pixels fully
+transparent, all four corners `(0,0,0,0)`, satisfying the handoff's "real transparency" rule. One size note is
+recorded and deliberately not acted on: the asset is 2.0 MB for a slot of at most 188 CSS px, within existing
+precedent (`dial-plate.png` is 3.0 MB), so it ships as supplied rather than downscaling the owner's art unasked.
+
+**Captures:** `artifacts/observatory-accounts-building-2026-09-18/` — 10 files, Accounts × five governed viewports
+× two themes, zero overflow and zero console errors, light/dark luminance deltas 147–163.
+
+**Test state:** non-browser suite **1181 passed, 1 skipped** (the previously failing guard now passes). The nine
+`tests/browser` `test_dial_fidelity.py` failures remain **pre-existing and unrelated** — they reproduce on a clean
+`874f61a` tree with this work absent. `ruff` clean on tracked source; `git diff --check` clean.
 
 ### 2026-09-17 — Builder (Today/Activity/Accounts) — OS-038 first item: the lilac wavy title rule
 

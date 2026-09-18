@@ -25,12 +25,21 @@ def test_assets_strip_uses_the_kit_ticket_nine_slice():
 
 
 def test_assets_strip_does_not_borrow_the_activity_telescope():
-    """The kit scopes the telescope to Activity with sparing reuse in Settings. Putting
-    it on an Accounts strip because the concept happens to draw an engraving there would
-    be an unsanctioned reuse, so the absence is asserted rather than left to chance."""
+    """The kit scopes the telescope to Activity with only sparing reuse in Settings, so
+    its absence from Accounts is asserted rather than left to chance.
+
+    The second assertion changed authority on 2026-09-18: the kit provisionally scoped
+    `observatory-landscape.png` (the Today dial's hilltop observatory) to the "Accounts
+    decorative vignette", but the owner supplied a dedicated Accounts cutout --
+    `accounts-ticket-building.png`, a colonnaded domed archive building with scrolls and
+    an open ledger. Reusing the Today dial's building on Accounts was the same class of
+    unsanctioned reuse this test exists to prevent, so the dedicated asset is now the one
+    asserted: Accounts carries its own art, not Today's and not Activity's."""
     css = _read("static/css/meridian/accounts.css")
     assert "activity-telescope.png" not in css
-    assert "observatory-landscape.png" in css  # the vignette the kit DOES scope here
+    assert "observatory-landscape.png" not in css  # Today's building stays on Today
+    assert "accounts-ticket-building.png" in css  # the dedicated Accounts asset
+    assert (ROOT / "static/img/meridian/observatory/accounts-ticket-building.png").is_file()
 
 
 def test_assets_strip_label_wins_on_specificity():

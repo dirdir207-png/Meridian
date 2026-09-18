@@ -24,6 +24,41 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Accounts — the supplied archive-building illustration (2026-09-18)
+
+![Accounts mobile-air dark, the supplied archive-building ticket illustration](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-building-2026-09-18/accounts-mobile-air-dark-viewport.png)
+
+**The missing Accounts asset arrived.** This closes **OS-039**, which was recorded as blocked because it could not
+be closed by effort: the concept draws a colonnaded domed building on the Accounts surface, the kit's only fit was
+`observatory-landscape.png` — the *Today dial's* hilltop observatory — and presenting that as a match would have
+been the same class of unsanctioned reuse the Accounts-strip guard exists to prevent.
+
+The owner supplied `accounts-ticket-building.png`: a colonnaded domed archive building with an arched entrance, a
+gilt dome, scrolls, a wax-sealed document and an open ledger. It is the Accounts page's own document-and-structure
+motif, and it replaces the provisional reuse of Today's building on this surface. **Accepted as the Accounts
+illustration.**
+
+**What it is, recorded precisely.** It is *not* a reproduction of the concept's "colonnaded domed rotunda on a
+rocky knoll" — this building stands on a flat plinth among foliage and scrolls. It is recorded as the owner-supplied
+governing art for this surface, and no pixel-equivalence with the concept engraving is claimed.
+
+**Verified, not assumed.** Decoding the PNG confirms genuine transparency rather than a baked-in backing: alpha
+range 0..255, **56.2%** of pixels fully transparent, all four corners `(0,0,0,0)` — the handoff's "real
+transparency" rule. Rendered at 420×912 DPR 3 in the isolated synthetic preview, the art box measures **92×92**
+(its `clamp(92px, 28%, 188px)` minimum) in a **1:1** box, the resolved background image is the new asset, and the
+engraving reads cleanly on the parchment with the parchment showing through.
+
+**A red suite was left behind, and is now green.** The parallel lane swapped the asset and updated
+`test_accounts_ticket.py`, but `test_accounts_assets_strip.py` still asserted the old asset was present, so the
+suite failed on `HEAD`. Its intent was restraint, not a specific filename, so the guard was reconciled to assert
+*both* restraints — Accounts borrows neither the Activity telescope *nor* Today's `observatory-landscape.png` — and
+that its own asset is present and on disk.
+
+**A size note, recorded rather than acted on.** The asset is **2.0 MB** for a display slot of at most 188 CSS px.
+That sits within the project's existing precedent (`dial-plate.png` is 3.0 MB, `accounts-ticket-building.png` is
+second at 2.0 MB) and its alpha is correct, so it ships as supplied; downscaling the owner's art is an optional
+follow-up rather than something to do unasked.
+
 ## Accounts — closing parchment strip (2026-09-16, batch 4)
 
 ![Accounts mobile-air light, closing Assets & Contracts parchment strip](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-accounts-assets-2026-09-16/accounts-mobile-air-light-full.png)
@@ -79,6 +114,11 @@ Read against concept **04**: the cash figure now sits on the concept's parchment
 engraving — `observatory-landscape.png`, the asset whose name does not say "dome" — set beside it. Scalloped
 ticket ends and corner rivets come from `parchment-ticket.png`; the figure and its provenance note stay
 code-owned HTML. **Accepted as matching** for the panel's material, silhouette and figure hierarchy.
+
+*Superseded 2026-09-18:* that dome engraving was the **Today dial's** building, borrowed onto Accounts pending
+dedicated art. The owner has since supplied `accounts-ticket-building.png`, which this surface now uses, so
+`observatory-landscape.png` no longer appears on Accounts at all. The panel's material, silhouette and hierarchy
+still hold; only the illustration changed. See the section at the top of this file.
 
 **The capture caught what the CSS did not.** The first render put "AVAILABLE CASH" in pale lilac on the
 parchment — exactly the contrast failure the kit names — because my two-class override tied on specificity with a

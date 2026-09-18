@@ -1053,19 +1053,27 @@
       "id": "OS-039",
       "title": "Accounts: the rotunda engraving differs from the concept",
       "phase": "asset-gap",
-      "status": "blocked",
+      "status": "complete",
       "priority": "medium",
       "dependencies": [
         "OS-034"
       ],
       "authority_impact": "none; art only",
-      "owner_decision_required": true,
+      "owner_decision_required": false,
       "acceptance_criteria": [
         "Requires new art from Astra: the concept draws a colonnaded domed rotunda on a rocky knoll",
         "The kit's observatory-landscape.png is a different engraving and must not be presented as a match",
         "No CSS approximation of the engraving, per the handoff's rule"
       ],
-      "notes": "Blocked on art supply, not on effort. Do not fake."
+      "notes": "Was blocked on art supply, not on effort. Art was supplied by the owner on 2026-09-18; the blocker is cleared.",
+      "evidence": {
+        "resolution": "The owner supplied a dedicated Accounts illustration, `static/img/meridian/observatory/accounts-ticket-building.png` (1254x1254 RGBA), described as 'a new asset for the accounts page, the missing one'. It is a colonnaded domed archive building -- classical columns, arched entrance, gilt dome -- with scrolls, a wax-sealed document and an open ledger, which is the Accounts page's document/structure motif. It replaced the kit's provisional scoping of observatory-landscape.png (the Today dial's hilltop observatory) to this surface.",
+        "what_it_is_not": "It is not a literal match for the concept's 'colonnaded domed rotunda on a rocky knoll': the building sits on a flat plinth among foliage and scrolls rather than on a rocky knoll. It is recorded as the owner-supplied governing art for this surface, not as a reproduction of the concept engraving, and the concept comparison is not claimed as pixel-equivalent.",
+        "verified": "Real transparency confirmed by decoding the PNG: alpha range 0..255, 56.2% of pixels fully transparent, all four corners (0,0,0,0). Rendered at 420x912 DPR 3 in the isolated synthetic preview, the art box measures 92x92 (its clamp(92px, 28%, 188px) minimum) in a 1:1 box, the background image resolves to the new asset, and the engraving reads cleanly on the parchment ticket with the parchment showing through.",
+        "tests": "tests/meridian/test_accounts_assets_strip.py reconciled: the guard that asserts Accounts does not borrow the Activity telescope now also asserts it does not borrow Today's observatory-landscape.png, and that the dedicated Accounts asset is present and on disk. tests/meridian/test_accounts_ticket.py already asserted the new asset (committed by the parallel lane).",
+        "artifacts": "static/img/meridian/observatory/ASSET_MANIFEST.md (new row with provenance and measured alpha), templates/meridian/partials/accounts.html (stale comment corrected), design-qa.md",
+        "limits": "The launch asset is 2.0MB for a display slot of at most 188 CSS px. That is within the project's existing precedent (dial-plate.png is 3.0MB) and its alpha is correct, so it is shipped as supplied; a downscale is recorded as an optional follow-up rather than applied to the owner's art without being asked. Not deployed."
+      }
     }
   ]
 }
