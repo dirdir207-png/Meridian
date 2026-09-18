@@ -1,7 +1,8 @@
 """Observatory slice: the Accounts parchment summary panel (concept 04).
 
 Kit README: `parchment-ticket.png` is for an "account summary" and
-`observatory-landscape.png` for the "Accounts decorative vignette". The kit also states
+the Accounts page now uses a dedicated archive-building cutout rather than reusing the
+Today dial building. The kit also states
 the contrast rule this panel has to obey: "On parchment, use dark navy text; do not
 carry pale lilac/mint text over without checking contrast."
 """
@@ -33,7 +34,8 @@ def test_accounts_summary_is_the_kit_parchment_panel():
     # The kit's own assets, the same measured nine-slice the other tickets use.
     assert "kit-2026-09-16/parchment-ticket.png" in css
     assert "80 fill / 20px round" in css
-    assert "kit-2026-09-16/observatory-landscape.png" in css
+    assert "observatory/accounts-ticket-building.png" in css
+    assert (ROOT / "static/img/meridian/observatory/accounts-ticket-building.png").is_file()
 
 
 def test_accounts_ticket_keeps_every_figure_in_html_and_drops_nothing():

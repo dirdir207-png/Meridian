@@ -23,6 +23,7 @@
         "static/css/meridian/plan.css",
         "static/css/meridian/activity.css",
         "static/css/meridian/accounts.css",
+        "static/img/meridian/observatory/accounts-ticket-building.png",
         "static/js/meridian/today.js",
         "static/js/meridian/dial.js",
         "static/js/meridian/plan.js",

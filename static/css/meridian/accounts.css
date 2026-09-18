@@ -70,11 +70,11 @@
 
 /* ---------- Parchment summary panel (concept 04) ---------- */
 
-/* The kit names parchment-ticket.png for an "account summary" and
-   observatory-landscape.png for the "Accounts decorative vignette", so the dominant
-   cash figure sits on the ticket with the dome set beside it. Nine-slice keeps the
-   scalloped ends and corner rivets fixed while the panel reflows, and `fill` carries
-   the blank face, so the figure and its provenance note stay code-owned HTML.
+/* The kit names parchment-ticket.png for an "account summary". The ticket uses a
+   dedicated archive-building cutout so the Accounts document motif does not reuse
+   the Today dial's hilltop observatory. Nine-slice keeps the scalloped ends and
+   corner rivets fixed while the panel reflows, and `fill` carries the blank face,
+   so the figure and its provenance note stay code-owned HTML.
 
    The kit is explicit about this surface: "On parchment, use dark navy text; do not
    carry pale lilac/mint text over without checking contrast." The figure's signal
@@ -95,8 +95,8 @@
 .m-accounts-ticket-art {
   flex: 0 0 auto;
   width: clamp(92px, 28%, 188px);
-  aspect-ratio: 1536 / 1024;
-  background: url("/static/img/meridian/observatory/kit-2026-09-16/observatory-landscape.png") center / contain no-repeat;
+  aspect-ratio: 1;
+  background: url("/static/img/meridian/observatory/accounts-ticket-building.png") center / contain no-repeat;
 }
 
 .m-accounts-ticket-figure {
