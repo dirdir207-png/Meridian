@@ -1,5 +1,9 @@
 # Enhanced SimpleCrew — Current Status
 
+## Repository overview review — 2026-09-18
+
+Reviewed Luna's README at `8f7d424` against the published `main` overview. Replaced the Beacon header with existing Observatory engraving; rewrote the page for human readers; removed internal agent/implementation guidance and local-environment commands; corrected the completed repository rename; separated current features, roadmap, and concept imagery. Detailed product scope remains in the existing project records. Branch: `feat/meridian-implementation`. Evidence: `docs/project/LANDING_PAGE_REVIEW_2026-09-18.md`. Documentation only; no app deployment or runtime behavior change. Publication is tracked in the review evidence.
+
 ## RESUME HERE — open work, measured (2026-09-16, at `5c732f9`)
 
 Written so a fresh session can continue from the repository rather than from a conversation. Every number below was
