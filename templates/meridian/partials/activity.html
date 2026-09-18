@@ -20,7 +20,7 @@
   <div class="m-activity-toolbar">
     <div class="m-segmented m-activity-tabs" role="group" aria-label="Activity mode">
       <button type="button" class="m-button m-activity-tab" data-activity-mode="timeline" aria-pressed="true">Timeline</button>
-      <button type="button" class="m-button m-activity-tab" data-activity-mode="review" aria-pressed="false">Review</button>
+      <button type="button" class="m-button m-activity-tab" data-activity-mode="review" aria-pressed="false">Review<span class="m-activity-tab-count" data-review-count hidden></span></button>
       <button type="button" class="m-button m-activity-tab" data-activity-mode="patterns" aria-pressed="false">Patterns</button>
     </div>
 
@@ -42,6 +42,17 @@
   </div>
 
   <div class="m-activity-body">
+    {# Concept 03's parchment strip. The figure is a count of transactions whose
+       classification confidence is below the review threshold -- the same queue the
+       Review tab lists -- so it is a fact about the ledger, never a forecast. #}
+    <p class="m-review-strip" data-review-strip hidden>
+      <span class="m-review-strip-icon obs-art" aria-hidden="true"></span>
+      <span class="m-review-strip-figure">
+        <strong data-review-strip-count>0</strong>
+        <span data-review-strip-label>decisions to review</span>
+      </span>
+      <span class="m-review-strip-ornament" aria-hidden="true"></span>
+    </p>
     <section class="m-surface m-ledger-card" aria-label="Transactions">
       <p class="m-ledger-cols" aria-hidden="true">
         <span>Transaction</span>

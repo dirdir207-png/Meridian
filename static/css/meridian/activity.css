@@ -193,6 +193,92 @@ html[data-theme="light"] .m-activity-tab[aria-pressed="true"] {
   background: var(--obs-action);
 }
 
+/* The concept raises the review figure beside the label as a filled orange counter.
+   Filled orange with dark ink is legible in BOTH editions -- it is orange as TEXT
+   on the light parchment that is not, which is why the selected tab's label is
+   handled separately above. */
+.m-activity-tab-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: var(--m-space-2);
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--obs-action);
+  color: var(--obs-action-ink);
+  font-family: var(--m-font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  vertical-align: 0.55em;
+}
+
+/* `hidden` is only display:none at UA specificity, so the rule above would beat it. */
+.m-activity-tab-count[hidden] {
+  display: none;
+}
+
+/* Concept 03's parchment strip, reusing the kit's `parchment-ticket.png` at the same
+   measured 80-slice the Accounts strip already uses, so the two share one material.
+   It reports the review queue's own size; it is never shown as an estimate. */
+.m-review-strip {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--m-space-3);
+  margin: 0;
+  padding: var(--m-space-3) var(--m-space-4);
+  border: 20px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 fill / 20px round;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: #3f351f;
+}
+
+.m-review-strip[hidden] {
+  display: none;
+}
+
+.m-review-strip-icon {
+  width: 40px;
+  height: 40px;
+  color: #3f351f;
+  background-color: currentColor;
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/journal-text.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/journal-text.svg") center / contain no-repeat;
+}
+
+.m-review-strip-figure {
+  display: flex;
+  align-items: baseline;
+  gap: var(--m-space-2);
+  font-family: var(--m-font-serif);
+  color: #3f351f;
+}
+
+.m-review-strip-figure strong {
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1;
+  color: #8a5a2e;
+}
+
+.m-review-strip-figure span {
+  font-size: var(--m-text-lg);
+}
+
+.m-review-strip-ornament {
+  width: 18px;
+  height: 18px;
+  color: #8a5a2e;
+  background-color: currentColor;
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+}
+
 .m-activity-filters {
   display: flex;
   align-items: flex-end;

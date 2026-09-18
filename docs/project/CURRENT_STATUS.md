@@ -148,6 +148,61 @@ Keyboard traversal reaches **both** actions:
 in both editions) and in `--m-ink` over the correction face (**13.5:1** dark / **12.78:1** light). All three
 generated stars are present.
 
+### Activity follow-up: icons, page-colour surfaces and the review count
+
+Owner review of the live preview on 2026-09-18 reported three things: "all the icons just
+show a question mark", "no icons on the timeline page", and "Time [Timeline] also still
+appears to have the lighter box in front of the dark background we did away with". All
+three were reproduced and fixed; a fourth item, the review count, was previously blocked
+and was explicitly authorised in the same review.
+
+**Every row showed one glyph because the resolver short-circuited.** Live transactions
+carry an explicit `classification.category` of `"uncategorized"`. That value is truthy but
+is not an assigned category, so `transactionIconName` returned `question-circle` before it
+ever reached the merchant patterns — the merchant tables were only consulted for rows with
+no category field at all, which the live ledger never has. The resolver now consults the
+merchant patterns whenever nothing is assigned or suggested, so the ring identifies the
+merchant while the category line still states that no category is known. Measured on the
+live preview at 420×912, the ledger went from **one distinct glyph to nine**
+(`arrow-left-right`, `arrow-repeat`, `basket`, `fork-knife`, `fuel-pump`, `key`,
+`lightning-charge`, `question-circle`, `receipt`) across Circle K, Cumberland Farms,
+KeyMe, Shell, OpenAI and the rest.
+
+**The timeline had no glyph at all.** The ringed glyph was constructed inside the
+`state.mode === "review"` branch, so the default Timeline tab rendered unadorned text.
+It is now built in both modes.
+
+**`bank` was mapped and never shipped.** A CSS mask whose asset is missing draws an empty
+ring, which reads as a broken icon rather than a deliberate one. It now resolves to the
+kit's `piggy-bank`, and a new guard compares every mapped name against the shipped asset
+set so the next one fails at test time rather than on a phone.
+
+**The lighter box survived the token fix.** OS-043 moved `--obs-surface` to `var(--obs-bg)`
+and its guard asserted the token declarations — but seven separate rules painted the
+retired `#202b40` / `#fffaf0` values directly and never read those tokens. Measured before
+the change, `.m-ledger-card` resolved to `rgba(32,43,64,0.78)` against a `#141b32` page,
+and the light edition to `rgba(255,250,240,0.9)`. All seven now read the token the fix
+moved; borders and hairlines are untouched. Verified across four workspaces × both themes:
+every surface resolves to its own page colour — `rgb(20,27,50)` for Activity/Plan/Accounts,
+`rgb(22,28,52)` for Today, `rgb(244,236,223)` in light — with zero horizontal overflow.
+
+**The review count now exists.** It was blocked in the previous slice because the Activity
+payload exposed no pending count; the owner authorised building the data source. Rather
+than add a second definition that could drift, the route derives the figure from the very
+queue the Review tab lists, so the badge and the strip cannot disagree with the rows beneath
+them. The payload carries `review_count` in **every** mode, because the tab badge is visible
+in every mode. The tab shows the concept's filled orange counter (filled orange with dark
+ink clears contrast in both editions; it is orange as *text* on the light parchment that
+does not), the tab's accessible name becomes "Review, N decisions to review" rather than a
+bare "Review 3", and the concept's parchment strip appears in **Review mode only** — the
+timeline carries the kit's own banner instead, so the two do not stack.
+
+Recorded limits: the live preview process at `:8081` was started before the API change, so
+its badge reads 0 until that process is restarted; restarting it re-runs its connector sync,
+so it was left to the owner. The count describes the review queue as currently defined — the
+most recent 200 transactions, confidence below 0.7 — and is not a claim about the whole
+ledger.
+
 ### Three referenced handoff files are missing
 
 `index.html`, `manifest.json` (provenance, dimensions, SHA-256) and `VERIFICATION.md` (Astra's measured checks)

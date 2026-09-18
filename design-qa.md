@@ -287,6 +287,47 @@ connector rail, the connection strip, and the "Assets & documents" ticket. The c
 here it takes 2.1fr beside the Liabilities card so no existing figure is dropped — a layout adaptation, recorded
 rather than presented as parity.
 
+## Activity — kit icons, page-colour surfaces and the review count (2026-09-18)
+
+![Activity review tab with the orange count badge and a kit glyph per row](/Users/stephenwest/Openrouter/simplecrew-latest/tmp/activity-review/count-body-dark.png)
+
+Read against `concepts/timeline.png` and `concepts/review.png`. Three owner-reported defects
+were reproduced and fixed here, and the review count — blocked in the previous slice — was
+explicitly authorised and built.
+
+**Icons.** The owner reported "all the icons just show a question mark" and "no icons on the
+timeline page". Both held: the resolver returned the question glyph before reaching its
+merchant patterns whenever a row carried an explicit `uncategorized` category, which is
+every row of the live ledger; and the timeline never built the ringed glyph at all, because
+it was constructed inside the Review branch. The live ledger now shows **nine distinct kit
+glyphs** where it showed one. A merchant the kit cannot name keeps the concept's question
+glyph, so the ring identifies the merchant without asserting a category the data does not
+have — the category line remains the authority. `bank` was mapped in the merchant patterns
+and shipped nowhere, which drew an empty ring; it resolves to `piggy-bank` now, and a guard
+compares every mapped name against the shipped asset set.
+
+**Surfaces.** OS-043's rule — one background value per page, separation drawn with hairlines
+— was decided and its tokens were moved, but seven rules kept painting the retired
+`#202b40` / `#fffaf0` literals directly. The Activity ledger card measured
+`rgba(32,43,64,0.78)` against a `#141b32` page, which is the "lighter box" the owner
+reported. All seven now read the token the fix moved. Measured afterwards across four
+workspaces × both themes, every surface resolves to its own page colour with zero overflow.
+
+**Review count.** The tab carries the concept's filled orange counter and the tab's
+accessible name becomes "Review, N decisions to review" rather than a bare "Review 3". The
+figure and the Review list are one queue, derived in the route from the list it returns, so
+"3 decisions to review" can never sit above five rows. The parchment strip appears in
+**Review mode only**: the timeline carries the kit's own banner instead, so the two do not
+stack into competing parchment invitations.
+
+**Not claimed:** the timeline's "Your money, in order." banner and its day-part moon/sun
+markers, the row chevrons, the "Ask Virgil about this activity" footer, and the
+single-primary treatment for a row with nothing to confirm. Those are the remaining
+divergences from `concepts/timeline.png` and `concepts/review.png` and are recorded in
+OS-045's limits rather than presented as parity. The live preview process at `:8081`
+predates the API change, so its badge reads 0 until it is restarted, and restarting it
+re-runs its connector sync.
+
 ## Activity — orange ruled tabs and ticket actions (2026-09-18)
 
 ![Activity mobile-air dark, orange Review tab and filled/open ticket actions](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-activity-actions-2026-09-18/activity-mobile-air-dark-viewport.png)

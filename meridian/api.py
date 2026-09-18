@@ -1198,13 +1198,17 @@ def activity():
     if mode == "review":
         repository = _repository()
         account_labels = _account_labels(repository)
+        queue = get_review_queue(repository)
         return jsonify(
             {
                 "transactions": [
                     _transaction_payload_with_suggestion(repository, item, account_labels)
-                    for item in get_review_queue(repository)
+                    for item in queue
                 ],
                 "next_cursor": None,
+                # The badge and the strip report the SAME number the list is built
+                # from, so "3 decisions to review" can never sit above five rows.
+                "review_count": len(queue),
                 "data_freshness": data_freshness(
                     repository, include_all_connections=True
                 ),
@@ -1215,6 +1219,8 @@ def activity():
         return jsonify(
             {
                 "patterns": get_patterns(repository),
+                # The tab badge is visible in every mode, so every mode reports it.
+                "review_count": len(get_review_queue(repository)),
                 "data_freshness": data_freshness(
                     repository, include_all_connections=True
                 ),
@@ -1266,6 +1272,7 @@ def activity():
                 for transaction in page["transactions"]
             ],
             "next_cursor": page["next_cursor"],
+            "review_count": len(get_review_queue(repository)),
             "data_freshness": page["data_freshness"],
         }
     )

@@ -219,6 +219,42 @@ function setChip(root, freshness) {
   chip.textContent = labels[chip.dataset.state] || chip.dataset.state;
 }
 
+/* The Review tab's badge and the parchment strip are ONE number, supplied by the
+   API as `review_count`. It is the size of the queue the Review tab lists, so the
+   figure cannot disagree with the rows beneath it. Zero hides both rather than
+   inviting the owner to look for nothing. */
+function setReviewCount(root, count) {
+  const value = Number.isFinite(count) && count > 0 ? Math.trunc(count) : 0;
+  const plural = value === 1 ? "decision" : "decisions";
+
+  const badge = root.querySelector("[data-review-count]");
+  if (badge) {
+    badge.textContent = String(value);
+    badge.hidden = value === 0;
+    // The badge is decorative inside the tab, so the tab's own name carries the
+    // figure to assistive tech instead of leaving a bare "Review 3".
+    const tab = badge.closest("[data-activity-mode]");
+    if (tab) {
+      if (value > 0) {
+        tab.setAttribute("aria-label", `Review, ${value} ${plural} to review`);
+      } else {
+        tab.removeAttribute("aria-label");
+      }
+    }
+  }
+
+  const strip = root.querySelector("[data-review-strip]");
+  if (strip) {
+    const figure = strip.querySelector("[data-review-strip-count]");
+    const label = strip.querySelector("[data-review-strip-label]");
+    if (figure) figure.textContent = String(value);
+    if (label) label.textContent = `${plural} to review`;
+    // The strip belongs to Review. The timeline carries the kit's own banner instead,
+    // so the two do not stack into two competing parchment invitations.
+    strip.hidden = value === 0 || state.mode !== "review";
+  }
+}
+
 /* Collect the distinct classification categories seen so far into the filter
    select, preserving the current selection. */
 function populateCategories(root, transactions) {
@@ -391,6 +427,7 @@ async function loadActivity(options = {}) {
     const payload = await meridianFetch(`/api/meridian/activity?${params}`, {
       signal: state.controller.signal,
     });
+    setReviewCount(root, payload.review_count);
     renderPage(root, payload, { append: append && cursor !== null });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {

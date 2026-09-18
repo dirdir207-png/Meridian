@@ -110,23 +110,40 @@ ACCOUNTS = {
     "data_freshness": {"status": "fresh", "last_updated_at": "2026-09-08T13:42:00Z"},
 }
 
+ACTIVITY_ROWS = [
+    {"id": "synthetic-tx-1", "amount": -84.00, "currency": "USD",
+     "description": "Electric", "merchant": "Electric", "provider": "crew",
+     "occurred_at": "2026-09-11T12:00:00Z", "classification": {"category": "Utilities", "confidence": 0.86},
+     "suggested_category": "Utilities", "category_options": ["Utilities", "Home"]},
+    {"id": "synthetic-tx-2", "amount": -65.00, "currency": "USD",
+     "description": "Internet", "merchant": "Internet", "provider": "crew",
+     "occurred_at": "2026-09-14T12:00:00Z", "classification": {"category": "Utilities", "confidence": 0.86},
+     "suggested_category": "Utilities", "category_options": ["Utilities", "Home"]},
+    {"id": "synthetic-tx-3", "amount": 1660.00, "currency": "USD",
+     "description": "Paycheck", "merchant": "Paycheck", "provider": "crew",
+     "occurred_at": "2026-09-16T12:00:00Z", "classification": {"category": "Income", "confidence": 0.95},
+     "suggested_category": "Income", "category_options": ["Income"]},
+    # Below the 0.7 review threshold, so the fixture exercises a real review queue and
+    # the badge/strip have a figure the rows actually support.
+    {"id": "synthetic-tx-4", "amount": -12.40, "currency": "USD",
+     "description": "Unassigned purchase", "merchant": "Unassigned purchase",
+     "provider": "crew", "occurred_at": "2026-09-16T09:30:00Z",
+     "classification": {"category": "uncategorized", "confidence": 0.2},
+     "suggested_category": None, "category_options": ["Groceries", "Dining"]},
+]
+
 ACTIVITY = {
-    "transactions": [
-        {"id": "synthetic-tx-1", "amount": -84.00, "currency": "USD",
-         "description": "Electric", "merchant": "Electric", "provider": "crew",
-         "occurred_at": "2026-09-11T12:00:00Z", "classification": {"category": "Utilities", "confidence": 0.86},
-         "suggested_category": "Utilities", "category_options": ["Utilities", "Home"]},
-        {"id": "synthetic-tx-2", "amount": -65.00, "currency": "USD",
-         "description": "Internet", "merchant": "Internet", "provider": "crew",
-         "occurred_at": "2026-09-14T12:00:00Z", "classification": {"category": "Utilities", "confidence": 0.86},
-         "suggested_category": "Utilities", "category_options": ["Utilities", "Home"]},
-        {"id": "synthetic-tx-3", "amount": 1660.00, "currency": "USD",
-         "description": "Paycheck", "merchant": "Paycheck", "provider": "crew",
-         "occurred_at": "2026-09-16T12:00:00Z", "classification": {"category": "Income", "confidence": 0.95},
-         "suggested_category": "Income", "category_options": ["Income"]},
-    ],
+    "transactions": ACTIVITY_ROWS,
     "patterns": [],
     "next_cursor": None,
+    # Derived from the rows above with the server's own rule, so the fixture can never
+    # advertise a count its list does not contain.
+    "review_count": sum(
+        1
+        for row in ACTIVITY_ROWS
+        if (row.get("classification") or {}).get("confidence") is not None
+        and row["classification"]["confidence"] < 0.7
+    ),
     "data_freshness": {"status": "fresh", "last_updated_at": "2026-09-08T13:42:00Z"},
 }
 

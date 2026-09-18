@@ -1237,6 +1237,32 @@
         "review_findings_fixed": "Review of the first pass found two real defects, both fixed and guarded. (1) clip-path severs a rectangular border at every chamfer, so the open ticket showed detached strokes; correction now stacks a brass edge polygon with a 1px-inset page-coloured face polygon. (2) #e99a48 as selected-tab TEXT measures only 1.95:1 on the light edition, below the 3:1 large-text floor; the light edition now uses --obs-action-ink for the label (12.78:1, dark keeps 7.45:1) while the star and underline stay orange, because the handoff forbids introducing a second orange. The orange cue itself remains 1.95:1 in light, recorded rather than hidden.",
         "limits": "The pending-count banner remains blocked because the Activity payload has no pending-count source. The existing Approve category label remains because activity.js is outside this presentation-only claim. At 390px the ticket controls wrap to preserve the long label; they remain paired at 420px and 430px. The light-edition orange star and underline measure 1.95:1, so the accessible selection state is carried by the label contrast rather than by the star. Captures are fixture-only and not deployment evidence."
       }
+    },
+    {
+      "id": "OS-045",
+      "title": "Activity: kit icons, page-colour surfaces and the review count",
+      "phase": "design-fidelity",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-043",
+        "OS-044"
+      ],
+      "authority_impact": "none; the review count is a read-only aggregate over the existing review queue. No classification, write, provider or authority change",
+      "owner_decision_required": false,
+      "requested_by": "owner review of the live preview on 2026-09-18",
+      "acceptance_criteria": [
+        "Every ledger row resolves to a kit glyph that the kit actually ships, on the timeline as well as in Review",
+        "A mapped icon name with no shipped asset fails a test instead of rendering an empty ring",
+        "No observatory rule hard-codes a retired surface literal; every content surface resolves to its own page colour",
+        "The Activity payload reports review_count in every mode",
+        "Review carries an orange count badge and, in Review mode only, the concept's parchment strip"
+      ],
+      "visual_authority": "design/observatory-extension-2026-09-18/concepts/timeline.png (Review badge, row glyphs) and concepts/review.png (the 'N decisions to review' strip)",
+      "delivered": "Kit glyphs on both timelines: the resolver no longer short-circuits on an explicit 'uncategorized' classification, the timeline builds the ringed glyph it never built before, the unshipped `bank` name resolves to `piggy-bank`, and the kit path lives beside the mapping. Retired surface literals replaced with the token the OS-043 fix moved. review_count added to the Activity payload and rendered as the Review tab badge plus the parchment strip",
+      "guards": "tests/meridian/test_activity_glyph.py pins asset coverage for every mapped name and the uncategorized-merchant cases; test_observatory_identity.py now strips comments and asserts no retired surface literal survives; tests/meridian/test_activity_review_count.py (new) proves the badge figure equals the rows the Review tab lists, in every mode",
+      "browser": "Live preview, 420x912: the ledger went from one distinct glyph to nine across the real merchants (Circle K, Cumberland Farms, KeyMe, Shell, OpenAI). Four workspaces x both themes: every surface resolves to its own page colour -- rgb(20,27,50) Activity/Plan/Accounts, rgb(22,28,52) Today, rgb(244,236,223) light -- with zero overflow. Isolated preview: badge '1', tab aria-label 'Review, 1 decision to review', strip shown in Review only and worded in the singular",
+      "limits": "The live preview at :8081 was started before the API change, so its badge will read 0 until that process is restarted; restarting it re-runs its connector sync, so it was left to the owner. Runpreview captures are fixture-only and are not deployment evidence"
     }
   ]
 }
