@@ -1,6 +1,6 @@
 /* Activity workspace: a stable, date-grouped ledger with cursor pagination. */
 
-import { MeridianApiError, meridianFetch } from "./api.js";
+import { MeridianApiError, activityBannerCopy, meridianFetch } from "./api.js";
 import { describeTransactionAccount } from "./archived-accounts.js";
 import { dayKey, dayLabel, formatCurrency } from "./format.js";
 import { ACTION_ICONS, categoryIsAssigned, kitIconUrl, transactionIconName } from "./kit-icons.js";
@@ -259,6 +259,25 @@ function setChip(root, freshness) {
   chip.textContent = labels[chip.dataset.state] || chip.dataset.state;
 }
 
+/* Concept 03's parchment banner. The copy comes from `activityBannerCopy`, which
+   returns null when nothing has been observed, so an unconnected ledger shows no
+   headline claiming an order it has not seen. The timeline owns this surface; Review
+   owns the decision strip, so the two never stack. */
+function setActivityBanner(root, freshness) {
+  const banner = root.querySelector("[data-activity-banner]");
+  if (!banner) {
+    return;
+  }
+  const copy = activityBannerCopy(freshness);
+  if (copy) {
+    const title = banner.querySelector("[data-activity-banner-title]");
+    const meta = banner.querySelector("[data-activity-banner-meta]");
+    if (title) title.textContent = copy.title;
+    if (meta) meta.textContent = copy.meta;
+  }
+  banner.hidden = copy === null || state.mode !== "timeline";
+}
+
 /* The Review tab's badge and the parchment strip are ONE number, supplied by the
    API as `review_count`. It is the size of the queue the Review tab lists, so the
    figure cannot disagree with the rows beneath it. Zero hides both rather than
@@ -468,6 +487,7 @@ async function loadActivity(options = {}) {
       signal: state.controller.signal,
     });
     setReviewCount(root, payload.review_count);
+    setActivityBanner(root, payload.data_freshness);
     renderPage(root, payload, { append: append && cursor !== null });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {

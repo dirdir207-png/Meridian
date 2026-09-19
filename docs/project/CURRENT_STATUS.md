@@ -244,6 +244,39 @@ Geometry was tuned rather than assumed: the two controls share a row at 420px (m
 side padding tightened. A larger basis wrapped them onto separate rows, which is not the
 concept's layout.
 
+### The timeline's parchment banner
+
+Concept 03 draws "Your money, in order." over an observed stamp, above the day dividers.
+The banner is the first Activity surface that states **when** the ledger was observed, so the
+honesty rules mattered more than the styling, and they are encoded in the mapper rather than
+left to the view.
+
+`activityBannerCopy()` lives in `api.js` beside the existing `freshnessText`, so it is
+DOM-free and a Node round-trip exercises every branch instead of a source pattern. It
+composes the stamp from the **same** freshness payload the rest of the shell already fetches,
+which means there is no second notion of "current" to drift:
+
+- **fresh** → "Your money, in order." / "Observed activity · Updated Sep 8, 9:42 AM"
+- **stale** → the same headline, but the line itself says "Last observed … · Not current",
+  because the headline read alone would present stale data as current
+- **unavailable** → **no banner at all**, because that headline claims an order nothing has
+  observed yet
+
+The timeline owns the banner and Review owns the decision strip, so the two parchment
+surfaces never stack. The banner reuses the kit's `parchment-ticket.png` at the same measured
+80-slice as the Review and Accounts strips, and its roundel and ornaments are the kit's own
+`moon.svg` and `star.svg`, masked so they inherit their ink.
+
+One deliberate deviation: the banner **keeps the full date** in its stamp. The concept shows a
+time alone ("Updated 11:40"), but the synthetic fixture's newest observation is ten days older
+than "today" — a time-only stamp would read as freshly observed. At phone widths the
+decorative stars stand down so the stamp still fits one line.
+
+Still open from the same concept: the day-part moon/sun markers on the dividers, the row
+chevrons, and the "Ask Virgil about this activity" footer. **The kit ships `moon.svg` and no
+sun glyph at all**, and no sun asset exists in any governing design bundle, so it is reported
+as a missing asset rather than approximated.
+
 ### Two defects in the inline category editor
 
 The owner reported: *"when manually writing a category, pressing the space key brings up the

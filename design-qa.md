@@ -287,6 +287,35 @@ connector rail, the connection strip, and the "Assets & documents" ticket. The c
 here it takes 2.1fr beside the Liabilities card so no existing figure is dropped — a layout adaptation, recorded
 rather than presented as parity.
 
+## Activity — the parchment banner above the day dividers (2026-09-18)
+
+![Activity timeline with the parchment banner, moon roundel and observed stamp](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-activity-banner-2026-09-18/activity-mobile-air-dark-viewport.png)
+
+Read against `concepts/timeline.png`, which draws a parchment banner above the Today divider
+carrying "Your money, in order." over an observed stamp.
+
+The banner is the first Activity surface that states **when** the ledger was observed, so the
+copy is composed by a DOM-free mapper (`activityBannerCopy` in `api.js`, beside the shell's
+existing `freshnessText`) from the **same** freshness payload everything else uses. Three
+honesty rules are encoded there rather than in the view: a stale ledger says "Not current" in
+the line itself, an unconnected ledger gets **no banner at all** rather than a headline
+claiming unobserved order, and a missing stamp is never invented.
+
+The timeline owns the banner and Review owns the decision strip, so the two parchment surfaces
+never stack — verified in both modes at both widths. The kit's `parchment-ticket.png` is
+reused at the same measured 80-slice as the Review and Accounts strips, and the roundel and
+ornaments are the kit's own `moon.svg` and `star.svg`.
+
+**Deliberate deviation:** the stamp keeps its full date. The concept shows a time alone
+("Updated 11:40"), but the fixture's newest observation is ten days older than "today", and a
+time-only stamp would read as fresh. At phone widths the decorative stars stand down so the
+stamp holds one line.
+
+**Not claimed:** the day-part moon/sun markers on the dividers, the row chevrons and the "Ask
+Virgil about this activity" footer. The kit ships `moon.svg` and **no sun glyph at all**, and no
+sun asset exists in any governing design bundle, so that is a reported asset gap rather than
+something to approximate.
+
 ## Activity — kit icons, page-colour surfaces and the review count (2026-09-18)
 
 ![Activity review: the orange count badge, the "1 decision to review" strip, and Confirm/Change with kit glyphs](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-activity-followup-review-2026-09-18/activity-mobile-air-dark-viewport.png)

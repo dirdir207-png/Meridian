@@ -42,6 +42,18 @@
   </div>
 
   <div class="m-activity-body">
+    {# Concept 03's parchment banner, above the day dividers. The headline is the
+       concept's; the observed stamp is composed from the SAME freshness payload the
+       rest of the shell uses, so a stale graph says "Not current" in the line itself
+       and an unconnected graph shows no banner at all. #}
+    <p class="m-activity-banner" data-activity-banner hidden>
+      <span class="m-activity-banner-roundel obs-art" aria-hidden="true"></span>
+      <span class="m-activity-banner-copy">
+        <strong data-activity-banner-title></strong>
+        <span class="m-activity-banner-meta" data-activity-banner-meta></span>
+      </span>
+      <span class="m-activity-banner-stars" aria-hidden="true"></span>
+    </p>
     {# Concept 03's parchment strip. The figure is a count of transactions whose
        classification confidence is below the review threshold -- the same queue the
        Review tab lists -- so it is a fact about the ledger, never a forecast. #}

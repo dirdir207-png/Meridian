@@ -1290,6 +1290,33 @@
       "guards": "tests/browser/test_transaction_review.py::test_a_two_word_category_can_be_typed_without_the_inspector_stealing_the_space types 'Personal Care', asserts the value lands, asserts no evidence opened, and asserts the timeline row still opens the inspector on Space",
       "browser": "Live preview: focused timeline row + Space opens the inspector (data-object-id 3300213); the same flow against mocked data lands 'Personal Care' in the field and sets data-object-id 303. tests/browser/test_transaction_review.py 2 passed; test_activity.py 1 failed / 6 passed with and without this change, so the pre-existing browser-suite failures in this environment are unrelated",
       "limits": "The wider browser suite reports 43 failed / 28 errors in this environment both with and without this change (stashed baseline: 43 failed / 21 passed / 28 errors; with the change: 43 failed / 22 passed / 28 errors), so those are environmental. The root cause of that instability was not investigated and is not claimed"
+    },
+    {
+      "id": "OS-047",
+      "title": "Timeline chrome: the parchment banner, then the day-part markers",
+      "phase": "design-fidelity",
+      "status": "in_progress",
+      "priority": "high",
+      "dependencies": [
+        "OS-043",
+        "OS-045"
+      ],
+      "authority_impact": "none; presentation only. The banner's stamp is composed from the freshness payload the shell already fetches. No route, write, provider or authority change",
+      "owner_decision_required": false,
+      "requested_by": "owner approval, 2026-09-18: 'Let's do it'",
+      "acceptance_criteria": [
+        "The timeline shows the concept's parchment banner above the day dividers",
+        "The observed stamp is composed from the real freshness payload, never invented",
+        "A stale ledger states that it is not current in the line itself",
+        "An unconnected ledger shows no banner rather than a headline claiming unobserved order",
+        "The banner belongs to Timeline and the decision strip to Review, never both"
+      ],
+      "visual_authority": "design/observatory-extension-2026-09-18/concepts/timeline.png",
+      "delivered": "activityBannerCopy() in api.js (DOM-free, beside freshnessText) composes the copy; the timeline renders it above the ledger and Review hides it, so the banner and the decision strip are mutually exclusive. The banner reuses the kit's parchment-ticket slice and its moon/star glyphs",
+      "guards": "tests/meridian/test_activity_banner.py (6 tests): a Node round-trip over fresh, stale, unavailable, null and stamp-less payloads, plus the template/script/CSS contract and the phone-width rule that keeps the stamp on one line",
+      "browser": "Isolated preview, 420x912 DPR3 and 1440x900 DPR1, both editions: the banner resolves the parchment border-image, the dark moon roundel, the concept headline and the real stamp; hidden in Review while the decision strip is visible; zero overflow in all eight combinations",
+      "capture": "artifacts/observatory-activity-banner-2026-09-18/** (untracked by convention): 10 records, 5 device presets x 2 themes, every record naming concepts/timeline.png, all with zero overflow and zero console errors",
+      "limits": "REMOVED from the concept's single-line stamp: the banner keeps the full date, because the fixture's newest observation is ten days older than 'today' and a time-only stamp would read as fresh; at phone widths the decorative stars stand down to buy the line. Still open in this task: the day-part moon/sun markers on the dividers (the kit ships moon.svg and no sun glyph at all), the row chevrons, and the 'Ask Virgil about this activity' footer. The day dividers still read as uppercase dates rather than the concept's 'Today . Sep 18 --- star'. No sun asset exists in any governing design bundle, so it is reported as a gap rather than invented"
     }
   ]
 }

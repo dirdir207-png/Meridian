@@ -232,6 +232,106 @@ html[data-theme="light"] .m-activity {
   display: none;
 }
 
+/* Concept 03's parchment banner, above the day dividers. It reuses the kit's
+   `parchment-ticket.png` at the same measured 80-slice as the Review strip and the
+   Accounts strip, so all three share one material. The roundel is a dark observatory
+   disc carrying the kit's own moon glyph; the stars are the concept's decorative marks
+   and stay out of the accessibility tree. */
+.m-activity-banner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--m-space-3);
+  margin: 0;
+  padding: var(--m-space-4);
+  border: 20px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 fill / 20px round;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.m-activity-banner[hidden] {
+  display: none;
+}
+
+.m-activity-banner-roundel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #141b32;
+  color: #f4ecdf;
+}
+
+/* A pseudo-element mask so the glyph inherits the roundel's parchment ink. */
+.m-activity-banner-roundel::after {
+  content: "";
+  width: 22px;
+  height: 22px;
+  background-color: currentColor;
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/moon.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/moon.svg") center / contain no-repeat;
+}
+
+.m-activity-banner-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.obs-shell .m-activity-banner-copy strong {
+  color: #3f351f;
+  font-family: var(--m-font-serif);
+  font-size: var(--m-text-lg);
+  font-weight: 400;
+}
+
+.obs-shell .m-activity-banner-meta {
+  color: #5c5136;
+  font-size: var(--m-text-sm);
+}
+
+.m-activity-banner-stars {
+  width: 34px;
+  height: 14px;
+  color: #8a5a2e;
+  background-color: currentColor;
+  -webkit-mask:
+    url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") left center / 14px 14px no-repeat,
+    url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") right center / 10px 10px no-repeat;
+  mask:
+    url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") left center / 14px 14px no-repeat,
+    url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") right center / 10px 10px no-repeat;
+}
+
+/* At phone widths the stamp cannot share the row with the roundel AND the stars: it
+   wrapped after "9:42" and orphaned the meridiem. The stars are decorative, so they
+   go first and the roundel gives up 6px; the stamp keeps its date, because a
+   time-only stamp would present a days-old ledger as freshly observed. */
+@media (max-width: 600px) {
+  .m-activity-banner {
+    gap: var(--m-space-2);
+    padding: var(--m-space-3);
+  }
+
+  .m-activity-banner-roundel {
+    width: 38px;
+    height: 38px;
+  }
+
+  .m-activity-banner-roundel::after {
+    width: 19px;
+    height: 19px;
+  }
+
+  .m-activity-banner-stars {
+    display: none;
+  }
+}
+
 /* Concept 03's parchment strip, reusing the kit's `parchment-ticket.png` at the same
    measured 80-slice the Accounts strip already uses, so the two share one material.
    It reports the review queue's own size; it is never shown as an estimate. */

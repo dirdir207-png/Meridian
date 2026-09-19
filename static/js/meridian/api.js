@@ -161,6 +161,41 @@ export function freshnessText(freshness) {
   return { state, label: "Not connected yet" };
 }
 
+/* Concept 03 draws a parchment banner above the day dividers: "Your money, in order."
+   with an observed stamp underneath. The stamp is composed from the same freshness
+   payload the rest of the shell uses rather than from a second notion of "current".
+
+   Two honesty rules live here rather than in the view:
+   - a stale graph says so IN the line ("Not current"), because "Your money, in order."
+     read alone would present stale data as current;
+   - an unconnected graph gets no banner at all, because that headline claims an order
+     nothing has observed yet. Callers get null and hide the surface. */
+export function activityBannerCopy(freshness) {
+  const state = (freshness && freshness.status) || "unavailable";
+  if (state === "unavailable") {
+    return null;
+  }
+  const stamp = formatTimestamp(freshness && freshness.last_updated_at);
+  // The stamp keeps its DATE. A time-only stamp reads as "today" on a ledger whose
+  // newest row may be days old, which is exactly the stale-as-current claim this
+  // banner must not make. The label binds to the stamp with a non-breaking space so a
+  // narrow banner breaks at the separator instead of orphaning the meridiem.
+  if (state === "stale") {
+    return {
+      title: "Your money, in order.",
+      meta: stamp
+        ? `Observed activity \u00b7 Last observed\u00a0${stamp} \u00b7 Not current`
+        : "Observed activity \u00b7 Not current",
+    };
+  }
+  return {
+    title: "Your money, in order.",
+    meta: stamp
+      ? `Observed activity \u00b7 Updated\u00a0${stamp}`
+      : "Observed activity",
+  };
+}
+
 export function formatTimestamp(value) {
   if (!value) {
     return "";
