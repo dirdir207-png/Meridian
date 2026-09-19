@@ -26,7 +26,7 @@ What that settles, and what it forbids:
 - The observed "State Of New Hampshire" transaction and the Crew Income Source are one thing
   seen from two sides. That is the provenance anchor for a projected paycheck.
 
-### Verified: the Income Source is never pulled from Crew
+### Verified: the Income Source is never INGESTED from Crew
 
 The owner: *"It doesnt appear to pull the Income source from crew."* Confirmed, and it is not a
 partial gap -- the surface is absent entirely.
@@ -38,6 +38,45 @@ partial gap -- the surface is absent entirely.
 - The dial's Paycheck events do not come from Crew at all. `meridian/paycheck.py` describes
   itself as a "**single paycheck config** (cadence, amount, next date)", persisted locally and
   set by hand. That is the source of the `+$1,663.00` projections.
+
+**Correction, round 2 of the same day.** The heading above first read "never pulled from Crew",
+and it said there was "no income surface to read". That was too strong, and it understated how
+close this is. Crew does expose a paycheck funding plan, and the connector already requests it:
+`meridian/providers/crewwork.py::readback_funding_plans()` parses
+`expenses...accounts[].billReserve.fundingPlans[]` and returns each entry with its parent
+`billReserveId`, "so a plan can be attributed to the reserve it belongs to rather than matched by
+name alone". A plan's shape is `{"id", "name", "amount"}` in cents.
+
+That is the owner's model, already in the data: a stable `id`, the payday title as `name`
+("Veteran's Home"), the cadence `amount`, and `billReserveId` joining the plan to the bills it
+funds.
+
+What is missing is therefore **ingestion and identity, not the read**. The plans are fetched only
+to verify a write that just happened, used, and discarded: nothing persists them, so nothing can
+cite them, and the hand-set local paycheck stays the only source of the projection.
+
+**And a Crew funding plan IS the owner's "Funding Cadence".** The write path fixes the shape
+(`create_crew_paycheck_funding_plan`):
+
+```
+{"billReserveId": "res:1", "name": "Cash App", "amount": 42720,
+ "frequency": "WEEKLY", "frequencyInterval": 2, "anchorDate": "2026-09-04"}
+```
+
+So a plan carries the payday **title**, its **amount** (cents, per the expenses facet's documented
+convention, with bills read through `_cents_to_dollars`), its **cadence**
+(`frequency` + `frequencyInterval` + `anchorDate`), and the **reserve it funds**. That is exactly
+what the owner described, and Meridian can already do three of the four things needed:
+
+| Capability | State |
+|---|---|
+| Write a cadence to Crew (`create`/`update`/`delete_crew_paycheck_funding_plan`) | **exists**, readback-verified |
+| Read a cadence from Crew (`readback_funding_plans()`) | **exists**, but only for write verification |
+| Ingest a cadence into the app's own model | **missing** |
+| Show the cadence and cite it against a projected paycheck | **missing** |
+
+So the app can already *set up* the owner's funding cadence in Crew and *prove* the write landed,
+and still cannot *display* it. The gap is display and identity, not plumbing.
 
 Three consequences, all following from that one fact:
 
