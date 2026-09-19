@@ -1231,8 +1231,15 @@
   }
 
   .m-plan-cell-funded::before {
-    content: "Funded";
-    color: var(--m-healthy);
+    /* NOT "Funded". The rule is unconditional, so every commitment carried the word --
+       including one with nothing reserved. On the owner's own ledger a card read
+       "Underfunded" beside "FUNDED $0", contradicting itself in one card. The figure is
+       Crew's `reservedAmount` (capped at the bill), and "Reserved" is the word this card's
+       own fact line already uses ("backed by Bill reserve"). It labels the figure instead
+       of asserting a verdict, so it takes the quiet label colour rather than a status one;
+       whether the bill is short is already the badge's job. */
+    content: "Reserved";
+    color: var(--m-ink-faint);
   }
 
   .m-plan-cell-next::before {
