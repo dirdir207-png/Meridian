@@ -189,6 +189,52 @@
       "base_sha": "c1b415bb25a2e81b51badfd56ef1768ae487b5ea",
       "since": "2026-09-19T00:00:00+00:00",
       "note": "OS-051 bounded Meridian-local learning floor and nested Payday reset control. Changes only derived paycheck learning; preserves financial records, makes no Crew/provider mutation, and does not deploy."
+    },
+    {
+      "agent": "codex-owner-rulings",
+      "claim_id": "owner-rulings-sun-handoff-20260919",
+      "generation": 2,
+      "files": [
+        "docs/project/agent-claims.json",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/HANDOFF_FOR_ASTRA_2026-09-19.md",
+        "docs/project/DEEPSEEK_HANDOFF_2026-09-19.md",
+        "design/observatory-sun-2026-09-19/**",
+        "static/css/meridian/activity.css",
+        "static/js/meridian/activity.js",
+        "static/img/meridian/observatory/sun-engraving-2026-09-19.png",
+        "artifacts/observatory-sun-2026-09-19/**",
+        "artifacts/visual-pass-2026-09-19/**",
+        "docs/project/VISUAL_CORRECTIONS_2026-09-19.md",
+        "design-qa.md",
+        "templates/meridian/partials/wordmark.html",
+        "static/css/meridian/shell.css",
+        "templates/meridian/settings.html",
+        "scripts/preview_observatory_dial.py",
+        "scripts/capture_meridian_matrix.py",
+        "tests/meridian/test_settings_visual_preview.py"
+      ],
+      "base_sha": "ade532d2e11069fa86600d3afea5442c75d992d1",
+      "since": "2026-09-19T19:16:24.109988+00:00",
+      "note": "Owner approved a focused five-page visual pass, 2-3 contained corrections, governed verification, and uncommitted DeepSeek handoff. Preserve previous sun work. No provider or live operation."
+    },
+    {
+      "agent": "deepseek",
+      "claim_id": "adopt-visual-checkpoint-20260919",
+      "generation": 1,
+      "files": [
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/VISUAL_CORRECTIONS_2026-09-19.md",
+        "docs/project/DEEPSEEK_HANDOFF_2026-09-19.md"
+      ],
+      "base_sha": "ade532d2e11069fa86600d3afea5442c75d992d1",
+      "since": "2026-09-19T20:05:00+00:00",
+      "note": "Adopts the codex-owner-rulings checkpoint on the owner's explicit handoff: reproduce its evidence, correct the measured 32px overflow attribution (1024x768 tablet, not mobile), and commit the checkpoint. Documentation only; no code, provider, live or authority change."
     }
   ]
 }

@@ -1,0 +1,19 @@
+{
+  "asset": "static/img/meridian/observatory/sun-engraving-2026-09-19.png",
+  "generator": "built-in image_gen",
+  "reference": "design/observatory-extension-2026-09-18/concepts/timeline.png",
+  "mode": "RGBA",
+  "size": [
+    1254,
+    1254
+  ],
+  "sha256": "25e0aecab55c92c39835ad5fb3f8955fd9e8e84a1123e08a99c6305314290b6f",
+  "bytes": 962012,
+  "alpha_extrema": [
+    0,
+    255
+  ],
+  "fully_transparent_pixels": 1238578,
+  "calls": 1,
+  "provenance": "New generated artwork inspired by reference; not an extracted original and not covered by the Bootstrap Icons license."
+}

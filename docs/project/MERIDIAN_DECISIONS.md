@@ -56,3 +56,24 @@ The owner requested review and correction of the GitHub landing page: Meridian b
 ## D-009 — Preserve the full future roadmap in the overview (owner, 2026-09-18)
 
 The owner clarified that all roadmap concepts belong on the human-facing landing page as future features. Restored all 22 individually named concepts with plain-language intended benefits and explicit future status. D-008 excludes agent-facing instructions, not product features involving AI or agents; it must not be used to compress away the roadmap.
+
+
+## D-010 — Preserve Crew funding relationships (owner, 2026-09-19)
+
+Owner: "Bills are already funded by a particular funding source or income source in Crew (only one exists presently)- but this can be made to be done in Crew as well, as long as it doesnt break cross functionality."
+
+Use Crew's existing relationship as the authority; do not invent a Meridian-only allocation or infer it from the number/name of income sources. Preserve interoperability. Managing the relationship in Crew is acceptable. This is not approval of a specific provider mutation. Source identity is separate from how much money is reserved for a dated bill occurrence; do not spread a reserve total across future occurrences.
+
+Read-only inspection at `ade532d`: funding plans persist `bill_reserve_id`, but `_collect_commitment_candidates` drops the containing reserve ID and `CommitmentCandidate` has no such field. The next slice must retain the observed relationship before resolving a source. Missing or ambiguous links remain explicit. See `DEEPSEEK_HANDOFF_2026-09-19.md`.
+
+## D-011 — Icon replacement scope and usage (owner, 2026-09-19)
+
+The supplied generic icon pack does not match the concept. The long-term goal is to replace all icons with closer concept-matched artwork. The owner accepts generating only the missing sun now when full-set generation is expensive. This checkpoint uses one built-in image generation; no full-pack generation or replacement. Keep generated artwork outside the Bootstrap-licensed directory and record provenance. Usage cost is not known in advance. The owner subsequently requested a clean, usage-conscious handoff for DeepSeek, prioritizing visual progress.
+
+## D-012 — Page-specific design authority (owner, 2026-09-19)
+
+Owner: "September 18 only filled in pages that had no concept before. If there is overlap, September 16th is the standard, otherwise drop back to the 8th".
+
+September 18 is additive, not a blanket replacement. Use September 16 where a page has an overlapping standard, September 18 for previously missing pages/surfaces, and September 8 as fallback. Historical does not mean unusable. Record the exact reference for each comparison; do not silently promote a rendered screenshot into a concept.
+
+Located locally: September 16 asset kit and its artwork handoff, September 8 page concepts, and September 18 Review/Timeline/Settings/Virgil studies. The September 16 kit README explicitly says its assets do not supersede reference composition and points to September 8 PNGs. No separate September 16 page-concept directory was found in the inspected design/kit paths; this limits reference discovery, not the owner's precedence rule. Use the documented September 8 compositions plus September 16 assets unless an actual September 16 page reference is located. The September 18 Timeline concept supplies the missing sun reference for this bounded slice.

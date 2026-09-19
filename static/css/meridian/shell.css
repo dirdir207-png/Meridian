@@ -78,9 +78,9 @@
   text-decoration: none;
 }
 
-/* Shared wordmark (partials/wordmark.html). The dotless letter anchors the apricot
-   four-point star to the glyph rather than the line box, and the star is a
-   pseudo-element so the mark adds no text to the accessibility tree. */
+/* Shared wordmark (partials/wordmark.html). The dotless second i anchors its apricot
+   dot to the glyph rather than the line box. The decorative pseudo-element
+   adds no text to the accessibility tree. */
 .m-wordmark {
   display: inline-block;
   font-family: var(--m-font-serif);
@@ -101,16 +101,7 @@
   top: 0.1em;
   left: 0.1em;
   background: var(--m-apricot, #f3b272);
-  clip-path: polygon(
-    50% 0,
-    63% 36%,
-    100% 50%,
-    63% 64%,
-    50% 100%,
-    36% 64%,
-    0 50%,
-    36% 36%
-  );
+  border-radius: 50%;
 }
 
 .m-nav-list {

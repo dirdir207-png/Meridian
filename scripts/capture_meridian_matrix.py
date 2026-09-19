@@ -55,11 +55,12 @@ def _validate_workspaces(workspaces: Sequence[str] | None) -> list[str]:
     # Distinguish "not specified" (None -> every governed workspace) from an
     # explicitly empty list, which is a caller error rather than "all".
     selected = list(WORKSPACES) if workspaces is None else list(workspaces)
-    unknown = [name for name in selected if name not in WORKSPACES]
+    supported = [*WORKSPACES, "settings"]
+    unknown = [name for name in selected if name not in supported]
     if unknown:
         raise ValueError(
             f"unknown workspace(s): {', '.join(unknown)}; "
-            f"governed workspaces are {', '.join(WORKSPACES)}"
+            f"governed workspaces are {', '.join(supported)}"
         )
     if not selected:
         raise ValueError("at least one workspace is required")
@@ -154,14 +155,18 @@ def capture_matrix(
                         login(page, app_url)
                     for workspace in selected:
                         console_errors.clear()
-                        page.goto(f"{app_url}/meridian?workspace={workspace}")
+                        page.goto(
+                            f"{app_url}/meridian/settings?section=connections"
+                            if workspace == "settings"
+                            else f"{app_url}/meridian?workspace={workspace}"
+                        )
                         page.wait_for_load_state("networkidle", timeout=15000)
                         page.evaluate("() => document.fonts && document.fonts.ready")
                         page.add_style_tag(
                             content="*{animation:none!important;transition:none!important;caret-color:transparent!important}"
                         )
                         page.wait_for_function(
-                            "(ws) => !document.querySelector(`[data-workspace-section='${ws}'] [aria-busy='true']`)",
+                            "(ws) => !document.querySelector(ws === 'settings' ? '[data-settings-shell] [aria-busy=true]' : `[data-workspace-section='${ws}'] [aria-busy='true']`)",
                             arg=workspace,
                             timeout=12000,
                         )

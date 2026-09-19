@@ -245,7 +245,8 @@ function buildRow(transaction) {
    The marker is the concept's own pair: a crescent on Today, a sunburst on every older
    day. The crescent is the kit's shipped `moon.svg`. The sunburst is NOT from the
    supplied set -- the kit is Bootstrap Icons and ships bi-moon without bi-sun -- so it
-   is authored in this repository to the kit's metrics and says so in its own header. */
+   now uses the generated engraving via CSS (D-011). The old sun.svg remains as
+   historical source; the generated asset is kept outside the Bootstrap-licensed set. */
 function dayHeading(isoTimestamp) {
   const heading = document.createElement("h2");
   heading.className = "m-day-heading";

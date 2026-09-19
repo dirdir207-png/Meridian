@@ -1,5 +1,7 @@
 # Handoff for Astra — funding-link rule, icon ornateness, and the visual pass
 
+> **Owner decisions received 2026-09-19:** the three-question gate below is superseded by D-010–D-012 in `MERIDIAN_DECISIONS.md`. Preserve Crew funding relationships; full ornate icon replacement is the long-term goal, one sun now; September 18 is additive, September 16 wins overlaps, September 8 is fallback. Resume from `DEEPSEEK_HANDOFF_2026-09-19.md`. The original handoff remains below as history, including its now-superseded blanket demotion of September 8.
+
 **Written:** 2026-09-19 by the Builder lane (the session that shipped `c1b415b` and `6d1668c`).
 **For:** Astra.
 **Base:** branch `feat/meridian-implementation`, HEAD `6d1668c`, nothing pushed, nothing deployed.

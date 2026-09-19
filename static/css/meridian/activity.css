@@ -466,8 +466,7 @@ html[data-theme="light"] .m-activity {
    rule running to the edge with a four-pointed star at its end. The rule and star are
    decorative; the label alone carries the heading. The star is the same typographic
    sparkle the Activity tabs already use, so the two dividers and the tab share one mark.
-   The marker slot (moon on Today, sunburst on older days) is not built: the kit ships a
-   crescent but no sunburst, and approximating the sun is forbidden. */
+   The marker pair is implemented below with the supplied crescent and a generated sun. */
 .m-day-heading {
   display: flex;
   align-items: center;
@@ -480,16 +479,23 @@ html[data-theme="light"] .m-activity {
   margin: 0 0 var(--m-space-2);
 }
 
-/* The concept's marker pair: a crescent on Today, a sunburst on older days. Masked so
-   both inherit the divider's brass. The crescent is the kit's shipped moon; the sun is
-   authored in-repo (see the asset's header) because the kit ships no sunburst. */
+/* Today keeps the supplied crescent. Older days use the generated engraving below;
+   its original color and alpha preserve detail that a single-color mask would lose. */
 .m-day-heading-marker {
   flex: 0 0 auto;
-  width: 15px;
-  height: 15px;
+  width: 24px;
+  height: 24px;
   background-color: currentColor;
   -webkit-mask: var(--m-day-marker) center / contain no-repeat;
   mask: var(--m-day-marker) center / contain no-repeat;
+}
+
+/* D-011: generated from the Timeline concept, not part of the Bootstrap icon set.
+   Provenance: design/observatory-sun-2026-09-19/README.md. */
+.m-day-heading-marker[data-day-marker="sun"] {
+  background: transparent url("/static/img/meridian/observatory/sun-engraving-2026-09-19.png") center / contain no-repeat;
+  -webkit-mask: none;
+  mask: none;
 }
 
 /* The concept puts the day's name in the accent brass while the hairline stays quiet. */
@@ -1147,5 +1153,47 @@ body:has([data-workspace-section="activity"]:not([hidden])) #advisor-fab.m-advis
   .m-select {
     min-width: 0;
     flex: 1;
+  }
+}
+
+
+/* Mobile Timeline follows the concept's merchant/category stack. Keep the whole
+   merchant readable instead of letting a third text column consume its width.
+   Review cards have their own layout and are deliberately excluded. */
+@media (max-width: 600px) {
+  .m-transaction-row:not(.m-review-card) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: var(--m-space-3);
+    row-gap: 2px;
+  }
+
+  .m-transaction-row:not(.m-review-card) > .m-review-glyph {
+    grid-column: 1;
+    grid-row: 1 / 3;
+  }
+
+  .m-transaction-row:not(.m-review-card) > .m-row-text {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .m-transaction-row:not(.m-review-card) .m-row-title {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .m-transaction-row:not(.m-review-card) > .m-row-category {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .m-transaction-row:not(.m-review-card) > .m-row-amount {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    min-width: 0;
   }
 }

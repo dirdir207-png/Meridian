@@ -1,5 +1,21 @@
 # Enhanced SimpleCrew — Current Status
 
+## RESUME HERE — owner rulings + generated sun, verified checkpoint (2026-09-19)
+
+Canonical checkout `/Users/stephenwest/Openrouter/simplecrew-latest`, branch `feat/meridian-implementation`, base HEAD `ade532d`. Owner requested a usage-conscious clean handoff to DeepSeek with as much visual progress as feasible. The Codex lane left the work uncommitted; **DeepSeek adopted the claim, reproduced the evidence and committed the checkpoint on 2026-09-19** (SHA in the `AGENT_COORDINATION.md` log). Nothing pushed or deployed. No financial code, live DB, provider calls or writes changed. Preserve the pre-existing unrelated untracked files.
+
+Read `DEEPSEEK_HANDOFF_2026-09-19.md` for exact changed paths, next steps and commands. Decisions D-010–D-012 supersede the old handoff's questions: preserve Crew's bill/source relationship; eventual full ornate icon replacement, sun-only now; September 16 wins overlapping concepts, September 18 adds missing surfaces, September 8 is fallback.
+
+Implemented: one generated ornate sun, real transparency, provenance and exact prompt; Activity older-day markers use it at 24px while Today retains its moon. Bootstrap set untouched. OS-048 source-link implementation remains open: bill ingestion currently drops the containing reserve ID, while funding plans retain it. No funding implementation was started.
+
+Verified this turn: 26 focused Activity tests passed; `node --check` passed. Synthetic `:8093` governed Activity matrix: 10 records / 20 PNGs, five required viewports in both themes, all zero overflow and zero page errors. `artifacts/observatory-sun-2026-09-19/manifest.json` names the Timeline concept and frozen clock. Supplementary browser probe confirms decoded PNG, 24px slot, no mask, transparency and `aria-hidden` in both themes. Visually inspected mobile Air dark, desktop light and both close-ups. No full-suite or live-acceptance claim. Captures include this uncommitted diff although metadata names base HEAD.
+
+Next: DeepSeek reviews/adopts the `codex-owner-rulings` claim and narrow diff, commits this checkpoint when appropriate, then implements/tests the Crew source-link read slice from the handoff. Full icon replacement and broader page fidelity remain future work; no further generation is needed for this sun.
+
+## RESUME HERE — focused visual pass (2026-09-19, verified and committed)
+
+Added the requested round wordmark dot, stacked Activity mobile merchant/category rows, and Settings theme parity plus a synthetic Connections preview route. `docs/project/VISUAL_CORRECTIONS_2026-09-19.md` records measured findings and the remaining page gaps. Forty-two focused tests passed; fresh Activity direct checks pass at 390/420/430/1440 in both themes. Today/Plan/Accounts and Activity governed captures are clean for overflow and page errors. Settings captures expose a remaining 32px overflow at the 1024×768 **tablet** viewport (light and dark; the 390/420/430 mobile viewports were clean), deliberately documented rather than hidden. The Codex lane performed no provider/live operation, deployment or commit; DeepSeek independently re-ran the focused suites (55 passed), Ruff, `node --check`, `git diff --check` and the guardrails, re-hashed the sun asset, read the capture manifests back, visually spot-checked the wordmark dot and row stacking, corrected the overflow attribution above, and committed the checkpoint.
+
 ## RESUME HERE — OS-051 learning floor (2026-09-19, base `c1b415b`)
 
 This checkpoint supersedes the OS-050 block below for the income-learning path. Branch

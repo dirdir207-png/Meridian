@@ -8,7 +8,7 @@ import mimetypes
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -158,6 +158,28 @@ ACTIVITY = {
 }
 
 
+# Connections-only Settings fixture. No credentials, account data or write handler.
+SETTINGS_CONNECTIONS = {"groups": [
+    {"kind": "bank", "label": "Banking", "connections": [{
+        "public_id": "synthetic-crew", "display_name": "Example Crew connection",
+        "uses": ["Balances", "Transactions", "Bills"], "state": "connected",
+        "freshness": "2026-09-18T18:00:00Z",
+    }]},
+    {"kind": "email", "label": "Email", "connections": []},
+    {"kind": "calendar", "label": "Calendar", "connections": []},
+]}
+
+
+def settings_preview_html():
+    env = Environment(loader=FileSystemLoader(ROOT / "templates"), autoescape=True)
+    html = env.get_template("meridian/settings.html").render(
+        active_workspace="", settings_active=True, active_settings_section="connections",
+    )
+    banner = '<div class="design-preview-banner">Synthetic Settings preview · no bank connection</div>'
+    styles = '<style>.design-preview-banner{position:fixed;z-index:1000;bottom:0;left:0;right:0;padding:4px;background:#101a28;color:#eee4cf;text-align:center;font:10px system-ui}*{animation:none!important;transition:none!important}</style>'
+    return html.replace("</head>", styles + "</head>").replace("</body>", banner + "</body>")
+
+
 def preview_html():
     env = Environment(loader=FileSystemLoader(ROOT / "templates"), autoescape=True)
     html = env.get_template("meridian/index.html").render(active_workspace="today", settings_active=False)
@@ -190,6 +212,14 @@ class Handler(BaseHTTPRequestHandler):
         path = unquote(urlsplit(self.path).path)
         if path in ("/", "/meridian"):
             body, mime = preview_html().encode(), "text/html; charset=utf-8"
+        elif path == "/meridian/settings":
+            section = parse_qs(urlsplit(self.path).query).get("section", ["connections"])[0]
+            if section != "connections":
+                self.send_error(404, "Only synthetic Connections is available in this preview")
+                return
+            body, mime = settings_preview_html().encode(), "text/html; charset=utf-8"
+        elif path == "/api/meridian/settings/connections":
+            body, mime = json.dumps(SETTINGS_CONNECTIONS).encode(), "application/json"
         elif path == "/api/meridian/today":
             body, mime = json.dumps(TODAY).encode(), "application/json"
         elif path == "/api/meridian/plan":
