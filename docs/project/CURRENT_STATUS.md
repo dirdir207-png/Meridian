@@ -26,6 +26,28 @@ What that settles, and what it forbids:
 - The observed "State Of New Hampshire" transaction and the Crew Income Source are one thing
   seen from two sides. That is the provenance anchor for a projected paycheck.
 
+### Verified: the Income Source is never pulled from Crew
+
+The owner: *"It doesnt appear to pull the Income source from crew."* Confirmed, and it is not a
+partial gap -- the surface is absent entirely.
+
+- `meridian/providers/crewwork.py` reads `expenses...billReserve.bills[]` (bills with
+  `reservedAmount`), `pockets...subaccounts[]`, `autopilot`, `virtual_cards` and
+  `userSpendConfig.selectedSpendSubaccount`. It contains **zero** references to income,
+  paycheck, payday, earning or deposit. There is no income surface to read.
+- The dial's Paycheck events do not come from Crew at all. `meridian/paycheck.py` describes
+  itself as a "**single paycheck config** (cadence, amount, next date)", persisted locally and
+  set by hand. That is the source of the `+$1,663.00` projections.
+
+Three consequences, all following from that one fact:
+
+1. A projected paycheck can never cite the observed deposit as evidence -- `observedAt` null and
+   `evidenceIds` empty are structural, not an omission.
+2. A rename in Crew can never reach Meridian. The owner's "State of New Hampshire" ->
+   "Veteran's Home" edit is invisible here, because the local config carries its own name.
+3. Per-bill funding cannot resolve either, so the dial's `fundingStatus: "unknown"` for bills is
+   the honest report of a missing pipeline rather than a decision anyone made.
+
 ### Fixed and committed this session
 
 | Commit | What |
