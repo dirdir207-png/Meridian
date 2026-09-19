@@ -143,6 +143,83 @@ single source of truth for the cadence (`OS-048`). The owner's rule answers *how
 expected amount and cite it*; it does not say the plan is authoritative over the local config.
 
 
+
+## The owner's full ruling on income — 2026-09-19, SUPERSEDES the precedence question above
+
+Three statements, verbatim, because each one decides something:
+
+> *"Moving forward paychecks are deposited directly to crew, unlike transfers from cash app etc
+> previously, this was the first paycheck to hit directly"*
+
+> *"as such, it should default to that value and moving forward aggregate after 3"*
+
+> *"Additionallly, If I set a payment cadence in Meridian, it should set that cadence as the
+> income source in Crew, the same way Crew should be populating the cadence in Meridian. So delete
+> should delete it in crew and vice versa. It should remain what it is currently for the
+> foreseeable future (unless I change jobs, nothing really should change)"*
+
+> *"The only deviation for Meridian is most likely the aggregation, I'm not sure if crew also does
+> that naturally"*
+
+### 1. The payment mechanism changed, which is why the fallback matters now
+
+Paychecks used to arrive as transfers **from Cash App**; they are now deposited **directly into
+Crew**, and the first such deposit has just happened. That has a sharp consequence the earlier
+notes did not have:
+
+- A learned aggregate over history describes the **superseded** channel. `learn_paycheck` groups
+  by merchant and returns one `source`, so a "Cash App" aggregate is the OLD pattern, not the
+  forward expectation. Presenting it as expected income would report a mechanism the owner has
+  left.
+- The new direct deposit is **one** observation, so no aggregate exists yet, and the owner's rule
+  applies exactly: **default to the value of the last known source.**
+- Aggregation must not blend the two channels. A number averaged across a retired payout route and
+  a new one is neither.
+
+### 2. Precedence is RESOLVED: observed-first, aggregate at three
+
+"it should default to that value and moving forward aggregate after 3" settles the question raised
+in the section above it: the observed value wins, and the aggregate takes over once there are
+three occurrences -- the existing `paycheck_learning._MIN_OCCURRENCES = 3`.
+
+So the expected-income chain is: **aggregate (> = 3 occurrences) -> value of the last known source
+-> (nothing observed) the configured value.** The configured figure is a last resort, not the
+authority. The owner should expect their `$1,663.00` to be superseded by what the deposits say.
+
+### 3. New requirement: the cadence is ONE record, kept in sync both ways
+
+This is larger than a display fix and is the owner's explicit instruction:
+
+- Setting a payment cadence **in Meridian** must set that cadence as the **income source in Crew**.
+- Crew must populate the cadence **back into Meridian**.
+- **Deletes are symmetric**: deleting in Meridian deletes it in Crew, and vice versa.
+- The value is expected to be **stable** ("nothing really should change" unless the owner changes
+  jobs), so the design should not assume churn.
+
+### 4. Aggregation is Meridian's own deviation
+
+The owner expects aggregation to be Meridian-side and is unsure whether Crew does it natively. So
+an aggregate that Crew does not hold is legitimate, but it is **Meridian's derivation** and must be
+labelled as such rather than presented as a Crew fact.
+
+### Open verification before any of this is built
+
+**Is Crew's "income source" the same object as the `fundingPlans` the app already writes?** The
+answer decides whether section 3 is a display-and-sync job on existing primitives or needs a new
+provider capability:
+
+- `create_crew_paycheck_funding_plan` / `update_...` / `delete_...` already exist, are
+  readback-verified, and carry `{billReserveId, name, amount, frequency, frequencyInterval,
+  anchorDate}` — a name, an amount and a cadence, which is what an income source looks like.
+- If they are the same object, symmetric delete and two-way sync build on paths that already
+  exist and are already proven against the provider.
+- If "income source" is a distinct Crew object, the write side needs a new capability, which must
+  be added as its own bounded slice with its own coverage record -- not as a side effect.
+
+**Safety, unchanged:** a cadence write is a provider write. It must ride the existing
+proposal -> approval -> execution -> provider verification pipeline, and no authority is expanded
+to make the sync symmetrical.
+
 ### The precedence conflict this rule exposes — needs one more answer
 
 `meridian/api.py::_paycheck_config` is **manual-first**:

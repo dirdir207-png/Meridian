@@ -479,135 +479,6 @@
       }
     },
     {
-      "id": "VIRGIL-A0",
-      "title": "Approve Virgil contracts and establish the compatible iOS toolchain",
-      "phase": "virgil-foundation",
-      "status": "ready",
-      "priority": "high",
-      "dependencies": [
-        "OS-002",
-        "OS-003"
-      ],
-      "authority_impact": "none; contracts, threat model, and local development toolchain only",
-      "owner_decision_required": true,
-      "acceptance_criteria": [
-        "Owner accepts or amends the Virgil north star, roadmap addendum, and threat-model reconciliation",
-        "Request, response, device-action, task, authentication, audit, and error contracts are versioned",
-        "A compatible full Xcode, iOS SDK, simulator runtime, simctl, and signing state are verified",
-        "No public endpoint, live credential issuance, provider change, deployment, or authority activation occurs"
-      ],
-      "evidence": {
-        "north_star": "docs/virgil/VIRGIL_IOS_NORTH_STAR.md",
-        "roadmap": "docs/virgil/VIRGIL_ROADMAP_ADDENDUM.md",
-        "reconciliation": "docs/virgil/VIRGIL_IOS_RECONCILIATION.md",
-        "toolchain_verified_at": "2026-09-15",
-        "toolchain": {
-          "macos": "26.4.1 (25E253)",
-          "xcode": "26.6 (17F113)",
-          "developer_directory": "/Applications/Xcode.app/Contents/Developer",
-          "iphoneos_sdk": "26.5",
-          "iphonesimulator_sdk": "26.5",
-          "simulator_runtime": "iOS 26.5 (23F77)",
-          "simulator_smoke_test": "iPhone Air booted, reported runtime 26.5, and simctl captured a 1260 x 2736 display image; clean terminal boot remains to be recorded after first-boot migration",
-          "first_launch_status": "complete",
-          "signing": "0 valid identities; account, certificate, profile, App ID, and device enrollment remain owner-gated"
-        }
-      }
-    },
-    {
-      "id": "VIRGIL-A1",
-      "title": "Authenticated read-only Virgil voice vertical slice",
-      "phase": "virgil-reactive",
-      "status": "blocked",
-      "priority": "high",
-      "dependencies": [
-        "VIRGIL-A0"
-      ],
-      "authority_impact": "none; evidence-backed read and conversation continuity only",
-      "owner_decision_required": true,
-      "acceptance_criteria": [
-        "C-V1 trustworthy evidence and I.1 envelope/permissions are explicitly accepted as adequate",
-        "Shortcut or Vocal Shortcut reaches the authenticated Virgil client interface",
-        "One Meridian question returns a cited spoken and displayed answer",
-        "Follow-up state is server-authoritative and no proposal, mutation, arbitrary tool, or background autonomy is exposed"
-      ]
-    },
-    {
-      "id": "VIRGIL-A2",
-      "title": "Typed deterministic iPhone actions beginning with Apple Maps",
-      "phase": "virgil-device-actions",
-      "status": "blocked",
-      "priority": "medium",
-      "dependencies": [
-        "VIRGIL-A1"
-      ],
-      "authority_impact": "bounded local-device capability; no financial authority",
-      "owner_decision_required": true,
-      "acceptance_criteria": [
-        "The iOS client accepts only a versioned allowlisted device-action schema",
-        "open_maps_route@1 validates and displays the destination before invocation",
-        "Arbitrary URLs, Shortcut names, app targets, calls, sends, purchases, and security controls fail closed",
-        "Simulator and physical-device results are recorded separately"
-      ]
-    },
-    {
-      "id": "VIRGIL-A3",
-      "title": "Virgil-to-Meridian proposal bridge",
-      "phase": "virgil-controlled-operations",
-      "status": "blocked",
-      "priority": "medium",
-      "dependencies": [
-        "VIRGIL-A2",
-        "OS-015",
-        "OS-017"
-      ],
-      "authority_impact": "proposal initiation only; approval and execution authority remain separate",
-      "owner_decision_required": true,
-      "acceptance_criteria": [
-        "C-V3 command-contract and executor release gates are explicitly accepted",
-        "Voice and model output can create only ai_interpreted proposals and can never select owner_direct",
-        "Approval occurs in a separate authenticated owner surface",
-        "Execution submits once and Virgil reports provider-verified or unresolved state without automatic retry"
-      ]
-    },
-    {
-      "id": "VIRGIL-A4",
-      "title": "Proactive Virgil and bounded long-running Harness tasks",
-      "phase": "virgil-proactive",
-      "status": "blocked",
-      "priority": "medium",
-      "dependencies": [
-        "VIRGIL-A3",
-        "OS-005",
-        "OS-021"
-      ],
-      "authority_impact": "none beyond approved notification and read-only task scopes",
-      "owner_decision_required": true,
-      "acceptance_criteria": [
-        "C-V4 suppression/feedback behavior and one useful I.2 role are explicitly accepted",
-        "One meaningful Meridian event and one bounded read-only Harness investigation work end to end",
-        "Tasks capture evidence, permissions, budget, expiry, cancellation, and sanitized progress",
-        "Unchanged state stays quiet and consequential output remains a proposal"
-      ]
-    },
-    {
-      "id": "VIRGIL-A5",
-      "title": "Rich conversational Virgil client and capability expansion",
-      "phase": "virgil-expansion",
-      "status": "blocked",
-      "priority": "low",
-      "dependencies": [
-        "VIRGIL-A4"
-      ],
-      "authority_impact": "capability-specific; each new action retains its own confirmation and policy boundary",
-      "owner_decision_required": true,
-      "acceptance_criteria": [
-        "A1-A4 are measured and stable before streaming, persistent voice, widgets, or Live Activities expand",
-        "Each new device, communications, context, research, or Home capability is added and verified independently",
-        "Native polish, provider routing, and proactive behavior never widen authority implicitly"
-      ]
-    },
-    {
       "id": "OS-022",
       "title": "Observatory shared identity: self-hosted type, accented wordmark, kit navigation glyphs",
       "phase": "design-fidelity",
@@ -1324,7 +1195,7 @@
       "title": "Link bill funding to the owner's Funding Cadence instead of reporting unknown",
       "status": "ready",
       "priority": "critical",
-      "detail": "Owner ruling (2026-09-19, verbatim in CURRENT_STATUS.md): 'the funding should link to a Funding Cadence setup by the user ... if I make a payday that titles Veteran's Home, and that is what is allocated toward my bills/expenses, they are funded by Veterans Home.' Today the dial reports fundingStatus unknown for every bill, which is honest only while the link is unimplemented. This is the dated-occurrence keystone the roadmap already names as drifting. VERIFIED 2026-09-19: the Crew adapter reads no income surface at all (zero references to income/paycheck/payday/earning/deposit in meridian/providers/crewwork.py), and meridian/paycheck.py is a locally persisted single config (cadence, amount, next date) set by hand. So this is an absent ingestion path, not a wiring bug: projections cannot cite observed deposits, a Crew rename cannot reach Meridian, and per-bill funding cannot resolve. OWNER RULING 2026-09-19 on expected income: 'if not enough data is available for an aggregate expected income, it should default to the value of the last known source (the paycheck from yesterday)'. So the expected amount is an aggregate when >=3 occurrences exist (paycheck_learning._MIN_OCCURRENCES, learn_paycheck()['amount'] = median of pay-period totals), else the most recent observed income deposit's value, else the configured paycheck. Every branch cites the observation it used (observedAt = the deposit time, evidenceIds = the deposits), and the branch must be labelled because an aggregate and a single last-known value are different strengths of claim. STILL OPEN: whether the Crew funding plan is authoritative over the local paycheck config. BLOCKING QUESTION 2026-09-19: _paycheck_config is manual-first ('Prefers the owner's explicit config; when none is set, auto-learn'), while the owner's rule is observed-first with a fallback. The owner HAS a manual config, so manual-first means the observed legs never run and the rule would be inert. Applying the rule as stated would replace their configured figure with a learned or last-observed one. Need the owner to choose: observed value wins (configured becomes the fallback), or configured wins (rule applies only when nothing is configured). Not implemented until answered, because the two produce different numbers on Today.",
+      "detail": "Owner ruling (2026-09-19, verbatim in CURRENT_STATUS.md): 'the funding should link to a Funding Cadence setup by the user ... if I make a payday that titles Veteran's Home, and that is what is allocated toward my bills/expenses, they are funded by Veterans Home.' Today the dial reports fundingStatus unknown for every bill, which is honest only while the link is unimplemented. This is the dated-occurrence keystone the roadmap already names as drifting. VERIFIED 2026-09-19: the Crew adapter reads no income surface at all (zero references to income/paycheck/payday/earning/deposit in meridian/providers/crewwork.py), and meridian/paycheck.py is a locally persisted single config (cadence, amount, next date) set by hand. So this is an absent ingestion path, not a wiring bug: projections cannot cite observed deposits, a Crew rename cannot reach Meridian, and per-bill funding cannot resolve. OWNER RULING 2026-09-19 on expected income: 'if not enough data is available for an aggregate expected income, it should default to the value of the last known source (the paycheck from yesterday)'. So the expected amount is an aggregate when >=3 occurrences exist (paycheck_learning._MIN_OCCURRENCES, learn_paycheck()['amount'] = median of pay-period totals), else the most recent observed income deposit's value, else the configured paycheck. Every branch cites the observation it used (observedAt = the deposit time, evidenceIds = the deposits), and the branch must be labelled because an aggregate and a single last-known value are different strengths of claim. STILL OPEN: whether the Crew funding plan is authoritative over the local paycheck config. BLOCKING QUESTION 2026-09-19: _paycheck_config is manual-first ('Prefers the owner's explicit config; when none is set, auto-learn'), while the owner's rule is observed-first with a fallback. The owner HAS a manual config, so manual-first means the observed legs never run and the rule would be inert. Applying the rule as stated would replace their configured figure with a learned or last-observed one. Need the owner to choose: observed value wins (configured becomes the fallback), or configured wins (rule applies only when nothing is configured). Not implemented until answered, because the two produce different numbers on Today. RESOLVED 2026-09-19 by the owner's ruling: observed-first, aggregating after 3 occurrences ('it should default to that value and moving forward aggregate after 3'), so the observed value supersedes the configured one and the configured figure is the last resort. Also: the payment mechanism changed (paychecks now deposit directly to Crew, where they previously arrived as Cash App transfers), so a learned aggregate over history describes the SUPERSEDED channel and must not be presented as the forward expectation. Cadence sync is tracked separately as OS-050.",
       "limits": "Needs owner input on allocation and recurrence semantics before implementation, because it changes what the app CLAIMS about money. The funding identity is the income source record, which the owner renames (State of New Hampshire -> Veteran's Home), so any link must key on the record and never on merchant text. Not started."
     },
     {
@@ -1334,6 +1205,143 @@
       "priority": "high",
       "detail": "tests/browser reports 43 failed / ~21 passed / 28 errors both with the current presentation work stashed and with it applied, so the failures are not attributable to that work. Every browser-level verification therefore rests on a baseline reconstructed by stash-comparison rather than on a known-good suite.",
       "limits": "Diagnosis not started. Not a product defect claim until measured."
+    },
+    {
+      "id": "OS-050",
+      "title": "Two-way sync of the income source / payment cadence between Meridian and Crew",
+      "status": "ready",
+      "priority": "high",
+      "detail": "Owner instruction 2026-09-19: setting a payment cadence in Meridian must set that cadence as the income source in Crew; Crew must populate the cadence back into Meridian; and deletes are symmetric (delete in Meridian deletes in Crew and vice versa). The value is expected to be stable unless the owner changes jobs, so do not design for churn. Aggregation is Meridian's own deviation and Crew may not do it natively, so any Meridian-computed aggregate must be labelled as Meridian's derivation rather than a Crew fact. FIRST STEP: determine whether Crew's 'income source' is the same object as the fundingPlans the app already writes via create/update/delete_crew_paycheck_funding_plan (readback-verified, carrying {billReserveId, name, amount, frequency, frequencyInterval, anchorDate}). If it is, this builds on proven paths; if it is a distinct object, the write side needs a new capability as its own bounded slice with its own write-coverage record.",
+      "limits": "Any cadence write is a provider write and must ride the existing proposal -> approval -> execution -> provider verification pipeline. No authority is expanded to make the sync symmetrical. Not started pending the object-identity check."
+    },
+    {
+      "id": "VIRGIL-A0",
+      "title": "Approve Virgil contracts and establish the compatible iOS toolchain",
+      "phase": "virgil-foundation",
+      "status": "ready",
+      "priority": "high",
+      "dependencies": [
+        "OS-002",
+        "OS-003"
+      ],
+      "authority_impact": "none; contracts, threat model, and local development toolchain only",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "Owner accepts or amends the Virgil north star, roadmap addendum, and threat-model reconciliation",
+        "Request, response, device-action, task, authentication, audit, and error contracts are versioned",
+        "A compatible full Xcode, iOS SDK, simulator runtime, simctl, and signing state are verified",
+        "No public endpoint, live credential issuance, provider change, deployment, or authority activation occurs"
+      ],
+      "evidence": {
+        "north_star": "docs/virgil/VIRGIL_IOS_NORTH_STAR.md",
+        "roadmap": "docs/virgil/VIRGIL_ROADMAP_ADDENDUM.md",
+        "reconciliation": "docs/virgil/VIRGIL_IOS_RECONCILIATION.md",
+        "toolchain_verified_at": "2026-09-15",
+        "toolchain": {
+          "macos": "26.4.1 (25E253)",
+          "xcode": "26.6 (17F113)",
+          "developer_directory": "/Applications/Xcode.app/Contents/Developer",
+          "iphoneos_sdk": "26.5",
+          "iphonesimulator_sdk": "26.5",
+          "simulator_runtime": "iOS 26.5 (23F77)",
+          "simulator_smoke_test": "iPhone Air booted, reported runtime 26.5, and simctl captured a 1260 x 2736 display image; clean terminal boot remains to be recorded after first-boot migration",
+          "first_launch_status": "complete",
+          "signing": "0 valid identities; account, certificate, profile, App ID, and device enrollment remain owner-gated"
+        }
+      }
+    },
+    {
+      "id": "VIRGIL-A1",
+      "title": "Authenticated read-only Virgil voice vertical slice",
+      "phase": "virgil-reactive",
+      "status": "blocked",
+      "priority": "high",
+      "dependencies": [
+        "VIRGIL-A0"
+      ],
+      "authority_impact": "none; evidence-backed read and conversation continuity only",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "C-V1 trustworthy evidence and I.1 envelope/permissions are explicitly accepted as adequate",
+        "Shortcut or Vocal Shortcut reaches the authenticated Virgil client interface",
+        "One Meridian question returns a cited spoken and displayed answer",
+        "Follow-up state is server-authoritative and no proposal, mutation, arbitrary tool, or background autonomy is exposed"
+      ]
+    },
+    {
+      "id": "VIRGIL-A2",
+      "title": "Typed deterministic iPhone actions beginning with Apple Maps",
+      "phase": "virgil-device-actions",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "VIRGIL-A1"
+      ],
+      "authority_impact": "bounded local-device capability; no financial authority",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "The iOS client accepts only a versioned allowlisted device-action schema",
+        "open_maps_route@1 validates and displays the destination before invocation",
+        "Arbitrary URLs, Shortcut names, app targets, calls, sends, purchases, and security controls fail closed",
+        "Simulator and physical-device results are recorded separately"
+      ]
+    },
+    {
+      "id": "VIRGIL-A3",
+      "title": "Virgil-to-Meridian proposal bridge",
+      "phase": "virgil-controlled-operations",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "VIRGIL-A2",
+        "OS-015",
+        "OS-017"
+      ],
+      "authority_impact": "proposal initiation only; approval and execution authority remain separate",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "C-V3 command-contract and executor release gates are explicitly accepted",
+        "Voice and model output can create only ai_interpreted proposals and can never select owner_direct",
+        "Approval occurs in a separate authenticated owner surface",
+        "Execution submits once and Virgil reports provider-verified or unresolved state without automatic retry"
+      ]
+    },
+    {
+      "id": "VIRGIL-A4",
+      "title": "Proactive Virgil and bounded long-running Harness tasks",
+      "phase": "virgil-proactive",
+      "status": "blocked",
+      "priority": "medium",
+      "dependencies": [
+        "VIRGIL-A3",
+        "OS-005",
+        "OS-021"
+      ],
+      "authority_impact": "none beyond approved notification and read-only task scopes",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "C-V4 suppression/feedback behavior and one useful I.2 role are explicitly accepted",
+        "One meaningful Meridian event and one bounded read-only Harness investigation work end to end",
+        "Tasks capture evidence, permissions, budget, expiry, cancellation, and sanitized progress",
+        "Unchanged state stays quiet and consequential output remains a proposal"
+      ]
+    },
+    {
+      "id": "VIRGIL-A5",
+      "title": "Rich conversational Virgil client and capability expansion",
+      "phase": "virgil-expansion",
+      "status": "blocked",
+      "priority": "low",
+      "dependencies": [
+        "VIRGIL-A4"
+      ],
+      "authority_impact": "capability-specific; each new action retains its own confirmation and policy boundary",
+      "owner_decision_required": true,
+      "acceptance_criteria": [
+        "A1-A4 are measured and stable before streaming, persistent voice, widgets, or Live Activities expand",
+        "Each new device, communications, context, research, or Home capability is added and verified independently",
+        "Native polish, provider routing, and proactive behavior never widen authority implicitly"
+      ]
     }
   ]
 }
