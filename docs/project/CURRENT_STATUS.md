@@ -1,5 +1,27 @@
 # Enhanced SimpleCrew — Current Status
 
+## WHAT'S NEXT — mirror Crew's own funding math, and measure it at the 2026-10-02 event (2026-09-20, base `9ceadf5`)
+
+Owner direction: *"ideally it should be deterministic based on the due date of the bill, paycheck amount, cadence so that bills are funded by their due date, or at the last funding event before the due date"*, modelled on *"how the beacon budget app works, or Simple Bank before it shut down"*. Asked whether Crew's actual calculations could be discerned rather than assumed — they could, from one read-only connector snapshot, and the answer removes most of the guesswork. Full evidence in `docs/project/CREW_FUNDING_MATH_2026-09-19.md`; the ruling is D-015.
+
+**Crew already computes the owner's model.** Proven exact on all five bills:
+
+```
+bill.estimatedNextFundingAmount = ceil( bill.amount * interval_days / 30.4375 )
+```
+
+`interval_days` is the plan's cadence in days (14 here — `frequency WEEKLY, frequencyInterval 2`, which the connector already maps to `biweekly`), `30.4375 = 365.25/12`. Each bill accrues a **daily-rate share of its monthly amount from every funding event**. That is the Simple/Beacon "fund it by its due date" mechanic, already running. Crew also states the two fields Meridian was discarding: per bill **`reservedBy`** (exactly that bill's next due date — `2026-09-22`, `2026-09-30`, `2026-10-16`, `2026-10-16`) and per reserve **`nextFundingDate`** (`2026-10-02`, the plan's own next event).
+
+**Falsified on real data, not merely unproven:** the even split (`109710/5 = 21942` cents is not observed), a proportional split, and a nearest-due-first waterfall (Eversource and Xfinity are due `2026-09-30` and hold `0`, while Rent is due `2026-10-16` and holds all `$1,097.10`). So OS-048b's `derived` even-split branch models something Crew does not do — the divisor copy the owner ratified, and the divisor question OS-055 raised, are both retired as a *model* rather than re-parameterised. This is recorded, not acted on: the branch is dormant, so nothing on Today is wrong today.
+
+**The engine to build on already exists and Today does not use it.** `meridian/funding.py` is a pure, Decimal, I/O-free projection (`FundingRule` + `project_funding`, cash- and cap-aware, returning `funded_by`, `total`, `shortfall`), persisted by `funding_repo.py`, with a proposal path in `funding_proposals.py::propose_due_funding`, and already called by Plan and Payday. Three gaps keep it out of Today: `funding_rules` holds **zero rows**; `_commitment_deadline` uses the raw stored `due_date`, which for these recurring bills is `2026-01-16/22/30` and therefore already past; and the dial has no vocabulary for a projected figure distinct from Crew's observed reserve.
+
+**Next slice (OS-056), read-only and bounded:** mirror Crew's proven proration and expose Crew's own `reservedBy`/`nextFundingDate` in Today, so each bill shows the funding events that fund it and by when, with Crew's `estimatedNextFundingAmount` labelled as **Crew's estimate** — never as money held. `reservedAmount` and `totalReservedAmount` remain the only observed balances and they outrank any projection. Nothing in the slice may write to Crew: making Crew reserve by that schedule is a provider mutation and must go through propose → approve → execute → readback.
+
+**Free decisive observation, no tooling needed:** the next funding event is **`2026-10-02`**. Comparing `crew_bill_reserves.total_reserved_amount` and `commitments.funded_amount` before and after it measures the three things still open — how `totalReservedAmount` is derived, which bill Crew earmarks the balance to, and what the reserve-level `estimatedNextFundingAmount` (`$1,435.97`) means. One observation point cannot separate them; that event can. Both tables are already refreshed every 15 seconds.
+
+Must not be assumed: **this entry changed no code.** It is a documentation record of a read-only measurement plus a design ruling; the only behaviour change in flight is OS-048b's, committed at `fec1c33`. The connector snapshot is the owner's real financial data — read the fields you need, never paste it around. Invoking the connector CLI *while* the app's refresh loop is calling it makes the call hang past the shell limit; run it detached with output to a file.
+
 ## RESUME HERE — OS-048b: the dial states a per-bill reserved amount, with its basis (2026-09-19, committed `fec1c33`, base `2f2e833`)
 
 D-013 permits the per-dated-occurrence figure and fixes its order of authority. Implementing it exposed two observed facts that the audit could not find anywhere in storage, so this slice persists them before it states anything — and it found that the production refresh path stored neither.

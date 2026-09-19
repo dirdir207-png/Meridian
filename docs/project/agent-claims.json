@@ -295,7 +295,23 @@
       ],
       "base_sha": "2f2e83373b51f38b0e2e4678ba7300118665fc8b",
       "since": "2026-09-19T23:40:00+00:00",
-      "note": "OS-048b read-side slice per D-013, owner-chosen Option B: persist the observed reserve state (Crew billReserve.totalReservedAmount per reserve in a new 024 table, plus a per-bill reservedAmount-reported flag, because commitments.funded_amount is NOT NULL DEFAULT 0 per C01) and make the dial state the per-bill reserved amount with labelled precedence observed -> derived even split -> unknown, carrying basis/divisor/attribution so a derivation is never presented as an observation or attributed to Crew. Both mapping sites (sync.py and live.py). No provider mutation, no live sync, no guessed backfill, no deployment, no :8081 restart."
+      "note": "OS-048b read-side slice per D-013, owner-chosen Option B: persist the observed reserve state (Crew billReserve.totalReservedAmount per reserve in a new 024 table, plus a per-bill reservedAmount-reported flag, because commitments.funded_amount is NOT NULL DEFAULT 0 per C01) and make the dial state the per-bill reserved amount with labelled precedence observed -> derived even split -> unknown, carrying basis/divisor/attribution so a derivation is never presented as an observation or attributed to Crew. Both mapping sites (sync.py and live.py). No provider mutation, no live sync, no guessed backfill, no deployment, no :8081 restart. Released at fec1c33."
+    },
+    {
+      "agent": "deepseek-crew-math",
+      "claim_id": "crew-funding-math-and-next-slice-20260919",
+      "generation": 1,
+      "files": [
+        "docs/project/CREW_FUNDING_MATH_2026-09-19.md",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json",
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json"
+      ],
+      "base_sha": "9ceadf57682fa1a53beccbd690f471f4796a51c9",
+      "since": "2026-09-20T02:40:00+00:00",
+      "note": "Documentation only, no code. Records the reverse-engineered Crew funding arithmetic from one read-only connector snapshot (crew-readonly snapshot, mode read-only, complete) against the live :8081 database: per-bill estimatedNextFundingAmount = ceil(amount * interval_days / 30.4375), proven on 5 of 5 bills, plus the reservedBy (next due date) and nextFundingDate fields Meridian was discarding. Also records what is NOT explained (totalReservedAmount, the earmarking rule, the reserve-level estimate) rather than guessing, and names the 2026-10-02 funding event as the decisive free observation. Refines OS-055/OS-056 to mirror Crew's own formula instead of an invented split; adds D-015. No provider mutation, no live sync, no schema change, no behaviour change."
     }
   ]
 }
