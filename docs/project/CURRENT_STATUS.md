@@ -1,5 +1,79 @@
 # Enhanced SimpleCrew — Current Status
 
+## RESUME HERE — session handoff (2026-09-19, at `f46880a`)
+
+Written so a fresh session continues from the repository rather than from a conversation. This
+supersedes the 2026-09-16 RESUME HERE further down, which is kept as history.
+
+### The owner's ruling on funding — read this first
+
+Verbatim: *"All the bills also display funding unknown, the funding should link to a Funding
+Cadence setup by the user. I went to check mine in Meridian, which should coincide with the
+paycheck in Crew, but I am unable to scroll on the settings page. For instance if I make a
+payday that titles 'Veteran's Home', and that is what is allocated toward my bills/expenses,
+they are funded by Veterans Home. Which is the 'State of New Hampshire' transaction or the
+Income Source in Crew, currently State of New Hampshire in Crew, now changed to Veterans Home."*
+
+What that settles, and what it forbids:
+
+- A bill's funding **is knowable**, and the link is the **Funding Cadence the user sets up** —
+  not a per-bill reserve. The dial's `fundingStatus: "unknown"` for bills is honest only while
+  that link is unimplemented; the owner expects it implemented, so "unknown" is now a recorded
+  gap rather than a settled design choice.
+- The funding identity is the **income source / payday**, and the owner **renames** it
+  ("State of New Hampshire" → "Veteran's Home" in Crew). Any evidence link must therefore key
+  on the source record, never on the merchant text of a deposit, which drifts on rename.
+- The observed "State Of New Hampshire" transaction and the Crew Income Source are one thing
+  seen from two sides. That is the provenance anchor for a projected paycheck.
+
+### Fixed and committed this session
+
+| Commit | What |
+|---|---|
+| `e8999eb` | Income rows stop claiming a funding status — the Paycheck row said "Funding unknown" while displaying `+$1,663.00`, which is why the amount could not be found |
+| `b166e0b` | Plan stops stamping every commitment "FUNDED" — the owner's card read "Underfunded" beside "FUNDED $0" |
+| `4d372cf` | Any control nested in a row owns its own events — fixed "apply to future matching" opening the evidence card; replaces the enumeration that caused it |
+| `2368214` | Plan view switch painted a fixed paper cream onto the page, so "Rules"/"Crew" vanished in the light edition |
+| `d833f44` | Settings could not scroll on a phone — a clipped middle row, which is what blocked reaching the Funding Cadence at all |
+| `f46880a` | `archive_commitment`: local commitments had **no removal path at all** (four stuck "Journey Test Bill" rows) |
+
+From the same session, earlier: the Activity timeline convergence (`22f10e5`, `b256199`,
+`2438821`), the space-key fix (`5cd16ee`), and the `:8081` restart record (`8d5a5b7`).
+
+### Open, in the order I would take them
+
+1. **The Funding Cadence link — the keystone.** Bills should read as funded by the cadence the
+   user configured rather than "Funding unknown". `docs/project/MERIDIAN_ROADMAP.md` already
+   names the dated-occurrence model as the keystone and as drifting; this is that. Needs owner
+   input on the recurrence/allocation semantics before V2, because it changes what the app
+   claims about money.
+2. **The evidence link for projected income** (slice 3 of the active goal). The Sep 30/Oct 14
+   paychecks carry `observedAt: null` and `evidenceIds: []` while Crew holds the observed
+   cheque. Key it on the income source record, not merchant text, per the ruling above.
+3. **Settings parity** — approved by the owner, still not started. The scroll fix (`d833f44`)
+   removed the practical blocker; the remaining one is that the isolated synthetic preview
+   (`scripts/preview_observatory_dial.py`) has no Settings route, so governed captures of
+   `design/observatory-extension-2026-09-18/concepts/settings.png` are not yet possible.
+4. **Remaining "funded" wording on Plan.** The per-row stamp is fixed; the coverage summary
+   and the "N% funded" subline still use the word for the same aggregate. Deliberately left
+   pending the owner's call, recorded in the `b166e0b` message.
+5. **The authored sunburst.** `kit-2026-09-18/icons/sun.svg` is written in this repository, is
+   **not** part of the supplied 61-icon Bootstrap set, and is the one file there not covered by
+   the LICENSE beside it. Astra has not reviewed it.
+6. **The browser-suite baseline is not green and is unexplained**: 43 failed / ~21 passed /
+   28 errors with this work stashed and the same with it applied. Treat browser-level
+   verification as resting on a reconstructed baseline until that is diagnosed.
+
+### Measured state at handoff
+
+`feat/meridian-implementation`, HEAD `f46880a`, tree clean, nothing pushed (16 commits ahead of
+`origin/feat-meridian-implementation`). Non-browser suite **1264 passed, 1 skipped**; Ruff,
+`node --check` and `git diff --check` clean. The `:8081` preview was **restarted after the
+`app.py` change** (it has no Python reloader, so `archive_commitment` would otherwise have
+failed on click); its connector sync completed `status=complete accounts=6 transactions=100
+errors=0`. The `:8093` isolated synthetic preview is the only permitted capture source; never
+produce fidelity evidence from `:8081`.
+
 ## Repository navigation — 2026-09-18
 
 Added concise directory introductions and overview navigation links. Neutral commit descriptions replace internal commentary in the main page's latest-change rows for the affected directories. All 22 future concepts and the interactive dial description are preserved. Documentation only; Git history, runtime behavior, untracked material, and other checkouts are unchanged. Verification: README links, concept count, GitHub rendering, and diff checks; published-page verification follows merge.

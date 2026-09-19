@@ -1004,7 +1004,7 @@
       "id": "OS-037",
       "title": "Today: pointer does not visibly move on Next day",
       "phase": "design-fidelity",
-      "status": "blocked",
+      "status": "complete",
       "priority": "medium",
       "dependencies": [
         "OS-034"
@@ -1017,7 +1017,8 @@
         "Rule out a stale cached JS bundle on the device first (hard refresh)",
         "Do not read x1 as 'pinned': sin(-120) == sin(-60), so equal x values across two steps are a coincidence"
       ],
-      "notes": "Owner-reported. Needs a device-specific repro; blocked pending that or confirmation that a hard refresh clears it."
+      "notes": "Owner-reported. Needs a device-specific repro; blocked pending that or confirmation that a hard refresh clears it.",
+      "resolution": "Closed on the owner's confirmation (2026-09-19): 'Dial pointer does now move on next day'. The pointer geometry was already corrected; the entry had stayed open as a blocked item with no re-verification."
     },
     {
       "id": "OS-038",
@@ -1317,6 +1318,22 @@
       "browser": "Isolated preview, 420x912 DPR3 and 1440x900 DPR1, both editions: the banner resolves the parchment border-image, the dark moon roundel, the concept headline and the real stamp; hidden in Review while the decision strip is visible; zero overflow in all eight combinations. Measured: 4 rows -> 4 chevrons, aria-hidden, visible at desktop and hidden below 600px; the divider renders the brass label, a 229px hairline and the sparkle at 420px; clicking the footer opens the real advisor in both editions (hidden false, data-open true). Markers verified against a mocked payload containing today, yesterday and an older day: Today -> moon.svg, Yesterday and older -> sun.svg. On the fixture, anchored to the capture clock, the first divider reads 'Today . Sep 18' with a crescent. #advisor-fab computes display:none on Activity with the ledger footer present, and the authored glyph was compared beside the supplied moon and star at 8x before being wired in",
       "capture": "artifacts/observatory-activity-banner-2026-09-18/** (untracked by convention): 10 records, 5 device presets x 2 themes, every record naming concepts/timeline.png, all with zero overflow and zero console errors",
       "limits": "The sunburst is authored in-repo, NOT supplied: the owner chose that over waiting for a new Astra glyph. It is drawn to the kit's 16x16/currentColor/outline metrics and declares its provenance in its own header, but Astra has not reviewed it and it is the one icon in that directory not covered by the Bootstrap Icons LICENSE beside it. The banner stamp uses the app's existing middle-dot separator where the concept draws a bullet, because the rest of Activity uses middle dots. The fixture's today-row is anchored to the capture clock (2026-09-18), not the wall clock, so a governed capture shows the crescent; without a frozen clock the same ledger reads as an older day. Captures are fixture-only and are not deployment evidence"
+    },
+    {
+      "id": "OS-048",
+      "title": "Link bill funding to the owner's Funding Cadence instead of reporting unknown",
+      "status": "ready",
+      "priority": "critical",
+      "detail": "Owner ruling (2026-09-19, verbatim in CURRENT_STATUS.md): 'the funding should link to a Funding Cadence setup by the user ... if I make a payday that titles Veteran's Home, and that is what is allocated toward my bills/expenses, they are funded by Veterans Home.' Today the dial reports fundingStatus unknown for every bill, which is honest only while the link is unimplemented. This is the dated-occurrence keystone the roadmap already names as drifting.",
+      "limits": "Needs owner input on allocation and recurrence semantics before implementation, because it changes what the app CLAIMS about money. The funding identity is the income source record, which the owner renames (State of New Hampshire -> Veteran's Home), so any link must key on the record and never on merchant text. Not started."
+    },
+    {
+      "id": "OS-049",
+      "title": "Environment: browser-suite baseline is not green and is unexplained",
+      "status": "ready",
+      "priority": "high",
+      "detail": "tests/browser reports 43 failed / ~21 passed / 28 errors both with the current presentation work stashed and with it applied, so the failures are not attributable to that work. Every browser-level verification therefore rests on a baseline reconstructed by stash-comparison rather than on a known-good suite.",
+      "limits": "Diagnosis not started. Not a product defect claim until measured."
     }
   ]
 }
