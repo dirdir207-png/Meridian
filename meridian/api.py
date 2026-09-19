@@ -1183,6 +1183,51 @@ def settings_payday():
     return jsonify(build_payday_settings(graph, commitments, rules, as_of=as_of))
 
 
+@meridian_api.post("/settings/payday/learning-floor")
+@login_required
+@_safe_read
+def settings_payday_learning_floor():
+    """Owner-operable reset of the paycheck learning window (OS-051).
+
+    Buyer beware of what this is NOT: it moves no money, touches no provider, and deletes
+    no financial record. It writes exactly ONE Meridian-local setting that decides which
+    already-stored income observations the learned figure may use, because the owner asked
+    that a job change stop dragging the previous position's pay into the aggregate:
+
+        "If I change jobs and have a different pay rate ... I shouldnt be including the
+         learned pay from previous positions" ... "it needs to be governable and resettable"
+
+    Clearing the floor restores the full history, so the control is reversible rather than
+    one-way. The excluded observations were never removed, so nothing needs restoring.
+    """
+    from meridian.paycheck_learning import PaycheckLearningFloorRepository
+    from meridian.services.payday import build_learning_window
+
+    graph = _repository()
+    payload = request.get_json(silent=True) or {}
+    raw = payload.get("floor")
+    floors = PaycheckLearningFloorRepository(graph.db_path)
+
+    if raw is None or str(raw).strip() == "":
+        floors.clear()
+        state = "cleared"
+    else:
+        floor = str(raw).strip()
+        try:
+            date.fromisoformat(floor)
+        except ValueError:
+            return _error(
+                "invalid_request",
+                "floor must be an ISO date (YYYY-MM-DD).",
+                "Pick the date your new pay history starts and try again.",
+                400,
+            )
+        floors.set(floor)
+        state = "saved"
+
+    return jsonify({"state": state, "learning": build_learning_window(graph)})
+
+
 @meridian_api.get("/activity")
 @login_required
 @_safe_read

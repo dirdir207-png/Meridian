@@ -1,5 +1,58 @@
 # Enhanced SimpleCrew — Current Status
 
+## RESUME HERE — OS-051 learning floor (2026-09-19, base `c1b415b`)
+
+This checkpoint supersedes the OS-050 block below for the income-learning path. Branch
+`feat/meridian-implementation`; no provider mutation and no deployment.
+
+### Delivered in this bounded slice
+
+- `meridian/paycheck_learning.py` gains `LearningFloor`, `PaycheckLearningFloorRepository`,
+  `observations_on_or_after(...)` and a `floor=` argument on `learn_paycheck(...)`.
+- `meridian/payday.py::recognize_payday(..., floor=...)` applies the same window before it
+  recognises a schedule, so the Settings income area cannot report a previous position's
+  payday after a reset.
+- `meridian/paycheck.py::resolve_expected_paycheck(..., learning_floor=...)` applies the
+  window **before the channel is identified** — otherwise a pre-floor deposit could still
+  decide which history is aggregated — and carries `learning_floor` as provenance on the
+  resolution. The Crew plan leg and the configured figure are deliberately untouched.
+- `POST /api/meridian/settings/payday/learning-floor` sets or clears the floor. It writes
+  exactly one Meridian-local `app_config` key and deletes no financial record.
+- A **nested** control inside Settings → Payday & Funding (a date plus "Include all
+  history"), with a labelled field, an `aria-live` summary, and an explicit statement that
+  no records are deleted and nothing is sent to Crew. The date defaults to yesterday, which
+  is what the owner asked for.
+
+### Safety properties, stated because they are the point
+
+- Deleting the floor restores the full history: the excluded observations were never
+  removed, only excluded while the floor was active.
+- The floor is a SEPARATE `app_config` key from the paycheck config, so a learning reset can
+  never clear the owner's configured amount.
+- A window that leaves too little evidence recognises nothing rather than falling back to
+  the excluded history.
+- The browser write is a plain `fetch` POST, following the documented precedent in
+  `connections.js` for owner-initiated, non-financial local settings. `api.js`'s `GET`-only
+  and proposal allowlists were **not** widened.
+
+### Verification
+
+- `.venv311/bin/python -m pytest tests --ignore=tests/browser -q`: **1340 passed, 1 skipped**.
+- `tests/browser/test_settings_payday_learning.py`: **2 passed** against a throwaway
+  instance on `:8097` with its own temp DB (started for this check, then stopped and
+  deleted). It verifies the control is nested, labelled, keyboard reachable, announced
+  through a live region, and that setting/clearing it changes what the area reports.
+  **Not fidelity evidence**; the live `:8081` and the synthetic `:8093` were not modified.
+- `.venv311/bin/python -m ruff check meridian/ tests/`: clean. `node --check` on
+  `static/js/meridian/payday.js`: clean. `git diff --check`: clean.
+
+### Not done here (deliberately)
+
+The Owner's other income work is untouched by this slice: the Meridian → Crew cadence write
+and symmetric delete (provider mutations needing the proposal pipeline), the cadence
+authority question (OS-048), and per-bill funding. See `HANDOFF_FOR_ASTRA_2026-09-19.md`
+for the next-session plan.
+
 ## RESUME HERE — OS-050 read slice (2026-09-19, before commit `b9185e3`)
 
 This checkpoint supersedes the older handoff below for the funding-plan path. The branch is

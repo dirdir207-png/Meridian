@@ -160,6 +160,34 @@
       "base_sha": "b9185e3ec2c70cd201072b33fe7863a856658c47",
       "since": "2026-09-19T00:00:00+00:00",
       "note": "OS-050 READ half: persist the Crew billReserve.fundingPlans the sync already fetches and discards, and resolve the expected paycheck to that Crew record first (plan name as source, plan id as identity). No provider mutation, no deployment; writes only Meridian's own SQLite, like the existing account/transaction ingestion. The Meridian->Crew cadence write and symmetric delete stay deferred."
+    },
+    {
+      "agent": "builder-os051",
+      "claim_id": "builder-os051-learning-floor",
+      "generation": 1,
+      "files": [
+        "meridian/paycheck_learning.py",
+        "meridian/paycheck.py",
+        "meridian/services/payday.py",
+        "meridian/api.py",
+        "templates/meridian/partials/payday-funding.html",
+        "static/js/meridian/payday.js",
+        "tests/meridian/test_paycheck_learning.py",
+        "tests/meridian/test_expected_income_rule.py",
+        "tests/meridian/test_payday.py",
+        "tests/meridian/test_settings_payday.py",
+        "tests/meridian/services/test_payday_settings.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/agent-claims.json",
+        "tests/meridian/test_api.py",
+        "static/css/meridian/settings.css",
+        "tests/browser/test_settings_payday_learning.py"
+      ],
+      "base_sha": "c1b415bb25a2e81b51badfd56ef1768ae487b5ea",
+      "since": "2026-09-19T00:00:00+00:00",
+      "note": "OS-051 bounded Meridian-local learning floor and nested Payday reset control. Changes only derived paycheck learning; preserves financial records, makes no Crew/provider mutation, and does not deploy."
     }
   ]
 }

@@ -328,3 +328,105 @@ def test_no_plan_leaves_the_approved_chain_untouched():
         resolved = resolve_expected_paycheck(current, plans=plans)
         assert resolved.basis == "aggregate"
         assert resolved.plan_id is None
+
+
+# ---------------------------------------------------------------------------
+# OS-051: the learning floor governs LEARNED legs only.
+#
+# The floor changes which observations are learned from. It must not touch the
+# Crew plan (a provider record) or the owner's configured figure (an assertion),
+# and it must never delete anything.
+# ---------------------------------------------------------------------------
+
+
+def _old_job():
+    return [
+        Tx("Old Employer", 1200.0, "2026-06-05", txn_id=1),
+        Tx("Old Employer", 1200.0, "2026-06-19", txn_id=2),
+        Tx("Old Employer", 1200.0, "2026-07-03", txn_id=3),
+    ]
+
+
+def test_the_floor_excludes_a_previous_positions_pay_from_the_aggregate():
+    """The owner's stated reason: "I shouldnt be including the learned pay from
+    previous positions". Without the floor the old job aggregates; with it, nothing
+    about that job may be reported."""
+    configured = PaycheckConfig(cadence="biweekly", amount=2500.00, next_date="2026-10-16")
+
+    without = resolve_expected_paycheck(_old_job(), configured=configured)
+    with_floor = resolve_expected_paycheck(
+        _old_job(), configured=configured, learning_floor="2026-09-01"
+    )
+
+    assert without.basis == "aggregate"
+    assert without.amount == 1200.0
+    # The old job is no longer learnable, so the honest answer is the configured figure.
+    assert with_floor.basis == "configured"
+    assert with_floor.amount == 2500.00
+    assert with_floor.learning_floor == "2026-09-01"
+
+
+def test_the_floor_carries_its_provenance_on_the_resolution():
+    """A learned figure produced under a floor must say so, or a reader cannot tell
+    why the amount differs from the raw history."""
+    resolved = resolve_expected_paycheck(
+        _old_job(),
+        configured=PaycheckConfig(cadence="monthly", amount=100.0, next_date="2026-10-01"),
+        learning_floor="2026-09-01",
+    )
+
+    assert resolved.learning_floor == "2026-09-01"
+
+
+def test_a_post_floor_channel_still_learns_once_it_recurs():
+    """The floor re-bases learning; it does not disable it."""
+    new_job = [
+        Tx("New Employer", 2500.0, "2026-09-18", txn_id=11),
+        Tx("New Employer", 2500.0, "2026-10-02", txn_id=12),
+    ]
+
+    resolved = resolve_expected_paycheck(
+        [*_old_job(), *new_job], learning_floor="2026-09-01"
+    )
+
+    assert resolved.basis == "last_known"
+    assert resolved.source == "New Employer"
+    assert resolved.amount == 2500.0
+    # Only observations inside the window may be cited as evidence.
+    assert set(resolved.evidence_ids) <= {11, 12}
+
+
+def test_the_floor_never_displaces_the_crew_record():
+    """The Crew plan is a provider RECORD, not an observation, so a learning window
+    cannot invalidate it. Priority 1 stays priority 1."""
+    plan = Plan("Veterans Home", 1663.00, cadence="biweekly", anchor_date="2026-09-04")
+
+    resolved = resolve_expected_paycheck(
+        _old_job(), plans=[plan], learning_floor="2026-09-01"
+    )
+
+    assert resolved.basis == "crew_plan"
+    assert resolved.amount == 1663.00
+    assert resolved.plan_id == "plan:1"
+
+
+def test_the_floor_never_removes_the_owners_configured_figure():
+    """A learning reset is not a configuration reset. Clearing the learned window must
+    leave the owner's explicit amount intact and usable."""
+    configured = PaycheckConfig(cadence="biweekly", amount=1663.00, next_date="2026-10-02")
+
+    resolved = resolve_expected_paycheck(
+        [], configured=configured, learning_floor="2026-09-19"
+    )
+
+    assert resolved.basis == "configured"
+    assert resolved.amount == 1663.00
+    assert resolved.source == "manual"
+
+
+def test_no_floor_leaves_resolution_unchanged():
+    """Regression guard: the floor is additive. Absent a floor nothing changes."""
+    resolved = resolve_expected_paycheck(_old_job())
+
+    assert resolved.basis == "aggregate"
+    assert resolved.learning_floor is None

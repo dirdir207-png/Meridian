@@ -1217,10 +1217,10 @@
     {
       "id": "OS-051",
       "title": "Make paycheck learning governable: an owner-operable, resettable floor",
-      "status": "ready",
+      "status": "done",
       "priority": "high",
       "detail": "Owner 2026-09-19: 'you can implement learn check, but starting at yesterday. There needs to be a nested owner operable setting to reset the learning. If I change jobs and have a different pay rate, or at a different cadence, weekly vs bi weekly for instance, I shouldnt be including the learned pay from previous positions' ... 'so it needs to be governable and resettable if needed'. Constraints: learning respects a FLOOR so only observations on or after it count; the floor is set by a nested owner-operable control (inside the income/paycheck area); a reset must NOT delete financial records, only change which observations Meridian aggregates; and the floor persists so it survives restarts. This is independent of the channel rule already shipped in resolve_expected_paycheck: the channel rule separates two live sources, the floor rule separates this job from the last one, and both must hold.",
-      "limits": "A derived-number governance setting only: it writes nothing to Crew. Needs a persistence decision (a Meridian-side setting, not the paycheck config, so a reset cannot be confused with configuration). Not started."
+      "limits": "DELIVERED (Meridian-local, no provider write): a learning FLOOR persisted in app_config under its own key; observations_on_or_after() filters the learned window for both learn_paycheck() and recognize_payday(); resolve_expected_paycheck(learning_floor=...) applies the window BEFORE the channel is chosen and reports learning_floor as provenance; a NESTED control in Settings > Payday & Funding sets or clears it (date defaults to yesterday), with an aria-live summary stating the included/excluded counts and that no records are deleted. Clearing restores full history: nothing financial is ever deleted, and the floor is a different app_config key from the paycheck config so a reset cannot clear the owner's configured amount. Verified: 1340 passed / 1 skipped non-browser; 2 browser accessibility/operability checks passed on a throwaway :8097 instance with a temp DB; ruff and node --check clean."
     },
     {
       "id": "VIRGIL-A0",

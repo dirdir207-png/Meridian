@@ -426,6 +426,42 @@
   font-size: var(--m-text-sm);
 }
 
+/* ---------- Learning window (OS-051) ----------
+   Nested inside Payday & Funding, never a top-level Settings section. Both buttons
+   are the shared button classes, so only the wrapper needs layout. */
+
+.m-payday-learning {
+  margin-top: var(--m-space-6);
+  padding-top: var(--m-space-5);
+  border-top: 1px solid var(--m-border);
+}
+
+.m-payday-learning-note {
+  max-width: 62ch;
+  margin: var(--m-space-2) 0 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+  line-height: 1.55;
+}
+
+.m-payday-learning-summary {
+  margin: var(--m-space-4) 0 0;
+  font-size: var(--m-text-md);
+}
+
+.m-payday-learning-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--m-space-3);
+  margin-top: var(--m-space-3);
+}
+
+.m-payday-learning-controls .m-payday-field {
+  flex: 1 1 14rem;
+  margin: 0;
+}
+
 @media (max-width: 760px) {
   .m-payday-summary {
     grid-template-columns: 1fr;

@@ -181,6 +181,11 @@ class ResolvedPaycheck:
     ``plan_id`` is the identity of the Crew funding plan when one produced the figure, and
     is ``None`` for every Meridian-derived leg. It is the field that lets a consumer say
     "this is the Crew record" without re-matching on the plan's name.
+
+    ``learning_floor`` is the owner's learning window (OS-051) when it governed a
+    LEARNED leg, and ``None`` otherwise. It is provenance for the same reason ``basis``
+    is: a learned figure produced from a windowed history must not look like one learned
+    from everything, or a reader cannot account for the difference.
     """
 
     cadence: str
@@ -193,6 +198,7 @@ class ResolvedPaycheck:
     evidence_ids: tuple = ()
     occurrences: int = 0
     plan_id: Optional[str] = None
+    learning_floor: Optional[str] = None
 
 
 def _income_transactions(transactions):
@@ -274,7 +280,9 @@ def _crew_plan_paycheck(plans) -> Optional[ResolvedPaycheck]:
     )
 
 
-def resolve_expected_paycheck(transactions, configured=None, plans=None) -> Optional[ResolvedPaycheck]:
+def resolve_expected_paycheck(
+    transactions, configured=None, plans=None, learning_floor=None
+) -> Optional[ResolvedPaycheck]:
     """The owner's approved rule (2026-09-19, verbatim in docs/project/CURRENT_STATUS.md):
 
         "it should default to that value and moving forward aggregate after 3"
@@ -303,6 +311,16 @@ def resolve_expected_paycheck(transactions, configured=None, plans=None) -> Opti
     placed first because the owner's model makes the Crew plan the income source itself,
     while the aggregate is explicitly Meridian's own deviation.
 
+    ``learning_floor`` (OS-051) is an ISO date restricting LEGS 1-3, which are the ones
+    learned from observations. The owner: "If I change jobs and have a different pay rate,
+    or at a different cadence ... I shouldnt be including the learned pay from previous
+    positions". So the window is applied BEFORE the channel is identified, which matters:
+    picking the channel from the most recent observation and then windowing would let a
+    pre-floor deposit still decide which history is aggregated. It never touches leg 0
+    (a provider record, not an observation) or the configured figure (an assertion, not a
+    learned value), and it deletes nothing -- the excluded observations remain in the
+    ledger and become learnable again when the floor is cleared.
+
     A retired channel therefore cannot win, and two channels are never averaged together,
     because a number averaged across a retired payout route and a new one describes neither.
 
@@ -311,13 +329,15 @@ def resolve_expected_paycheck(transactions, configured=None, plans=None) -> Opti
     config when there is one and otherwise from the last observed date advanced by one month.
     ``basis`` describes where the amount came from, not the schedule.
     """
-    from .paycheck_learning import learn_paycheck
+    from .paycheck_learning import learn_paycheck, observations_on_or_after
 
     plan_resolution = _crew_plan_paycheck(plans)
     if plan_resolution is not None:
         return plan_resolution
 
-    income = _income_transactions(transactions)
+    # The window is applied BEFORE the channel is identified, so a pre-floor deposit
+    # cannot decide which history is aggregated.
+    income = _income_transactions(observations_on_or_after(transactions, learning_floor))
 
     if income:
         latest = max(income, key=lambda txn: str(getattr(txn, "occurred_at", "") or ""))
@@ -344,6 +364,7 @@ def resolve_expected_paycheck(transactions, configured=None, plans=None) -> Opti
                 observed_at=max(days) if days else None,
                 evidence_ids=ids,
                 occurrences=int(learned.get("occurrences") or 0),
+                learning_floor=learning_floor,
             )
 
         # A FALLBACK ONLY FOR A RECURRING DEPOSIT. Income is not the same thing as a paycheck:
@@ -363,6 +384,7 @@ def resolve_expected_paycheck(transactions, configured=None, plans=None) -> Opti
                     active=bool(getattr(configured, "active", True)),
                     basis="configured",
                     source="manual",
+                    learning_floor=learning_floor,
                 )
             return None
 
@@ -394,6 +416,7 @@ def resolve_expected_paycheck(transactions, configured=None, plans=None) -> Opti
                 else ()
             ),
             occurrences=len(current),
+            learning_floor=learning_floor,
         )
 
     if configured is not None:
@@ -404,6 +427,7 @@ def resolve_expected_paycheck(transactions, configured=None, plans=None) -> Opti
             active=bool(getattr(configured, "active", True)),
             basis="configured",
             source="manual",
+            learning_floor=learning_floor,
         )
 
     return None

@@ -6,6 +6,10 @@ from datetime import date
 from decimal import Decimal
 
 from meridian.funding import project_funding
+from meridian.paycheck_learning import (
+    PaycheckLearningFloorRepository,
+    observations_on_or_after,
+)
 from meridian.payday import recognize_payday
 from meridian.services.today import data_freshness
 
@@ -24,9 +28,34 @@ def _rule_payload(rule, commitment) -> dict[str, object]:
     }
 
 
+def build_learning_window(graph, transactions=None) -> dict[str, object]:
+    """The owner's learnable window, as a reportable payload (OS-051).
+
+    One builder, used by both the settings read and the reset endpoint, so the control
+    and the report can never disagree about what the floor currently excludes. The
+    excluded count is the point of it: a reset whose effect is invisible is not
+    governable.
+    """
+    stored = PaycheckLearningFloorRepository(graph.db_path).get()
+    floor = stored.floor if stored is not None else None
+    if transactions is None:
+        transactions, _cursor = graph.list_transactions(limit=200)
+    included = len(observations_on_or_after(transactions, floor))
+    return {
+        "active": floor is not None,
+        "floor": floor,
+        "set_at": stored.set_at if stored is not None else None,
+        "included": included,
+        "excluded": len(transactions) - included,
+    }
+
+
 def build_payday_settings(graph, commitments, rules, *, as_of: date) -> dict[str, object]:
     transactions, _cursor = graph.list_transactions(limit=200)
-    pattern = recognize_payday(transactions, as_of=as_of)
+    # The owner's learning window (OS-051). It governs which observations may be learned
+    # from, so it is read BEFORE recognition and reported alongside the result.
+    learning = build_learning_window(graph, transactions)
+    pattern = recognize_payday(transactions, as_of=as_of, floor=learning["floor"])
     rule_views = []
     next_contributions = []
     for rule in rules.list_all():
@@ -87,5 +116,6 @@ def build_payday_settings(graph, commitments, rules, *, as_of: date) -> dict[str
         ),
         "rules": rule_views,
         "next_run": next_run,
+        "learning": learning,
         "data_freshness": data_freshness(graph, include_all_connections=True),
     }

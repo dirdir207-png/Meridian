@@ -80,3 +80,73 @@ def test_an_all_equal_fourteen_day_gap_stays_biweekly():
 
     assert pattern.cadence == "biweekly"
     assert pattern.next_date == date(2026, 7, 31)
+
+
+# ---------------------------------------------------------------------------
+# OS-051: the payday recognition the Settings income area shows must honour the
+# owner's learning floor, or the reset control would be visibly ineffective.
+# ---------------------------------------------------------------------------
+
+
+def test_recognize_payday_ignores_a_previous_jobs_schedule_after_a_reset():
+    """"I shouldnt be including the learned pay from previous positions." An old
+    biweekly schedule with plenty of evidence must stop being recognised once the
+    floor sits after it."""
+    old_job = income_transactions(
+        ["2026-06-05", "2026-06-19", "2026-07-03", "2026-07-17", "2026-07-31"]
+    )
+    new_job = income_transactions(["2026-09-18", "2026-10-02"], amounts=[2500.0, 2500.0])
+
+    # Without a floor the old schedule is recognised...
+    assert recognize_payday(old_job, as_of=date(2026, 10, 31)) is not None
+    # ...and with a floor it is not learnable, so nothing is claimed.
+    assert (
+        recognize_payday([*old_job, *new_job], as_of=date(2026, 10, 31), floor="2026-09-01")
+        is None
+    )
+
+
+def test_recognize_payday_reports_only_the_post_floor_evidence():
+    """The evidence behind the pattern must be the observations actually used, so the
+    shown confidence and deposit count cannot describe the excluded history."""
+    # Unique ids across both jobs, so the assertion can tell the two apart.
+    history = [
+        SimpleNamespace(id=index, amount=1200.0, occurred_at=f"{day}T12:00:00Z",
+                        classification_kind="income")
+        for index, day in enumerate(
+            ["2026-06-05", "2026-06-19", "2026-07-03"], start=1
+        )
+    ]
+    new_job = [
+        SimpleNamespace(id=index, amount=2500.0, occurred_at=f"{day}T12:00:00Z",
+                        classification_kind="income")
+        for index, day in enumerate(
+            ["2026-09-04", "2026-09-18", "2026-10-02", "2026-10-16"], start=4
+        )
+    ]
+
+    pattern = recognize_payday(
+        [*history, *new_job], as_of=date(2026, 10, 31), floor="2026-09-01"
+    )
+
+    assert pattern is not None
+    # Only the four post-floor deposits carry evidence; the old job is gone entirely.
+    assert pattern.evidence_ids == (4, 5, 6, 7)
+    assert pattern.typical_amount == 2500.0
+    assert pattern.cadence == "biweekly"
+
+
+def test_a_floor_leaving_too_little_evidence_recognises_nothing():
+    """Two deposits after a reset are not a recognised schedule, and the app must not
+    fall back to the previous position's pattern to fill the gap."""
+    history = income_transactions(
+        ["2026-06-05", "2026-06-19", "2026-07-03", "2026-07-17"], amounts=[1200.0] * 4
+    )
+    new_job = income_transactions(["2026-09-18", "2026-10-02"], amounts=[2500.0] * 2)
+
+    assert (
+        recognize_payday(
+            [*history, *new_job], as_of=date(2026, 10, 31), floor="2026-09-01"
+        )
+        is None
+    )

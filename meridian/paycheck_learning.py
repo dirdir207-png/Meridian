@@ -14,7 +14,10 @@ app keeps the owner's explicit config (or no paycheck).
 
 from __future__ import annotations
 
+import json
+import sqlite3
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Optional
 
@@ -25,6 +28,94 @@ from .cadence import advance_by_periods
 _MIN_OCCURRENCES = 3
 _MAX_DAILY_RANGE_DAYS = 40  # max gap between paychecks to count as recurring
 _MAX_PAYCHECK_AMOUNT = 10_000.0  # sanity guard; ignore absurd outliers
+
+_FLOOR_KEY = "meridian_paycheck_learning_floor"
+
+
+@dataclass(frozen=True)
+class LearningFloor:
+    """The owner's learning window: only observations on or after ``floor`` count.
+
+    ``set_at`` is provenance — when the owner reset the window — so a surface can say
+    when the learned figure was last re-based rather than presenting it as timeless.
+    """
+
+    floor: str
+    set_at: str
+
+
+def _now() -> str:
+    return datetime.now().astimezone().isoformat()
+
+
+class PaycheckLearningFloorRepository:
+    """Persist the learning floor in ``app_config`` (single user, Meridian-local).
+
+    Deliberately a SEPARATE key from the paycheck config. The floor governs which
+    observations are learned from; the config is what the owner asserts. Keeping them
+    apart means a learning reset can never clear the owner's configured amount, and a
+    configured amount can never look like a learning reset.
+    """
+
+    def __init__(self, db_path: str):
+        self._db_path = db_path
+
+    def _connect(self):
+        conn = sqlite3.connect(self._db_path)
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS app_config (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )"""
+        )
+        return conn
+
+    def set(self, floor: str) -> LearningFloor:
+        """Record the learning floor. Validates the date so a bad value cannot be
+        stored and later silently exclude every observation."""
+        if _parse_date(floor) is None:
+            raise ValueError("floor must be an ISO date (YYYY-MM-DD)")
+        record = LearningFloor(floor=str(floor), set_at=_now())
+        with self._connect() as conn:
+            conn.execute(
+                """INSERT INTO app_config(key, value, created_at) VALUES (?, ?, ?)
+                   ON CONFLICT(key) DO UPDATE SET value=excluded.value""",
+                (_FLOOR_KEY, json.dumps(record.__dict__), _now()),
+            )
+        return record
+
+    def get(self) -> Optional[LearningFloor]:
+        """The stored floor, or None when the owner has not set one.
+
+        A malformed stored value resolves to None rather than raising: the same
+        discipline ``PaycheckRepository.get`` uses, so a corrupt local setting degrades
+        to "learn from all history" instead of taking the income surface down.
+        """
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT value FROM app_config WHERE key=?", (_FLOOR_KEY,)
+            ).fetchone()
+        if row is None:
+            return None
+        try:
+            data = json.loads(row[0])
+            floor = str(data.get("floor") or "")
+        except (ValueError, TypeError, AttributeError):
+            return None
+        if _parse_date(floor) is None:
+            return None
+        return LearningFloor(floor=floor, set_at=str(data.get("set_at") or ""))
+
+    def clear(self) -> None:
+        """Remove the floor, so all history is learned from again.
+
+        This deletes ONE local setting. It never deletes a financial record: the
+        observations were never removed, only excluded while the floor was active.
+        """
+        with self._connect() as conn:
+            conn.execute("DELETE FROM app_config WHERE key=?", (_FLOOR_KEY,))
+
 
 
 def _parse_date(value) -> Optional[date]:
@@ -63,8 +154,42 @@ def _cadence_guess(offsets: list[int]) -> tuple[str, int]:
     return "monthly", 1
 
 
-def learn_paycheck(transactions) -> dict | None:
+def observations_on_or_after(transactions, floor: Optional[str] = None) -> list:
+    """Only the observations inside the owner's learning window.
+
+    ``floor`` is an ISO date; the boundary is INCLUSIVE because the owner said
+    "starting at yesterday". With no floor every observation is returned, which is the
+    behaviour that existed before the floor and is what a cleared floor restores.
+
+    This FILTERS a view. It never deletes: the excluded observations stay in the
+    ledger and become learnable again the moment the floor is cleared or moved back.
+
+    An observation whose date cannot be read is EXCLUDED while a floor is active,
+    because "after the floor" cannot be established for it, and the whole point of the
+    floor is to stop a previous position's pay being counted. Under no floor it is kept,
+    as it always was.
+    """
+    if not floor:
+        return list(transactions)
+    floor_date = _parse_date(floor)
+    if floor_date is None:
+        # A corrupt floor must not silently blank the income surface; falling back to
+        # "all history" is the pre-floor behaviour and stays visible as such.
+        return list(transactions)
+    kept = []
+    for txn in transactions:
+        occurred = _parse_date(getattr(txn, "occurred_at", None))
+        if occurred is not None and occurred >= floor_date:
+            kept.append(txn)
+    return kept
+
+
+def learn_paycheck(transactions, floor: Optional[str] = None) -> dict | None:
     """Return a learned paycheck dict, or None if no clear recurring income.
+
+    ``floor`` restricts learning to observations on or after that ISO date (OS-051), so
+    a job change can re-base the learned figure without deleting any financial record.
+    With no floor, every observation is learnable exactly as before.
 
     The paycheck is often NOT a single transfer: it arrives as multiple same-period
     chunks (e.g. Cash App's $500-per-transfer limit, or a PayPal->external->Crew
@@ -81,7 +206,7 @@ def learn_paycheck(transactions) -> dict | None:
     next_date, occurrences, sources, confidence}. None when no clear recurring
     income exists.
     """
-    income = [t for t in transactions if _is_income(t)]
+    income = [t for t in observations_on_or_after(transactions, floor) if _is_income(t)]
     if len(income) < _MIN_OCCURRENCES:
         return None
 

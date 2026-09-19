@@ -1177,3 +1177,74 @@ def test_a_plan_with_an_unmappable_cadence_does_not_fabricate_a_payday(api_clien
 
     assert response.status_code == 200
     assert [e for e in response.get_json()["events"] if e["kind"] == "income"] == []
+
+
+def test_the_payday_settings_report_the_learning_window(api_client):
+    """OS-051: the income area must say which learning window produced its figure, and
+    how much of the history that window excluded."""
+    client, repository = api_client
+    _complete_connection(repository)
+
+    response = client.get("/api/meridian/settings/payday")
+
+    assert response.status_code == 200
+    learning = response.get_json()["learning"]
+    assert learning["active"] is False
+    assert learning["floor"] is None
+    assert learning["excluded"] == 0
+
+
+def test_the_owner_can_reset_the_learning_window_from_the_income_area(api_client):
+    """The owner-operable reset. It writes ONE Meridian-local setting and must not
+    delete a single financial record: "a reset must NOT delete financial records". The
+    observations stay; only which of them are learned from changes."""
+    client, repository = api_client
+    _complete_connection(repository)
+    transactions_before = len(repository.list_transactions(limit=200)[0])
+
+    response = client.post(
+        "/api/meridian/settings/payday/learning-floor", json={"floor": "2026-09-01"}
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["learning"]["active"] is True
+    assert payload["learning"]["floor"] == "2026-09-01"
+    assert payload["learning"]["set_at"]
+    # No financial record was removed, and nothing left Meridian.
+    assert len(repository.list_transactions(limit=200)[0]) == transactions_before
+
+    # And it persists across requests, so a restart cannot lose it.
+    again = client.get("/api/meridian/settings/payday").get_json()
+    assert again["learning"]["floor"] == "2026-09-01"
+
+
+def test_the_owner_can_clear_the_learning_window(api_client):
+    """Reversibility: clearing restores the full history rather than being one-way."""
+    client, repository = api_client
+    _complete_connection(repository)
+    client.post(
+        "/api/meridian/settings/payday/learning-floor", json={"floor": "2026-09-01"}
+    )
+
+    response = client.post(
+        "/api/meridian/settings/payday/learning-floor", json={"floor": None}
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["learning"]["active"] is False
+    assert client.get("/api/meridian/settings/payday").get_json()["learning"]["floor"] is None
+
+
+def test_an_invalid_learning_floor_is_rejected(api_client):
+    """A bad date would otherwise be stored and could silently exclude everything."""
+    client, repository = api_client
+    _complete_connection(repository)
+
+    response = client.post(
+        "/api/meridian/settings/payday/learning-floor", json={"floor": "yesterday"}
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"]["code"] == "invalid_request"
+    assert client.get("/api/meridian/settings/payday").get_json()["learning"]["active"] is False

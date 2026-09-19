@@ -28,10 +28,19 @@ def _transaction_date(transaction) -> date | None:
         return None
 
 
-def recognize_payday(transactions, *, as_of: date) -> PaydayPattern | None:
-    """Recognize only well-supported recurring positive-income patterns."""
+def recognize_payday(transactions, *, as_of: date, floor: str | None = None) -> PaydayPattern | None:
+    """Recognize only well-supported recurring positive-income patterns.
+
+    ``floor`` is the owner's learning window (OS-051): only observations on or after it
+    are considered, so a job change can re-base the recognised schedule without deleting
+    any financial record. With no floor all history is considered, exactly as before.
+    The filter runs FIRST, so the pattern's ``evidence_ids`` and confidence describe the
+    observations actually used rather than the excluded history.
+    """
+    from .paycheck_learning import observations_on_or_after
+
     evidence = []
-    for transaction in transactions:
+    for transaction in observations_on_or_after(transactions, floor):
         occurred = _transaction_date(transaction)
         if (
             occurred is None

@@ -61,4 +61,34 @@
       <p class="m-payday-safe-note">This remains a proposal until you explicitly approve it.</p>
     </aside>
   </div>
+
+  <section class="m-payday-learning" data-learning-floor aria-labelledby="payday-learning-title">
+    <p class="m-section-label">Learning</p>
+    <h2 id="payday-learning-title">What Meridian learns your pay from</h2>
+    <p class="m-payday-learning-note">
+      Meridian learns your payday from your income history. If you change jobs, point it at
+      the date your new pay history starts so the previous position no longer counts. This
+      changes only which deposits are learned from — no records are deleted, and nothing is
+      sent to Crew.
+    </p>
+
+    <p class="m-payday-learning-summary" data-learning-floor-summary role="status" aria-live="polite">
+      Learning from all of your income history.
+    </p>
+
+    <div class="m-payday-learning-controls">
+      <label class="m-payday-field">
+        <span>Start learning from</span>
+        <input type="date" data-learning-floor-input>
+      </label>
+      <button class="m-primary-button" type="button" data-learning-floor-set>
+        Start fresh from this date
+      </button>
+      <button class="m-secondary-button" type="button" data-learning-floor-clear>
+        Include all history
+      </button>
+    </div>
+
+    <p class="m-payday-status" data-learning-floor-status role="status" aria-live="polite"></p>
+  </section>
 </section>
