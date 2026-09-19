@@ -125,3 +125,75 @@ def test_a_two_word_category_can_be_typed_without_the_inspector_stealing_the_spa
     # rather than sampling visibility once.
     page.wait_for_selector("[data-inspector-rail]", state="visible", timeout=5000)
     context.close()
+
+
+def test_unchecking_apply_to_future_matching_toggles_the_box_instead_of_opening_evidence(browser):
+    """The owner: unchecking "apply to future matching" made the evidence card consume the
+    page and left the box unchanged -- the same failure the space key had.
+
+    The row's click guard enumerated the review controls one by one, and this checkbox was
+    never added to that list, so a click on it bubbled to the row and opened the inspector.
+    The guard is now general: any interactive descendant owns its own events, so adding a
+    control and forgetting a list can no longer reintroduce this.
+    """
+    from tests.browser.test_transaction_inspector import _authed_page, _fulfill
+
+    context, page = _authed_page(browser)
+    transaction = {
+        "id": 303,
+        "account_id": 11,
+        "provider": "crew",
+        "amount": -12.4,
+        "currency": "USD",
+        "occurred_at": "2026-08-20T18:00:00Z",
+        "description": "Unassigned purchase",
+        "merchant": "Unassigned purchase",
+        "status": "posted",
+        "classification": {
+            "category": "uncategorized",
+            "kind": "spend",
+            "confidence": 0.2,
+            "evidence": "no reliable category",
+        },
+        "suggested_category": None,
+        "category_options": ["Personal Care", "Dining"],
+    }
+
+    page.route(
+        "**/api/meridian/activity*",
+        _fulfill(
+            {
+                "transactions": [transaction],
+                "next_cursor": None,
+                "review_count": 1,
+                "data_freshness": {"status": "fresh"},
+            }
+        ),
+    )
+    page.route(
+        "**/api/meridian/accounts",
+        _fulfill({"accounts": [], "data_freshness": {"status": "fresh"}}),
+    )
+    page.route(
+        "**/api/meridian/transactions/303",
+        _fulfill({"transaction": transaction, "data_freshness": {"status": "fresh"}}),
+    )
+
+    page.goto(f"{APP_URL}/meridian?workspace=activity", wait_until="domcontentloaded")
+    page.locator('[data-activity-mode="review"]').click()
+    page.locator("[data-review-correct]").first.click()
+
+    box = page.locator(".m-review-editor-rule input[type=checkbox]")
+    box.wait_for(state="visible")
+    assert box.is_checked()
+
+    # The box itself.
+    box.click()
+    assert not box.is_checked()
+    assert not page.locator("[data-inspector-rail]").is_visible()
+
+    # And its label, which is the other half of the same control.
+    page.locator(".m-review-editor-rule").click()
+    assert box.is_checked()
+    assert not page.locator("[data-inspector-rail]").is_visible()
+    context.close()

@@ -228,19 +228,32 @@ function close() {
 
 window.MeridianTransactionInspector = { open, close };
 
-document.addEventListener("click", (event) => {
-  // Review-card controls own their own click handlers (Approve / Correct / the
-  // inline category editor / the batch select) — never treat a click on them as
-  // an "open inspector" intent.
-  if (
-    event.target.closest(
-      "[data-review-approve], [data-review-correct], [data-review-editor], [data-review-select], .m-review-actions",
-    )
-  ) {
-    return;
+/* A control nested inside an activatable row owns its own events.
+
+   This guard used to be an enumeration of the review-card controls, which meant every new
+   nested control had to be remembered by hand -- and "Apply to future matching" was not, so
+   clicking it bubbled here and opened the evidence card instead of toggling the box, exactly
+   the failure the space key had. The region exclusions stay, because they express intent
+   about whole areas rather than about one element; the general rule is what makes the guard
+   hold for controls that do not exist yet. */
+const ROW_CONTROL_SELECTOR =
+  'a[href], button, input, select, textarea, label, [role="checkbox"], [role="radio"], [role="button"]';
+
+function rowControlOwnsEvent(event, row) {
+  if (event.target.closest("[data-review-editor], .m-review-actions")) {
+    return true;
   }
+  // The row itself carries role="button", so matching it is the row's own activation.
+  const control = event.target.closest(ROW_CONTROL_SELECTOR);
+  return Boolean(control) && control !== row;
+}
+
+document.addEventListener("click", (event) => {
   const row = event.target.closest("[data-transaction-row]");
   if (row) {
+    if (rowControlOwnsEvent(event, row)) {
+      return;
+    }
     open(Number(row.dataset.transactionId), { opener: row });
     return;
   }
@@ -263,13 +276,12 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   // A timeline row is role="button", so Enter and Space activate it. But the inline
-  // category editor and the row's own selection checkbox live INSIDE the row, and
-  // this listener is on the document: a space typed into the category field bubbled
-  // here, was swallowed by preventDefault, and opened the inspector instead -- so a
-  // two-word category such as "Personal Care" could not be typed at all, and the
-  // checkbox could not be toggled from the keyboard. Only the row itself being the
-  // focused target should activate the row; this is the guard plan.js already uses.
-  if (event.target !== row) {
+  // category editor and the row's own selection checkbox live INSIDE the row, and this
+  // listener is on the document: a space typed into the category field bubbled here, was
+  // swallowed by preventDefault, and opened the inspector instead -- so a two-word category
+  // such as "Personal Care" could not be typed at all. The same helper answers it, so keys
+  // and clicks cannot drift apart again.
+  if (rowControlOwnsEvent(event, row)) {
     return;
   }
   event.preventDefault();
