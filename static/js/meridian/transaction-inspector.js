@@ -262,6 +262,16 @@ document.addEventListener("keydown", (event) => {
   if (!row || (event.key !== "Enter" && event.key !== " ")) {
     return;
   }
+  // A timeline row is role="button", so Enter and Space activate it. But the inline
+  // category editor and the row's own selection checkbox live INSIDE the row, and
+  // this listener is on the document: a space typed into the category field bubbled
+  // here, was swallowed by preventDefault, and opened the inspector instead -- so a
+  // two-word category such as "Personal Care" could not be typed at all, and the
+  // checkbox could not be toggled from the keyboard. Only the row itself being the
+  // focused target should activate the row; this is the guard plan.js already uses.
+  if (event.target !== row) {
+    return;
+  }
   event.preventDefault();
   open(Number(row.dataset.transactionId), { opener: row });
 });

@@ -78,11 +78,14 @@ function openInlineCategoryEditor(row, onSave) {
   input.setAttribute("aria-label", "Correct category");
   input.setAttribute("list", "meridian-category-suggestions");
   const category = row.dataset.classificationCategory || "";
-  // Prefill with the smart data-derived guess if there's no existing category.
-  input.value =
-    category && category !== "Uncategorized"
-      ? category
-      : (row.dataset.suggestedCategory || "");
+  // Prefill with the smart data-derived guess if there's no existing category. The
+  // placeholder is tested with the same predicate the rest of the app uses: the old
+  // case-sensitive `!== "Uncategorized"` missed the lowercase "uncategorized" the
+  // provider actually writes, so the field opened prefilled with the literal word
+  // "uncategorized" and saving it would have filed that as a real category.
+  input.value = categoryIsAssigned(category)
+    ? category
+    : (row.dataset.suggestedCategory || "");
   // Ranked options from the backend (suggestion first + merchant history +
   // defaults); fall back to the static list when the row carries none.
   let options = null;

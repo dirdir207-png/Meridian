@@ -1267,6 +1267,29 @@
       "browser": "Live preview, 420x912: the ledger went from one distinct glyph to nine across the real merchants (Circle K, Cumberland Farms, KeyMe, Shell, OpenAI). Four workspaces x both themes: every surface resolves to its own page colour -- rgb(20,27,50) Activity/Plan/Accounts, rgb(22,28,52) Today, rgb(244,236,223) light -- with zero overflow. Isolated preview: badge '1', tab aria-label 'Review, 1 decision to review', strip shown in Review only and worded in the singular. Light edition measured action #25644f with ink #f4ecdf across the tab label, star, underline and confirmation fill; dark unchanged at #e99a48 with #20263b. At 420px the review pair shares one row at 187px + 105px, both exactly 44px (single line), the single choose control is full width, and both themes report zero overflow",
       "limits": "The live preview at :8081 was started before the API change, so its badge will read 0 until that process is restarted; restarting it re-runs its connector sync, so it was left to the owner. Mint was rejected for the light action: the dark edition's mint (#a5d4bf) is only 1.4:1 on parchment, and mint already means 'confirmed'. Still open: the timeline's 'Your money, in order.' banner, day-part moon/sun markers, row chevrons and the 'Ask Virgil about this activity' footer. Captures are fixture-only and are not deployment evidence",
       "capture": "artifacts/observatory-activity-followup-2026-09-18/** (timeline, authority concepts/timeline.png) and artifacts/observatory-activity-followup-review-2026-09-18/** (Review, authority concepts/review.png), both untracked by convention: 5 device presets x 2 themes, 20 PNGs and 10 manifest records each, every record naming a concept file that exists, zero overflow, zero console errors"
+    },
+    {
+      "id": "OS-046",
+      "title": "Inline category editor: the space key opened the evidence",
+      "phase": "correctness",
+      "status": "complete",
+      "priority": "high",
+      "dependencies": [
+        "OS-030"
+      ],
+      "authority_impact": "none. A keyboard-event guard and a placeholder predicate; no route, write, provider or authority change",
+      "owner_decision_required": false,
+      "requested_by": "owner report, 2026-09-18: 'when manually writing a category, pressing the space key brings up the evidence so you cannot have more than 1 word'",
+      "acceptance_criteria": [
+        "A multi-word category can be typed into the inline editor",
+        "Space on a focused timeline row still opens the transaction inspector",
+        "Space on the review card's selection checkbox toggles it instead of opening the inspector",
+        "The field is not prefilled with a placeholder value such as 'uncategorized'"
+      ],
+      "delivered": "transaction-inspector.js now activates a row only when the row itself is the focused target, the guard plan.js already used; review.js prefill uses categoryIsAssigned() instead of a case-sensitive string comparison",
+      "guards": "tests/browser/test_transaction_review.py::test_a_two_word_category_can_be_typed_without_the_inspector_stealing_the_space types 'Personal Care', asserts the value lands, asserts no evidence opened, and asserts the timeline row still opens the inspector on Space",
+      "browser": "Live preview: focused timeline row + Space opens the inspector (data-object-id 3300213); the same flow against mocked data lands 'Personal Care' in the field and sets data-object-id 303. tests/browser/test_transaction_review.py 2 passed; test_activity.py 1 failed / 6 passed with and without this change, so the pre-existing browser-suite failures in this environment are unrelated",
+      "limits": "The wider browser suite reports 43 failed / 28 errors in this environment both with and without this change (stashed baseline: 43 failed / 21 passed / 28 errors; with the change: 43 failed / 22 passed / 28 errors), so those are environmental. The root cause of that instability was not investigated and is not claimed"
     }
   ]
 }

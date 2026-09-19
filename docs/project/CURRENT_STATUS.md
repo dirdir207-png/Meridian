@@ -244,6 +244,37 @@ Geometry was tuned rather than assumed: the two controls share a row at 420px (m
 side padding tightened. A larger basis wrapped them onto separate rows, which is not the
 concept's layout.
 
+### Two defects in the inline category editor
+
+The owner reported: *"when manually writing a category, pressing the space key brings up the
+evidence so you cannot have more than 1 word"*. That was accurate, and it was one line in
+`transaction-inspector.js`.
+
+**Spaces were swallowed by the row's own keyboard shortcut.** A timeline row is
+`role="button"`, so a document-level listener treats Enter and Space anywhere inside a row as
+"activate the row", calls `preventDefault()`, and opens the inspector. But
+`openInlineCategoryEditor` does `const container = row` — **the editor is inserted into the
+transaction row** — so every space typed into the category field bubbled to that listener, was
+prevented, and opened the evidence instead of reaching the input. Multi-word categories such
+as "Personal Care" or "Home Office" were impossible to type. The row now activates only when
+the row *itself* is the focused target, which is the guard `plan.js` already used. The same
+bug also meant the review card's own selection checkbox could not be toggled from the
+keyboard: Space on the checkbox opened the inspector instead of toggling it.
+
+**The field opened prefilled with the literal word "uncategorized".** The prefill test was
+`category !== "Uncategorized"` — case-sensitive — while the provider writes lowercase
+`"uncategorized"`, so the guard missed and the field opened with that placeholder as its
+value; saving would have filed "uncategorized" as a real category. It now uses
+`categoryIsAssigned()`, the same predicate the ledger, the glyph resolver and the review
+labels already share.
+
+Guarded by a browser test that types a two-word category, asserts the space reaches the field
+and no evidence opens, and asserts the row still opens the inspector from the keyboard when
+the row itself has focus. Baseline check for the wider browser suite: with these changes
+stashed it reports 43 failed / 21 passed / 28 errors, and with them 43 failed / 22 passed /
+28 errors — the same failures, plus this one new passing test. Those pre-existing failures are
+environmental and were not caused by this change.
+
 ### Three referenced handoff files are missing
 
 `index.html`, `manifest.json` (provenance, dimensions, SHA-256) and `VERIFICATION.md` (Astra's measured checks)

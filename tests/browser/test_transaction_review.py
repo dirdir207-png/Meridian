@@ -45,3 +45,83 @@ def test_review_modes_show_confidence_patterns_and_preserve_inspector(browser):
     page.wait_for_selector('[data-pattern-card="recurrence"]')
     assert page.locator('[data-pattern-card="recurrence"]').is_visible()
     context.close()
+
+
+def test_a_two_word_category_can_be_typed_without_the_inspector_stealing_the_space(browser):
+    """The owner: "when manually writing a category, pressing the space key brings up
+    the evidence so you cannot have more than 1 word".
+
+    The inline editor is inserted INTO the transaction row, and a document-level
+    keydown listener treated Enter/Space anywhere inside a row as "activate the row",
+    calling preventDefault and opening the inspector. The space never reached the
+    input, so multi-word categories such as "Personal Care" were impossible to type.
+    """
+    from tests.browser.test_transaction_inspector import _authed_page, _fulfill
+
+    context, page = _authed_page(browser)
+    transaction = {
+        "id": 303,
+        "account_id": 11,
+        "provider": "crew",
+        "amount": -12.4,
+        "currency": "USD",
+        "occurred_at": "2026-08-20T18:00:00Z",
+        "description": "Unassigned purchase",
+        "merchant": "Unassigned purchase",
+        "status": "posted",
+        "classification": {
+            "category": "uncategorized",
+            "kind": "spend",
+            "confidence": 0.2,
+            "evidence": "no reliable category",
+        },
+        "suggested_category": None,
+        "category_options": ["Personal Care", "Dining"],
+    }
+
+    page.route(
+        "**/api/meridian/activity*",
+        _fulfill(
+            {
+                "transactions": [transaction],
+                "next_cursor": None,
+                "review_count": 1,
+                "data_freshness": {"status": "fresh"},
+            }
+        ),
+    )
+    page.route(
+        "**/api/meridian/accounts",
+        _fulfill({"accounts": [], "data_freshness": {"status": "fresh"}}),
+    )
+    # The inspector fetches the transaction detail when it opens.
+    page.route(
+        "**/api/meridian/transactions/303",
+        _fulfill({"transaction": transaction, "data_freshness": {"status": "fresh"}}),
+    )
+    page.goto(f"{APP_URL}/meridian?workspace=activity", wait_until="domcontentloaded")
+    page.locator('[data-activity-mode="review"]').click()
+
+    page.locator("[data-review-correct]").first.click()
+    field = page.locator(".m-review-editor-input")
+    field.click()
+    field.type("Personal Care")
+
+    # The space must reach the field rather than opening the transaction evidence.
+    assert field.input_value() == "Personal Care"
+    assert not page.locator("[data-inspector-rail]").is_visible()
+
+    # The row must still activate from the keyboard, but only when the ROW itself has
+    # focus. Review cards drop role/tabindex, so the focusable row is the timeline one.
+    page.locator(".m-review-editor-input").press("Escape")
+    page.locator('[data-activity-mode="timeline"]').click()
+    # Review cards drop role/tabindex, so wait for the RE-RENDERED timeline row rather
+    # than focusing the review card that is still attached under the same id.
+    row = page.locator('[data-transaction-id="303"][tabindex="0"]')
+    row.wait_for(state="attached")
+    row.focus()
+    page.keyboard.press("Space")
+    # The rail opens asynchronously (it fetches the transaction), so wait for it
+    # rather than sampling visibility once.
+    page.wait_for_selector("[data-inspector-rail]", state="visible", timeout=5000)
+    context.close()
