@@ -289,7 +289,14 @@ rather than presented as parity.
 
 ## Activity — kit icons, page-colour surfaces and the review count (2026-09-18)
 
-![Activity review tab with the orange count badge and a kit glyph per row](/Users/stephenwest/Openrouter/simplecrew-latest/tmp/activity-review/count-body-dark.png)
+![Activity review: the orange count badge, the "1 decision to review" strip, and Confirm/Change with kit glyphs](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-activity-followup-review-2026-09-18/activity-mobile-air-dark-viewport.png)
+
+Captured from the isolated synthetic preview at 1440×900 DPR1, 1024×768 DPR1, 430×932 DPR3,
+390×844 DPR3 and 420×912 DPR3, both editions, into
+`artifacts/observatory-activity-followup-2026-09-18/` (timeline, authority `timeline.png`)
+and `artifacts/observatory-activity-followup-review-2026-09-18/` (Review, authority
+`review.png`). All 20 records report zero horizontal overflow and zero console errors, and
+each names a concept file that exists.
 
 Read against `concepts/timeline.png` and `concepts/review.png`. Three owner-reported defects
 were reproduced and fixed here, and the review count — blocked in the previous slice — was

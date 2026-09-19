@@ -214,6 +214,15 @@ orange at 7.45:1 in dark, green at 5.94:1 in light — and the earlier light-onl
 disappears. No second brand colour was invented and no new hex was added: the two
 `#e99a48` declarations are the only orange left, and a guard asserts exactly that.
 
+Governed captures for this follow-up live in
+`artifacts/observatory-activity-followup-2026-09-18/` (timeline, authority
+`concepts/timeline.png`) and `artifacts/observatory-activity-followup-review-2026-09-18/`
+(Review, authority `concepts/review.png`), untracked by convention: five device presets
+both editions, ten manifest records each, every one naming a concept file that exists, with
+zero overflow and zero console errors. The single most complete frame is the mobile-air
+dark Review viewport, which shows the count badge, the strip, the Confirm/Change pair with
+their kit glyphs, and the page-colour card at once.
+
 **A row with nothing to confirm now offers one primary control, not a dead one.** The owner
 reported the pair as "very subdued or greyed out as inactive", and that was accurate: the
 confirmation control rendered `disabled`, so the row's only available action was the least
