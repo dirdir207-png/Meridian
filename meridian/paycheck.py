@@ -156,3 +156,150 @@ def build_cash_events(
     if paycheck is not None:
         events.extend(future_paycheck_events(paycheck, as_of=as_of, horizon_days=horizon_days))
     return sorted(events, key=lambda item: item[0])
+
+
+_MAX_EVIDENCE_IDS = 12
+
+
+@dataclass(frozen=True)
+class ResolvedPaycheck:
+    """A paycheck projection AND the provenance of its amount.
+
+    Deliberately NOT part of ``PaycheckConfig``. The config is what the owner set and is
+    persisted verbatim through ``PaycheckRepository``; ``basis``, ``source``, ``observed_at``
+    and ``evidence_ids`` are DERIVED. Folding them into the persisted config would write
+    derived provenance to the database and later read it back as though the owner had
+    configured it.
+
+    It exposes the same attribute names as ``PaycheckConfig`` (cadence/amount/next_date/
+    active) so the dial's ``getattr``-based readers take either one unchanged.
+
+    ``basis`` is not decoration: an aggregate over three observed paychecks and a single
+    last-observed value are different strengths of claim, and a consumer that cannot tell
+    them apart cannot report the amount honestly.
+    """
+
+    cadence: str
+    amount: float
+    next_date: str
+    active: bool
+    basis: str  # "aggregate" | "last_known" | "configured"
+    source: str
+    observed_at: Optional[str] = None
+    evidence_ids: tuple = ()
+    occurrences: int = 0
+
+
+def _income_transactions(transactions):
+    return [
+        txn
+        for txn in transactions or ()
+        if str(getattr(txn, "classification_kind", "") or "") == "income"
+    ]
+
+
+def _observed_day(txn) -> Optional[str]:
+    raw = str(getattr(txn, "occurred_at", "") or "")
+    return raw[:10] if len(raw) >= 10 else None
+
+
+def resolve_expected_paycheck(transactions, configured=None) -> Optional[ResolvedPaycheck]:
+    """The owner's approved rule (2026-09-19, verbatim in docs/project/CURRENT_STATUS.md):
+
+        "it should default to that value and moving forward aggregate after 3"
+
+    The rule is applied to the CURRENT income channel, not to income in general, and that
+    distinction is the difference between an honest number and a wrong one. ``learn_paycheck``
+    groups by merchant and returns a single source, so calling it across all history would
+    happily return a three-occurrence aggregate for a channel the owner has stopped using --
+    and that aggregate would then be reported as the expected income. The owner's mechanism
+    just changed in exactly that way (paychecks now deposit directly into Crew, where they
+    previously arrived as Cash App transfers), so:
+
+      1. identify the channel from the MOST RECENTLY observed income transaction;
+      2. aggregate WITHIN that channel once it has enough occurrences (``learn_paycheck``
+         returns None below ``paycheck_learning._MIN_OCCURRENCES``, so the threshold is the
+         existing one rather than a second copy);
+      3. otherwise use that channel's last observed value -- "default to that value";
+      4. otherwise fall back to the owner's configured figure, which is the last resort.
+
+    A retired channel therefore cannot win, and two channels are never averaged together,
+    because a number averaged across a retired payout route and a new one describes neither.
+
+    Known limitation, stated rather than hidden: with fewer than three observations the AMOUNT
+    is observed but the SCHEDULE is not, so the cadence and next date come from the configured
+    config when there is one and otherwise from the last observed date advanced by one month.
+    ``basis`` describes where the amount came from, not the schedule.
+    """
+    from .paycheck_learning import learn_paycheck
+
+    income = _income_transactions(transactions)
+
+    if income:
+        latest = max(income, key=lambda txn: str(getattr(txn, "occurred_at", "") or ""))
+        channel = str(getattr(latest, "merchant", "") or "")
+        current = [
+            txn for txn in income if str(getattr(txn, "merchant", "") or "") == channel
+        ]
+        learned = learn_paycheck(current)
+
+        if learned:
+            days = [day for day in (_observed_day(txn) for txn in current) if day]
+            ids = tuple(
+                getattr(txn, "id")
+                for txn in current[:_MAX_EVIDENCE_IDS]
+                if getattr(txn, "id", None) is not None
+            )
+            return ResolvedPaycheck(
+                cadence=str(learned.get("cadence") or "monthly"),
+                amount=float(learned.get("amount") or 0.0),
+                next_date=str(learned.get("next_date") or ""),
+                active=True,
+                basis="aggregate",
+                source=channel or "manual",
+                observed_at=max(days) if days else None,
+                evidence_ids=ids,
+                occurrences=int(learned.get("occurrences") or 0),
+            )
+
+        day = _observed_day(latest)
+        cadence = "monthly"
+        next_date = ""
+        if configured is not None:
+            cadence = str(getattr(configured, "cadence", "") or cadence)
+            next_date = str(getattr(configured, "next_date", "") or "")
+        if not next_date and day:
+            try:
+                from datetime import date as _date
+
+                advanced = cadence_advance(_date.fromisoformat(day), cadence, 1)
+                next_date = advanced.isoformat() if advanced else ""
+            except Exception:  # noqa: BLE001 - a malformed date must not block a read
+                next_date = ""
+        return ResolvedPaycheck(
+            cadence=cadence,
+            amount=abs(float(getattr(latest, "amount", 0) or 0.0)),
+            next_date=next_date,
+            active=True,
+            basis="last_known",
+            source=channel or "manual",
+            observed_at=day,
+            evidence_ids=(
+                (getattr(latest, "id"),)
+                if getattr(latest, "id", None) is not None
+                else ()
+            ),
+            occurrences=len(current),
+        )
+
+    if configured is not None:
+        return ResolvedPaycheck(
+            cadence=str(getattr(configured, "cadence", "") or "monthly"),
+            amount=float(getattr(configured, "amount", 0) or 0.0),
+            next_date=str(getattr(configured, "next_date", "") or ""),
+            active=bool(getattr(configured, "active", True)),
+            basis="configured",
+            source="manual",
+        )
+
+    return None

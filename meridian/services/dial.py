@@ -248,17 +248,18 @@ def _paycheck_events(paycheck, as_of: date, horizon_end: date) -> list[dict]:
             },
             "fundingStatus": "unknown",
             "reserved": None,
-            # NOT "crew". This amount comes from the locally configured paycheck
-            # (meridian/paycheck.py: "single paycheck config (cadence, amount, next date)").
-            # Crew's income source is never ingested -- the adapter reads no income surface
-            # at all -- so attributing the figure to Crew was false, and it is what made the
-            # row read "Source: crew" for a number typed into Settings. A Crew funding plan
-            # (name, amount, frequency, anchorDate, billReserveId) does exist and the app can
-            # already write one, but nothing ingests it yet; until it does, the honest source
-            # is "manual", the same word the bill and goal branches use for a non-Crew record.
-            "source": "manual",
-            "observedAt": None,
-            "evidenceIds": [],
+            # Provenance now comes from the RESOLUTION rather than being asserted here.
+            # The amount is an aggregate of observed paychecks, or the last observed value,
+            # or the configured figure -- and which one it is changes how strongly the
+            # number may be claimed, so "basis" travels with it. Neither "source" nor the
+            # evidence is ever invented: a figure with nothing behind it carries basis
+            # "configured", no observation time and no evidence ids.
+            "source": str(getattr(paycheck, "source", "") or "manual"),
+            "observedAt": getattr(paycheck, "observed_at", None),
+            "evidenceIds": [
+                str(item) for item in (getattr(paycheck, "evidence_ids", ()) or ())
+            ],
+            "basis": str(getattr(paycheck, "basis", "") or "configured"),
             "detailHref": "/meridian?workspace=plan",
         }
         for day, _event_amount in raw

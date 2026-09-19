@@ -69,9 +69,13 @@ def test_the_projection_does_not_claim_crew_provenance_for_a_local_paycheck():
     # rather than its indentation.
     assert service.count('if commitment.legacy_source == "crew"') == 2
     assert service.count('else "manual"') == 2
-    # And the income branch no longer hardcodes the false attribution.
+    # And the income branch no longer hardcodes ANY attribution -- neither the false "crew"
+    # nor a literal "manual". The source now comes from the resolution, so it cannot drift
+    # away from where the amount actually came from.
     assert '"source": "crew",' not in service
-    assert service.count('"source": "manual",') == 1
+    assert 'str(getattr(paycheck, "source", "") or "manual")' in service
+    assert 'getattr(paycheck, "observed_at", None)' in service
+    assert 'getattr(paycheck, "basis", "") or "configured"' in service
 
 
 def test_the_paycheck_is_still_described_as_locally_configured():
@@ -82,3 +86,61 @@ def test_the_paycheck_is_still_described_as_locally_configured():
     provider = (ROOT / "meridian/providers/crewwork.py").read_text(encoding="utf-8")
     for word in ("income", "paycheck", "earning", "deposit"):
         assert word not in provider.lower(), f"adapter now mentions {word!r}; revisit the label"
+
+
+def test_the_projection_cites_the_observation_that_anchors_it():
+    """Slice 3's acceptance: an observed amount carries its source, its observation time and
+    the evidence ids behind it, plus the basis that says how strong the claim is."""
+    from datetime import date
+
+    from meridian.paycheck import ResolvedPaycheck
+    from meridian.services.dial import _paycheck_events
+
+    resolved = ResolvedPaycheck(
+        cadence="monthly",
+        amount=1663.00,
+        next_date="2026-10-18",
+        active=True,
+        basis="last_known",
+        source="Veterans Home",
+        observed_at="2026-09-18",
+        evidence_ids=(99,),
+        occurrences=1,
+    )
+    events = _paycheck_events(resolved, date(2026, 9, 19), date(2026, 10, 31))
+
+    assert events, "a resolved paycheck must project at least one occurrence"
+    first = events[0]
+    assert first["kind"] == "income"
+    assert first["source"] == "Veterans Home"
+    assert first["observedAt"] == "2026-09-18"
+    assert first["evidenceIds"] == ["99"]
+    assert first["basis"] == "last_known"
+    # The amount is the observed value, not the configured one.
+    assert first["amount"]["minor"] == 166300
+
+
+def test_an_unobserved_amount_cites_nothing_at_all():
+    """The honesty case: a configured figure has no observation behind it, so it must not
+    borrow one. This is what "never present a forecast as a fact" means in the payload."""
+    from datetime import date
+
+    from meridian.paycheck import ResolvedPaycheck
+    from meridian.services.dial import _paycheck_events
+
+    resolved = ResolvedPaycheck(
+        cadence="biweekly",
+        amount=1663.00,
+        next_date="2026-10-02",
+        active=True,
+        basis="configured",
+        source="manual",
+    )
+    events = _paycheck_events(resolved, date(2026, 9, 19), date(2026, 10, 31))
+
+    assert events
+    first = events[0]
+    assert first["basis"] == "configured"
+    assert first["source"] == "manual"
+    assert first["observedAt"] is None
+    assert first["evidenceIds"] == []

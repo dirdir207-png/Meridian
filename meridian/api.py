@@ -513,39 +513,33 @@ def plan_scenario_preview():
 
 
 def _paycheck_config(graph):
-    """Load the owner's paycheck config, OR learn it from real income.
+    """Resolve the expected paycheck from observations, per the owner's rule.
 
-    Prefers the owner's explicit config; when none is set, auto-learn the typical
-    recurring income (e.g. a Cash App paycheck) so the forecast/beacon reflect
-    reality. The learned config auto-updates as new paychecks land.
+    Owner ruling 2026-09-19: "it should default to that value and moving forward aggregate
+    after 3". So observed beats configured, and the configured figure is the last resort
+    rather than the authority.
+
+    This REVERSES the previous precedence, which preferred the owner's explicit config and
+    only auto-learned when nothing was configured. That order meant the observed legs never
+    ran for an owner who had configured a figure, which is why the projection cited no
+    evidence. See meridian.paycheck.resolve_expected_paycheck for the chain and for why it
+    resolves within the CURRENT income channel rather than across all history.
     """
-    from meridian.paycheck import PaycheckConfig, PaycheckRepository
+    from meridian.paycheck import PaycheckRepository, resolve_expected_paycheck
 
-    manual = PaycheckRepository(graph.db_path).get()
-    if manual is not None:
-        return manual
-    learned = _learned_paycheck(graph)
-    if learned is not None:
-        return PaycheckConfig(
-            cadence=learned["cadence"],
-            amount=learned["amount"],
-            next_date=learned["next_date"],
-            active=True,
-        )
-    return None
-
-
-def _learned_paycheck(graph):
-    """Learn the paycheck from recent income transactions (best-effort)."""
+    configured = PaycheckRepository(graph.db_path).get()
     try:
-        from meridian.paycheck_learning import learn_paycheck
         from meridian.repository import FinancialRepository
 
-        financial = graph if isinstance(graph, FinancialRepository) else FinancialRepository(graph.db_path)
+        financial = (
+            graph
+            if isinstance(graph, FinancialRepository)
+            else FinancialRepository(graph.db_path)
+        )
         transactions, _cursor = financial.list_transactions(limit=200)
-        return learn_paycheck(transactions)
-    except Exception:  # noqa: BLE001 - learning is best-effort
-        return None
+    except Exception:  # noqa: BLE001 - observations are best-effort context
+        transactions = []
+    return resolve_expected_paycheck(transactions, configured=configured)
 
 
 @meridian_api.get("/paycheck")
