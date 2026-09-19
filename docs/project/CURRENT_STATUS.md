@@ -1,6 +1,6 @@
 # Enhanced SimpleCrew — Current Status
 
-## RESUME HERE — OS-048b: the dial states a per-bill reserved amount, with its basis (2026-09-19, base `2f2e833`)
+## RESUME HERE — OS-048b: the dial states a per-bill reserved amount, with its basis (2026-09-19, committed `fec1c33`, base `2f2e833`)
 
 D-013 permits the per-dated-occurrence figure and fixes its order of authority. Implementing it exposed two observed facts that the audit could not find anywhere in storage, so this slice persists them before it states anything — and it found that the production refresh path stored neither.
 
