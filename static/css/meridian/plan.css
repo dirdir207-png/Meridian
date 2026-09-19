@@ -1036,7 +1036,13 @@
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: var(--obs-paper);
+  /* Page-relative, NOT the fixed paper cream. This bar is transparent and sits on the page,
+     and `--obs-paper` (#ead8b5) is a literal that never flips: cream-on-navy is legible in
+     the dark edition, but on the light edition it was cream-on-parchment, so "Rules" and
+     "Crew" vanished (owner report). `--m-ink` is the same cream on dark and the dark ink on
+     light. The app's other `color: var(--obs-paper)` uses sit on genuinely dark surfaces and
+     are deliberately left alone. */
+  color: var(--m-ink);
   font-family: var(--m-font-serif);
   font-size: var(--m-text-sm);
   font-weight: 600;
