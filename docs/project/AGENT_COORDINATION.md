@@ -108,6 +108,8 @@ Verified: 29 new non-browser tests (new `services/test_dial_reserved_amount.py` 
 
 Explicitly not done and not claimed: **no live sync, no provider call, no backfill, no deployment, no `:8081` restart.** `crew_bill_reserves` is empty in every existing database until the next ordinary read runs, so the running app still states nothing new. The six `tests/browser/test_dial_fidelity.py` failures listed as OS-049 were reproduced at pristine `2f2e833` with this diff stashed, so they are pre-existing and this slice neither caused nor fixed them. `sync_providers` and `sync_live_crew` now copy three fields twice, and a test pins the two paths equal on the reserve facts; the recurrence divergence OS-053 records is untouched and still deliberate.
 
+Owner ratified the derived figure's divisor copy after the slice — *"Split across 3 bills is fine, I can always adjust after"* (D-014). Nothing was changed in response; the ruling is recorded so the wording is not re-opened as an open question, and it remains revisable as presentation only.
+
 ### 2026-09-19 — OS-048a: the bill→reserve membership survives ingestion, and the dial names the funder (committed `8e8333c`)
 
 Read-side slice for D-010 (*"Bills are already funded by a particular funding source or income source in Crew"*). The plan was already stored with its reserve (022); the bill side dropped the containing reserve id at ingestion (`_collect_commitment_candidates` bound `account.billReserve` and never read its `id`), so no join existed and every bill read "funding unknown".
