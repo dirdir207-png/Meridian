@@ -60,6 +60,36 @@ class StoredAssignmentRule:
 
 
 @dataclass(frozen=True)
+class FundingPlanRecord:
+    """A Crew bill-reserve funding plan: the owner's income source / Funding Cadence.
+
+    ``external_id`` is Crew's own plan id and is the identity of the record — the owner
+    renames the plan ("State of New Hampshire" -> "Veteran's Home"), so anything keyed on
+    the plan's *name* or on a deposit's merchant text would break on the next rename.
+
+    ``cadence`` is ``None`` when Crew's frequency/interval has no exact Meridian
+    equivalent. ``observed_at`` is the provider read that observed the plan; ``absent_since``
+    records that a later complete read no longer returned it, so the row documents a
+    withdrawal without being deleted.
+    """
+
+    id: int
+    provider: str
+    external_id: str
+    bill_reserve_id: str
+    name: str
+    amount: float
+    cadence: Optional[str]
+    anchor_date: Optional[str]
+    currency: str
+    observed_at: Optional[str]
+    synced_at: str
+    absent_since: Optional[str]
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
 class ReimbursementRecord:
     id: int
     provider: str
@@ -911,6 +941,129 @@ class FinancialRepository:
                 "SELECT * FROM provider_reimbursements ORDER BY name COLLATE NOCASE, id"
             ).fetchall()
         return [ReimbursementRecord(**dict(row)) for row in rows]
+
+    def upsert_funding_plan(
+        self,
+        *,
+        provider: str,
+        external_id: str,
+        bill_reserve_id: str,
+        name: str,
+        amount: float,
+        cadence: Optional[str] = None,
+        anchor_date: Optional[str] = None,
+        currency: str = "USD",
+        observed_at: Optional[str] = None,
+    ) -> FundingPlanRecord:
+        """Store the Crew funding plan this provider read observed.
+
+        Keyed on Crew's own plan id, so a rename updates the record the app already
+        cites instead of creating a second one. Re-observing a plan that a previous
+        complete read retired clears ``absent_since``: the row was kept precisely so a
+        re-created cadence stays the same record rather than orphaning its history.
+        """
+        timestamp = _now()
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO crew_funding_plans (
+                    provider, external_id, bill_reserve_id, name, amount, cadence,
+                    anchor_date, currency, observed_at, synced_at, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(provider, external_id) DO UPDATE SET
+                    bill_reserve_id = excluded.bill_reserve_id,
+                    name = excluded.name,
+                    amount = excluded.amount,
+                    cadence = excluded.cadence,
+                    anchor_date = excluded.anchor_date,
+                    currency = excluded.currency,
+                    observed_at = excluded.observed_at,
+                    synced_at = excluded.synced_at,
+                    absent_since = NULL,
+                    updated_at = excluded.updated_at
+                """,
+                (
+                    provider,
+                    external_id,
+                    bill_reserve_id,
+                    name,
+                    amount,
+                    cadence,
+                    anchor_date,
+                    currency,
+                    observed_at,
+                    timestamp,
+                    timestamp,
+                    timestamp,
+                ),
+            )
+            row = connection.execute(
+                "SELECT * FROM crew_funding_plans WHERE provider = ? AND external_id = ?",
+                (provider, external_id),
+            ).fetchone()
+        assert row is not None
+        return FundingPlanRecord(**dict(row))
+
+    def list_funding_plans(self) -> list[FundingPlanRecord]:
+        """The funding plans currently observed, newest observed first.
+
+        Retired plans are excluded rather than deleted: resolution must not treat a
+        withdrawn cadence as an income source, while the row still documents that the
+        plan existed and when it stopped being returned.
+        """
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT * FROM crew_funding_plans
+                WHERE absent_since IS NULL
+                ORDER BY observed_at DESC, id DESC
+                """
+            ).fetchall()
+        return [FundingPlanRecord(**dict(row)) for row in rows]
+
+    def get_funding_plan(self, provider: str, external_id: str) -> Optional[FundingPlanRecord]:
+        """One stored plan whether current or retired, or None."""
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM crew_funding_plans WHERE provider = ? AND external_id = ?",
+                (provider, external_id),
+            ).fetchone()
+        return FundingPlanRecord(**dict(row)) if row is not None else None
+
+    def mark_absent_funding_plans(
+        self,
+        *,
+        provider: str,
+        observed_external_ids: Sequence[str],
+        absent_since: Optional[str] = None,
+    ) -> int:
+        """Record that a complete read no longer returns these funding plans.
+
+        Same discipline as the account and bill absence rules: only a complete,
+        error-free read may reach here (the caller enforces that), the row is never
+        deleted, and a plan already concluded absent is left untouched so one
+        observation cannot masquerade as a repeatedly refreshed fact.
+        """
+        timestamp = absent_since or _now()
+        observed = tuple(observed_external_ids)
+        unobserved_condition = ""
+        parameters: tuple[object, ...] = (timestamp, timestamp, provider)
+        if observed:
+            placeholders = ", ".join("?" for _ in observed)
+            unobserved_condition = f" AND external_id NOT IN ({placeholders})"
+            parameters += observed
+        with self._connect() as connection:
+            cursor = connection.execute(
+                f"""
+                UPDATE crew_funding_plans
+                SET absent_since = ?, updated_at = ?
+                WHERE provider = ?
+                    AND absent_since IS NULL
+                    {unobserved_condition}
+                """,
+                parameters,
+            )
+            return cursor.rowcount
 
     def list_accounts(self) -> list[AccountRecord]:
         with self._connect() as connection:

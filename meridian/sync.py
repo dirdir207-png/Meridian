@@ -233,6 +233,32 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
                 currency=expected_inflow.currency,
                 source_updated_at=expected_inflow.source_updated_at,
             )
+        # Crew funding plans are the owner's income source / Funding Cadence, and the
+        # snapshot carrying them is fetched fresh and never cached, so this is the only
+        # moment they can be kept. `None` means the read did not observe the surface at
+        # all, which is not evidence of anything -- in particular not of a deletion --
+        # so absence is only ever concluded from an observed-but-empty or a changed
+        # complete read, never from an unobserved facet.
+        if snapshot.funding_plans is not None:
+            for plan in snapshot.funding_plans:
+                repository.upsert_funding_plan(
+                    provider=adapter.provider_name,
+                    external_id=plan.external_id,
+                    bill_reserve_id=plan.bill_reserve_id,
+                    name=plan.name,
+                    amount=plan.amount,
+                    cadence=plan.cadence,
+                    anchor_date=plan.anchor_date,
+                    currency=plan.currency,
+                    observed_at=plan.observed_at,
+                )
+            if report.status == "complete":
+                repository.mark_absent_funding_plans(
+                    provider=adapter.provider_name,
+                    observed_external_ids=tuple(
+                        plan.external_id for plan in snapshot.funding_plans
+                    ),
+                )
         reconcile(snapshot, repository)
         _reclassify_relations(repository)
     return tuple(reports)

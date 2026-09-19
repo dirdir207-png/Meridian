@@ -177,17 +177,22 @@ class ResolvedPaycheck:
     ``basis`` is not decoration: an aggregate over three observed paychecks and a single
     last-observed value are different strengths of claim, and a consumer that cannot tell
     them apart cannot report the amount honestly.
+
+    ``plan_id`` is the identity of the Crew funding plan when one produced the figure, and
+    is ``None`` for every Meridian-derived leg. It is the field that lets a consumer say
+    "this is the Crew record" without re-matching on the plan's name.
     """
 
     cadence: str
     amount: float
     next_date: str
     active: bool
-    basis: str  # "aggregate" | "last_known" | "configured"
+    basis: str  # "crew_plan" | "aggregate" | "last_known" | "configured"
     source: str
     observed_at: Optional[str] = None
     evidence_ids: tuple = ()
     occurrences: int = 0
+    plan_id: Optional[str] = None
 
 
 def _income_transactions(transactions):
@@ -203,7 +208,73 @@ def _observed_day(txn) -> Optional[str]:
     return raw[:10] if len(raw) >= 10 else None
 
 
-def resolve_expected_paycheck(transactions, configured=None) -> Optional[ResolvedPaycheck]:
+def _crew_plan_paycheck(plans) -> Optional[ResolvedPaycheck]:
+    """The owner's Crew funding plan as the expected paycheck, or None.
+
+    Owner directive, verbatim: *"Right, it SHOULD be a crew record though, the paycheck"*.
+    A Crew bill-reserve funding plan IS the owner's "Funding Cadence" (confirmed
+    2026-09-19), so this is the FIRST leg of the chain and Meridian's own aggregation is
+    the deviation that sits below it -- not above it.
+
+    The plan is the IDENTITY as well as the amount, which is the whole point: the owner
+    renames the income source ("State of New Hampshire" -> "Veteran's Home"), so keying on
+    the plan record means a rename propagates and nothing depends on the merchant text of a
+    deposit, which drifts. ``plan_id`` carries that identity out of here.
+
+    Three deliberate restraints, each a place where a guess would otherwise be reported as
+    a fact:
+
+    1. **Exactly one plan, or this leg does not apply.** A plan is money moving INTO one
+       reserve, so a family with several reserves can hold several plans that are
+       allocations of ONE paycheck rather than competing candidates for it. Picking one
+       would understate income and picking the largest would be an invented claim, so with
+       more than one observed plan resolution falls through to the observations.
+    2. **The schedule is never invented.** Crew's ``frequency``/``frequencyInterval`` is not
+       always expressible in Meridian's vocabulary (MONTHLY x2 is not weekly, biweekly,
+       monthly, semimonthly or annually). The amount and identity remain Crew facts, but an
+       unmappable cadence leaves ``cadence`` empty rather than substituted with something
+       Meridian cannot honour.
+    3. **No transaction is claimed as evidence.** The plan is a provider RECORD, not a
+       deposit, so ``evidence_ids`` stays empty and the provenance is the plan id plus the
+       provider read that observed it (``observed_at``).
+
+    ``next_date`` mirrors the established ``last_known`` leg: one cadence period after the
+    plan's own ``anchorDate``, without consulting the clock. Consumers already roll a passed
+    date forward through the shared anchor-preserving rule, and doing the roll here would
+    make the same plan resolve differently at different times of day.
+    """
+    current = [
+        plan for plan in (plans or ()) if float(getattr(plan, "amount", 0) or 0.0) > 0
+    ]
+    if len(current) != 1:
+        return None
+
+    plan = current[0]
+    cadence = str(getattr(plan, "cadence", "") or "")
+    next_date = ""
+    if cadence:
+        anchor = str(getattr(plan, "anchor_date", "") or "")
+        if anchor:
+            try:
+                advanced = cadence_advance(date.fromisoformat(anchor), cadence, 1)
+            except ValueError:
+                advanced = None
+            next_date = advanced.isoformat() if advanced else ""
+
+    return ResolvedPaycheck(
+        cadence=cadence,
+        amount=abs(float(getattr(plan, "amount", 0) or 0.0)),
+        next_date=next_date,
+        active=True,
+        basis="crew_plan",
+        source=str(getattr(plan, "name", "") or "") or "Crew funding plan",
+        observed_at=str(getattr(plan, "observed_at", "") or "") or None,
+        evidence_ids=(),
+        plan_id=str(getattr(plan, "external_id", "") or "") or None,
+    )
+
+
+def resolve_expected_paycheck(transactions, configured=None, plans=None) -> Optional[ResolvedPaycheck]:
     """The owner's approved rule (2026-09-19, verbatim in docs/project/CURRENT_STATUS.md):
 
         "it should default to that value and moving forward aggregate after 3"
@@ -216,6 +287,8 @@ def resolve_expected_paycheck(transactions, configured=None) -> Optional[Resolve
     just changed in exactly that way (paychecks now deposit directly into Crew, where they
     previously arrived as Cash App transfers), so:
 
+      0. the Crew funding plan, when the sync has observed exactly one (``plans``) -- the
+         provider RECORD the owner named, which outranks everything Meridian derives;
       1. identify the channel from the MOST RECENTLY observed income transaction;
       2. aggregate WITHIN that channel once it has enough occurrences (``learn_paycheck``
          returns None below ``paycheck_learning._MIN_OCCURRENCES``, so the threshold is the
@@ -224,6 +297,11 @@ def resolve_expected_paycheck(transactions, configured=None) -> Optional[Resolve
          but only once the channel has RECURRED (>= 2 observations), because a single
          income transaction is indistinguishable from interest or a refund;
       4. otherwise fall back to the owner's configured figure, which is the last resort.
+
+    Leg 0 was added 2026-09-19 (OS-050) and is ADDITIVE: with no plan observed the chain
+    above is exactly the behaviour it had, which is what ``plans=None`` means. It is
+    placed first because the owner's model makes the Crew plan the income source itself,
+    while the aggregate is explicitly Meridian's own deviation.
 
     A retired channel therefore cannot win, and two channels are never averaged together,
     because a number averaged across a retired payout route and a new one describes neither.
@@ -234,6 +312,10 @@ def resolve_expected_paycheck(transactions, configured=None) -> Optional[Resolve
     ``basis`` describes where the amount came from, not the schedule.
     """
     from .paycheck_learning import learn_paycheck
+
+    plan_resolution = _crew_plan_paycheck(plans)
+    if plan_resolution is not None:
+        return plan_resolution
 
     income = _income_transactions(transactions)
 

@@ -2,6 +2,8 @@
 (crew-readonly MCP) snapshot. Balances and amounts are cents; the adapter
 normalizes them to dollars like CrewReadAdapter."""
 
+import pytest
+
 from meridian.providers.crewwork import CrewWorkSnapshotAdapter
 
 
@@ -420,6 +422,91 @@ def test_reserve_totals_are_keyed_by_reserve_id():
     adapter = CrewWorkSnapshotAdapter(_expenses_facet(reserve_id="res:3", total=12345))
     assert adapter.readback_reserve_totals() == {"res:3": 12345}
     assert CrewWorkSnapshotAdapter(_expenses_facet(with_facet=False)).readback_reserve_totals() is None
+
+
+# --- OS-050: funding plans as a normalized snapshot surface (ingestion) ---
+#
+# The readback above returns raw provider dicts and is used to VERIFY a write. The
+# snapshot surface is what gets persisted, so it must be provider-neutral, in
+# Meridian's own vocabulary, and must preserve the observed/not-observed
+# distinction the C01 rule depends on.
+
+
+def test_funding_plans_normalize_to_dollars_with_reserve_identity_and_cadence():
+    """A plan must arrive in Meridian's units and vocabulary, carrying the reserve it
+    funds. Crew reports cents and Crew frequency names; a consumer that had to
+    convert either would eventually get one wrong."""
+    adapter = CrewWorkSnapshotAdapter(_expenses_facet(
+        reserve_id="res:9",
+        plans=[{"id": "plan:1", "name": "Veterans Home", "amount": 166300,
+                "frequency": "WEEKLY", "frequencyInterval": 2, "anchorDate": "2026-09-04"}],
+    ))
+
+    plans = adapter.fetch_snapshot().funding_plans
+
+    assert len(plans) == 1
+    plan = plans[0]
+    assert plan.external_id == "plan:1"
+    assert plan.name == "Veterans Home"
+    # Cents in the payload, dollars in Meridian, exactly like bills.
+    assert plan.amount == 1663.00
+    assert plan.bill_reserve_id == "res:9"
+    assert plan.cadence == "biweekly"
+    assert plan.anchor_date == "2026-09-04"
+    # Provenance: the provider read that observed it.
+    assert plan.observed_at == "2026-09-14T12:00:00Z"
+
+
+@pytest.mark.parametrize(
+    "frequency, interval, expected",
+    [
+        ("WEEKLY", 1, "weekly"),
+        ("WEEKLY", 2, "biweekly"),
+        ("MONTHLY", 1, "monthly"),
+        ("SEMIMONTHLY", 1, "semimonthly"),
+        ("ANNUALLY", 1, "annually"),
+        # Not expressible in Meridian's vocabulary: must not be coerced.
+        ("MONTHLY", 2, None),
+        ("WEEKLY", 3, None),
+        ("DAILY", 1, None),
+        ("WEEKLY", None, None),
+        ("", 1, None),
+    ],
+)
+def test_crew_frequency_maps_to_a_meridian_cadence_only_when_exact(frequency, interval, expected):
+    """A synonym is a guess. Meridian has five cadences; Crew's `frequency` +
+    `frequencyInterval` can express others, and an unrecognised interval must stay
+    unrecognised rather than silently becoming weekly -- the shared cadence rule
+    already refuses to default for exactly this reason."""
+    adapter = CrewWorkSnapshotAdapter(_expenses_facet(plans=[
+        {"id": "plan:1", "name": "Veterans Home", "amount": 166300,
+         "frequency": frequency, "frequencyInterval": interval, "anchorDate": "2026-09-04"},
+    ]))
+
+    assert adapter.fetch_snapshot().funding_plans[0].cadence == expected
+
+
+def test_a_plan_without_a_provider_id_is_not_a_record():
+    """The plan id IS the identity the owner's directive turns on. Without one there
+    is nothing stable to cite, so the plan is skipped rather than stored under a
+    fabricated key."""
+    adapter = CrewWorkSnapshotAdapter(_expenses_facet(plans=[
+        {"name": "Nameless", "amount": 5000, "frequency": "WEEKLY", "frequencyInterval": 1},
+    ]))
+
+    assert adapter.fetch_snapshot().funding_plans == ()
+
+
+def test_unobserved_funding_plans_stay_unobserved_in_the_snapshot():
+    """The C01 rule: a facet the connector could not read means "not observed", which
+    is NOT the same as "observed and empty". Collapsing the two would let an
+    unreadable read conclude that a plan had been deleted."""
+    assert CrewWorkSnapshotAdapter(_expenses_facet(with_facet=False)).fetch_snapshot().funding_plans is None
+
+
+def test_observed_empty_funding_plans_are_an_empty_tuple():
+    snapshot = CrewWorkSnapshotAdapter(_expenses_facet(plans=[])).fetch_snapshot()
+    assert snapshot.funding_plans == ()
 
 
 def test_reassignment_rules_readback_distinguishes_empty_from_unobserved():

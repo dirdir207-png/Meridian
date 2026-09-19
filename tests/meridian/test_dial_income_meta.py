@@ -53,14 +53,16 @@ def test_the_projection_does_not_claim_crew_provenance_for_a_local_paycheck():
     """The amount comes from the locally configured paycheck, so it must not be attributed
     to Crew.
 
-    Crew's income source is never ingested -- the adapter reads no income surface at all --
-    so `source: "crew"` on an income event was false, and it is what made the dial row read
-    "Source: crew" for a figure typed into Settings. It also masked the real gap: the owner
-    read that label and reasonably concluded the income was coming from Crew.
+    Before OS-050 no Crew income surface was ingested at all, so `source: "crew"` on an
+    income event was false, and it is what made the dial row read "Source: crew" for a figure
+    typed into Settings. It also masked the real gap: the owner read that label and reasonably
+    concluded the income was coming from Crew.
 
-    A Crew funding plan does exist (name, amount, frequency, anchorDate, billReserveId) and
-    the app can already write one, but nothing ingests it yet. Until something does, "manual"
-    is the honest word -- the same one the bill and goal branches use for a non-Crew record.
+    OS-050 now DOES ingest the Crew funding plan, so a Crew record can legitimately be the
+    source -- but only by way of the resolution, which is what sets it. The point of this test
+    is unchanged and now matters more, not less: the income branch must never hardcode an
+    attribution, because a hardcoded "crew" would be right for a plan-backed figure and a lie
+    for a configured one.
     """
     service = DIAL_PY.read_text(encoding="utf-8")
 
@@ -78,14 +80,31 @@ def test_the_projection_does_not_claim_crew_provenance_for_a_local_paycheck():
     assert 'getattr(paycheck, "basis", "") or "configured"' in service
 
 
-def test_the_paycheck_is_still_described_as_locally_configured():
-    """Pin the premise of the fix: if a Crew income surface is ever ingested, this test should
-    be the thing that fails and forces the label to be revisited."""
+def test_the_locally_configured_figure_keeps_its_local_label_as_the_last_resort():
+    """The premise this test used to pin -- *"no Crew income surface is ingested"* -- is now
+    FALSE, and this is the revision it existed to force.
+
+    OS-050 (2026-09-19) ingests the Crew bill-reserve funding plan, which the owner confirmed
+    IS their income source, so the label the owner reads now comes from the plan's own name
+    and the previously-empty evidence is no longer structural. The locally configured figure
+    is untouched by that: it is still a local config, still labelled ``manual``/``configured``,
+    and still the documented last resort -- the plan outranks it rather than replacing it.
+
+    The retired word list was replaced deliberately: it filtered for "income"/"paycheck"/
+    "earning"/"deposit" in the adapter, so a future ingestion path that used different
+    vocabulary would slip past it. The assertions below name the ingestion surface itself.
+    """
     paycheck = (ROOT / "meridian/paycheck.py").read_text(encoding="utf-8")
+    # The amount is still a local config with an honest label, and the plan leg now
+    # sits ABOVE it in the documented chain.
     assert "single paycheck config" in paycheck
+    assert 'basis="crew_plan"' in paycheck
+    assert '"crew_plan" | "aggregate" | "last_known" | "configured"' in paycheck
+    # The adapter normalizes the funding-plan surface into the provider snapshot, which is
+    # the only thing that makes the plan leg reachable at all.
     provider = (ROOT / "meridian/providers/crewwork.py").read_text(encoding="utf-8")
-    for word in ("income", "paycheck", "earning", "deposit"):
-        assert word not in provider.lower(), f"adapter now mentions {word!r}; revisit the label"
+    assert "FundingPlanCandidate" in provider
+    assert "funding_plans=" in provider
 
 
 def test_the_projection_cites_the_observation_that_anchors_it():

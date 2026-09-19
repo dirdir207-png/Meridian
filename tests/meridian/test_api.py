@@ -1121,3 +1121,59 @@ def test_plan_api_reports_a_bill_the_provider_no_longer_returns(api_client):
     assert payload["absent_bills"][0]["absent_since"]
     # A last known figure is not a current obligation.
     assert "amount" not in payload["absent_bills"][0]
+
+
+def test_the_dial_names_the_crew_funding_plan_as_the_income_source(api_client):
+    """OS-050 end-to-end and read-only: a persisted Crew funding plan becomes the source
+    the dial names, so the row's stamp reads the Crew record ("Veterans Home") instead of
+    the interim "manual".
+
+    Owner directive: *"Right, it SHOULD be a crew record though, the paycheck"*. This is the
+    assertion that ties the stored record to the surface the owner actually reads, and it
+    fails if resolution stops consulting the plan.
+    """
+    client, repository = api_client
+    _complete_connection(repository)
+    repository.upsert_funding_plan(
+        provider="crew",
+        external_id="plan:1",
+        bill_reserve_id="res:1",
+        name="Veterans Home",
+        amount=1663.00,
+        cadence="biweekly",
+        anchor_date="2026-09-04",
+        observed_at="2026-09-19T12:00:00Z",
+    )
+
+    response = client.get("/api/meridian/dial?as_of=2026-09-19")
+
+    assert response.status_code == 200
+    income = [e for e in response.get_json()["events"] if e["kind"] == "income"]
+    assert income, "a resolved Crew plan must project at least one occurrence"
+    assert income[0]["source"] == "Veterans Home"
+    assert income[0]["basis"] == "crew_plan"
+    assert income[0]["amount"]["minor"] == 166300
+
+
+def test_a_plan_with_an_unmappable_cadence_does_not_fabricate_a_payday(api_client):
+    """Safety guard for the honesty case: Crew can carry a schedule Meridian cannot express
+    (MONTHLY x2), which reaches resolution as cadence ``None``. The amount and identity stay
+    Crew facts, but no occurrence date may be invented -- so the dial must still answer 200
+    and simply omit the projection rather than guessing a payday."""
+    client, repository = api_client
+    _complete_connection(repository)
+    repository.upsert_funding_plan(
+        provider="crew",
+        external_id="plan:2",
+        bill_reserve_id="res:1",
+        name="Veterans Home",
+        amount=1663.00,
+        cadence=None,
+        anchor_date="2026-09-04",
+        observed_at="2026-09-19T12:00:00Z",
+    )
+
+    response = client.get("/api/meridian/dial?as_of=2026-09-19")
+
+    assert response.status_code == 200
+    assert [e for e in response.get_json()["events"] if e["kind"] == "income"] == []

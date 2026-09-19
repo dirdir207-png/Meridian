@@ -56,6 +56,31 @@ class CommitmentCandidate:
 
 
 @dataclass(frozen=True)
+class FundingPlanCandidate:
+    """A provider's paycheck funding plan, normalized and provider-neutral.
+
+    The plan is the record the owner calls their "income source" / "Funding Cadence"
+    (confirmed 2026-09-19). ``external_id`` is that record's identity, which is what
+    lets a rename in the provider propagate here instead of the app keying on a
+    deposit's merchant text.
+
+    ``cadence`` is the plan's own schedule expressed in Meridian's vocabulary, or
+    ``None`` when the provider's frequency/interval cannot be expressed exactly. It is
+    never coerced to a nearby cadence: an interval Meridian cannot honour must stay
+    unrecognised, exactly as the shared cadence rule refuses to default.
+    """
+
+    external_id: str
+    name: str
+    amount: float
+    bill_reserve_id: str = ""
+    cadence: Optional[str] = None
+    anchor_date: Optional[str] = None
+    currency: str = "USD"
+    observed_at: Optional[str] = None
+
+
+@dataclass(frozen=True)
 class ProviderSnapshot:
     connection_external_id: str
     connection_name: str
@@ -63,6 +88,11 @@ class ProviderSnapshot:
     transactions: Tuple[NormalizedTransaction, ...]
     expected_inflows: Tuple[ExpectedInflow, ...] = ()
     commitment_candidates: Tuple[CommitmentCandidate, ...] = ()
+    # Tri-state on purpose: ``None`` means the provider read did not observe the
+    # funding-plan surface at all, while ``()`` means it observed a genuinely empty
+    # one. Absence reconciliation may only conclude from the second, so collapsing
+    # them would let an unreadable read look like a deletion.
+    funding_plans: Optional[Tuple[FundingPlanCandidate, ...]] = None
     is_complete: bool = True
     errors: Tuple[str, ...] = ()
 

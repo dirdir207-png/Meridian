@@ -132,6 +132,34 @@
       "base_sha": "72370de78c529f6b88afa01f79d5ac05a3874b17",
       "since": "2026-09-13T07:29:51+00:00",
       "note": "In-flight readiness/wiring audit and isolated synthetic restore rehearsal. Declared so their changes are not reported as another agent's undeclared drift."
+    },
+    {
+      "agent": "builder-os050",
+      "claim_id": "builder-os050-funding-plan-ingestion",
+      "generation": 1,
+      "files": [
+        "meridian/migrations/022_crew_funding_plans.sql",
+        "docs/project/shipped-migrations.json",
+        "meridian/providers/base.py",
+        "meridian/providers/crewwork.py",
+        "meridian/repository.py",
+        "meridian/sync.py",
+        "meridian/paycheck.py",
+        "meridian/api.py",
+        "tests/meridian/test_crew_funding_plans.py",
+        "tests/meridian/test_expected_income_rule.py",
+        "tests/meridian/providers/test_crewwork.py",
+        "tests/meridian/test_migrations.py",
+        "tests/meridian/test_api.py",
+        "tests/meridian/test_dial_income_meta.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json",
+        "docs/project/MERIDIAN_OS_TASKS.json"
+      ],
+      "base_sha": "b9185e3ec2c70cd201072b33fe7863a856658c47",
+      "since": "2026-09-19T00:00:00+00:00",
+      "note": "OS-050 READ half: persist the Crew billReserve.fundingPlans the sync already fetches and discards, and resolve the expected paycheck to that Crew record first (plan name as source, plan id as identity). No provider mutation, no deployment; writes only Meridian's own SQLite, like the existing account/transaction ingestion. The Meridian->Crew cadence write and symmetric delete stay deferred."
     }
   ]
 }

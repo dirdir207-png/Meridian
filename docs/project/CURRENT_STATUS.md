@@ -1,9 +1,46 @@
 # Enhanced SimpleCrew — Current Status
 
-## RESUME HERE — session handoff (2026-09-19, at `f46880a`)
+## RESUME HERE — OS-050 read slice (2026-09-19, before commit `b9185e3`)
+
+This checkpoint supersedes the older handoff below for the funding-plan path. The branch is
+`feat/meridian-implementation`; no provider mutation or deployment was performed.
+
+### Delivered in this bounded slice
+
+- Added migration `022_crew_funding_plans.sql` and registered its frozen checksum. Meridian now
+  persists the Crew `billReserve.fundingPlans` read during sync, keyed by the Crew plan id and
+  retaining `billReserveId`, name, dollar amount, exact mapped cadence, anchor date and the
+  provider-read timestamp.
+- Preserved the C01 distinction between an unobserved funding-plan facet (`None`) and an
+  observed empty facet (`()`); only a complete, error-free observed read can mark a plan absent,
+  and absence is soft (the row remains for provenance and can become current again).
+- `resolve_expected_paycheck(..., plans=...)` now uses exactly one current positive Crew plan
+  first: `basis="crew_plan"`, the plan name as `source`, and the Crew id as `plan_id`. It never
+  matches on deposit merchant text. Multiple plans, zero amounts and unsupported cadences are
+  conservative: they do not silently choose, fabricate a cadence, or claim a transaction as
+  evidence.
+- The existing aggregate → recurring last-known → configured chain remains unchanged when no
+  usable plan is observed. The read-only API now supplies persisted plans to that resolver, so
+  the existing dial source stamp reads the Crew plan name without changing its payload shape.
+
+### Explicit non-goals / next slice
+
+This is the **READ half** of OS-050. Meridian → Crew cadence writes and symmetric deletion remain
+provider mutations and are not implemented here; any future write must use proposal → approval →
+execution → provider verification. No deployment was performed.
+
+### Verification
+
+- `.venv311/bin/python -m pytest tests --ignore=tests/browser -q`: **1310 passed, 1 skipped**.
+- `.venv311/bin/python -m ruff check meridian/ tests/`: **clean**.
+- `node --check` across `static/js/meridian/*.js`: **clean**; `git diff --check`: **clean**.
+- Relevant browser evidence: the focused dial evidence-ticket test passed; the full dial browser
+  run had 6 failures in the unchanged mobile theme-toggle label/hit-area assertions, reproduced
+  identically on a clean `b9185e3` worktree (13 passed, 2 skipped in both runs). Those failures
+  are pre-existing and not attributable to this slice.
 
 Written so a fresh session continues from the repository rather than from a conversation. This
-supersedes the 2026-09-16 RESUME HERE further down, which is kept as history.
+supersedes the prior 2026-09-19 handoff further down, which is kept as history.
 
 ### The owner's ruling on funding — read this first
 

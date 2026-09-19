@@ -14,6 +14,7 @@ from typing import Any, Dict, Optional
 
 from .base import (
     CommitmentCandidate,
+    FundingPlanCandidate,
     NormalizedAccount,
     NormalizedTransaction,
     ProviderSnapshot,
@@ -32,6 +33,31 @@ _STATUS_MAP = {
 
 # Account type: primary pocket -> checking, everything else -> pocket.
 _ACCOUNT_TYPE = {"ACTIVATED": "checking"}
+
+# Crew expresses a schedule as ``frequency`` + ``frequencyInterval``, Meridian as a
+# single cadence name. Only the combinations that mean EXACTLY one Meridian cadence
+# are listed. Anything else (MONTHLY x2, WEEKLY x3, DAILY, a missing interval) is
+# deliberately absent: coercing it to the nearest cadence would report a schedule
+# Meridian cannot honour, which is the same class of error the shared cadence rule
+# refuses to make when it returns None instead of defaulting to weekly.
+_CADENCE_MAP = {
+    ("WEEKLY", 1): "weekly",
+    ("WEEKLY", 2): "biweekly",
+    ("MONTHLY", 1): "monthly",
+    ("SEMIMONTHLY", 1): "semimonthly",
+    ("ANNUAL", 1): "annually",
+    ("ANNUALLY", 1): "annually",
+    ("YEARLY", 1): "annually",
+}
+
+
+def _meridian_cadence(frequency: Any, interval: Any) -> Optional[str]:
+    """The plan's schedule in Meridian's vocabulary, or None when not exact."""
+    try:
+        periods = int(interval)
+    except (TypeError, ValueError):
+        return None
+    return _CADENCE_MAP.get((str(frequency or "").strip().upper(), periods))
 
 
 def _status(value: Optional[str]) -> str:
@@ -112,6 +138,7 @@ class CrewWorkSnapshotAdapter:
         accounts = self._collect_accounts(captured_at)
         transactions = self._collect_transactions(accounts)
         commitment_candidates = self._collect_commitment_candidates()
+        funding_plans = self._collect_funding_plans()
         errors = tuple(self._snapshot_errors(snap_errors))
 
         return ProviderSnapshot(
@@ -120,6 +147,7 @@ class CrewWorkSnapshotAdapter:
             accounts=tuple(accounts),
             transactions=tuple(transactions),
             commitment_candidates=tuple(commitment_candidates),
+            funding_plans=None if funding_plans is None else tuple(funding_plans),
             is_complete=complete and not errors,
             errors=errors,
         )
@@ -165,6 +193,44 @@ class CrewWorkSnapshotAdapter:
                     )
                 )
         return result
+
+    def _collect_funding_plans(self) -> Optional[list[FundingPlanCandidate]]:
+        """Normalize ``billReserve.fundingPlans`` into Meridian's own vocabulary.
+
+        Reuses :meth:`readback_funding_plans` rather than re-walking the facet, so the
+        write-verification path and the ingestion path can never disagree about where a
+        plan lives or which reserve owns it. The ``None`` (not observed) versus ``()``
+        (observed empty) distinction is the readback's and is preserved exactly, because
+        absence reconciliation depends on it.
+
+        Amounts are converted from Crew's cents to Meridian's dollars here, at the
+        provider boundary, the same way bills are. A plan with no provider id is skipped:
+        the id is the identity the whole slice rests on, and storing the plan under a
+        fabricated key would make it unciteable and unlinkable.
+        """
+        plans = self.readback_funding_plans()
+        if plans is None:
+            return None
+        captured_at = str(self._snapshot.get("captured_at") or "") or None
+        collected = []
+        for plan in plans:
+            external_id = str(plan.get("id") or "")
+            if not external_id:
+                continue
+            collected.append(
+                FundingPlanCandidate(
+                    external_id=external_id,
+                    name=str(plan.get("name") or "Crew funding plan"),
+                    amount=_cents_to_dollars(plan.get("amount")),
+                    bill_reserve_id=str(plan.get("billReserveId") or ""),
+                    cadence=_meridian_cadence(
+                        plan.get("frequency"), plan.get("frequencyInterval")
+                    ),
+                    anchor_date=str(plan.get("anchorDate") or "") or None,
+                    observed_at=captured_at,
+                )
+            )
+        return collected
 
     def _snapshot_errors(self, snap_errors: Any) -> list[str]:
         if not isinstance(snap_errors, dict):

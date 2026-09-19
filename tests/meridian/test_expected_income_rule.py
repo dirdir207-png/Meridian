@@ -12,6 +12,25 @@ that impossible to reintroduce.
 from meridian.paycheck import PaycheckConfig, resolve_expected_paycheck
 
 
+class Plan:
+    """A persisted Crew funding plan, as resolution reads it.
+
+    Resolution reads Meridian's OWN record of the plan, never a live provider
+    payload, so a read path cannot depend on a network call.
+    """
+
+    def __init__(self, name, amount, cadence=None, anchor_date=None,
+                 external_id="plan:1", bill_reserve_id="res:1",
+                 observed_at="2026-09-19T12:00:00Z"):
+        self.external_id = external_id
+        self.bill_reserve_id = bill_reserve_id
+        self.name = name
+        self.amount = amount
+        self.cadence = cadence
+        self.anchor_date = anchor_date
+        self.observed_at = observed_at
+
+
 class Tx:
     """A transaction as the dial's readers see it."""
 
@@ -172,3 +191,140 @@ def test_a_stray_recent_credit_does_not_resurrect_an_older_channel():
     assert resolved.basis == "configured"
     assert resolved.amount == 1663.00
     assert resolved.source == "manual"
+
+
+# ---------------------------------------------------------------------------
+# OS-050: the paycheck must resolve to the Crew record the owner named.
+#
+# Owner directive, verbatim: "Right, it SHOULD be a crew record though, the
+# paycheck". The Crew bill-reserve funding plan IS the owner's "Funding
+# Cadence", so it outranks every Meridian-derived leg.
+#
+# What these tests protect: the Crew record is the identity, so a rename in
+# Crew reaches Meridian and nothing keys on the merchant text of a deposit.
+# ---------------------------------------------------------------------------
+
+
+def test_the_crew_funding_plan_outranks_every_meridian_derived_leg():
+    """The Crew record wins even when Meridian has an aggregate to offer.
+
+    Aggregation is Meridian's own deviation -- the owner: "The only deviation for
+    Meridian is most likely the aggregation". A deviation must never displace the
+    authoritative provider record.
+    """
+    configured = PaycheckConfig(cadence="biweekly", amount=1663.00, next_date="2026-10-02")
+    observed = [
+        Tx("Cash App", 980.50, "2026-08-05", txn_id=1),
+        Tx("Cash App", 980.50, "2026-08-19", txn_id=2),
+        Tx("Cash App", 980.50, "2026-09-02", txn_id=3),
+    ]
+    plan = Plan("Veterans Home", 1663.00, cadence="biweekly", anchor_date="2026-09-04")
+
+    resolved = resolve_expected_paycheck(observed, configured=configured, plans=[plan])
+
+    assert resolved.basis == "crew_plan"
+    assert resolved.source == "Veterans Home"
+    assert resolved.amount == 1663.00
+    assert resolved.plan_id == "plan:1"
+
+
+def test_the_plan_is_the_identity_so_a_crew_rename_reaches_meridian():
+    """The owner renames the income source ("State of New Hampshire" ->
+    "Veteran's Home"). Keying on the plan record means the rename propagates;
+    keying on a deposit's merchant text would break the next time it changes."""
+    configured = PaycheckConfig(cadence="biweekly", amount=1663.00, next_date="2026-10-02")
+    # The deposits still carry the OLD merchant text.
+    observed = [Tx("State Of New Hampshire", 1663.00, "2026-09-18", txn_id=7)]
+    plan = Plan("Veteran's Home", 1663.00, cadence="biweekly", anchor_date="2026-09-04")
+
+    resolved = resolve_expected_paycheck(observed, configured=configured, plans=[plan])
+
+    assert resolved.source == "Veteran's Home"
+    assert resolved.plan_id == "plan:1"
+
+
+def test_a_plan_cites_its_own_record_and_claims_no_transaction_as_evidence():
+    """The plan is a provider RECORD, not a transaction. Its provenance is the
+    provider read that observed it, so `evidence_ids` (transaction ids) must stay
+    empty rather than borrowing a deposit that merely looks related."""
+    plan = Plan("Veterans Home", 1663.00, cadence="biweekly", anchor_date="2026-09-04",
+                observed_at="2026-09-19T12:00:00Z")
+
+    resolved = resolve_expected_paycheck([], plans=[plan])
+
+    assert resolved.plan_id == "plan:1"
+    assert resolved.observed_at == "2026-09-19T12:00:00Z"
+    assert resolved.evidence_ids == ()
+
+
+def test_the_plan_supplies_the_cadence_it_reports():
+    """Crew carries frequency + frequencyInterval + anchorDate, so the schedule is
+    not re-derived locally and does not need the configured figure."""
+    plan = Plan("Veterans Home", 1663.00, cadence="biweekly", anchor_date="2026-09-04")
+
+    resolved = resolve_expected_paycheck([], plans=[plan])
+
+    assert resolved.cadence == "biweekly"
+    assert resolved.next_date == "2026-09-18"
+
+
+def test_an_unmappable_crew_cadence_is_not_invented():
+    """Crew's interval is not always expressible in Meridian's vocabulary (e.g.
+    MONTHLY x2 is not weekly/biweekly/monthly/semimonthly/annually). The AMOUNT and
+    the IDENTITY are still Crew facts, but the schedule must not be fabricated into
+    a cadence Meridian cannot honour."""
+    plan = Plan("Veterans Home", 1663.00, cadence=None, anchor_date="2026-09-04")
+
+    resolved = resolve_expected_paycheck([], plans=[plan])
+
+    assert resolved.basis == "crew_plan"
+    assert resolved.amount == 1663.00
+    assert resolved.cadence == ""
+    assert resolved.next_date == ""
+
+
+def test_several_plans_do_not_silently_pick_one():
+    """A reserve's funding plan is money moving INTO that reserve, so a family with
+    several reserves can hold several plans that are allocations of ONE paycheck --
+    not competing candidates for it. Choosing one would understate income; picking
+    the largest would be a guess presented as a fact. So with more than one plan the
+    Crew leg does not apply, and resolution falls through to the honest legs."""
+    configured = PaycheckConfig(cadence="biweekly", amount=1663.00, next_date="2026-10-02")
+    plans = [
+        Plan("Veterans Home", 1000.00, cadence="biweekly", anchor_date="2026-09-04",
+             external_id="plan:1", bill_reserve_id="res:1"),
+        Plan("Veterans Home", 663.00, cadence="biweekly", anchor_date="2026-09-04",
+             external_id="plan:2", bill_reserve_id="res:2"),
+    ]
+
+    resolved = resolve_expected_paycheck([], configured=configured, plans=plans)
+
+    assert resolved.basis == "configured"
+    assert resolved.plan_id is None
+
+
+def test_a_zero_amount_plan_is_not_an_expected_paycheck():
+    """A cadence that funds nothing does not describe income."""
+    configured = PaycheckConfig(cadence="biweekly", amount=1663.00, next_date="2026-10-02")
+    plan = Plan("Veterans Home", 0.0, cadence="biweekly", anchor_date="2026-09-04")
+
+    resolved = resolve_expected_paycheck([], configured=configured, plans=[plan])
+
+    assert resolved.basis == "configured"
+    assert resolved.plan_id is None
+
+
+def test_no_plan_leaves_the_approved_chain_untouched():
+    """Regression guard: the plan leg must be additive. With no plan observed, the
+    owner's approved rule (aggregate, else last known, else configured) is exactly
+    what it was."""
+    current = [
+        Tx("Veterans Home", 1600.00, "2026-08-21", txn_id=11),
+        Tx("Veterans Home", 1663.00, "2026-09-04", txn_id=12),
+        Tx("Veterans Home", 1663.00, "2026-09-18", txn_id=13),
+    ]
+
+    for plans in (None, []):
+        resolved = resolve_expected_paycheck(current, plans=plans)
+        assert resolved.basis == "aggregate"
+        assert resolved.plan_id is None

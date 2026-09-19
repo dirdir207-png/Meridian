@@ -513,7 +513,7 @@ def plan_scenario_preview():
 
 
 def _paycheck_config(graph):
-    """Resolve the expected paycheck from observations, per the owner's rule.
+    """Resolve the expected paycheck from the Crew record, then from observations.
 
     Owner ruling 2026-09-19: "it should default to that value and moving forward aggregate
     after 3". So observed beats configured, and the configured figure is the last resort
@@ -524,6 +524,11 @@ def _paycheck_config(graph):
     ran for an owner who had configured a figure, which is why the projection cited no
     evidence. See meridian.paycheck.resolve_expected_paycheck for the chain and for why it
     resolves within the CURRENT income channel rather than across all history.
+
+    The Crew funding plan now outranks every leg above it, per the owner's directive that
+    the paycheck "SHOULD be a crew record". The stored plans are read from Meridian's own
+    database -- never fetched here -- so a read path stays free of provider calls, and only
+    a plan the sync actually observed can claim to be the income source.
     """
     from meridian.paycheck import PaycheckRepository, resolve_expected_paycheck
 
@@ -537,9 +542,10 @@ def _paycheck_config(graph):
             else FinancialRepository(graph.db_path)
         )
         transactions, _cursor = financial.list_transactions(limit=200)
+        plans = financial.list_funding_plans()
     except Exception:  # noqa: BLE001 - observations are best-effort context
-        transactions = []
-    return resolve_expected_paycheck(transactions, configured=configured)
+        transactions, plans = [], []
+    return resolve_expected_paycheck(transactions, configured=configured, plans=plans)
 
 
 @meridian_api.get("/paycheck")
