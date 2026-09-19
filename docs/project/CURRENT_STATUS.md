@@ -253,6 +253,43 @@ something to infer from a rule about how to aggregate:
 
 Recorded rather than guessed, because the two answers produce different numbers on the owner's own
 Today page, and the second one silently changes what "expected income" means.
+
+### Sizing the sync requirement: there is no income-source write in the connector
+
+Checking whether the owner's two-way sync instruction (`OS-050`) can build on existing paths
+produced a clear negative, and the repository already contains the precedent for how to treat it.
+
+- `cancel_income_source` exists **only** as a string in `meridian/write_routing.py`'s
+  `_PLAN_LEVEL_TYPES` (and a test of the routing model). It is **not** in `app.py`'s
+  `allowed_types`, **not** in `crew_write_actions`' executor map, and **not** in the connector.
+  So there is no income-source write capability anywhere in the app.
+- `update_crew_virtual_card` was retired on 2026-09-14 for exactly this reason, and the recorded
+  reason is the governing precedent: *"the connector exposes no write operation for it ... The
+  capability to perform the write did not exist, so no readback verifier could have made it work.
+  ... would reinstate on: a connector write operation for the card update, plus a readback
+  verifier and an owner decision."*
+
+What DOES exist and is already proven against the provider is the funding-plan lifecycle:
+`create_crew_paycheck_funding_plan` / `update_...` / `delete_...`, all readback-verified, carrying
+`{billReserveId, name, amount, frequency, frequencyInterval, anchorDate}`.
+
+So the owner's requirement splits, and the split is not a matter of effort:
+
+| Requirement | Feasibility today |
+|---|---|
+| Meridian sets a cadence and it appears as the income source in Crew | **only if** Crew's income source IS the funding-plan object |
+| Crew populates the cadence back into Meridian | **feasible** — `readback_funding_plans()` already reaches the field; it needs ingesting |
+| Delete in Meridian deletes in Crew | **feasible** for a funding plan; otherwise no capability exists |
+| Delete in Crew reflects in Meridian | **feasible** by the existing absence-reconciliation pattern used for bills |
+
+**The single question that decides it:** is the Crew object the owner calls the "income source" the
+same object as `billReserve.fundingPlans`? The evidence is suggestive and not conclusive -- a
+funding plan has a name, an amount and a cadence attached to the bill reserve it funds, which is
+what an income source would look like. If it is the same object, most of the requirement builds on
+paths already proven. If it is distinct, the honest answer follows the virtual-card precedent:
+**do not add the action type**, because an allowed type with no provider capability can only fail
+with `no_executor` after the owner has approved it.
+
 ### Open, in the order I would take them
 
 1. **The Funding Cadence link — the keystone.** Bills should read as funded by the cadence the
