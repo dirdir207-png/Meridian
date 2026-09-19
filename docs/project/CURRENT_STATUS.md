@@ -142,6 +142,40 @@ Still unresolved, and NOT answered by this rule: whether the Crew funding plan b
 single source of truth for the cadence (`OS-048`). The owner's rule answers *how to compute the
 expected amount and cite it*; it does not say the plan is authoritative over the local config.
 
+
+### The precedence conflict this rule exposes — needs one more answer
+
+`meridian/api.py::_paycheck_config` is **manual-first**:
+
+```python
+manual = PaycheckRepository(graph.db_path).get()
+if manual is not None:
+    return manual                      # "Prefers the owner's explicit config"
+learned = _learned_paycheck(graph)     # only reached when NOTHING is configured
+```
+
+The docstring is deliberate about it: *"Prefers the owner's explicit config; when none is set,
+auto-learn the typical recurring income."*
+
+The owner's rule is **observed-first with a fallback** — the aggregate when there is enough data,
+else the value of the last known source. Those two orders disagree, and for this owner the
+disagreement is not academic: they DO have a manual config (the one showing `+$1,663.00`), so
+manual-first means the learned leg never runs at all, and it is exactly why their figure cites no
+evidence.
+
+Applying the rule literally would therefore **replace the owner's own configured amount with a
+learned or last-observed one**. That is a change in whose number the app reports, and it is not
+something to infer from a rule about how to aggregate:
+
+- If the **observed value wins**, the configured amount becomes a fallback for when there are no
+  observations — and the owner should expect `$1,663.00` to be replaced by whatever the deposits
+  say. That is legible as "the app reports reality rather than my entry".
+- If the **configured value wins**, the rule only governs when nothing is configured, and the
+  owner's figure keeps its current prominence — with the evidence problem unsolved for them
+  personally.
+
+Recorded rather than guessed, because the two answers produce different numbers on the owner's own
+Today page, and the second one silently changes what "expected income" means.
 ### Open, in the order I would take them
 
 1. **The Funding Cadence link — the keystone.** Bills should read as funded by the cadence the
