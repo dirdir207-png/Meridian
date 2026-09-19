@@ -248,7 +248,15 @@ def _paycheck_events(paycheck, as_of: date, horizon_end: date) -> list[dict]:
             },
             "fundingStatus": "unknown",
             "reserved": None,
-            "source": "crew",
+            # NOT "crew". This amount comes from the locally configured paycheck
+            # (meridian/paycheck.py: "single paycheck config (cadence, amount, next date)").
+            # Crew's income source is never ingested -- the adapter reads no income surface
+            # at all -- so attributing the figure to Crew was false, and it is what made the
+            # row read "Source: crew" for a number typed into Settings. A Crew funding plan
+            # (name, amount, frequency, anchorDate, billReserveId) does exist and the app can
+            # already write one, but nothing ingests it yet; until it does, the honest source
+            # is "manual", the same word the bill and goal branches use for a non-Crew record.
+            "source": "manual",
             "observedAt": None,
             "evidenceIds": [],
             "detailHref": "/meridian?workspace=plan",

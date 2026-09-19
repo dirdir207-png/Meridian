@@ -47,3 +47,38 @@ def test_bills_keep_the_funding_status_including_its_honest_unknown():
     # The bill branch still refuses to claim a reserve covers an occurrence.
     assert '"fundingStatus": "unknown",' in service
     assert "does not safely link one reserve to each" in service
+
+
+def test_the_projection_does_not_claim_crew_provenance_for_a_local_paycheck():
+    """The amount comes from the locally configured paycheck, so it must not be attributed
+    to Crew.
+
+    Crew's income source is never ingested -- the adapter reads no income surface at all --
+    so `source: "crew"` on an income event was false, and it is what made the dial row read
+    "Source: crew" for a figure typed into Settings. It also masked the real gap: the owner
+    read that label and reasonably concluded the income was coming from Crew.
+
+    A Crew funding plan does exist (name, amount, frequency, anchorDate, billReserveId) and
+    the app can already write one, but nothing ingests it yet. Until something does, "manual"
+    is the honest word -- the same one the bill and goal branches use for a non-Crew record.
+    """
+    service = DIAL_PY.read_text(encoding="utf-8")
+
+    # The established vocabulary, unchanged for records that really do come from Crew.
+    # The bill and goal branches sit at different nesting depths, so match the expression
+    # rather than its indentation.
+    assert service.count('if commitment.legacy_source == "crew"') == 2
+    assert service.count('else "manual"') == 2
+    # And the income branch no longer hardcodes the false attribution.
+    assert '"source": "crew",' not in service
+    assert service.count('"source": "manual",') == 1
+
+
+def test_the_paycheck_is_still_described_as_locally_configured():
+    """Pin the premise of the fix: if a Crew income surface is ever ingested, this test should
+    be the thing that fails and forces the label to be revisited."""
+    paycheck = (ROOT / "meridian/paycheck.py").read_text(encoding="utf-8")
+    assert "single paycheck config" in paycheck
+    provider = (ROOT / "meridian/providers/crewwork.py").read_text(encoding="utf-8")
+    for word in ("income", "paycheck", "earning", "deposit"):
+        assert word not in provider.lower(), f"adapter now mentions {word!r}; revisit the label"
