@@ -220,7 +220,9 @@ def resolve_expected_paycheck(transactions, configured=None) -> Optional[Resolve
       2. aggregate WITHIN that channel once it has enough occurrences (``learn_paycheck``
          returns None below ``paycheck_learning._MIN_OCCURRENCES``, so the threshold is the
          existing one rather than a second copy);
-      3. otherwise use that channel's last observed value -- "default to that value";
+      3. otherwise use that channel's last observed value -- "default to that value" --
+         but only once the channel has RECURRED (>= 2 observations), because a single
+         income transaction is indistinguishable from interest or a refund;
       4. otherwise fall back to the owner's configured figure, which is the last resort.
 
     A retired channel therefore cannot win, and two channels are never averaged together,
@@ -261,6 +263,26 @@ def resolve_expected_paycheck(transactions, configured=None) -> Optional[Resolve
                 evidence_ids=ids,
                 occurrences=int(learned.get("occurrences") or 0),
             )
+
+        # A FALLBACK ONLY FOR A RECURRING DEPOSIT. Income is not the same thing as a paycheck:
+        # on the owner's live ledger the most recent income-classified transaction was a $0.46
+        # "Interest paid" credit, and taking it as the "last known source" replaced an expected
+        # paycheck of $1,663.00 with 46 cents -- a false statement about money, produced by
+        # equating two different things. One observation cannot be told apart from interest,
+        # a refund or a one-off, so it is not enough to name a paycheck source. Two is the
+        # smallest evidence that a channel RECURS, and anything less falls through to the
+        # configured figure, which claims nothing it cannot support.
+        if len(current) < 2:
+            if configured is not None:
+                return ResolvedPaycheck(
+                    cadence=str(getattr(configured, "cadence", "") or "monthly"),
+                    amount=float(getattr(configured, "amount", 0) or 0.0),
+                    next_date=str(getattr(configured, "next_date", "") or ""),
+                    active=bool(getattr(configured, "active", True)),
+                    basis="configured",
+                    source="manual",
+                )
+            return None
 
         day = _observed_day(latest)
         cadence = "monthly"
