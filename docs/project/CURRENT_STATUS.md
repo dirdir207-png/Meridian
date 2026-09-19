@@ -1,6 +1,6 @@
 # Enhanced SimpleCrew — Current Status
 
-## RESUME HERE — OS-048a: bills now name their funding source (2026-09-19, base `04c485c`)
+## RESUME HERE — OS-048a: bills now name their funding source (2026-09-19, committed `8e8333c`, base `04c485c`)
 
 The owner's complaint — *"All the bills also display funding unknown ... they are funded by Veterans Home"* — contains two questions, and this slice answers only the first. **Who funds the bill** is now an observed fact; **how much of a dated occurrence is reserved** is still unknown and the payload still says so.
 
