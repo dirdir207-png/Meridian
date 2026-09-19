@@ -346,6 +346,38 @@ payout route cannot win) and the floor rule (never look back past the reset). Th
 independent: the channel rule separates two live-ish sources, the floor rule separates this job
 from the last one.
 
+
+### OWNER DIRECTIVE: the paycheck SHOULD be a Crew record
+
+Verbatim, 2026-09-19: *"Right, it SHOULD be a crew record though, the paycheck"*
+
+This settles the end state of the income source, and it means the current `Source: manual` stamp
+is **interim and not acceptable as a destination**. The expected paycheck must resolve to the
+Crew bill-reserve funding plan, so the stamp reads the plan's name ("Veterans Home") because that
+is the record that actually pays it.
+
+Consequences for `resolve_expected_paycheck`, which currently has no Crew leg at all:
+
+| Priority | Source of the expected amount | Label |
+|---|---|---|
+| 1 | the Crew funding plan (name, amount, frequency, frequencyInterval, anchorDate) | the plan's name |
+| 2 | Meridian's aggregate of >= 3 observed paychecks of the current channel | Meridian's derivation, labelled as such |
+| 3 | the last observed value of a channel that has RECURRED (>= 2 observations) | the deposit's channel |
+| 4 | the locally configured figure | "manual" -- honest but interim |
+
+The owner's own framing puts aggregation at 2: *"The only deviation for Meridian is most likely
+the aggregation, I'm not sure if crew also does that naturally"* -- so an aggregate is Meridian's
+addition and must never be presented as the Crew record's value when the two differ.
+
+**How to ingest it, from this session's last check:** the snapshot is fetched fresh each sync
+(`meridian/live.py::capture_crew_snapshot`, wrapped by `CrewWorkSnapshotAdapter`) and is NOT
+cached on disk, so the plans have to be PERSISTED during sync rather than read on demand.
+`readback_funding_plans()` already parses `expenses...accounts[].billReserve.fundingPlans[]` and
+returns each plan with its parent `billReserveId` -- so the parsing exists and only the
+persistence, identity and resolution legs are missing. `fundingPlans` is already a declared
+connector readback field (`docs/project/CONNECTOR_READBACK_FIELDS_PATCH.md`), so no connector
+change is needed.
+
 ### Open, in the order I would take them
 
 **Done since this list was written** (do not re-do): slice 3 shipped in `e7874b6` — the expected
