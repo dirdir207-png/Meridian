@@ -200,6 +200,7 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
                     funded_amount=(candidate.funded_amount if candidate.funded_amount is not None else 0.0),
                     legacy_source=adapter.provider_name,
                     legacy_id=candidate.external_id,
+                    bill_reserve_id=candidate.bill_reserve_id,
                 )
             else:
                 commitment_repository.update(
@@ -214,6 +215,11 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
                         if candidate.funded_amount is not None
                         else existing.funded_amount
                     ),
+                    # An unobserved reserve id ("" from the adapter) is not evidence
+                    # that the bill left its reserve, so it never overwrites an
+                    # observed membership. A different observed id does replace it,
+                    # which is how a bill moved between reserves is picked up.
+                    bill_reserve_id=candidate.bill_reserve_id or existing.bill_reserve_id,
                 )
         if report.status == "complete":
             # Only a complete, error-free read of this provider may conclude that a

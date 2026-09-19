@@ -147,6 +147,7 @@ function shortestAngleDelta(from, to) {
 function normalizeEvent(event) {
   const amount = event.amount || {};
   const reserved = event.reserved || null;
+  const source = event.fundingSource || null;
   return {
     id: event.id || `${event.date}-${event.kind || "event"}-${event.title || "event"}`,
     date: dateKey(event.date),
@@ -163,6 +164,24 @@ function normalizeEvent(event) {
           currency: reserved.currency || amount.currency || "USD",
         }
       : null,
+    // Observed funding-source identity, kept separate from the reserved amount above.
+    // A source without a provider record id is not citable, so it is dropped rather
+    // than shown as an unnamed source.
+    fundingSource:
+      source && source.id
+        ? {
+            id: String(source.id),
+            name: source.name || "",
+            provider: source.provider || "",
+            cadence: source.cadence || null,
+            observedAt: source.observedAt || null,
+            billReserveId: source.billReserveId || "",
+          }
+        : null,
+    fundingSourceAmbiguous: event.fundingSourceAmbiguous === true,
+    fundingSourceCandidateIds: Array.isArray(event.fundingSourceCandidateIds)
+      ? event.fundingSourceCandidateIds.slice()
+      : [],
     source: event.source || "crew",
     observedAt: event.observedAt || null,
     evidenceIds: Array.isArray(event.evidenceIds) ? event.evidenceIds : [],
@@ -295,7 +314,9 @@ function renderInstrumentOverlay(state) {
     kicker.textContent = formatCenterDate(selected.date);
     title.textContent = selected.title;
     amount.textContent = minorToDisplay(selected.amount) || "—";
-    status.textContent = fundingLabel(selected.fundingStatus);
+    // The observed source names the bill's funder; the reservation amount stays a
+    // separate question, so the status word is only shown while no source is known.
+    status.textContent = fundingSourceSummary(selected) || fundingLabel(selected.fundingStatus);
   } else if (state.model.availableToSpend && state.model.availableToSpend.minor != null) {
     kicker.textContent = "Safe to spend";
     title.textContent = "";
@@ -375,6 +396,30 @@ function fundingLabel(status) {
     unknown: "Funding unknown",
   };
   return labels[status] || labels.unknown;
+}
+
+/* The funding source is the Crew funding plan the owner calls their income source /
+   Funding Cadence, matched to the reserve that contained the bill. It is identity and
+   provenance only: it says WHO funds the bill and says nothing about how much of a
+   dated occurrence is reserved, which stays `fundingStatus` and is still unknown. Two
+   plans claiming one reserve is ambiguity, and the copy says so rather than naming one
+   of them. Nothing is substituted for a missing link. */
+export function fundingSourceValue(event) {
+  const source = event && event.fundingSource;
+  // A source is only citable through the provider's own record id; a name alone
+  // cannot be cited or renamed safely, so it is not shown.
+  if (source && source.id && typeof source.name === "string" && source.name) {
+    return source.name;
+  }
+  if (event && event.fundingSourceAmbiguous === true) {
+    return "Not determined (multiple candidates)";
+  }
+  return "";
+}
+
+export function fundingSourceSummary(event) {
+  const value = fundingSourceValue(event);
+  return value ? `Funding source: ${value}` : "";
 }
 
 /* Kit README semantic mapping. The dial service emits only `kind` plus the
@@ -603,7 +648,8 @@ function describeSelectedDay(state) {
   if (!events.length) return `${dateText}, no scheduled money moments`;
   const parts = events.map((event) => {
     const amount = minorToDisplay(event.amount);
-    return `${event.title}, ${amount || "amount unavailable"}, ${fundingLabel(event.fundingStatus)}`;
+    const funding = fundingSourceSummary(event) || fundingLabel(event.fundingStatus);
+    return `${event.title}, ${amount || "amount unavailable"}, ${funding}`;
   });
   return `${dateText}, ${parts.join("; ")}`;
 }
@@ -678,7 +724,10 @@ function renderEventList(state, container) {
       if (event.kind !== "income") {
         const meta = document.createElement("span");
         meta.className = "obs-event-meta";
-        meta.textContent = fundingLabel(event.fundingStatus);
+        // An observed funding source is a stronger statement than "unknown", and it
+        // is a different statement: this row names the funder, the evidence ticket
+        // still reports the reservation status beside it.
+        meta.textContent = fundingSourceSummary(event) || fundingLabel(event.fundingStatus);
         body.append(meta);
       }
       const amount = document.createElement("strong");
@@ -828,6 +877,11 @@ function renderEvidenceTicket(state, event) {
   const rowData = [
     ["Amount", displayAmount || "—"],
   ];
+  const sourceValue = fundingSourceValue(event);
+  if (sourceValue) {
+    // Identity first, then what is still unresolved about the money.
+    rowData.push(["Funding source", sourceValue]);
+  }
   if (event.reserved && event.reserved.minor != null) {
     rowData.push(["Reserved", minorToDisplay(event.reserved)]);
   } else {

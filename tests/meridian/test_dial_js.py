@@ -106,6 +106,50 @@ def test_dial_js_hides_decorative_svg_and_supplies_accessibility_valuetext():
     assert 'aria-valuetext", describeSelectedDay' in js
 
 
+def test_dial_js_funding_source_copy_declines_to_guess():
+    """The funder is named only from an observed source; ambiguity names nobody.
+
+    Executed, not grepped: these three outcomes are the whole honesty contract of the
+    slice, and a same-looking string in the file would prove none of them.
+    """
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is not available in this environment")
+    script = """
+      const dial = await import('./static/js/meridian/dial.js');
+      const { fundingSourceValue, fundingSourceSummary } = dial;
+      const named = { fundingSource: { id: 'plan-1', name: "Veterans Home" } };
+      if (fundingSourceSummary(named) !== 'Funding source: Veterans Home') throw new Error('named source');
+      if (fundingSourceValue(named) !== "Veterans Home") throw new Error('named value');
+      if (fundingSourceSummary({}) !== '') throw new Error('missing link must stay silent');
+      if (fundingSourceSummary(null) !== '') throw new Error('no event must stay silent');
+      const ambiguous = { fundingSource: null, fundingSourceAmbiguous: true,
+                          fundingSourceCandidateIds: ['plan-1', 'plan-2'] };
+      if (fundingSourceSummary(ambiguous) !== 'Funding source: Not determined (multiple candidates)') {
+        throw new Error('ambiguity must name nobody');
+      }
+      // A source with no provider record id is not citable and must not be shown.
+      const unidentified = { fundingSource: { name: 'Veterans Home' } };
+      if (fundingSourceSummary(unidentified) !== '') throw new Error('uncitable source');
+    """
+    result = subprocess.run(
+        [node, "--input-type=module", "-e", script],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_dial_js_reports_the_reservation_status_beside_the_source():
+    js = _read("static/js/meridian/dial.js")
+    # The ticket keeps the funding/reserved row even when a source is named, so the
+    # unresolved amount is never implied to be known.
+    assert 'rowData.push(["Funding source", sourceValue])' in js
+    assert 'rowData.push(["Funding", fundingLabel(event.fundingStatus)])' in js
+
+
 def test_dial_js_keeps_drag_and_range_accessibility_contract():
     js = _read("static/js/meridian/dial.js")
     assert "setPointerCapture" in js

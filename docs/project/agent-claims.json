@@ -235,6 +235,34 @@
       "base_sha": "ade532d2e11069fa86600d3afea5442c75d992d1",
       "since": "2026-09-19T20:05:00+00:00",
       "note": "Adopts the codex-owner-rulings checkpoint on the owner's explicit handoff: reproduce its evidence, correct the measured 32px overflow attribution (1024x768 tablet, not mobile), and commit the checkpoint. Documentation only; no code, provider, live or authority change."
+    },
+    {
+      "agent": "deepseek-os048a",
+      "claim_id": "bill-reserve-membership-20260919",
+      "generation": 1,
+      "files": [
+        "meridian/providers/base.py",
+        "meridian/providers/crewwork.py",
+        "meridian/commitments.py",
+        "meridian/sync.py",
+        "meridian/live.py",
+        "meridian/services/dial.py",
+        "meridian/migrations/023_commitment_bill_reserve.sql",
+        "docs/project/shipped-migrations.json",
+        "static/js/meridian/dial.js",
+        "tests/meridian/test_migrations.py",
+        "tests/meridian/test_bill_reserve_membership.py",
+        "tests/meridian/services/test_dial_funding_source.py",
+        "tests/meridian/test_dial_js.py",
+        "tests/meridian/test_dial_income_meta.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json",
+        "docs/project/MERIDIAN_OS_TASKS.json"
+      ],
+      "base_sha": "04c485cd40cc492218ce6c190c471821b02b62c4",
+      "since": "2026-09-19T21:10:00+00:00",
+      "note": "OS-048a read-side slice per D-010: retain the observed bill->bill-reserve membership at ingestion (adapter field, both the sync.py and live.py mapping sites, new column via migration 023), and expose funding-source identity separately from occurrence reservation status in the dial payload and its JS surfaces. No provider mutation, no live sync, no backfill, no reserved-amount or weather change."
     }
   ]
 }

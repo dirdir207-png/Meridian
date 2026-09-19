@@ -1,5 +1,22 @@
 # Enhanced SimpleCrew — Current Status
 
+## RESUME HERE — OS-048a: bills now name their funding source (2026-09-19, base `04c485c`)
+
+The owner's complaint — *"All the bills also display funding unknown ... they are funded by Veterans Home"* — contains two questions, and this slice answers only the first. **Who funds the bill** is now an observed fact; **how much of a dated occurrence is reserved** is still unknown and the payload still says so.
+
+The link already half-existed: the funding plan the owner calls their income source is stored with the reserve it belongs to (022). What was missing was the bill side — `_collect_commitment_candidates` bound `account.billReserve` and discarded its `id`, so the two stored facts could never be joined.
+
+- `CommitmentCandidate.bill_reserve_id` is read from the containing reserve. `""` means **not observed**, never "belongs to no reserve".
+- Migration `023_commitment_bill_reserve.sql` adds `commitments.bill_reserve_id`; registered in `docs/project/shipped-migrations.json` and `test_migrations._LATER_MIGRATIONS`. Append-only, no existing migration edited.
+- Copied at **both** mapping sites — `sync.py` and `meridian/live.py::sync_live_crew`. Recon found that `sync_providers` has no production caller while `live.py` duplicates its loop (and they disagree on the recurrence default); that divergence was deliberately **not** changed, because changing it would alter what production writes. Recorded as **OS-053**.
+- An unobserved id never overwrites an observed one; a different observed id replaces it (a bill moved between reserves).
+- `dial.py` resolves `(provider, bill_reserve_id)` against **current** plans only (`absent_since IS NULL`): exactly one match names the source with its plan id, name, cadence and observation time; **two or more matches report ambiguity and name none**; no membership or no match stays `fundingSource: null`. The sole global plan is never substituted for a missing link.
+- `dial.js` renders `Funding source: <name>` in the centre, the event row and the accessibility label, and as its own evidence-ticket row **beside** the still-unresolved Funding row, so nothing unresolved is implied to be known.
+
+Verified: 98 focused tests (new `test_bill_reserve_membership.py`, new `services/test_dial_funding_source.py`, extended `test_dial_js.py`, plus the dial/commitments/migration/crewwork suites) and the full non-browser suite **1361 passed, 1 skipped**; `node --check` on `dial.js`; Ruff clean; guardrails clean for `deepseek-os048a`; `git diff --check` clean.
+
+Must not be assumed: existing stored bills keep an empty membership until an ordinary read sync runs — **no backfill was guessed and no live sync was performed**; the per-occurrence reserved amount remains unknown; weather/risk is unchanged; nothing was deployed or pushed.
+
 ## RESUME HERE — owner rulings + generated sun, verified checkpoint (2026-09-19)
 
 Canonical checkout `/Users/stephenwest/Openrouter/simplecrew-latest`, branch `feat/meridian-implementation`, base HEAD `ade532d`. Owner requested a usage-conscious clean handoff to DeepSeek with as much visual progress as feasible. The Codex lane left the work uncommitted; **DeepSeek adopted the claim, reproduced the evidence and committed the checkpoint as `052ab3e`** (details in the `AGENT_COORDINATION.md` log entry of 2026-09-19). Nothing pushed or deployed. No financial code, live DB, provider calls or writes changed. Preserve the pre-existing unrelated untracked files.

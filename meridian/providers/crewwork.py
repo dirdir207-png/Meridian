@@ -158,6 +158,13 @@ class CrewWorkSnapshotAdapter:
         `bills` are the real recurring money obligations (Verizon, Rent, …).
         Amounts are cents; funding surface (reservedAmount) maps to dollar
         amount on the BILL record, and the Crew bill id is the stable key.
+
+        The containing reserve's own id is read here too. It was previously bound
+        and discarded, which is why the dial could only ever report funding unknown:
+        the funding plans (022) already store the reserve they belong to, so the
+        reserve id is the whole join. ``""`` means the id was not observed; it is
+        passed through as unobserved rather than fabricated, and the sync refuses to
+        let it overwrite an observed membership.
         """
         data = _as_dict(self._snapshot.get("data"))
         expenses_payload = _as_dict(data.get("expenses"))
@@ -166,6 +173,7 @@ class CrewWorkSnapshotAdapter:
         result = []
         for account in accounts:
             bill_reserve = _as_dict(account.get("billReserve"))
+            bill_reserve_id = str(bill_reserve.get("id") or "")
             for bill in _as_list(bill_reserve.get("bills")):
                 external_id = str(bill.get("id") or "")
                 name = str(bill.get("name") or "Crew bill")
@@ -190,6 +198,7 @@ class CrewWorkSnapshotAdapter:
                         due_date=anchor_date,
                         recurrence=frequency,
                         funded_amount=reserved,
+                        bill_reserve_id=bill_reserve_id,
                     )
                 )
         return result

@@ -73,6 +73,7 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
                 target_amount=candidate.amount,
                 funded_amount=(candidate.funded_amount if candidate.funded_amount is not None else 0.0),                legacy_source=adapter.provider_name,
                 legacy_id=candidate.external_id,
+                bill_reserve_id=candidate.bill_reserve_id,
             )
         else:
             commitment_repository.update(
@@ -86,7 +87,11 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
                     candidate.funded_amount
                     if candidate.funded_amount is not None
                     else existing.funded_amount
-                ),            )
+                ),
+                # Same rule as sync.py: an unobserved reserve id never erases an
+                # observed membership; a different observed one replaces it.
+                bill_reserve_id=candidate.bill_reserve_id or existing.bill_reserve_id,
+            )
     # A complete, error-free read may conclude that a bill Crew no longer returns
     # is gone; the row and its history are kept.
     if snap.is_complete and not snap.errors:

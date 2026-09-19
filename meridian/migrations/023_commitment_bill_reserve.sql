@@ -1,0 +1,23 @@
+-- 023: Record which provider bill reserve contains each ingested bill.
+--
+-- Why this column exists: the owner's funding source IS the Crew funding plan
+-- attached to a bill reserve (D-010, 2026-09-19: "Bills are already funded by a
+-- particular funding source or income source in Crew"). The plan table (022) already
+-- stores the reserve it belongs to, but a bill had no way back to its reserve:
+-- _collect_commitment_candidates walked account.billReserve.bills and discarded the
+-- parent reserve id, so the two sides of the join could never meet and the dial could
+-- only report funding unknown for every bill occurrence.
+--
+-- "" means no membership was observed. It is never read as "belongs to no reserve",
+-- and a sync that fails to observe the id must not overwrite one that was observed:
+-- an unreadable field is not a move, the same discipline as 020/021's absence
+-- handling and C01's nullable reserve amount. Ownership is keyed on the provider's
+-- record id, never on a reserve or plan name, because the owner renames those records
+-- in Crew ("State of New Hampshire" -> "Veteran's Home") and a name-keyed link would
+-- break on the next rename.
+--
+-- No separate observation timestamp: the membership is refreshed by the same complete
+-- provider read that refreshes the bill row, so commitments.updated_at is when it was
+-- last observed. Resolution joins the stored bills to the stored plans in memory, so
+-- no index is added for it.
+ALTER TABLE commitments ADD COLUMN bill_reserve_id TEXT NOT NULL DEFAULT '';

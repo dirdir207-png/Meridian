@@ -53,6 +53,13 @@ class CommitmentCandidate:
     recurrence: Optional[str] = None
     funded_amount: Optional[float] = None
     status: Optional[str] = None
+    # The provider's own id of the bill reserve that contains this bill, as observed
+    # when the bill was read. ``""`` means no membership was observed -- never
+    # "belongs to no reserve" -- and the sync must not let an unobserved id overwrite
+    # one that was observed. It is the join key to the funding plans the owner calls
+    # their income source, and it keys on the provider's record id rather than on any
+    # name the owner renames (D-010).
+    bill_reserve_id: str = ""
 
 
 @dataclass(frozen=True)

@@ -61,13 +61,21 @@ class Commitment:
     # Set when a complete provider read no longer returns this bill; cleared when
     # the provider returns it again. Never set on a local-only commitment.
     absent_since: Optional[str] = None
+    # The provider's own id of the bill reserve that contains this bill, observed at
+    # ingestion (023). "" means no membership was observed -- never "belongs to no
+    # reserve" -- and an unobserved id never overwrites an observed one. It is the
+    # join key to the funding plans that are the owner's income source (D-010). It is
+    # refreshed by the same complete read that refreshes the row, so ``updated_at`` is
+    # when the membership was last observed; there is no separate timestamp.
+    bill_reserve_id: str = ""
 
 
 _COLUMNS = (
     "id, type, name, status, priority, currency, target_amount, target_date,"
     " funded_amount, amount, due_date, recurrence, cadence, minimum_payment,"
     " buffer_minimum, payoff_strategy, backing_account_id, legacy_source,"
-    " legacy_id, migration_version, created_at, updated_at, absent_since"
+    " legacy_id, migration_version, created_at, updated_at, absent_since,"
+    " bill_reserve_id"
 )
 
 
@@ -207,6 +215,16 @@ class CommitmentRepository:
                     raise ValueError(f"{text_field} must be a non-empty string when present")
                 validated[text_field] = value
 
+        if fields.get("bill_reserve_id", ...) is not ...:
+            # Deliberately not in the non-empty text loop above: "" is the observed
+            # value for "no membership seen", not an invalid blank.
+            reserve_id = fields.get("bill_reserve_id")
+            if reserve_id is None:
+                reserve_id = ""
+            if not isinstance(reserve_id, str):
+                raise ValueError("bill_reserve_id must be a string")
+            validated["bill_reserve_id"] = reserve_id
+
         if creating and commitment_type is CommitmentType.BILL:
             if not (fields.get("due_date") or fields.get("recurrence")):
                 raise ValueError("bills need a due_date or recurrence")
@@ -278,6 +296,7 @@ class CommitmentRepository:
             "legacy_source": validated.get("legacy_source"),
             "legacy_id": validated.get("legacy_id"),
             "migration_version": validated.get("migration_version"),
+            "bill_reserve_id": validated.get("bill_reserve_id") or "",
         }
 
     def insert_record(self, connection: sqlite3.Connection, record: dict) -> int:
@@ -287,7 +306,7 @@ class CommitmentRepository:
             "amount", "minimum_payment", "buffer_minimum", "funded_amount",
             "target_date", "due_date", "recurrence", "cadence", "payoff_strategy",
             "backing_account_id", "legacy_source", "legacy_id", "migration_version",
-            "created_at", "updated_at",
+            "created_at", "updated_at", "bill_reserve_id",
         ]
         now = _now()
         values = {**record, "created_at": now, "updated_at": now}
@@ -447,4 +466,5 @@ class CommitmentRepository:
             created_at=row["created_at"],
             updated_at=row["updated_at"],
             absent_since=row["absent_since"],
+            bill_reserve_id=row["bill_reserve_id"] or "",
         )

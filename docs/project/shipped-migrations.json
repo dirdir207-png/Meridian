@@ -26,6 +26,7 @@
     "meridian/migrations/019_immutable_observations.sql": "b91f986805ade7ae6afb24674460887e0de379a31527a3e9bdf39c4d2b6dd063",
     "meridian/migrations/020_account_absence_reconciliation.sql": "7d9e300efe7dd9596d579eb15a66e683759dfb0fff2f2d4a55b33470ccafb52b",
     "meridian/migrations/021_commitment_absence_reconciliation.sql": "0473ffb49e97a719b37187cca1147546a475413c038b06a378a0a0b68ffd9f2d",
-    "meridian/migrations/022_crew_funding_plans.sql": "987b8cbe2d24244c5fd8c0ffaf7f6b9f4543836ba2a9a4aa56daba076f45ef23"
+    "meridian/migrations/022_crew_funding_plans.sql": "987b8cbe2d24244c5fd8c0ffaf7f6b9f4543836ba2a9a4aa56daba076f45ef23",
+    "meridian/migrations/023_commitment_bill_reserve.sql": "069b28afd0a2a77c56817f1f1c01346d8fb61c399ef0b947b1374f6c074d0b03"
   }
 }

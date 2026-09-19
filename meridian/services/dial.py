@@ -126,11 +126,68 @@ def _horizon(graph, paycheck, as_of: date) -> date:
     return max(as_of + timedelta(days=14), next_date + timedelta(days=14))
 
 
+def _funding_sources_by_reserve(graph) -> dict[tuple[str, str], list]:
+    """Index the currently observed funding plans by (provider, bill reserve).
+
+    The plan is the record the owner calls their income source / Funding Cadence, and
+    it is attached to a bill reserve; the bill row now carries the reserve that
+    contained it (023). Matching those two stored facts is the whole link, and it keys
+    on provider record ids, never on a name the owner renames.
+
+    A plan retired by a complete read is excluded (``list_funding_plans`` filters on
+    ``absent_since``): a withdrawn cadence must not keep naming a bill's funding
+    source.
+    """
+    index: dict[tuple[str, str], list] = {}
+    for plan in graph.list_funding_plans():
+        if not plan.bill_reserve_id:
+            continue
+        index.setdefault((plan.provider, plan.bill_reserve_id), []).append(plan)
+    return index
+
+
+def _resolve_funding_source(commitment, sources: dict[tuple[str, str], list]):
+    """Identify the observed funding source for one bill, or decline to.
+
+    Returns ``(source, candidate_ids)``. ``source`` is a dict only when exactly one
+    current plan claims the bill's reserve; several plans claiming one reserve is
+    ambiguity, and the honest answer is to name none of them rather than to pick the
+    first. An empty membership, an unknown provider, or no matching plan all return
+    ``(None, ())``: the sole global plan is never substituted for a missing link.
+
+    The source is identity and provenance only. It says who funds the bill; it does
+    NOT say how much of a dated occurrence is reserved, which stays unknown here.
+    """
+    reserve_id = getattr(commitment, "bill_reserve_id", "") or ""
+    provider = getattr(commitment, "legacy_source", None)
+    if not reserve_id or not provider:
+        return None, ()
+    matches = sources.get((provider, reserve_id), [])
+    if len(matches) == 1:
+        plan = matches[0]
+        return (
+            {
+                "id": plan.external_id,
+                "name": plan.name,
+                "provider": plan.provider,
+                "cadence": plan.cadence,
+                "observedAt": plan.observed_at,
+                "billReserveId": reserve_id,
+            },
+            (),
+        )
+    if len(matches) > 1:
+        return None, tuple(plan.external_id for plan in matches)
+    return None, ()
+
+
 def _commitment_events(
     commitments: Sequence[Commitment],
     as_of: date,
     horizon_end: date,
+    funding_sources: Optional[dict[tuple[str, str], list]] = None,
 ) -> list[dict]:
+    sources = funding_sources if funding_sources is not None else {}
     events: list[dict] = []
     for commitment in commitments:
         if commitment.type not in (CommitmentType.BILL, CommitmentType.GOAL):
@@ -143,6 +200,7 @@ def _commitment_events(
             recurrence = getattr(commitment, "recurrence", "") or ""
             if amount is None or anchor is None:
                 continue
+            funding_source, ambiguous_ids = _resolve_funding_source(commitment, sources)
             current, period = next_occurrence_with_index(anchor, recurrence, as_of)
             guard = 0
             while current <= horizon_end and guard < 200:
@@ -157,9 +215,14 @@ def _commitment_events(
                             "currency": commitment.currency,
                         },
                         # Current data does not safely link one reserve to each
-                        # future occurrence, so do not claim reserved/partial.
+                        # future occurrence, so do not claim reserved/partial. What
+                        # IS observed is which funding source the bill belongs to,
+                        # reported separately below and never as a reserved amount.
                         "fundingStatus": "unknown",
                         "reserved": None,
+                        "fundingSource": funding_source,
+                        "fundingSourceAmbiguous": bool(ambiguous_ids),
+                        "fundingSourceCandidateIds": list(ambiguous_ids),
                         "source": (
                             "crew"
                             if commitment.legacy_source == "crew"
@@ -281,7 +344,9 @@ def build_dial(
     accounts = graph.list_accounts()
     horizon_end = _horizon(graph, paycheck, as_of)
 
-    events = _commitment_events(commitments, as_of, horizon_end)
+    events = _commitment_events(
+        commitments, as_of, horizon_end, _funding_sources_by_reserve(graph)
+    )
     events.extend(_paycheck_events(paycheck, as_of, horizon_end))
     events.sort(key=lambda event: (event["date"], event["kind"], event["title"]))
 

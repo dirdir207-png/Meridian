@@ -31,7 +31,13 @@ def test_income_rows_do_not_render_a_funding_status():
     # The meta is created INSIDE that guard, so income rows cannot produce one.
     guard, rest = block.split('if (event.kind !== "income") {', 1)
     assert "obs-event-meta" not in guard
-    assert 'meta.textContent = fundingLabel(event.fundingStatus);' in rest
+    # OS-048 puts the observed funding SOURCE ahead of the reservation status here, and
+    # the status stays the fallback, so a bill with no observed source still reads its
+    # honest "Funding unknown". The guard above is what keeps income out of both.
+    assert (
+        "meta.textContent = fundingSourceSummary(event) || fundingLabel(event.fundingStatus);"
+        in rest
+    )
     assert "body.append(meta);" in rest
 
 
