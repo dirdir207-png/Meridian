@@ -101,6 +101,47 @@ Three consequences, all following from that one fact:
 From the same session, earlier: the Activity timeline convergence (`22f10e5`, `b256199`,
 `2438821`), the space-key fix (`5cd16ee`), and the `:8081` restart record (`8d5a5b7`).
 
+## The owner's rule for expected income — APPROVED 2026-09-19
+
+Verbatim: *"I would say if not enough data is available for an aggregate expected income, it
+should default to the value of the last known source (the paycheck from yesterday) for example"*
+
+That is the linking rule this objective was waiting on, and it is a fallback chain rather than a
+single source:
+
+1. **Enough data for an aggregate** -> the aggregate expected income, citing the observations it
+   aggregates.
+2. **Not enough data** -> the **value of the last known source** (the most recent observed
+   paycheck), citing that observation.
+3. **No observations at all** -> the configured paycheck, labelled as configured.
+
+It maps onto primitives that already exist, which is why it can be built without inventing
+anything:
+
+| Rule element | Existing primitive |
+|---|---|
+| "enough data for an aggregate" | `paycheck_learning._MIN_OCCURRENCES = 3`, already tested |
+| "aggregate expected income" | `learn_paycheck()["amount"]` — the median of pay-period totals |
+| "the last known source" | the most recent transaction whose `classification_kind` is `income` |
+| the source's name | `learn_paycheck()["source"]`, or that deposit's merchant |
+| confidence | `learn_paycheck()["confidence"]` |
+
+Two consequences worth stating, because they are the difference between a forecast and a false
+claim:
+
+- **Every branch cites a real observation** where one exists, so `observedAt` and `evidenceIds`
+  become genuinely meaningful instead of "should be filled in". `observedAt` is the observed
+  deposit's time; `evidenceIds` are the deposits used. Nothing is inferred from merchant text
+  alone, and the Crew funding plan — which the owner renames — is not the identity.
+- **The branch must be visible.** An aggregate and a single last-known value are different
+  strengths of claim, so which one produced the figure has to be labelled rather than flattened
+  into one number. A fallback presented as an expectation would be exactly the
+  forecast-as-fact error this project forbids.
+
+Still unresolved, and NOT answered by this rule: whether the Crew funding plan becomes the
+single source of truth for the cadence (`OS-048`). The owner's rule answers *how to compute the
+expected amount and cite it*; it does not say the plan is authoritative over the local config.
+
 ### Open, in the order I would take them
 
 1. **The Funding Cadence link — the keystone.** Bills should read as funded by the cadence the
