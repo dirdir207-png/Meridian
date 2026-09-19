@@ -68,6 +68,13 @@ class Commitment:
     # refreshed by the same complete read that refreshes the row, so ``updated_at`` is
     # when the membership was last observed; there is no separate timestamp.
     bill_reserve_id: str = ""
+    # Whether ``funded_amount`` is a statement about this bill's reserve or just the
+    # NOT NULL column's placeholder for data Meridian never received (024). A Crew read
+    # that reports ``reservedAmount`` -- including an explicit 0 -- sets it; a read that
+    # does not report the field never clears it, for the same reason C01 refuses to let a
+    # silent read erase a known amount. The dial may only state a figure whose flag is
+    # set, so "not yet set aside" and "missing" stop being the same stored 0.0.
+    reserved_amount_reported: bool = False
 
 
 _COLUMNS = (
@@ -75,7 +82,7 @@ _COLUMNS = (
     " funded_amount, amount, due_date, recurrence, cadence, minimum_payment,"
     " buffer_minimum, payoff_strategy, backing_account_id, legacy_source,"
     " legacy_id, migration_version, created_at, updated_at, absent_since,"
-    " bill_reserve_id"
+    " bill_reserve_id, reserved_amount_reported"
 )
 
 
@@ -238,6 +245,25 @@ class CommitmentRepository:
                 fields.get("funded_amount"), "funded_amount"
             ) or 0.0
 
+        if fields.get("reserved_amount_reported", ...) is not ...:
+            reported = fields.get("reserved_amount_reported")
+            if reported is None:
+                reported = False
+            elif isinstance(reported, bool):
+                pass
+            elif reported in (0, 1):
+                reported = bool(reported)
+            else:
+                raise ValueError("reserved_amount_reported must be a boolean")
+            validated["reserved_amount_reported"] = reported
+
+        # A positive amount cannot be the absence of data: absence writes 0.0 (C01), so
+        # any positive funded_amount was stated by something -- a Crew report, a migrated
+        # legacy balance, or the owner. Normalising here keeps the 024 backfill rule and
+        # every later write in agreement instead of asking each caller to remember it.
+        if (validated.get("funded_amount") or 0.0) > 0:
+            validated["reserved_amount_reported"] = True
+
         if fields.get("backing_account_id", ...) is not ...:
             backing = fields.get("backing_account_id")
             if backing is not None:
@@ -297,6 +323,9 @@ class CommitmentRepository:
             "legacy_id": validated.get("legacy_id"),
             "migration_version": validated.get("migration_version"),
             "bill_reserve_id": validated.get("bill_reserve_id") or "",
+            "reserved_amount_reported": bool(
+                validated.get("reserved_amount_reported", False)
+            ),
         }
 
     def insert_record(self, connection: sqlite3.Connection, record: dict) -> int:
@@ -306,7 +335,7 @@ class CommitmentRepository:
             "amount", "minimum_payment", "buffer_minimum", "funded_amount",
             "target_date", "due_date", "recurrence", "cadence", "payoff_strategy",
             "backing_account_id", "legacy_source", "legacy_id", "migration_version",
-            "created_at", "updated_at", "bill_reserve_id",
+            "created_at", "updated_at", "bill_reserve_id", "reserved_amount_reported",
         ]
         now = _now()
         values = {**record, "created_at": now, "updated_at": now}
@@ -467,4 +496,5 @@ class CommitmentRepository:
             updated_at=row["updated_at"],
             absent_since=row["absent_since"],
             bill_reserve_id=row["bill_reserve_id"] or "",
+            reserved_amount_reported=bool(row["reserved_amount_reported"]),
         )

@@ -24,6 +24,20 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Today — the dial states a per-bill reserved amount (2026-09-19, OS-048b, base `2f2e833`)
+
+![Today iPhone Air dark, the stated reserve on the earliest bill](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-dial-reserved-2026-09-19/dial-reserved-420x912-dark.png)
+
+**Changed:** the earliest occurrence of a bill now states what is set aside for it — `$1,200.00 of $1,500.00 set aside — $300.00 short` — beside the funding source it already named, and the evidence ticket carries the same figure with its author (`$1,200.00 · observed from Crew · Sep 8, 2026`). Later occurrences of the same bill deliberately keep `Funding unknown`, because one reserve is not a per-occurrence amount (D-010 as narrowed by D-013).
+
+**What these captures are not.** There is no concept drawing of a reserved amount in any governing set, so nothing here is compared against a concept and nothing here is a parity claim. These are viewport captures of a synthetic self-consistency check (fixed clock, local seed, no app, no credentials, no bank data) taken by the committed test `tests/browser/test_dial_reserved_amount.py`; the contract's five viewports × both themes at the specified DPRs are in `artifacts/observatory-dial-reserved-2026-09-19/`.
+
+**A defect only the capture caught.** The first version labelled the ticket row "Set aside for this bill". The row grid sizes its label column for AMOUNT / FUNDING SOURCE / RESERVED, so at 420px the label wrapped onto a second line and **collided with its own value**. No assertion noticed; the 420px capture did. The label is now the short "Set aside", the provenance note is date-only (the ticket header already stamps the time), and the browser suite measures both boxes and fails if they overlap.
+
+**A D-013 gap the capture also caught.** The event row first rendered a derived figure as a bare `$65.00 of $65.00 set aside`, which reads as an observation. D-013 §4 requires a derivation to be labelled *wherever it is stated*, not only in the ticket, so the row now goes through the same summary function as the centre and reads `… set aside (Meridian estimate)`, with the divisor named in the ticket.
+
+Measured at all ten contract combinations: zero horizontal overflow (`scrollWidth <= innerWidth`), zero console/page errors, rail width non-zero, and the derivation never attributed to Crew. The six pre-existing `tests/browser/test_dial_fidelity.py` failures (dial-wrap vs rail geometry; theme-toggle label width) were reproduced at pristine `2f2e833` with this diff stashed — they are OS-049's baseline, not this slice's regressions.
+
 ## Today — the day arc starts clear of the building (2026-09-18)
 
 ![Today mobile-air dark, the hand stopping clear of the observatory](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-dial-arc-2026-09-18/today-mobile-air-dark-viewport.png)

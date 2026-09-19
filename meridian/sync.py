@@ -201,6 +201,9 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
                     legacy_source=adapter.provider_name,
                     legacy_id=candidate.external_id,
                     bill_reserve_id=candidate.bill_reserve_id,
+                    # Only a reported reserveAmount sets this (C01/024): a silent read
+                    # stores 0.0 and must not read as "Crew said the reserve is empty".
+                    reserved_amount_reported=candidate.funded_amount is not None,
                 )
             else:
                 commitment_repository.update(
@@ -220,6 +223,14 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
                     # observed membership. A different observed id does replace it,
                     # which is how a bill moved between reserves is picked up.
                     bill_reserve_id=candidate.bill_reserve_id or existing.bill_reserve_id,
+                    # Symmetric with the membership: a read that did not report the
+                    # amount is not a report of nothing, so the flag it already had
+                    # stands rather than being cleared.
+                    reserved_amount_reported=(
+                        True
+                        if candidate.funded_amount is not None
+                        else existing.reserved_amount_reported
+                    ),
                 )
         if report.status == "complete":
             # Only a complete, error-free read of this provider may conclude that a
@@ -263,6 +274,26 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
                     provider=adapter.provider_name,
                     observed_external_ids=tuple(
                         plan.external_id for plan in snapshot.funding_plans
+                    ),
+                )
+        # The reserve's own total set-aside funds is the dividend D-013's even-split
+        # fallback divides across the reserve's bills (024). Same tri-state discipline
+        # as the funding plans above: an unobserved facet is evidence of nothing, and an
+        # unreported total is stored as NULL rather than as an emptied bucket.
+        if snapshot.bill_reserves is not None:
+            for reserve in snapshot.bill_reserves:
+                repository.upsert_bill_reserve(
+                    provider=adapter.provider_name,
+                    external_id=reserve.external_id,
+                    total_reserved_amount=reserve.total_reserved_amount,
+                    currency=reserve.currency,
+                    observed_at=reserve.observed_at,
+                )
+            if report.status == "complete":
+                repository.mark_absent_bill_reserves(
+                    provider=adapter.provider_name,
+                    observed_external_ids=tuple(
+                        reserve.external_id for reserve in snapshot.bill_reserves
                     ),
                 )
         reconcile(snapshot, repository)

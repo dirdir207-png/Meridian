@@ -88,6 +88,26 @@ class FundingPlanCandidate:
 
 
 @dataclass(frozen=True)
+class NormalizedBillReserve:
+    """One observed bill reserve's own state, normalized and provider-neutral.
+
+    ``total_reserved_amount`` is Crew's ``billReserve.totalReservedAmount`` in dollars:
+    the reserve's total set-aside funds -- the single bucket the owner describes
+    (D-013). It is ``None`` when the provider did not report the field, which is not a
+    zero: an unreported total is missing data, an emptied bucket is a stated 0.0.
+
+    ``external_id`` is the provider's reserve id, which is the same value the ingested
+    bill carries as ``bill_reserve_id``; matching the two stored facts is the join, and
+    it keys on the provider's record id rather than a name the owner renames.
+    """
+
+    external_id: str
+    total_reserved_amount: Optional[float] = None
+    currency: str = "USD"
+    observed_at: Optional[str] = None
+
+
+@dataclass(frozen=True)
 class ProviderSnapshot:
     connection_external_id: str
     connection_name: str
@@ -100,6 +120,10 @@ class ProviderSnapshot:
     # one. Absence reconciliation may only conclude from the second, so collapsing
     # them would let an unreadable read look like a deletion.
     funding_plans: Optional[Tuple[FundingPlanCandidate, ...]] = None
+    # The same tri-state for the reserves themselves. Their totals are the dividend
+    # D-013's even-split fallback divides by, so an unobserved facet must stay
+    # distinguishable from an observed-but-empty one here too.
+    bill_reserves: Optional[Tuple[NormalizedBillReserve, ...]] = None
     is_complete: bool = True
     errors: Tuple[str, ...] = ()
 

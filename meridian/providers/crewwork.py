@@ -16,6 +16,7 @@ from .base import (
     CommitmentCandidate,
     FundingPlanCandidate,
     NormalizedAccount,
+    NormalizedBillReserve,
     NormalizedTransaction,
     ProviderSnapshot,
 )
@@ -139,6 +140,7 @@ class CrewWorkSnapshotAdapter:
         transactions = self._collect_transactions(accounts)
         commitment_candidates = self._collect_commitment_candidates()
         funding_plans = self._collect_funding_plans()
+        bill_reserves = self._collect_bill_reserves()
         errors = tuple(self._snapshot_errors(snap_errors))
 
         return ProviderSnapshot(
@@ -148,6 +150,7 @@ class CrewWorkSnapshotAdapter:
             transactions=tuple(transactions),
             commitment_candidates=tuple(commitment_candidates),
             funding_plans=None if funding_plans is None else tuple(funding_plans),
+            bill_reserves=None if bill_reserves is None else tuple(bill_reserves),
             is_complete=complete and not errors,
             errors=errors,
         )
@@ -240,6 +243,33 @@ class CrewWorkSnapshotAdapter:
                 )
             )
         return collected
+
+    def _collect_bill_reserves(self) -> Optional[list[NormalizedBillReserve]]:
+        """The observed reserve totals, or None when the facet was not returned.
+
+        Reuses :meth:`readback_reserve_totals` for the same reason the funding plans
+        reuse their readback: the write-verification path and the ingestion path must
+        never disagree about where a reserve's total lives. ``None`` (not observed)
+        versus a dict (observed, possibly empty) is preserved exactly, because absence
+        reconciliation may only conclude from the second.
+
+        The total is nullable on purpose (C01): a reserve Crew did not report a total
+        for must stay absent rather than read as an emptied bucket, so
+        ``_cents_to_dollars_or_none`` is the conversion -- not the zero-defaulting one.
+        """
+        totals = self.readback_reserve_totals()
+        if totals is None:
+            return None
+        captured_at = str(self._snapshot.get("captured_at") or "") or None
+        return [
+            NormalizedBillReserve(
+                external_id=reserve_id,
+                total_reserved_amount=_cents_to_dollars_or_none(total),
+                currency="USD",
+                observed_at=captured_at,
+            )
+            for reserve_id, total in totals.items()
+        ]
 
     def _snapshot_errors(self, snap_errors: Any) -> list[str]:
         if not isinstance(snap_errors, dict):

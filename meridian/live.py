@@ -71,9 +71,13 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
                 recurrence=candidate.recurrence or "monthly",
                 due_date=candidate.due_date,
                 target_amount=candidate.amount,
-                funded_amount=(candidate.funded_amount if candidate.funded_amount is not None else 0.0),                legacy_source=adapter.provider_name,
+                funded_amount=(candidate.funded_amount if candidate.funded_amount is not None else 0.0),
+                legacy_source=adapter.provider_name,
                 legacy_id=candidate.external_id,
                 bill_reserve_id=candidate.bill_reserve_id,
+                # Only a reported reserveAmount sets this (C01/024); a silent read stores
+                # 0.0 and must not read as "Crew said the reserve is empty".
+                reserved_amount_reported=candidate.funded_amount is not None,
             )
         else:
             commitment_repository.update(
@@ -91,6 +95,13 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
                 # Same rule as sync.py: an unobserved reserve id never erases an
                 # observed membership; a different observed one replaces it.
                 bill_reserve_id=candidate.bill_reserve_id or existing.bill_reserve_id,
+                # And a read that did not report the amount is not a report of nothing,
+                # so the flag it already had stands rather than being cleared.
+                reserved_amount_reported=(
+                    True
+                    if candidate.funded_amount is not None
+                    else existing.reserved_amount_reported
+                ),
             )
     # A complete, error-free read may conclude that a bill Crew no longer returns
     # is gone; the row and its history are kept.
@@ -99,6 +110,46 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
             provider=adapter.provider_name,
             observed_external_ids=tuple(c.external_id for c in snap.commitment_candidates),
         )
+    # Funding plans and reserve totals are the two stored facts the dial's funding
+    # resolution reads (D-010/D-013), and they are the same two facts ``sync_providers``
+    # already persisted -- but that function has no production caller (OS-053), so until
+    # they are written here the app's own refresh stored neither: the funding source
+    # could never resolve in production and no reserve total existed to divide. Both
+    # writes are Meridian-local, additive and provider-read-only, and both follow the
+    # same tri-state rule: ``None`` means the read did not observe the surface, which is
+    # evidence of nothing, so absence may only be concluded from an observed read.
+    if snap.funding_plans is not None:
+        for plan in snap.funding_plans:
+            repository.upsert_funding_plan(
+                provider=adapter.provider_name,
+                external_id=plan.external_id,
+                bill_reserve_id=plan.bill_reserve_id,
+                name=plan.name,
+                amount=plan.amount,
+                cadence=plan.cadence,
+                anchor_date=plan.anchor_date,
+                currency=plan.currency,
+                observed_at=plan.observed_at,
+            )
+        if snap.is_complete and not snap.errors:
+            repository.mark_absent_funding_plans(
+                provider=adapter.provider_name,
+                observed_external_ids=tuple(p.external_id for p in snap.funding_plans),
+            )
+    if snap.bill_reserves is not None:
+        for reserve in snap.bill_reserves:
+            repository.upsert_bill_reserve(
+                provider=adapter.provider_name,
+                external_id=reserve.external_id,
+                total_reserved_amount=reserve.total_reserved_amount,
+                currency=reserve.currency,
+                observed_at=reserve.observed_at,
+            )
+        if snap.is_complete and not snap.errors:
+            repository.mark_absent_bill_reserves(
+                provider=adapter.provider_name,
+                observed_external_ids=tuple(r.external_id for r in snap.bill_reserves),
+            )
     return report
 
 

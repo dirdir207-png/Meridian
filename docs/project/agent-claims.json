@@ -263,6 +263,39 @@
       "base_sha": "04c485cd40cc492218ce6c190c471821b02b62c4",
       "since": "2026-09-19T21:10:00+00:00",
       "note": "OS-048a read-side slice per D-010: retain the observed bill->bill-reserve membership at ingestion (adapter field, both the sync.py and live.py mapping sites, new column via migration 023), and expose funding-source identity separately from occurrence reservation status in the dial payload and its JS surfaces. No provider mutation, no live sync, no backfill, no reserved-amount or weather change."
+    },
+    {
+      "agent": "deepseek-os048b",
+      "claim_id": "reserve-amount-observations-20260919",
+      "generation": 1,
+      "files": [
+        "meridian/providers/base.py",
+        "meridian/providers/crewwork.py",
+        "meridian/repository.py",
+        "meridian/commitments.py",
+        "meridian/sync.py",
+        "meridian/live.py",
+        "meridian/services/dial.py",
+        "meridian/migrations/024_crew_bill_reserve_observations.sql",
+        "docs/project/shipped-migrations.json",
+        "static/js/meridian/dial.js",
+        "tests/meridian/test_migrations.py",
+        "tests/meridian/test_bill_reserve_observations.py",
+        "tests/meridian/services/test_dial_reserved_amount.py",
+        "tests/meridian/test_dial_js.py",
+        "tests/meridian/test_dial_income_meta.py",
+        "tests/browser/test_dial_reserved_amount.py",
+        "design-qa.md",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json",
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "artifacts/observatory-dial-reserved-2026-09-19/**"
+      ],
+      "base_sha": "2f2e83373b51f38b0e2e4678ba7300118665fc8b",
+      "since": "2026-09-19T23:40:00+00:00",
+      "note": "OS-048b read-side slice per D-013, owner-chosen Option B: persist the observed reserve state (Crew billReserve.totalReservedAmount per reserve in a new 024 table, plus a per-bill reservedAmount-reported flag, because commitments.funded_amount is NOT NULL DEFAULT 0 per C01) and make the dial state the per-bill reserved amount with labelled precedence observed -> derived even split -> unknown, carrying basis/divisor/attribution so a derivation is never presented as an observation or attributed to Crew. Both mapping sites (sync.py and live.py). No provider mutation, no live sync, no guessed backfill, no deployment, no :8081 restart."
     }
   ]
 }

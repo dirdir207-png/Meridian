@@ -90,6 +90,31 @@ class FundingPlanRecord:
 
 
 @dataclass(frozen=True)
+class BillReserveRecord:
+    """One Crew bill reserve's observed state: the bucket the bills sit in.
+
+    ``external_id`` is Crew's own reserve id -- the same value the ingested bill carries
+    as ``commitments.bill_reserve_id``, which is the whole join. The owner renames
+    reserves in Crew, so nothing may key on the name.
+
+    ``total_reserved_amount`` is the reserve's total set-aside funds in dollars, or
+    ``None`` when Crew did not report it. It is the dividend D-013's even-split fallback
+    divides across the reserve's bills; ``None`` means "not reported", never "empty".
+    """
+
+    id: int
+    provider: str
+    external_id: str
+    total_reserved_amount: Optional[float]
+    currency: str
+    observed_at: Optional[str]
+    synced_at: str
+    absent_since: Optional[str]
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
 class ReimbursementRecord:
     id: int
     provider: str
@@ -1056,6 +1081,127 @@ class FinancialRepository:
             cursor = connection.execute(
                 f"""
                 UPDATE crew_funding_plans
+                SET absent_since = ?, updated_at = ?
+                WHERE provider = ?
+                    AND absent_since IS NULL
+                    {unobserved_condition}
+                """,
+                parameters,
+            )
+            return cursor.rowcount
+
+    def upsert_bill_reserve(
+        self,
+        *,
+        provider: str,
+        external_id: str,
+        total_reserved_amount: Optional[float],
+        currency: str = "USD",
+        observed_at: Optional[str] = None,
+    ) -> BillReserveRecord:
+        """Store the reserve state this provider read observed.
+
+        Keyed on Crew's own reserve id so a rename updates the record the app already
+        cites rather than creating a second one, and re-observing a reserve a previous
+        complete read retired clears ``absent_since``.
+
+        ``None`` means the read did not report the total, which is not evidence that the
+        bucket is empty, so it never overwrites a total Meridian already knew -- the same
+        rule C01 applies to a single bill's reserve. A reported ``0.0`` does overwrite,
+        because an emptied bucket is a real observation.
+        """
+        timestamp = _now()
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO crew_bill_reserves (
+                    provider, external_id, total_reserved_amount, currency,
+                    observed_at, synced_at, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(provider, external_id) DO UPDATE SET
+                    total_reserved_amount = COALESCE(
+                        excluded.total_reserved_amount,
+                        crew_bill_reserves.total_reserved_amount
+                    ),
+                    currency = excluded.currency,
+                    observed_at = CASE
+                        WHEN excluded.total_reserved_amount IS NULL
+                        THEN crew_bill_reserves.observed_at
+                        ELSE excluded.observed_at
+                    END,
+                    synced_at = excluded.synced_at,
+                    absent_since = NULL,
+                    updated_at = excluded.updated_at
+                """,
+                (
+                    provider,
+                    external_id,
+                    total_reserved_amount,
+                    currency,
+                    observed_at,
+                    timestamp,
+                    timestamp,
+                    timestamp,
+                ),
+            )
+            row = connection.execute(
+                "SELECT * FROM crew_bill_reserves WHERE provider = ? AND external_id = ?",
+                (provider, external_id),
+            ).fetchone()
+        assert row is not None
+        return BillReserveRecord(**dict(row))
+
+    def get_bill_reserve(self, provider: str, external_id: str) -> Optional[BillReserveRecord]:
+        """One stored reserve whether current or retired, or None."""
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM crew_bill_reserves WHERE provider = ? AND external_id = ?",
+                (provider, external_id),
+            ).fetchone()
+        return BillReserveRecord(**dict(row)) if row is not None else None
+
+    def list_bill_reserves(self) -> list[BillReserveRecord]:
+        """The reserves currently observed.
+
+        Retired reserves are excluded rather than deleted: resolution must not divide a
+        withdrawn bucket, while the row still documents that the reserve existed and when
+        it stopped being returned.
+        """
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT * FROM crew_bill_reserves
+                WHERE absent_since IS NULL
+                ORDER BY observed_at DESC, id DESC
+                """
+            ).fetchall()
+        return [BillReserveRecord(**dict(row)) for row in rows]
+
+    def mark_absent_bill_reserves(
+        self,
+        *,
+        provider: str,
+        observed_external_ids: Sequence[str],
+        absent_since: Optional[str] = None,
+    ) -> int:
+        """Record that a complete read no longer returns these reserves.
+
+        Same discipline as the account, bill and funding-plan absence rules: only a
+        complete, error-free read may reach here (the caller enforces that), the row is
+        never deleted, and a reserve already concluded absent is left untouched.
+        """
+        timestamp = absent_since or _now()
+        observed = tuple(observed_external_ids)
+        unobserved_condition = ""
+        parameters: tuple[object, ...] = (timestamp, timestamp, provider)
+        if observed:
+            placeholders = ", ".join("?" for _ in observed)
+            unobserved_condition = f" AND external_id NOT IN ({placeholders})"
+            parameters += observed
+        with self._connect() as connection:
+            cursor = connection.execute(
+                f"""
+                UPDATE crew_bill_reserves
                 SET absent_since = ?, updated_at = ?
                 WHERE provider = ?
                     AND absent_since IS NULL

@@ -33,16 +33,17 @@ def test_income_rows_do_not_render_a_funding_status():
     assert "obs-event-meta" not in guard
     # OS-048 puts the observed funding SOURCE ahead of the reservation status here, and
     # the status stays the fallback, so a bill with no observed source still reads its
-    # honest "Funding unknown". The guard above is what keeps income out of both.
-    assert (
-        "meta.textContent = fundingSourceSummary(event) || fundingLabel(event.fundingStatus);"
-        in rest
-    )
+    # honest "Funding unknown". OS-048b adds the stated reserved amount to the same line,
+    # still as a fallback chain that ends in that status word. The guard above is what
+    # keeps income out of all three.
+    assert "fundingReserveSummary(event)" in rest
+    assert "fundingSourceSummary(event)" in rest
+    assert "fundingLabel(event.fundingStatus)" in rest
     assert "body.append(meta);" in rest
 
 
 def test_bills_keep_the_funding_status_including_its_honest_unknown():
-    """The rule being removed must not be removed for bills, where "unknown" is the
+    """The rule being narrowed must not be narrowed for bills, where "unknown" is the
     deliberate refusal to spread one reserve across every future occurrence."""
     script = DIAL_JS.read_text(encoding="utf-8")
     assert 'unknown: "Funding unknown",' in script
@@ -50,9 +51,12 @@ def test_bills_keep_the_funding_status_including_its_honest_unknown():
     assert "function fundingLabel(status)" in script
 
     service = DIAL_PY.read_text(encoding="utf-8")
-    # The bill branch still refuses to claim a reserve covers an occurrence.
+    # D-013 permits a figure, but only on one occurrence: the bill branch states it on the
+    # first and falls back to "unknown" for every later one, so no reserve is multiplied
+    # across the future dates (D-010).
+    assert "first_occurrence" in service
     assert '"fundingStatus": "unknown",' in service
-    assert "does not safely link one reserve to each" in service
+    assert '"fundingBasis": basis,' in service
 
 
 def test_the_projection_does_not_claim_crew_provenance_for_a_local_paycheck():

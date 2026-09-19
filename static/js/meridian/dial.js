@@ -182,6 +182,20 @@ function normalizeEvent(event) {
     fundingSourceCandidateIds: Array.isArray(event.fundingSourceCandidateIds)
       ? event.fundingSourceCandidateIds.slice()
       : [],
+    // The basis of the reserved amount above (D-013). Normalised to the service's own
+    // vocabulary and defaulted to "unknown", so a payload that predates this slice — or
+    // a figure that arrives without provenance — can never be rendered as an observation.
+    fundingBasis:
+      event.fundingBasis === "observed" || event.fundingBasis === "derived"
+        ? event.fundingBasis
+        : "unknown",
+    fundingBasisDivisor:
+      event.fundingBasisDivisor == null ? null : Number(event.fundingBasisDivisor),
+    fundingAttribution:
+      event.fundingAttribution === "crew" || event.fundingAttribution === "meridian"
+        ? event.fundingAttribution
+        : null,
+    fundingObservedAt: event.fundingObservedAt || null,
     source: event.source || "crew",
     observedAt: event.observedAt || null,
     evidenceIds: Array.isArray(event.evidenceIds) ? event.evidenceIds : [],
@@ -270,6 +284,22 @@ function formatCenterDate(key) {
 }
 
 
+/* Date without the time of day. Used where the exact instant is already stamped
+   elsewhere in the same view (the ticket header), and where repeating it costs several
+   wrapped lines at the mobile viewport. */
+function formatObservedDate(value) {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return String(value);
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(parsed);
+}
+
 function formatObservedAt(value) {
   if (!value) {
     return "Observation time unavailable";
@@ -314,9 +344,14 @@ function renderInstrumentOverlay(state) {
     kicker.textContent = formatCenterDate(selected.date);
     title.textContent = selected.title;
     amount.textContent = minorToDisplay(selected.amount) || "—";
-    // The observed source names the bill's funder; the reservation amount stays a
-    // separate question, so the status word is only shown while no source is known.
-    status.textContent = fundingSourceSummary(selected) || fundingLabel(selected.fundingStatus);
+    // The reserved amount, when it may honestly be stated, is the strongest thing this
+    // readout can say about the selected bill; the source identity follows it, and the
+    // bare status word is only shown while neither is known. The date prefix is spelled
+    // out here because the centre has no adjacent date label of its own.
+    status.textContent =
+      fundingReserveLine(selected) ||
+      fundingSourceSummary(selected) ||
+      fundingLabel(selected.fundingStatus);
   } else if (state.model.availableToSpend && state.model.availableToSpend.minor != null) {
     kicker.textContent = "Safe to spend";
     title.textContent = "";
@@ -420,6 +455,87 @@ export function fundingSourceValue(event) {
 export function fundingSourceSummary(event) {
   const value = fundingSourceValue(event);
   return value ? `Funding source: ${value}` : "";
+}
+
+/* The reserved amount, and — the part that matters — the basis it may be claimed on
+   (D-013). The service emits a figure only for the earliest occurrence in the horizon,
+   so the same reserve is never multiplied across future due dates (D-010), and every
+   figure arrives with `fundingBasis`:
+
+     observed  Crew reported this bill's own reservedAmount.
+     derived   Meridian's even split of the reserve's observed total set-aside funds.
+               It is labelled as an estimate and is never attributed to Crew.
+     unknown   nothing is stated, and no figure is shown.
+
+   A figure with no basis is rendered as nothing at all: an unlabelled number could only
+   be read as an observation, which is exactly what D-013 forbids. */
+
+function isStatedFigure(event) {
+  const basis = event && event.fundingBasis;
+  return basis === "observed" || basis === "derived";
+}
+
+function shortfallText(event) {
+  const amountMinor = event.amount && event.amount.minor != null ? Number(event.amount.minor) : 0;
+  const reservedMinor =
+    event.reserved && event.reserved.minor != null ? Number(event.reserved.minor) : 0;
+  // A reserve above the obligation is a surplus, never a negative shortfall.
+  const remainingMinor = Math.max(0, amountMinor - reservedMinor);
+  if (remainingMinor <= 0) return "";
+  return minorToDisplay({ minor: remainingMinor, currency: event.amount.currency });
+}
+
+export function fundingReserveValue(event) {
+  if (!event || !isStatedFigure(event)) return "";
+  const amount = minorToDisplay(event.amount);
+  const reserved = event.reserved && event.reserved.minor != null
+    ? minorToDisplay(event.reserved)
+    : null;
+  if (reserved && event.reserved.minor > 0) {
+    const short = shortfallText(event);
+    return short ? `${reserved} of ${amount} set aside — ${short} short`
+                 : `${reserved} of ${amount} set aside`;
+  }
+  // A stated zero: Crew reported an emptied reserve, which is a fact, unlike silence.
+  if (event.fundingStatus === "unfunded") return `${amount} — not yet set aside`;
+  return "";
+}
+
+export function fundingReserveSummary(event) {
+  const value = fundingReserveValue(event);
+  if (!value) return "";
+  // D-013: a derived figure must be labelled wherever it is stated, not only in the
+  // ticket. The row gets the compact marker; the ticket carries the divisor.
+  if (event.fundingBasis === "derived") {
+    return `${value} (Meridian estimate)`;
+  }
+  return value;
+}
+
+/* The day-context form: the same statement, naming the occurrence it belongs to. Used
+   where the date is not already the adjacent label (the centre readout and the
+   accessibility text), never twice in one row. */
+export function fundingReserveLine(event) {
+  const summary = fundingReserveSummary(event);
+  if (!summary || !event.date) return "";
+  return `Next due ${formatShortDay(event.date)} · ${summary}`;
+}
+
+/* The bill-level provenance for the evidence ticket. A derived figure names its divisor
+   and Meridian as its author; an observed one names the provider read that reported it.
+   Neither is ever mixed: a derivation must not read as an observation. */
+export function fundingBasisNote(event) {
+  if (!event || !isStatedFigure(event)) return "";
+  if (event.fundingBasis === "derived") {
+    const count = Number(event.fundingBasisDivisor);
+    const bills = count === 1 ? "1 bill" : `${count} bills`;
+    return `Meridian estimate, split across ${bills}`;
+  }
+  const by = event.fundingAttribution === "crew" ? "observed from Crew" : "Meridian-side amount";
+  // Date only: the ticket header already stamps the full observation time, and repeating
+  // the time of day here wrapped the value over three extra lines at the mobile viewport.
+  const observed = event.fundingObservedAt ? formatObservedDate(event.fundingObservedAt) : "";
+  return observed ? `${by} · ${observed}` : by;
 }
 
 /* Kit README semantic mapping. The dial service emits only `kind` plus the
@@ -648,7 +764,13 @@ function describeSelectedDay(state) {
   if (!events.length) return `${dateText}, no scheduled money moments`;
   const parts = events.map((event) => {
     const amount = minorToDisplay(event.amount);
-    const funding = fundingSourceSummary(event) || fundingLabel(event.fundingStatus);
+    // The figure first — it is the answer to "how much is set aside for this one" — then
+    // who funds the bill. The basis stays attached to the figure so the spoken text
+    // carries the same distinction the row does.
+    const funding =
+      fundingReserveSummary(event) ||
+      fundingSourceSummary(event) ||
+      fundingLabel(event.fundingStatus);
     return `${event.title}, ${amount || "amount unavailable"}, ${funding}`;
   });
   return `${dateText}, ${parts.join("; ")}`;
@@ -724,10 +846,16 @@ function renderEventList(state, container) {
       if (event.kind !== "income") {
         const meta = document.createElement("span");
         meta.className = "obs-event-meta";
-        // An observed funding source is a stronger statement than "unknown", and it
-        // is a different statement: this row names the funder, the evidence ticket
-        // still reports the reservation status beside it.
-        meta.textContent = fundingSourceSummary(event) || fundingLabel(event.fundingStatus);
+        // A stated reserved amount is a stronger statement than "unknown", and it is a
+        // different statement from the source identity, which is why the two are joined
+        // rather than substituted for one another: the source is a fact about the bill on
+        // every row, the figure belongs to the one occurrence it was measured against.
+        // fundingReserveSummary (not the bare value) so a derived figure is labelled here
+        // too -- a row must not read as an observation.
+        const reserveValue = fundingReserveSummary(event);
+        const sourceSummary = fundingSourceSummary(event);
+        meta.textContent = [sourceSummary, reserveValue].filter(Boolean).join(" · ")
+          || fundingLabel(event.fundingStatus);
         body.append(meta);
       }
       const amount = document.createElement("strong");
@@ -882,7 +1010,18 @@ function renderEvidenceTicket(state, event) {
     // Identity first, then what is still unresolved about the money.
     rowData.push(["Funding source", sourceValue]);
   }
-  if (event.reserved && event.reserved.minor != null) {
+  if (isStatedFigure(event)) {
+    // The bill-level statement, with its author: "$1,200.00 · observed from Crew ·
+    // Sep 8, 2026" or "$65.00 · Meridian estimate, split across 3 bills". The label stays
+    // short on purpose: the ticket's row grid gives AMOUNT / FUNDING SOURCE / RESERVED
+    // widths this long label overflows at 420px, where a wrapped label collided with its
+    // own value. A stated-zero reserve reads "$0.00" here while the row states it in
+    // words, so the ticket never has to invent a figure for missing data.
+    const figure = event.reserved && event.reserved.minor > 0
+      ? minorToDisplay(event.reserved)
+      : minorToDisplay({ minor: 0, currency: event.amount.currency });
+    rowData.push(["Set aside", `${figure} · ${fundingBasisNote(event)}`]);
+  } else if (event.reserved && event.reserved.minor != null) {
     rowData.push(["Reserved", minorToDisplay(event.reserved)]);
   } else {
     rowData.push(["Funding", fundingLabel(event.fundingStatus)]);

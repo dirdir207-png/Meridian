@@ -1,10 +1,15 @@
 """Read-only Observatory dial view model.
 
 This builds the dated event horizon from normalized Meridian records only. It
-never performs a mutation and never invents missing financial facts. Where the
-current data model does not yet link a bill reserve to a specific occurrence,
-the dial deliberately reports ``fundingStatus: "unknown"`` and omits a reserved
-amount rather than misrepresenting one reserve across every future due date.
+never performs a mutation and never invents missing financial facts.
+
+A bill's reserved amount follows D-013's order of authority: a provider-reported
+per-bill figure is an observation and wins; otherwise an even split of the
+reserve's observed total set-aside funds across the bills in that reserve may be
+stated, labelled as the Meridian estimate it is; otherwise the amount stays
+unknown. Payload additions carry their basis, so a derivation can never be read as
+an observation, and a figure is stated for a single dated occurrence rather than
+spread across the future ones it would otherwise appear to multiply into.
 """
 
 from datetime import date, datetime, timedelta
@@ -181,13 +186,98 @@ def _resolve_funding_source(commitment, sources: dict[tuple[str, str], list]):
     return None, ()
 
 
+def _reserve_totals_by_reserve(graph) -> dict:
+    """Index the currently observed reserve totals by (provider, reserve id).
+
+    A retired reserve is excluded for the same reason a retired plan is: dividing a
+    bucket a complete read no longer returns would state a figure from withdrawn
+    evidence. The total itself stays nullable -- ``None`` is "not reported", never an
+    emptied bucket -- so this index carries the absence through rather than zeroing it.
+    """
+    index: dict[tuple[str, str], dict] = {}
+    for reserve in graph.list_bill_reserves():
+        index[(reserve.provider, reserve.external_id)] = {
+            "total": reserve.total_reserved_amount,
+            "observedAt": reserve.observed_at,
+        }
+    return index
+
+
+def _bill_counts_by_reserve(commitments: Sequence[Commitment]) -> dict:
+    """How many bills each reserve contains, for the even split's divisor.
+
+    Counted from the same rows the horizon is built from, keyed the same way the plan
+    and reserve indexes are (provider + the provider's own reserve id). A bill whose
+    membership was never observed carries ``""`` and can neither be counted nor
+    resolved, which is what keeps an unobserved link from silently joining a bucket.
+    """
+    counts: dict[tuple[str, str], int] = {}
+    for commitment in commitments:
+        if commitment.type is not CommitmentType.BILL:
+            continue
+        reserve_id = getattr(commitment, "bill_reserve_id", "") or ""
+        provider = getattr(commitment, "legacy_source", None)
+        if not reserve_id or not provider:
+            continue
+        counts[(provider, reserve_id)] = counts.get((provider, reserve_id), 0) + 1
+    return counts
+
+
+def _reserve_figure(
+    commitment,
+    amount: float,
+    totals: dict,
+    counts: dict,
+):
+    """The reserved figure for one bill, with the basis it may be claimed on.
+
+    Returns ``(funded, status, basis, divisor, attribution, observed_at)``. Precedence
+    is D-013's, in order:
+
+    * **observed** -- Crew reported this bill's own ``reservedAmount`` (024's flag says
+      so, because the NOT NULL column cannot distinguish a reported 0 from silence).
+      Attributed to Crew only when the row itself came from Crew; a local bill's own
+      figure is Meridian-side money and is never called Crew's.
+    * **derived** -- the bill's own figure was never reported, but the reserve's total
+      set-aside funds was observed, so one share is ``total / bills in the reserve``.
+      Labelled ``derived`` with its divisor and attributed to Meridian.
+    * **unknown** -- neither. Nothing is stated.
+    """
+    provider = getattr(commitment, "legacy_source", None)
+    reserve_id = getattr(commitment, "bill_reserve_id", "") or ""
+
+    if getattr(commitment, "reserved_amount_reported", False):
+        funded = commitment.funded_amount or 0.0
+        status = "reserved" if funded >= amount else ("partial" if funded > 0 else "unfunded")
+        return (
+            funded,
+            status,
+            "observed",
+            None,
+            "crew" if provider == "crew" else "meridian",
+            commitment.updated_at or None,
+        )
+
+    observation = totals.get((provider, reserve_id)) if provider and reserve_id else None
+    divisor = counts.get((provider, reserve_id), 0) if provider and reserve_id else 0
+    if observation is not None and observation["total"] is not None and divisor > 0:
+        share = observation["total"] / divisor
+        status = "reserved" if share >= amount else ("partial" if share > 0 else "unfunded")
+        return share, status, "derived", divisor, "meridian", observation["observedAt"]
+
+    return None, "unknown", "unknown", None, None, None
+
+
 def _commitment_events(
     commitments: Sequence[Commitment],
     as_of: date,
     horizon_end: date,
     funding_sources: Optional[dict[tuple[str, str], list]] = None,
+    reserve_totals: Optional[dict] = None,
 ) -> list[dict]:
     sources = funding_sources if funding_sources is not None else {}
+    totals = reserve_totals if reserve_totals is not None else {}
+    counts = _bill_counts_by_reserve(commitments)
     events: list[dict] = []
     for commitment in commitments:
         if commitment.type not in (CommitmentType.BILL, CommitmentType.GOAL):
@@ -203,7 +293,38 @@ def _commitment_events(
             funding_source, ambiguous_ids = _resolve_funding_source(commitment, sources)
             current, period = next_occurrence_with_index(anchor, recurrence, as_of)
             guard = 0
+            first_occurrence = True
             while current <= horizon_end and guard < 200:
+                if first_occurrence:
+                    (
+                        funded,
+                        status,
+                        basis,
+                        divisor,
+                        attribution,
+                        basis_observed_at,
+                    ) = _reserve_figure(commitment, amount, totals, counts)
+                    reserved = (
+                        {
+                            "minor": _minor(funded, commitment.currency),
+                            "currency": commitment.currency,
+                        }
+                        if funded is not None and funded > 0
+                        else None
+                    )
+                else:
+                    # D-010/D-013: one reserve is not a per-occurrence amount. Repeating
+                    # this bill's figure on every future due date would read as several
+                    # times the money, so the later occurrences stay plainly unresolved
+                    # while the source identity above still holds on every row.
+                    status, basis, divisor, attribution, basis_observed_at = (
+                        "unknown",
+                        "unknown",
+                        None,
+                        None,
+                        None,
+                    )
+                    reserved = None
                 events.append(
                     {
                         "id": f"bill-{commitment.id}-{current.isoformat()}",
@@ -214,12 +335,17 @@ def _commitment_events(
                             "minor": _minor(amount, commitment.currency),
                             "currency": commitment.currency,
                         },
-                        # Current data does not safely link one reserve to each
-                        # future occurrence, so do not claim reserved/partial. What
-                        # IS observed is which funding source the bill belongs to,
-                        # reported separately below and never as a reserved amount.
-                        "fundingStatus": "unknown",
-                        "reserved": None,
+                        "fundingStatus": status,
+                        "reserved": reserved,
+                        # Basis travels with the figure (D-013): "observed" is Crew's own
+                        # per-bill number, "derived" is Meridian's even split of the
+                        # reserve total and says so with its divisor, "unknown" states
+                        # nothing. A consumer can therefore never present a derivation as
+                        # an observation, and never attribute one to Crew.
+                        "fundingBasis": basis,
+                        "fundingBasisDivisor": divisor,
+                        "fundingAttribution": attribution,
+                        "fundingObservedAt": basis_observed_at,
                         "fundingSource": funding_source,
                         "fundingSourceAmbiguous": bool(ambiguous_ids),
                         "fundingSourceCandidateIds": list(ambiguous_ids),
@@ -233,6 +359,7 @@ def _commitment_events(
                         "detailHref": "/meridian?workspace=plan",
                     }
                 )
+                first_occurrence = False
                 # Anchor-preserving step: measured from the original anchor and
                 # tracked by period index, so a February clamp does not become the
                 # permanent day and no occurrence is skipped or repeated.
@@ -345,7 +472,11 @@ def build_dial(
     horizon_end = _horizon(graph, paycheck, as_of)
 
     events = _commitment_events(
-        commitments, as_of, horizon_end, _funding_sources_by_reserve(graph)
+        commitments,
+        as_of,
+        horizon_end,
+        _funding_sources_by_reserve(graph),
+        _reserve_totals_by_reserve(graph),
     )
     events.extend(_paycheck_events(paycheck, as_of, horizon_end))
     events.sort(key=lambda event: (event["date"], event["kind"], event["title"]))

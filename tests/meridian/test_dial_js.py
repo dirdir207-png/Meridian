@@ -492,3 +492,134 @@ def test_the_day_arc_starts_clear_of_the_dials_building_art():
         f"building edge. -100 is the measured-safe start."
     )
     assert "const ARC_END = 120;" in js, "only the start moved; the sweep narrows to 220deg"
+
+
+def test_dial_js_states_the_reserved_amount_and_its_basis():
+    """OS-048b: the four copy states, executed rather than grepped.
+
+    D-013 fixes the precedence (an observed per-bill figure outranks a Meridian
+    derivation) and requires a derived figure to be labelled and never attributed to
+    Crew. ``test_dial_reserved_amount.py`` pins which basis the service emits; this
+    pins what the owner reads for each of them, including the two that must stay
+    silent and the surplus that must not read as a negative shortfall.
+
+    The money strings are built with the same ``Intl`` call the module uses, so the
+    assertions hold under any locale while still requiring the exact wording.
+    """
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is not available in this environment")
+    script = """
+      const dial = await import('./static/js/meridian/dial.js');
+      const { fundingReserveValue, fundingReserveSummary, fundingBasisNote,
+              fundingReserveLine } = dial;
+      const money = (minor) => new Intl.NumberFormat(undefined, {
+        style: 'currency', currency: 'USD', currencyDisplay: 'narrowSymbol',
+        minimumFractionDigits: 2, maximumFractionDigits: 2,
+      }).format(minor / 100);
+      const amount = { minor: 150000, currency: 'USD' };
+      const base = { date: '2026-10-01', amount, fundingStatus: 'reserved',
+                     fundingBasis: 'observed', fundingAttribution: 'crew',
+                     fundingObservedAt: '2026-09-11T21:00:00Z' };
+
+      // covered
+      const covered = { ...base, reserved: { minor: 150000, currency: 'USD' } };
+      const wantCovered = money(150000) + ' of ' + money(150000) + ' set aside';
+      if (fundingReserveSummary(covered) !== wantCovered) {
+        throw new Error('covered copy: ' + fundingReserveSummary(covered));
+      }
+
+      // partial, with the exact shortfall
+      const partial = { ...base, reserved: { minor: 120000, currency: 'USD' },
+                        fundingStatus: 'partial' };
+      const wantPartial = money(120000) + ' of ' + money(150000) + ' set aside \\u2014 '
+                          + money(30000) + ' short';
+      if (fundingReserveSummary(partial) !== wantPartial) {
+        throw new Error('partial copy: ' + fundingReserveSummary(partial));
+      }
+
+      // a reported zero is stated; missing data is not
+      const emptied = { ...base, reserved: null, fundingStatus: 'unfunded' };
+      const wantEmptied = money(150000) + ' \\u2014 not yet set aside';
+      if (fundingReserveSummary(emptied) !== wantEmptied) {
+        throw new Error('emptied copy: ' + fundingReserveSummary(emptied));
+      }
+      const unknown = { ...base, reserved: null, fundingStatus: 'unknown',
+                        fundingBasis: 'unknown', fundingAttribution: null };
+      if (fundingReserveSummary(unknown) !== '') throw new Error('unknown must stay silent');
+      if (fundingReserveValue({ amount, reserved: { minor: 0, currency: 'USD' } }) !== '') {
+        throw new Error('a figure with no basis must not be stated');
+      }
+
+      // a surplus is never a negative shortfall
+      const over = { ...base, reserved: { minor: 160000, currency: 'USD' } };
+      const wantOver = money(160000) + ' of ' + money(150000) + ' set aside';
+      if (fundingReserveSummary(over) !== wantOver) {
+        throw new Error('surplus copy: ' + fundingReserveSummary(over));
+      }
+
+      // derived is labelled wherever it is stated, names its divisor in the ticket, and
+      // is never Crew's
+      const derived = { ...base, reserved: { minor: 150000, currency: 'USD' },
+                        fundingBasis: 'derived', fundingAttribution: 'meridian',
+                        fundingBasisDivisor: 3 };
+      const wantDerived = money(150000) + ' of ' + money(150000)
+                          + ' set aside (Meridian estimate)';
+      if (fundingReserveSummary(derived) !== wantDerived) {
+        throw new Error('derived copy: ' + fundingReserveSummary(derived));
+      }
+      // The row uses the same function as the centre, so the label cannot be dropped
+      // from one surface while the other keeps it.
+      if (fundingReserveValue(derived).indexOf('Meridian estimate') !== -1) {
+        throw new Error('only the summary may carry the basis label');
+      }
+      if (fundingBasisNote(derived) !== 'Meridian estimate, split across 3 bills') {
+        throw new Error('derived note: ' + fundingBasisNote(derived));
+      }
+      if (fundingBasisNote(derived).indexOf('Crew') !== -1) {
+        throw new Error('a derivation must never be attributed to Crew');
+      }
+      if (fundingBasisNote(derived).indexOf('observed') !== -1) {
+        throw new Error('a derivation must never read as an observation');
+      }
+      if (fundingReserveSummary(derived).indexOf('Crew') !== -1) {
+        throw new Error('a derivation must never be attributed to Crew on the row either');
+      }
+      if (fundingBasisNote(covered).indexOf('observed from Crew') !== 0) {
+        throw new Error('observed note: ' + fundingBasisNote(covered));
+      }
+
+      // the day-context line carries the date the figure belongs to
+      const short = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' })
+        .format(new Date(2026, 9, 1));
+      if (fundingReserveLine(covered) !== 'Next due ' + short + ' \\u00b7 ' + wantCovered) {
+        throw new Error('day line: ' + fundingReserveLine(covered));
+      }
+      if (fundingReserveLine(unknown) !== '') throw new Error('no figure, no day line');
+    """
+    result = subprocess.run(
+        [node, "--input-type=module", "-e", script],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_dial_js_ticket_states_the_bill_level_basis():
+    """The ticket carries the bill's own figure and where it came from.
+
+    Grep is enough here because the Node test above already executed the copy: this
+    only pins that the ticket uses it, and that a bill with a stated figure no longer
+    falls through to the unresolved "Funding" row.
+    """
+    js = _read("static/js/meridian/dial.js")
+    # The label is deliberately the short form: the ticket's row grid sizes its label
+    # column for AMOUNT / FUNDING SOURCE / RESERVED, and "Set aside for this bill" wrapped
+    # onto a second line that collided with its own value at 420px (measured in
+    # tests/browser/test_dial_reserved_amount.py, which pins that they cannot overlap).
+    assert 'rowData.push(["Set aside", `${figure} · ${fundingBasisNote(event)}`])' in js
+    assert "fundingBasisNote(event)" in js
+    # The unresolved row survives for the cases that are genuinely unknown.
+    assert 'rowData.push(["Funding", fundingLabel(event.fundingStatus)])' in js
