@@ -48,7 +48,7 @@
       "type": "crew_initiate_transfer",
       "verification": "readback",
       "check": "crew-transfer-readback",
-      "note": "Fresh complete provider snapshot; confirms the provider-returned transfer id appears on an observed transaction. Absence from a single read cannot confirm failure — only presence confirms success. Pagination may hide the transfer on an unobserved page, so the receipt stays unresolved when the transfer is not seen in the fetched page."
+      "note": "Fresh complete provider snapshot; confirms the provider-returned transfer id appears on an observed transaction. Absence from a single read cannot confirm failure \u2014 only presence confirms success. Pagination may hide the transfer on an unobserved page, so the receipt stays unresolved when the transfer is not seen in the fetched page."
     },
     {
       "type": "top_up_crew_reserve",
@@ -145,6 +145,12 @@
       "verification": "readback",
       "check": "commitment-state-reread",
       "note": "Local re-read of the created commitment."
+    },
+    {
+      "type": "archive_commitment",
+      "verification": "readback",
+      "check": "commitment-archived-reread",
+      "note": "Local planning records only; never contacts Crew. Refuses any commitment carrying a Crew bill id, which must travel archive_crew_bill so the change can be verified with the provider. Verifies the STORED status is archived rather than trusting the write, and a row that is missing is unverified rather than assumed. Archiving keeps the row and its history, which is what makes the control reversible."
     }
   ],
   "memory_action_types": [

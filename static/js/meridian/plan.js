@@ -680,6 +680,56 @@ function renderCommitments(root, plan, template) {
         })();
       });
       actionCell.appendChild(del);
+    } else {
+      // A local planning record has no Crew bill behind it, so neither "Save to Crew" nor
+      // the Crew delete applies -- and until now that left the row with NO removal path at
+      // all. The owner had four stuck "Journey Test Bill" rows and no way to clear them.
+      // This archives locally through the same proposal/execution/verification pipeline: it
+      // never contacts the provider, and the executor refuses any row that does carry a
+      // Crew bill id, so the two delete controls can never both apply to one row.
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "m-button m-button--quiet m-button--small m-button--danger";
+      del.textContent = "Delete";
+      del.setAttribute("aria-label", `Delete commitment ${commitment.name}`);
+      del.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (!window.confirm(`Delete "${commitment.name}"? This cannot be undone.`)) {
+          return;
+        }
+        (async () => {
+          const note = document.createElement("p");
+          note.className = "m-action-note";
+          note.dataset.state = "ok";
+          try {
+            const result = await meridianMutate({
+              type: "archive_commitment",
+              params: { commitment_id: commitment.id },
+              provenance: "owner_direct",
+              rationale: `Delete the local commitment ${commitment.name} from Meridian.`,
+            });
+            const outcome = describeActionOutcome(result, {
+              verifiedMessage: `${commitment.name} was deleted and verified.`,
+            });
+            note.dataset.state = outcome.tone;
+            note.textContent = outcome.message;
+            // One archive only: the row is concluded, so leave the control dead rather
+            // than allowing a second request against it.
+            del.disabled = true;
+            if (outcome.refresh) {
+              setTimeout(() => loadPlan(), 600);
+            }
+          } catch (error) {
+            note.dataset.state = "error";
+            note.textContent =
+              error instanceof MeridianApiError
+                ? `${error.message} ${error.recoveryAction}`
+                : "The commitment could not be deleted.";
+          }
+          actionCell.appendChild(note);
+        })();
+      });
+      actionCell.appendChild(del);
     }
 
     row.append(nameCell, fundedCell, nextCell, actionCell);

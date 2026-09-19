@@ -70,7 +70,7 @@ from crew.renewal import GuidedRenewalService, sanitize_status_payload
 from crew.transports import BrokerCrewTransport
 from meridian.ai.advisor import ContextualAdvisor, MeridianContextBuilder
 from meridian.api import meridian_api
-from meridian.commitments import CommitmentRepository, CommitmentType
+from meridian.commitments import CommitmentRepository, CommitmentStatus, CommitmentType
 from meridian.memory_actions import (
     MEMORY_ACTION_TYPES,
     asset_executors,
@@ -1001,6 +1001,55 @@ def verify_create_commitment_action(params, result):
         "check": "commitment-state-reread",
     }
 
+
+def _apply_archive_commitment(params):
+    """Archive a LOCAL commitment -- one with no Crew bill behind it.
+
+    CommitmentRepository.archive() has existed and been tested since the absence
+    reconciliation work, but no action type or control ever reached it, so a local
+    planning record could be created and then never removed (the owner had four
+    "Journey Test Bill" rows stuck that way). Crew-backed bills travel the separate
+    archive_crew_bill path, which also has to push the change to the provider; this one
+    writes locally and contacts nothing, the same as update_funding_rule.
+
+    Archiving rather than deleting is deliberate: the repository already models an
+    archived commitment as "keeps its history, stops being a current observation", it is
+    excluded from listing, and it is therefore reversible -- which is the conservative
+    choice for a destructive control.
+    """
+    commitment_id = params.get("commitment_id")
+    if commitment_id is None:
+        return {"success": False, "error": "commitment_id is required"}
+    repository = CommitmentRepository(DB_FILE)
+    existing = repository.get(int(commitment_id))
+    if existing is None:
+        return {"success": False, "error": "commitment not found"}
+    # A Crew-backed bill must not be concluded absent by a local archive: that is a
+    # provider fact, and its own path is the one that can verify it with Crew.
+    if getattr(existing, "legacy_source", None) == "crew" and getattr(existing, "legacy_id", None):
+        return {"success": False, "error": "crew-backed commitment; use the Crew bill path"}
+    archived = repository.archive(int(commitment_id))
+    return {
+        "success": True,
+        "commitment_id": int(commitment_id),
+        "status": archived.status.value if archived else None,
+    }
+
+
+def verify_archive_commitment_action(params, result):
+    """Read the row back rather than trusting the write.
+
+    An archived commitment keeps its row, so the check is the stored status, not
+    absence -- and if the row is gone entirely the write is unverified rather than
+    assumed successful.
+    """
+    commitment_id = (result or {}).get("commitment_id") or params.get("commitment_id")
+    stored = CommitmentRepository(DB_FILE).get(int(commitment_id)) if commitment_id else None
+    return {
+        "ok": stored is not None and stored.status == CommitmentStatus.ARCHIVED,
+        "check": "commitment-archived-reread",
+    }
+
 action_store = ActionStore(
     db_path=DB_FILE,
     allowed_types=(
@@ -1008,6 +1057,7 @@ action_store = ActionStore(
         "scheduled_move_money",
         "update_funding_rule",
         "create_commitment",
+        "archive_commitment",
         "update_crew_bill",
         "update_crew_bill_reserve_settings",
         "create_crew_autopilot_rule",
@@ -1053,6 +1103,12 @@ action_executors = {
     "create_commitment": ExecutorSpec(
         execute=_apply_create_commitment,
         verifier=verify_create_commitment_action,
+    ),
+    # Local planning records only; a Crew-backed bill uses archive_crew_bill, which
+    # can verify the change with the provider.
+    "archive_commitment": ExecutorSpec(
+        execute=_apply_archive_commitment,
+        verifier=verify_archive_commitment_action,
     ),
 }
 
