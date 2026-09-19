@@ -23,8 +23,7 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Agent | Files claimed | Since | Status |
 |---|---|---|---|
-| DeepSeek (adopting the visual checkpoint) | `docs/project/{AGENT_COORDINATION.md,agent-claims.json,CURRENT_STATUS.md,VISUAL_CORRECTIONS_2026-09-19.md,DEEPSEEK_HANDOFF_2026-09-19.md}` | 2026-09-19 | **Active.** Adopted the `codex-owner-rulings` checkpoint on the owner's explicit handoff. Reproduced its evidence independently (55 focused tests, `node --check`, Ruff, guardrails, asset hash, capture manifests) and corrected one measured-evidence error in the docs: the Settings 32px overflow is at the 1024×768 **tablet** viewport, not "mobile". No code, provider or live operation in this adoption. |
-| Codex owner-rulings | `docs/project/{agent-claims.json,AGENT_COORDINATION.md,MERIDIAN_DECISIONS.md,CURRENT_STATUS.md,MERIDIAN_OS_TASKS.json,HANDOFF_FOR_ASTRA_2026-09-19.md,DEEPSEEK_HANDOFF_2026-09-19.md}`, `design/observatory-sun-2026-09-19/**`, `static/css/meridian/activity.css`, `static/js/meridian/activity.js` (comment), `static/img/meridian/observatory/sun-engraving-2026-09-19.png`, `artifacts/observatory-sun-2026-09-19/**` | 2026-09-19 | **Adopted and released** by DeepSeek on the owner's handoff; the row above records the adoption and the corrected 32px viewport attribution. Scope as declared: owner-approved visual pass. Additional scope: `artifacts/visual-pass-2026-09-19/**`, `docs/project/VISUAL_CORRECTIONS_2026-09-19.md`, `design-qa.md` (declared, unmodified), wordmark partial/shell CSS, Settings template, preview/capture scripts, `tests/meridian/test_settings_visual_preview.py`. Sun work preserved. No provider/live operation. |
+| Codex owner-rulings | `docs/project/{agent-claims.json,AGENT_COORDINATION.md,MERIDIAN_DECISIONS.md,CURRENT_STATUS.md,MERIDIAN_OS_TASKS.json,HANDOFF_FOR_ASTRA_2026-09-19.md,DEEPSEEK_HANDOFF_2026-09-19.md}`, `design/observatory-sun-2026-09-19/**`, `static/css/meridian/activity.css`, `static/js/meridian/activity.js` (comment), `static/img/meridian/observatory/sun-engraving-2026-09-19.png`, `artifacts/observatory-sun-2026-09-19/**` | 2026-09-19 | **released** at `052ab3e` (adopted and committed by DeepSeek; the adoption row was removed on release and the evidence is in the log entry of that date). Scope as declared: owner-approved visual pass. Additional scope: `artifacts/visual-pass-2026-09-19/**`, `docs/project/VISUAL_CORRECTIONS_2026-09-19.md`, `design-qa.md` (declared, unmodified), wordmark partial/shell CSS, Settings template, preview/capture scripts, `tests/meridian/test_settings_visual_preview.py`. Sun work preserved. No provider/live operation. |
 | Builder (this lane) | `docs/project/*` (roadmap, plans, decisions, claims, coordination), `scripts/check_guardrails.py`, `tests/test_check_guardrails.py`, `tests/test_concept_coverage.py`, `AGENTS.md`, `.dockerignore` | 2026-09-13 | **released** 2026-09-16. The `docs/project/*` portion of this blanket claim is superseded by the path-scoped per-slice claims logged below, each released at its own commit; no work is held under this row. `scripts/check_guardrails.py`, `tests/test_concept_coverage.py` and `.dockerignore` were not modified by this lane's recent slices. |
 | Astra | `scripts/verify_readiness.py`, `tests/test_readiness_tools.py`, `docs/project/MERIDIAN_READINESS_AUDIT.md`, `docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md`, `artifacts/readiness-2026-09-13/**` | 2026-09-13 | **released** at `648be9f`; retained as a declared-scope record, not a work lock (Astra's own wording) |
 | Builder (C4 create readback) | `meridian/crew_write_actions.py`, `tests/meridian/test_crew_write_actions.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-13 | **released** at `41387f5`; retained as a declared-scope record |
@@ -86,6 +85,43 @@ would have reverted three commits had it been applied. This file is the channel.
 | Builder (OS-051: governable paycheck-learning floor and nested reset) | `meridian/paycheck_learning.py`, `meridian/paycheck.py`, `meridian/payday.py`, `meridian/services/payday.py`, `meridian/api.py`, `templates/meridian/partials/payday-funding.html`, `static/js/meridian/payday.js`, `static/css/meridian/settings.css`, `tests/meridian/test_paycheck_learning.py`, `tests/meridian/test_expected_income_rule.py`, `tests/meridian/test_payday.py`, `tests/meridian/test_settings_payday.py`, `tests/meridian/services/test_payday_settings.py`, `tests/meridian/test_api.py`, `tests/browser/test_settings_payday_learning.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/agent-claims.json` | 2026-09-19 | **released at this commit**. Meridian-local derived-number governance only: the floor/reset changes which observations are learned from, deletes no financial record, mutates no provider, and is nested under Payday & Funding. The window is applied before the income channel is chosen, so a pre-floor deposit cannot select the aggregated history. Crew plan precedence and the configured figure are untouched. Browser write follows the documented `connections.js` plain-`fetch` precedent; `api.js` allowlists were not widened. **No** provider write, deployment or authority change. |
 
 ## Log (append only — newest first)
+
+### 2026-09-19 — DeepSeek adopts and commits the owner-rulings/visual checkpoint (`052ab3e`)
+
+The Codex lane handed off the owner's 2026-09-19 rulings (`codex-owner-rulings`) as a deliberately uncommitted
+checkpoint and asked DeepSeek to reconcile the claim, reproduce the evidence, and commit it. Done: `052ab3e`
+("Meridian: owner rulings, generated sun marker, and the focused visual pass") — 20 paths, 386 insertions, no
+push and no deployment.
+
+**Reproduced, not accepted on description.** 55 focused tests passed under `.venv311/bin/python`
+(`test_settings_visual_preview`, `test_observatory_identity`, `test_auth_branding`,
+`test_activity_timeline_chrome`, `test_activity_glyph`, `test_activity_vignette` — a superset of the 42 the
+handoff claimed). `node --check static/js/meridian/activity.js`, Ruff on the changed preview/capture/test
+files, `git diff --check`, and `scripts/check_guardrails.py --agent codex-owner-rulings` (21 scope patterns,
+456 changed paths) all clean. `sun-engraving-2026-09-19.png` was re-hashed to the `asset.json` sha256
+`25e0aeca…`, with RGBA mode, 1254×1254, alpha 0–255 and 1,238,578 fully transparent pixels read back
+independently.
+
+**One measured-evidence error corrected.** The handoff, `CURRENT_STATUS.md` and
+`VISUAL_CORRECTIONS_2026-09-19.md` all described the Settings 32px overflow as "mobile". The manifests say
+otherwise: `after-main` 30 records, `after-activity` 10 and `observatory-sun` 10 with zero overflow and zero
+console errors, and `after-settings` 10 records with exactly two nonzero entries — 32px at the **1024×768
+tablet** viewport, light and dark. The 390/420/430 mobile viewports were clean. All three records now say
+tablet. The lesson to keep: the claim was right about the app and wrong about which viewport, and only reading
+the manifest back could tell the difference.
+
+**Scope held.** Documentation-only adoption plus the checkpoint's own presentation change (generated sun
+marker, round wordmark dot, ≤600px Activity row stack, Settings theme controller, read-only synthetic
+Connections preview). No provider call, database write, migration, route authority or live-preview (`:8081`)
+touch. Captures in `artifacts/observatory-sun-2026-09-19/` and `artifacts/visual-pass-2026-09-19/` stay
+untracked by convention. `design-qa.md` was declared in the claim but not modified. The pre-existing untracked
+set is intact — 2089 entries before the commit, 2082 after, the seven-file difference being exactly the newly
+tracked files.
+
+**Next slice, unchanged by this commit:** OS-048 read-side Crew bill→reserve funding source per D-010 and
+`DEEPSEEK_HANDOFF_2026-09-19.md` — retain the observed bill→reserve link during ingestion, expose source
+identity separately from occurrence reservation status, never default a missing or ambiguous link to the sole
+global plan, and perform no live sync or provider mutation.
 
 ### 2026-09-18 — ⚠ A CONCURRENT WRITER IS ACTIVE IN THIS WORKING TREE
 

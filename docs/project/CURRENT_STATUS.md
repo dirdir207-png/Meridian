@@ -2,7 +2,7 @@
 
 ## RESUME HERE — owner rulings + generated sun, verified checkpoint (2026-09-19)
 
-Canonical checkout `/Users/stephenwest/Openrouter/simplecrew-latest`, branch `feat/meridian-implementation`, base HEAD `ade532d`. Owner requested a usage-conscious clean handoff to DeepSeek with as much visual progress as feasible. The Codex lane left the work uncommitted; **DeepSeek adopted the claim, reproduced the evidence and committed the checkpoint on 2026-09-19** (SHA in the `AGENT_COORDINATION.md` log). Nothing pushed or deployed. No financial code, live DB, provider calls or writes changed. Preserve the pre-existing unrelated untracked files.
+Canonical checkout `/Users/stephenwest/Openrouter/simplecrew-latest`, branch `feat/meridian-implementation`, base HEAD `ade532d`. Owner requested a usage-conscious clean handoff to DeepSeek with as much visual progress as feasible. The Codex lane left the work uncommitted; **DeepSeek adopted the claim, reproduced the evidence and committed the checkpoint as `052ab3e`** (details in the `AGENT_COORDINATION.md` log entry of 2026-09-19). Nothing pushed or deployed. No financial code, live DB, provider calls or writes changed. Preserve the pre-existing unrelated untracked files.
 
 Read `DEEPSEEK_HANDOFF_2026-09-19.md` for exact changed paths, next steps and commands. Decisions D-010–D-012 supersede the old handoff's questions: preserve Crew's bill/source relationship; eventual full ornate icon replacement, sun-only now; September 16 wins overlapping concepts, September 18 adds missing surfaces, September 8 is fallback.
 
