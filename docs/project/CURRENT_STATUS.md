@@ -290,6 +290,58 @@ paths already proven. If it is distinct, the honest answer follows the virtual-c
 **do not add the action type**, because an allowed type with no provider capability can only fail
 with `no_executor` after the owner has approved it.
 
+
+## Handoff additions — 2026-09-19, at `e7874b6`
+
+Two owner directives arrived after the ruling above. Both are recorded here because both were
+otherwise only in conversation, and the second one is new work.
+
+### 1. CONFIRMED: the income source IS the bill-reserve funding plan
+
+Owner: *"Yes, it would be bill reserve funding plans, but I think you came to the conclusion
+already."*
+
+That is the question that sized `OS-050`, and it resolves it favourably:
+
+- The **write** path the owner requires already exists and is readback-verified:
+  `create_crew_paycheck_funding_plan` / `update_...` / `delete_...`.
+- The **read** path exists: `readback_funding_plans()`.
+- Therefore the `update_crew_virtual_card` retirement precedent **does not apply**. That
+  precedent exists for a capability the connector never exposed; here the connector exposes the
+  capability, so the work is ingestion, identity and UI rather than a new provider feature.
+- Symmetric delete is expressible: deleting in Meridian -> `delete_crew_paycheck_funding_plan`;
+  deleting in Crew -> the absence-reconciliation pattern already used for bills.
+
+### 2. NEW: the learning must be governable and resettable
+
+Owner, verbatim: *"you can implement learn check, but starting at yesterday. There needs to be a
+nested owner operable setting to reset the learning. If I change jobs and have a different pay
+rate, or at a different cadence, weekly vs bi weekly for instance, I shouldnt be including the
+learned pay from previous positions"* ... *"so it needs to be governable and resettable if
+needed"*.
+
+The requirement, stated as constraints:
+
+- Learning must respect a **floor**: only observations on or after that point count. "Starting at
+  yesterday" is the floor immediately after a reset, so a reset makes the previous history
+  ineligible rather than merely ignored by accident.
+- The floor is an **owner-operable nested setting** — nested inside the income/paycheck area, not
+  a top-level control.
+- It must be **resettable** without deleting financial records. A reset changes which
+  observations Meridian aggregates; it must never delete transactions or Crew data.
+- The reason is concrete and expected: a job change brings a different pay rate or a different
+  cadence (weekly vs biweekly), and the aggregate must not blend the previous position's pay into
+  the new one.
+
+This is a governance requirement about a **derived** number, so it stays inside Meridian: it
+governs which observations feed the learning, and it writes nothing to Crew.
+
+Note for whoever implements it: the rule now has TWO exclusions that must both hold -- the
+channel rule already shipped (aggregate only the most recently observed channel, so a retired
+payout route cannot win) and the floor rule (never look back past the reset). They are
+independent: the channel rule separates two live-ish sources, the floor rule separates this job
+from the last one.
+
 ### Open, in the order I would take them
 
 1. **The Funding Cadence link — the keystone.** Bills should read as funded by the cadence the
