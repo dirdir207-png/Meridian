@@ -213,6 +213,12 @@
   .m-settings-shell {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "topbar" "main" "dock";
+    /* The shell is bounded to the viewport and clips (see the first report: height
+       resolved to exactly the viewport with overflow hidden), and its rows previously
+       summed to exactly that height. So the content row must be the scroller: `1fr`
+       would refuse to shrink below its content and push past the clip, and a grid
+       item's automatic minimum size would refuse even with `1fr`, hence minmax(0, ...). */
+    grid-template-rows: auto minmax(0, 1fr) auto;
   }
 
   .m-settings-nav {
@@ -221,6 +227,13 @@
 
   .m-settings-main {
     padding: var(--m-space-5) var(--m-space-4) calc(var(--m-space-7) + env(safe-area-inset-bottom));
+    /* Owner report: "I am unable to scroll on the settings page". The middle column had
+       825px of content in a 784px box with overflow visible inside a clipping shell, so
+       the bottom of the page -- including the funding cadence controls -- was unreachable
+       and neither the page nor the column would scroll. */
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .m-settings-link {
