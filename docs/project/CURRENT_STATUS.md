@@ -97,6 +97,10 @@ Three consequences, all following from that one fact:
 | `2368214` | Plan view switch painted a fixed paper cream onto the page, so "Rules"/"Crew" vanished in the light edition |
 | `d833f44` | Settings could not scroll on a phone — a clipped middle row, which is what blocked reaching the Funding Cadence at all |
 | `f46880a` | `archive_commitment`: local commitments had **no removal path at all** (four stuck "Journey Test Bill" rows) |
+| `78bcf87` | Corrected my own over-claim: the funding cadence is fetched, just not ingested |
+| `91dabf9` | The paycheck projection stops attributing itself to Crew (`source: "crew"` was false, and only ever announced to assistive tech) |
+| `e7874b6` | The expected paycheck is resolved from observations, with `source`/`observedAt`/`evidenceIds`/`basis` from that resolution |
+| `ebf30f4` | The outstanding directives recorded for handoff |
 
 From the same session, earlier: the Activity timeline convergence (`22f10e5`, `b256199`,
 `2438821`), the space-key fix (`5cd16ee`), and the `:8081` restart record (`8d5a5b7`).
@@ -344,14 +348,29 @@ from the last one.
 
 ### Open, in the order I would take them
 
-1. **The Funding Cadence link — the keystone.** Bills should read as funded by the cadence the
+**Done since this list was written** (do not re-do): slice 3 shipped in `e7874b6` — the expected
+paycheck is now resolved from observations with the owner's rule (aggregate the CURRENT channel
+at >= 3 observations, else the last observed value, else the configured figure), and the
+projection carries `source`, `observedAt`, `evidenceIds` and `basis` from that resolution. The
+false `source: "crew"` attribution is gone (`91dabf9`). The local-commitment Delete shipped
+(`f46880a`). Settings scrolls (`d833f44`).
+
+1. **`OS-051` — make the learning governable and resettable** (owner directive, not started).
+   A learning FLOOR so only observations on or after it count, set by a nested owner-operable
+   control in the income area, resettable without deleting any financial record, persisted across
+   restarts. Reason given by the owner: a job change brings a different pay rate or cadence and
+   the previous position's pay must not be blended in. Note it is INDEPENDENT of the channel rule
+   already shipped — that separates two live sources, this separates this job from the last one.
+2. **`OS-050` — two-way sync of the cadence with Crew**, now confirmed feasible: the income
+   source IS the bill-reserve funding plan, so the write path already exists and is
+   readback-verified. Remaining work is ingestion (`readback_funding_plans` is fetched but thrown
+   away), identity (key on the plan id, never the name the owner renames), the mirror UI, and
+   symmetric delete on both sides.
+3. **The Funding Cadence link — the keystone.** Bills should read as funded by the cadence the
    user configured rather than "Funding unknown". `docs/project/MERIDIAN_ROADMAP.md` already
-   names the dated-occurrence model as the keystone and as drifting; this is that. Needs owner
-   input on the recurrence/allocation semantics before V2, because it changes what the app
-   claims about money.
-2. **The evidence link for projected income** (slice 3 of the active goal). The Sep 30/Oct 14
-   paychecks carry `observedAt: null` and `evidenceIds: []` while Crew holds the observed
-   cheque. Key it on the income source record, not merchant text, per the ruling above.
+   names the dated-occurrence model as the keystone and as drifting; this is that. Bills are
+   funded through a plan attached to a bill reserve, so reserve membership may already answer
+   "which bills does this payday fund" -- confirm that with the owner rather than assuming it.
 3. **Settings parity** — approved by the owner, still not started. The scroll fix (`d833f44`)
    removed the practical blocker; the remaining one is that the isolated synthetic preview
    (`scripts/preview_observatory_dial.py`) has no Settings route, so governed captures of
@@ -366,7 +385,8 @@ from the last one.
    28 errors with this work stashed and the same with it applied. Treat browser-level
    verification as resting on a reconstructed baseline until that is diagnosed.
 
-### Measured state at handoff
+### Measured state at handoff (refresh at `ebf30f4`; the numbers below this line are the
+### earlier snapshot unless restated)
 
 `feat/meridian-implementation`, HEAD `f46880a`, tree clean, nothing pushed (16 commits ahead of
 `origin/feat-meridian-implementation`). Non-browser suite **1264 passed, 1 skipped**; Ruff,
