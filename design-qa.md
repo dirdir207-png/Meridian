@@ -287,6 +287,27 @@ connector rail, the connection strip, and the "Assets & documents" ticket. The c
 here it takes 2.1fr beside the Liabilities card so no existing figure is dropped — a layout adaptation, recorded
 rather than presented as parity.
 
+## Activity — dividers, row chevrons and the ledger footer (2026-09-18)
+
+![Activity timeline with the day divider rule and star, row glyphs, and the parchment banner](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-activity-chrome-2026-09-18/activity-mobile-air-light-viewport.png)
+
+`concepts/timeline.png` was re-read with the vision tool rather than trusted from notes, which
+corrected the detail: the first divider carries a **crescent moon**, the second a **sunburst**,
+each divider's rule ends in a **four-pointed star**, and every row ends in a **chevron**.
+
+Delivered: dividers reading `Wed, Sep 16 ── ✦` (named day + short date + hairline + the same
+sparkle the tabs use), a chevron closing every timeline row, and "Ask Virgil about this
+activity" closing the ledger on the **existing** `data-open-advisor` hook. Measured at 420px:
+4 rows → 4 chevrons (aria-hidden, hidden below 600px), a 229px divider rule, zero overflow;
+clicking the footer opens the real advisor in both editions.
+
+**Not delivered: the moon/sun marker.** The supplied set is exactly the 61 installed icons —
+`moon.svg` is present, **no sunburst is**, in this bundle or any other governing one. The
+handoff forbids approximating engraved art, so the slot is left empty and reported.
+
+**Recorded deviation:** the banner stamp uses the app's middle-dot separator where the concept
+draws a bullet; the rest of Activity uses middle dots and one screen should not mix them.
+
 ## Activity — the parchment banner above the day dividers (2026-09-18)
 
 ![Activity timeline with the parchment banner, moon roundel and observed stamp](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-activity-banner-2026-09-18/activity-mobile-air-dark-viewport.png)
@@ -311,10 +332,10 @@ ornaments are the kit's own `moon.svg` and `star.svg`.
 time-only stamp would read as fresh. At phone widths the decorative stars stand down so the
 stamp holds one line.
 
-**Not claimed:** the day-part moon/sun markers on the dividers, the row chevrons and the "Ask
-Virgil about this activity" footer. The kit ships `moon.svg` and **no sun glyph at all**, and no
-sun asset exists in any governing design bundle, so that is a reported asset gap rather than
-something to approximate.
+**Not claimed:** the day-part moon/sun markers on the dividers. The kit ships `moon.svg` and
+**no sun glyph at all**, and no sun asset exists in any governing design bundle, so that is a
+reported asset gap rather than something to approximate. The chevrons and the ledger footer are
+delivered and recorded in the chrome section above.
 
 ## Activity — kit icons, page-colour surfaces and the review count (2026-09-18)
 
@@ -373,9 +394,10 @@ glyphs. `ACTION_ICONS` had been exported and used nowhere, so Astra's action ico
 Review tab had never rendered. Measured at 420px, the pair shares one row at 187px + 105px,
 both exactly 44px tall (single line); a larger basis wrapped them onto separate rows.
 
-**Not claimed:** the timeline's "Your money, in order." banner and its day-part moon/sun
-markers, the row chevrons, and the "Ask Virgil about this activity" footer. Those are the
-remaining divergences from `concepts/timeline.png` and are recorded in OS-045's limits
+**Not claimed:** the day-part moon/sun markers on the dividers (see the chrome section above;
+the sunburst asset does not exist). The banner, the chevrons and the "Ask Virgil about this
+activity" footer that this note previously listed as missing are now delivered and recorded in
+OS-047.
 rather than presented as parity. The live preview process at `:8081`
 predates the API change, so its badge reads 0 until it is restarted, and restarting it
 re-runs its connector sync.

@@ -2,7 +2,7 @@
 
 import { MeridianApiError, activityBannerCopy, meridianFetch } from "./api.js";
 import { describeTransactionAccount } from "./archived-accounts.js";
-import { dayKey, dayLabel, formatCurrency } from "./format.js";
+import { dayDividerLabel, dayKey, dayLabel, formatCurrency } from "./format.js";
 import { ACTION_ICONS, categoryIsAssigned, kitIconUrl, transactionIconName } from "./kit-icons.js";
 
 const state = {
@@ -96,6 +96,18 @@ function buildRow(transaction) {
   amount.textContent = signedAmount(transaction.amount, transaction.currency);
 
   row.append(left, category, amount);
+
+  // Concept 03 closes every timeline row with a trailing chevron. It is a typographic
+  // affordance -- the kit ships no chevron glyph, and a decorative mark is not artwork
+  // to be engraved -- and it is hidden from assistive tech because the row already
+  // announces itself as "Open details" and a second cue would only repeat that.
+  if (state.mode !== "review") {
+    const chevron = document.createElement("span");
+    chevron.className = "m-row-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.textContent = "\u203a";
+    row.append(chevron);
+  }
 
   // Concept 03 frames each row's category glyph in a ring with a small marker dot.
   // Decorative: the icon is masked and hidden from assistive tech, while the real
@@ -225,6 +237,31 @@ function buildRow(transaction) {
   return row;
 }
 
+/* Concept 03's day divider: the day's name bound to its short date, a hairline rule
+   that runs to the edge, and a four-pointed star at the rule's end. The rule and the
+   star are decorative and stay out of the accessibility tree; the label carries the
+   heading's meaning on its own.
+
+   The divider's moon/sun marker is NOT built here yet: the kit ships a crescent
+   (`moon.svg`) but no sunburst, and the concept puts a sunburst on every older day.
+   Rather than approximate artwork the handoff forbids approximating, the marker slot is
+   left for the missing asset. */
+function dayHeading(isoTimestamp) {
+  const heading = document.createElement("h2");
+  heading.className = "m-day-heading";
+  const label = document.createElement("span");
+  label.className = "m-day-heading-label";
+  label.textContent = dayDividerLabel(isoTimestamp);
+  const rule = document.createElement("span");
+  rule.className = "m-day-heading-rule";
+  rule.setAttribute("aria-hidden", "true");
+  const star = document.createElement("span");
+  star.className = "m-day-heading-star";
+  star.setAttribute("aria-hidden", "true");
+  heading.append(label, rule, star);
+  return heading;
+}
+
 function groupFor(ledger, isoTimestamp) {
   const key = dayKey(isoTimestamp);
   let group = ledger.querySelector(`[data-day-group][data-day-key="${key}"]`);
@@ -233,9 +270,7 @@ function groupFor(ledger, isoTimestamp) {
     group.className = "m-day-group";
     group.dataset.dayGroup = "";
     group.dataset.dayKey = key;
-    const heading = document.createElement("h2");
-    heading.className = "m-day-heading";
-    heading.textContent = dayLabel(isoTimestamp);
+    const heading = dayHeading(isoTimestamp);
     const list = document.createElement("div");
     list.className = "m-day-rows";
     group.append(heading, list);

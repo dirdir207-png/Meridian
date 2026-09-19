@@ -85,3 +85,27 @@ export function dayLabel(isoTimestamp) {
     year: "numeric",
   });
 }
+
+/* The ledger's day divider. Concept 03 writes "Today · Sep 18" and "Yesterday · Sep 17"
+   -- a named day bound to its short date -- rather than the long form `dayLabel` gives,
+   which the row meta lines still use. Kept separate so restyling the divider cannot
+   move the row text. */
+export function dayDividerLabel(isoTimestamp) {
+  const parsed = new Date(isoTimestamp);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Unknown date";
+  }
+  const named = dayLabel(isoTimestamp);
+  if (named === "Today" || named === "Yesterday") {
+    const short = parsed.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    });
+    return `${named} \u00b7 ${short}`;
+  }
+  return parsed.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}

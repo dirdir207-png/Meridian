@@ -277,6 +277,33 @@ chevrons, and the "Ask Virgil about this activity" footer. **The kit ships `moon
 sun glyph at all**, and no sun asset exists in any governing design bundle, so it is reported
 as a missing asset rather than approximated.
 
+### The timeline's dividers, chevrons and ledger footer
+
+Read directly from `concepts/timeline.png` rather than from notes: each day divider carries a
+**crescent moon** on Today and a **sunburst** on Yesterday, the day's name bound to its short
+date, a thin gold rule ending in a **four-pointed star**, and every transaction row ends in a
+right-pointing **chevron**. The ledger closes with "Ask Virgil about this activity".
+
+**Built.** The dividers now read `Wed, Sep 16 ── ✦` — a named day bound to its short date, a
+hairline rule, and the same four-pointed sparkle the Activity tabs already use. The label comes
+from a new `dayDividerLabel` in `format.js`, kept separate from `dayLabel` because that one also
+feeds the row meta lines and must not move. Every timeline row closes with a chevron: a
+typographic mark, since the kit ships no chevron glyph, hidden from assistive tech because the
+row already announces "Open details". The ledger closes with "Ask Virgil about this activity",
+which carries the shell's **existing** `data-open-advisor` hook — the one `today.js` already
+binds to `window.advisorSetOpen` from the advisor FAB — so it adds an entry point without
+adding a capability, a route or a prompt of its own. Clicking it opens the real advisor.
+
+**Not built, and deliberately so: the divider's moon/sun marker.** The concept puts a crescent
+on Today and a **sunburst** on older days. The supplied icon set is exactly the 61 icons
+installed, and it contains `moon.svg` and **no sunburst** — nor does any governing design
+bundle. The handoff forbids approximating engraved art, so this is reported as a missing asset
+rather than filled with something I drew. The marker slot is left for it.
+
+One recorded deviation: the banner's stamp uses the app's existing middle-dot separator where
+the concept draws a bullet, because every other separator in Activity is a middle dot and one
+screen should not mix them.
+
 ### Two defects in the inline category editor
 
 The owner reported: *"when manually writing a category, pressing the space key brings up the

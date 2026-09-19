@@ -75,6 +75,13 @@
       <p class="m-empty-note" data-activity-empty hidden>No transactions yet.</p>
       <button type="button" class="m-button m-load-more" data-load-more hidden>Load more</button>
       <p class="m-inline-error" data-activity-error role="alert" hidden></p>
+      {# Concept 03 closes the ledger with "Ask Virgil about this activity". It opens the
+         SAME advisor the rest of the shell opens via data-open-advisor -- no new route,
+         capability or authority, just a ledger-contextual way in. #}
+      <button type="button" class="m-activity-ask" data-open-advisor>
+        <span class="m-activity-ask-roundel" aria-hidden="true"></span>
+        <span class="m-activity-ask-label">Ask Virgil about this activity</span>
+      </button>
     </section>
 
     <aside class="m-selected-summary" data-selected-summary hidden aria-live="polite">

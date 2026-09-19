@@ -462,14 +462,48 @@ html[data-theme="light"] .m-activity {
   margin-top: var(--m-space-5);
 }
 
+/* Concept 03's day divider: the day's name bound to its short date, then a hairline
+   rule running to the edge with a four-pointed star at its end. The rule and star are
+   decorative; the label alone carries the heading. The star is the same typographic
+   sparkle the Activity tabs already use, so the two dividers and the tab share one mark.
+   The marker slot (moon on Today, sunburst on older days) is not built: the kit ships a
+   crescent but no sunburst, and approximating the sun is forbidden. */
 .m-day-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-3);
   font-family: var(--m-font-sans);
   font-size: var(--m-text-sm);
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--m-ink-faint);
   margin: 0 0 var(--m-space-2);
+}
+
+/* The concept puts the day's name in the accent brass while the hairline stays quiet. */
+.m-day-heading-label {
+  flex: 0 0 auto;
+  color: var(--obs-brass);
+  text-transform: none;
+}
+
+.m-day-heading-rule {
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--m-border);
+}
+
+.m-day-heading-star {
+  flex: 0 0 auto;
+  color: var(--obs-brass);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.m-day-heading-star::before {
+  /* CSS escapes are backslash + hex, not a backslash-u sequence, which renders as the
+     literal word after the backslash. */
+  content: "\2726";
 }
 
 /* Pattern evidence: human, clickable rows (merchant · date · amount) that open
@@ -592,6 +626,65 @@ html[data-theme="light"] .m-activity {
   font-size: var(--m-text-md);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+/* Concept 03's trailing chevron. Decorative and typographic: the kit ships no chevron
+   glyph, and this reads as a mark of affordance rather than as engraved art. It gives up
+   its slot on the narrowest rows so it can never push the amount out of the line. */
+.m-row-chevron {
+  flex: 0 0 auto;
+  margin-left: var(--m-space-1);
+  color: var(--m-ink-faint);
+  font-size: var(--m-text-lg);
+  line-height: 1;
+}
+
+@media (max-width: 600px) {
+  .m-row-chevron {
+    display: none;
+  }
+}
+
+/* Concept 03 closes the ledger with "Ask Virgil about this activity". It is a plain
+   button carrying the shell's own data-open-advisor hook, so it opens the advisor the
+   rest of the app already opens rather than introducing a second entry point. The
+   label is underlined because it reads as a link into a conversation, and the star
+   roundel is the kit's shipped star, masked to inherit the ink. */
+.m-activity-ask {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--m-space-2);
+  margin-top: var(--m-space-4);
+  padding: var(--m-space-2) 0;
+  background: none;
+  border: 0;
+  color: var(--m-ink);
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-md);
+  cursor: pointer;
+}
+
+.m-activity-ask-roundel {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+}
+
+.m-activity-ask-label {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.m-activity-ask:hover .m-activity-ask-label {
+  color: var(--m-activity-action);
+}
+
+.m-activity-ask:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--m-activity-action-ink);
 }
 
 .m-row-amount.is-income {
