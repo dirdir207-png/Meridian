@@ -667,11 +667,20 @@ function renderEventList(state, container) {
       const title = document.createElement("span");
       title.className = "obs-event-title";
       title.textContent = event.title;
-      const meta = document.createElement("span");
-      meta.className = "obs-event-meta";
-      meta.textContent = fundingLabel(event.fundingStatus);
       button.setAttribute("aria-description", `Source: ${event.source}`);
-      body.append(date, title, meta);
+      body.append(date, title);
+      // Funding is a BILL concept: a bill may or may not have a reserve covering a future
+      // occurrence, which is what the funder-status vocabulary is about. Income is not
+      // funded, it arrives -- so a funding status on an income row is a category error, and
+      // on the owner's own ledger "Funding unknown" under a Paycheck read as though the
+      // amount were unknown while the row was displaying +$1,663.00. Income rows carry the
+      // date, the title and the amount; nothing is claimed about funding.
+      if (event.kind !== "income") {
+        const meta = document.createElement("span");
+        meta.className = "obs-event-meta";
+        meta.textContent = fundingLabel(event.fundingStatus);
+        body.append(meta);
+      }
       const amount = document.createElement("strong");
       amount.className = "obs-event-amount";
       amount.dataset.direction = event.kind === "income" ? "incoming" : "outgoing";
