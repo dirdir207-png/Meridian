@@ -77,3 +77,16 @@ Owner: "September 18 only filled in pages that had no concept before. If there i
 September 18 is additive, not a blanket replacement. Use September 16 where a page has an overlapping standard, September 18 for previously missing pages/surfaces, and September 8 as fallback. Historical does not mean unusable. Record the exact reference for each comparison; do not silently promote a rendered screenshot into a concept.
 
 Located locally: September 16 asset kit and its artwork handoff, September 8 page concepts, and September 18 Review/Timeline/Settings/Virgil studies. The September 16 kit README explicitly says its assets do not supersede reference composition and points to September 8 PNGs. No separate September 16 page-concept directory was found in the inspected design/kit paths; this limits reference discovery, not the owner's precedence rule. Use the documented September 8 compositions plus September 16 assets unless an actual September 16 page reference is located. The September 18 Timeline concept supplies the missing sun reference for this bounded slice.
+
+## D-013 — How a dated occurrence's reserved amount may be stated (owner, 2026-09-19)
+
+Owner, verbatim: *"The per dated occurance can be strictly user facing on the meridian side, or it can be an even allocation of total set aside funds, split evenly across commitments. Since Bill reserve is a single bucket, I'm not sure how it allocates per bill in Crew currently."*
+
+What this settles:
+
+1. A per-dated-occurrence reserved figure **may** be shown. It may be a Meridian-side allocation the owner sets, or a Meridian-derived even split of the reserve's set-aside total across the bills in that reserve. Neither is forbidden. The owner is explicit that they do not know how Crew itself allocates per bill inside the single reserve bucket, so no Crew allocation may be assumed from the bucket total alone.
+2. D-010 is narrowed, not overturned. Its prohibition is about spreading a reserve total across **future occurrences**. Dividing across **commitments** (one share per bill) is now permitted; multiplying a bill's share by the number of future dates it recurs is still forbidden.
+3. Precedence: a provider-reported per-bill figure is an observation and outranks any Meridian derivation. `_collect_commitment_candidates` already carries Crew's per-bill `reservedAmount` into `funded_amount` (nullable, per C01), so when Crew reports it that is the figure to use — the dial currently ignores it for bills and hardcodes `fundingStatus: "unknown"` with `reserved: null`.
+4. Attribution: a Meridian-side or derived figure must be labelled as Meridian-side/derived together with its basis, must never be attributed to Crew, and must never be presented as a provider balance or as an observed reservation.
+
+Status: not implemented. Still open: the display semantics for a standing per-bill reserve measured against repeated future occurrences.
