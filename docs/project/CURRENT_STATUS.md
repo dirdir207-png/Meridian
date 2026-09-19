@@ -197,11 +197,18 @@ does not), the tab's accessible name becomes "Review, N decisions to review" rat
 bare "Review 3", and the concept's parchment strip appears in **Review mode only** — the
 timeline carries the kit's own banner instead, so the two do not stack.
 
-Recorded limits: the live preview process at `:8081` was started before the API change, so
-its badge reads 0 until that process is restarted; restarting it re-runs its connector sync,
-so it was left to the owner. The count describes the review queue as currently defined — the
-most recent 200 transactions, confidence below 0.7 — and is not a claim about the whole
-ledger.
+Recorded limits: the count describes the review queue as currently defined — the most recent
+200 transactions, confidence below 0.7 — and is not a claim about the whole ledger.
+
+**The `:8081` preview has since been restarted (owner's instruction) and the badge is live.**
+`run_preview.py` auto-reloads templates but not Python, so the process that predated the API
+change could not report a count. The restart re-ran its connector sync, which completed
+cleanly (`provider=crew status=complete accounts=6 transactions=100 errors=0`), and the live
+preview on real data now shows the badge at **8** with the Review tab listing **8** rows — the
+figure and the list still come from one queue, so they cannot disagree. The banner's stamp
+came back as "Observed activity · Updated Sep 19, 1:50 AM", the real refresh time rather than
+the fixture's. The count moved from 12 to 8 because the restart re-synced from the provider;
+that is the sync changing the queue, not the derivation.
 
 **The light edition's action colour is the palette's green, on the owner's instruction.**
 "Let's do the green or mint on light instead." Orange could not carry the selected tab's

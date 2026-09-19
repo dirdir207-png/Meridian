@@ -401,13 +401,19 @@ glyphs. `ACTION_ICONS` had been exported and used nowhere, so Astra's action ico
 Review tab had never rendered. Measured at 420px, the pair shares one row at 187px + 105px,
 both exactly 44px tall (single line); a larger basis wrapped them onto separate rows.
 
-**Not claimed:** the day-part moon/sun markers on the dividers (see the chrome section above;
-the sunburst asset does not exist). The banner, the chevrons and the "Ask Virgil about this
-activity" footer that this note previously listed as missing are now delivered and recorded in
+**Not claimed:** nothing outstanding from `concepts/review.png` beyond the light-edition colour
+notes above. The banner, the day-part markers, the chevrons and the "Ask Virgil about this
+activity" footer that earlier notes here listed as missing are all delivered and recorded in
 OS-047.
-rather than presented as parity. The live preview process at `:8081`
-predates the API change, so its badge reads 0 until it is restarted, and restarting it
-re-runs its connector sync.
+
+**Live preview, restarted on the owner's instruction.** The `:8081` process predated the API
+change and so had no count to report; `run_preview.py` auto-reloads templates but not Python,
+which is why a restart was required and not merely a refresh. The restart re-ran its connector
+sync (`provider=crew status=complete accounts=6 transactions=100 errors=0`), and on the owner's
+real data the badge now reads **8** with the Review tab listing **8** rows — one queue, so the
+figure and the list cannot disagree. The banner stamped the real refresh time ("Updated Sep 19,
+1:50 AM") rather than the fixture's. The count moved from 12 to 8 because the sync changed the
+queue, not because the derivation changed.
 
 ## Activity — orange ruled tabs and ticket actions (2026-09-18)
 
