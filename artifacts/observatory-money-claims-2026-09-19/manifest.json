@@ -1,0 +1,404 @@
+{
+  "captures": [
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/today-desktop-light-full.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:55:48.503041Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/today-desktop-light-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/today-desktop-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/plan-desktop-light-full.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:55:49.838535Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/plan-desktop-light-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/plan-desktop-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/today-desktop-dark-full.png",
+      "viewport": "desktop",
+      "theme": "dark",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:55:51.095225Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/today-desktop-dark-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/today-desktop-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/plan-desktop-dark-full.png",
+      "viewport": "desktop",
+      "theme": "dark",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:55:52.560427Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/plan-desktop-dark-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/plan-desktop-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/today-tablet-light-full.png",
+      "viewport": "tablet",
+      "theme": "light",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:55:53.705935Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/today-tablet-light-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/today-tablet-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/plan-tablet-light-full.png",
+      "viewport": "tablet",
+      "theme": "light",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:55:54.858087Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/plan-tablet-light-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/plan-tablet-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/today-tablet-dark-full.png",
+      "viewport": "tablet",
+      "theme": "dark",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:55:56.024748Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/today-tablet-dark-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/today-tablet-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/plan-tablet-dark-full.png",
+      "viewport": "tablet",
+      "theme": "dark",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:55:57.197109Z",
+      "dpr": 1,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/plan-tablet-dark-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/plan-tablet-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/today-mobile-light-full.png",
+      "viewport": "mobile",
+      "theme": "light",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:55:58.721610Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-light-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/plan-mobile-light-full.png",
+      "viewport": "mobile",
+      "theme": "light",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:56:00.741888Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-light-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/today-mobile-dark-full.png",
+      "viewport": "mobile",
+      "theme": "dark",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:56:02.384350Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-dark-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/plan-mobile-dark-full.png",
+      "viewport": "mobile",
+      "theme": "dark",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:56:04.624870Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-dark-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/today-mobile-small-light-full.png",
+      "viewport": "mobile-small",
+      "theme": "light",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:56:06.303794Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-small-light-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-small-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/plan-mobile-small-light-full.png",
+      "viewport": "mobile-small",
+      "theme": "light",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:56:08.048297Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-small-light-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-small-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/today-mobile-small-dark-full.png",
+      "viewport": "mobile-small",
+      "theme": "dark",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:56:09.466929Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-small-dark-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-small-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/plan-mobile-small-dark-full.png",
+      "viewport": "mobile-small",
+      "theme": "dark",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:56:11.438434Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-small-dark-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-small-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/today-mobile-air-light-full.png",
+      "viewport": "mobile-air",
+      "theme": "light",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:56:12.924891Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-air-light-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-air-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/plan-mobile-air-light-full.png",
+      "viewport": "mobile-air",
+      "theme": "light",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:56:14.780666Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-air-light-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-air-light-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/01-today.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/today-mobile-air-dark-full.png",
+      "viewport": "mobile-air",
+      "theme": "dark",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "today:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:56:16.273351Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-air-dark-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/today-mobile-air-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    },
+    {
+      "concept_path": "design/observatory-drafts-2026-09-08/02-plan.png",
+      "current_path": "artifacts/observatory-money-claims-2026-09-19/plan-mobile-air-dark-full.png",
+      "viewport": "mobile-air",
+      "theme": "dark",
+      "fixture": "synthetic dial+plan fixtures, no live data",
+      "frozen_clock": "2026-09-18T19:50:00-04:00",
+      "ui_state": "plan:default",
+      "full_page": true,
+      "commit": "6ebf854c1a4ec16a623725109acfb10e20a88b5a",
+      "captured_at": "2026-09-19T06:56:18.311532Z",
+      "dpr": 3,
+      "artifacts": [
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-air-dark-viewport.png",
+        "artifacts/observatory-money-claims-2026-09-19/plan-mobile-air-dark-full.png"
+      ],
+      "overflow": 0,
+      "console_errors": [],
+      "ui_state_selector": null
+    }
+  ]
+}
