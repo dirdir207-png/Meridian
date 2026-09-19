@@ -330,11 +330,17 @@ underline and confirmation fill; dark is unchanged at `rgb(233,154,72)`. Mint wa
 for this role because the dark edition's mint (`#a5d4bf`) is only 1.4:1 on parchment, and
 because mint already means "confirmed" and must not become an action colour.
 
+**Review controls.** The unconfirmable row now offers **one** filled "Choose category" and
+no disabled control, matching `concepts/review.png`; the confirmable row reads **"Confirm
+<category>"** and **"Change"** with the kit's `check-circle` / `pencil-square` / `tag`
+glyphs. `ACTION_ICONS` had been exported and used nowhere, so Astra's action icons for the
+Review tab had never rendered. Measured at 420px, the pair shares one row at 187px + 105px,
+both exactly 44px tall (single line); a larger basis wrapped them onto separate rows.
+
 **Not claimed:** the timeline's "Your money, in order." banner and its day-part moon/sun
-markers, the row chevrons, the "Ask Virgil about this activity" footer, and the
-single-primary treatment for a row with nothing to confirm. Those are the remaining
-divergences from `concepts/timeline.png` and `concepts/review.png` and are recorded in
-OS-045's limits rather than presented as parity. The live preview process at `:8081`
+markers, the row chevrons, and the "Ask Virgil about this activity" footer. Those are the
+remaining divergences from `concepts/timeline.png` and are recorded in OS-045's limits
+rather than presented as parity. The live preview process at `:8081`
 predates the API change, so its badge reads 0 until it is restarted, and restarting it
 re-runs its connector sync.
 

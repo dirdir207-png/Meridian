@@ -214,6 +214,27 @@ orange at 7.45:1 in dark, green at 5.94:1 in light — and the earlier light-onl
 disappears. No second brand colour was invented and no new hex was added: the two
 `#e99a48` declarations are the only orange left, and a guard asserts exactly that.
 
+**A row with nothing to confirm now offers one primary control, not a dead one.** The owner
+reported the pair as "very subdued or greyed out as inactive", and that was accurate: the
+confirmation control rendered `disabled`, so the row's only available action was the least
+prominent thing on it. Concept 03 shows a single filled "Choose category" and no disabled
+control; the row now matches, and the control keeps `data-review-correct`, so the existing
+handler opens the category editor exactly as before — only the emphasis changed. **Nothing
+in the review actions is rendered disabled any more**, and the muted `:disabled` styling was
+removed rather than left as dead CSS.
+
+The confirmable row now reads **"Confirm <category>"** and **"Change"**, replacing
+"Approve category" and "Correct", and both controls carry the kit's own glyphs
+(`check-circle`, `pencil-square`, `tag`). `ACTION_ICONS` had been exported from
+`kit-icons.js` and **used nowhere**, so Astra's action icons for the Review tab had never
+rendered at all. The glyph is a masked span painted with `currentColor`, so it takes the
+button's ink and stays out of the accessibility tree; the label keeps the accessible name.
+
+Geometry was tuned rather than assumed: the two controls share a row at 420px (measured
+187px + 105px, both exactly 44px — a single line), which needed the basis raised and the
+side padding tightened. A larger basis wrapped them onto separate rows, which is not the
+concept's layout.
+
 ### Three referenced handoff files are missing
 
 `index.html`, `manifest.json` (provenance, dimensions, SHA-256) and `VERIFICATION.md` (Astra's measured checks)

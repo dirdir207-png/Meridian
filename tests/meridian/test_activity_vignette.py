@@ -140,11 +140,62 @@ def test_review_actions_use_filled_and_continuously_outlined_ticket_silhouettes(
 
 def test_review_action_focus_rings_contrast_with_each_ticket_face():
     css = _read("static/css/meridian/activity.css")
-    approve_focus = css.split(
-        ".m-review-actions .m-review-approve:focus-visible {", 1
+    # One shared rule: the filled controls (confirm and the single choose) use the
+    # same inset ring, because they share the same face colour.
+    focused = css.split(
+        ".m-review-actions .m-review-choose:focus-visible {", 1
     )[1].split("}", 1)[0]
-    assert "var(--m-activity-action-ink)" in approve_focus
+    assert "var(--m-activity-action-ink)" in focused
+    assert ".m-review-actions .m-review-approve:focus-visible," in css
     correct_focus = css.split(
         ".m-review-actions .m-review-correct:focus-visible::after {", 1
     )[1].split("}", 1)[0]
     assert "var(--m-ink)" in correct_focus
+
+
+def test_a_row_with_nothing_to_confirm_offers_one_primary_control():
+    """Concept 03: the unconfirmable row has ONE filled "Choose category", not a
+    greyed, disabled button beside a quiet one.
+
+    The owner reported the old pair as "very subdued or greyed out as inactive". It
+    was accurate: the control rendered `disabled`, so the row's only available action
+    was the least prominent thing on it.
+    """
+    script = _read("static/js/meridian/activity.js")
+    css = _read("static/css/meridian/activity.css")
+
+    # The branch is decided once and drives both layouts.
+    assert "const confirmable = hasCategory || suggested;" in script
+    assert "if (confirmable) {" in script
+    # Nothing is ever rendered disabled now, so the muted disabled styling is gone.
+    assert "approve.disabled" not in script
+    assert ".m-review-approve:disabled" not in css
+    # The single control takes the filled action treatment, and no brass outline.
+    choose = css.split(".m-review-actions .m-review-choose {", 1)[1].split("}", 1)[0]
+    assert "background: var(--m-activity-action)" in choose
+    assert "flex: 1 1 100%" in choose
+    # It keeps data-review-correct, so the existing handler still opens the editor.
+    assert 'dataAttribute: "reviewCorrect"' in script
+
+
+def test_review_controls_use_the_kits_own_action_glyphs_and_concept_copy():
+    """ACTION_ICONS was exported and used nowhere, so Astra's action icons for the
+    Review tab had never rendered."""
+    script = _read("static/js/meridian/activity.js")
+    icons = _read("static/js/meridian/kit-icons.js")
+
+    assert "ACTION_ICONS.confirmCategory" in script
+    assert "ACTION_ICONS.correctCategory" in script
+    assert "ACTION_ICONS.chooseCategory" in script
+    assert "ACTION_ICONS" in script.split("from \"./kit-icons.js\"", 1)[0]
+    # Concept copy: "Confirm <category>" and "Change", in place of Approve/Correct.
+    assert "label: `Confirm ${target}`" in script
+    assert 'label: "Change"' in script
+    assert "Approve category" not in script
+    assert '"Needs category"' not in script
+    # The glyph is masked so it inherits the button's ink, and decorative.
+    assert 'glyph.setAttribute("aria-hidden", "true")' in script
+    assert ".m-review-action-icon" in _read("static/css/meridian/activity.css")
+    # Every action name the control asks for is a real asset.
+    assert '"check-circle"' in icons
+    assert '"pencil-square"' in icons

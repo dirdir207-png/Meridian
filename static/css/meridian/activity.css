@@ -669,9 +669,14 @@ html[data-theme="light"] .m-activity {
 .m-review-actions .m-button {
   --m-ticket-cut: 9px;
 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
   min-height: 44px;
-  padding: var(--m-space-2) var(--m-space-4);
+  /* Tighter side padding than a plain button: the kit glyph plus a category name
+     ("Confirm Utilities") has to stay on one line at 420px without truncating. */
+  padding: var(--m-space-2) var(--m-space-3);
   border-radius: 0;
   clip-path: polygon(
     var(--m-ticket-cut) 0,
@@ -691,12 +696,27 @@ html[data-theme="light"] .m-activity {
   outline: none;
 }
 
-.m-review-actions .m-review-approve:focus-visible {
+.m-review-actions .m-review-approve:focus-visible,
+.m-review-actions .m-review-choose:focus-visible {
   box-shadow: inset 0 0 0 3px var(--m-activity-action-ink);
 }
 
+/* The kit's own action glyph inside a review control: masked so it inherits the
+   button's ink, decorative so the label keeps the accessible name. */
+.m-review-action-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  background-color: currentColor;
+  -webkit-mask: var(--m-review-action-icon) center / contain no-repeat;
+  mask: var(--m-review-action-icon) center / contain no-repeat;
+}
+
 .m-review-approve {
-  flex: 1.35 1 170px;
+  /* Basis chosen so the pair's bases plus the gap stay inside a 420px card: a larger
+     basis wraps them onto separate rows, which is not the concept's layout. */
+  flex: 2 1 182px;
   background: var(--m-activity-action);
   border-color: var(--m-activity-action);
   color: var(--m-activity-action-ink);
@@ -707,11 +727,19 @@ html[data-theme="light"] .m-activity {
   border-color: var(--m-activity-action-hover);
 }
 
-.m-review-approve:disabled {
-  background: color-mix(in srgb, var(--m-activity-action) 45%, var(--m-surface));
-  border-color: color-mix(in srgb, var(--m-activity-action) 45%, var(--m-surface));
+/* The one control a row offers when there is nothing to confirm. It carries
+   `data-review-correct`, so the existing handler opens the editor; only the
+   emphasis differs from the two-button case. */
+.m-review-actions .m-review-choose {
+  flex: 1 1 100%;
+  background: var(--m-activity-action);
+  border-color: var(--m-activity-action);
   color: var(--m-activity-action-ink);
-  cursor: not-allowed;
+}
+
+.m-review-actions .m-review-choose:hover {
+  background: var(--m-activity-action-hover);
+  border-color: var(--m-activity-action-hover);
 }
 
 .m-review-actions .m-review-correct {
@@ -719,7 +747,7 @@ html[data-theme="light"] .m-activity {
 
   position: relative;
   isolation: isolate;
-  flex: 0.8 1 110px;
+  flex: 0.6 1 104px;
   background: transparent;
   border-color: transparent;
   color: var(--m-ink);

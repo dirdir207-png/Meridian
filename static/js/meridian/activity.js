@@ -3,7 +3,7 @@
 import { MeridianApiError, meridianFetch } from "./api.js";
 import { describeTransactionAccount } from "./archived-accounts.js";
 import { dayKey, dayLabel, formatCurrency } from "./format.js";
-import { categoryIsAssigned, kitIconUrl, transactionIconName } from "./kit-icons.js";
+import { ACTION_ICONS, categoryIsAssigned, kitIconUrl, transactionIconName } from "./kit-icons.js";
 
 const state = {
   cursor: null,
@@ -16,6 +16,24 @@ const state = {
 
 /* Show an explicit sign so income reads "+$" and spend reads "−$", matching the
    atlas. formatCurrency keeps the locale grouping; we only add the sign. */
+/* One review control, built the same way every time: the kit's action glyph inside a
+   masked span (so it inherits currentColor), the label as real text, and the data
+   attribute the existing click handlers already look for. */
+function reviewAction({ className, dataAttribute, icon, label }) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `m-button ${className}`;
+  button.dataset[dataAttribute] = "";
+  const glyph = document.createElement("span");
+  glyph.className = "m-review-action-icon";
+  glyph.setAttribute("aria-hidden", "true");
+  glyph.style.setProperty("--m-review-action-icon", kitIconUrl(icon));
+  const text = document.createElement("span");
+  text.textContent = label;
+  button.append(glyph, text);
+  return button;
+}
+
 function signedAmount(amount, currency) {
   const sign = amount < 0 ? "\u2212" : "+";
   return `${sign}${formatCurrency(Math.abs(amount), currency)}`;
@@ -146,19 +164,41 @@ function buildRow(transaction) {
 
     const actions = document.createElement("div");
     actions.className = "m-review-actions";
-    const approve = document.createElement("button");
-    approve.type = "button";
-    approve.className = "m-button m-review-approve";
-    approve.dataset.reviewApprove = "";
-    approve.textContent =
-      hasCategory || suggested ? "Approve category" : "Needs category";
-    approve.disabled = !(hasCategory || suggested);
-    const correct = document.createElement("button");
-    correct.type = "button";
-    correct.className = "m-button m-button--quiet m-review-correct";
-    correct.dataset.reviewCorrect = "";
-    correct.textContent = hasCategory ? "Correct" : "Choose category";
-    actions.append(approve, correct);
+    // Concept 03 gives a row with nothing to confirm ONE filled control -- "Choose
+    // category" -- and no disabled button beside it. The previous markup rendered a
+    // greyed, disabled Needs-category control next to a quiet Choose-category one, so
+    // the row's only available action was the least prominent thing on it and the row
+    // read as broken. The concept instead makes the thing the owner CAN do the
+    // primary action.
+    const confirmable = hasCategory || suggested;
+    if (confirmable) {
+      const target = hasCategory ? transaction.classification.category : suggested;
+      actions.append(
+        reviewAction({
+          className: "m-review-approve",
+          dataAttribute: "reviewApprove",
+          icon: ACTION_ICONS.confirmCategory,
+          label: `Confirm ${target}`,
+        }),
+        reviewAction({
+          className: "m-button--quiet m-review-correct",
+          dataAttribute: "reviewCorrect",
+          icon: ACTION_ICONS.correctCategory,
+          label: "Change",
+        })
+      );
+    } else {
+      // Still `data-review-correct`, so the existing handler opens the category
+      // editor exactly as before; only the emphasis changes.
+      actions.append(
+        reviewAction({
+          className: "m-review-choose",
+          dataAttribute: "reviewCorrect",
+          icon: ACTION_ICONS.chooseCategory,
+          label: "Choose category",
+        })
+      );
+    }
 
     // Wrap the header (name + amount) for the card's top line.
     const header = document.createElement("div");
