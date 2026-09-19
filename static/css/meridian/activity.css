@@ -480,6 +480,18 @@ html[data-theme="light"] .m-activity {
   margin: 0 0 var(--m-space-2);
 }
 
+/* The concept's marker pair: a crescent on Today, a sunburst on older days. Masked so
+   both inherit the divider's brass. The crescent is the kit's shipped moon; the sun is
+   authored in-repo (see the asset's header) because the kit ships no sunburst. */
+.m-day-heading-marker {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  background-color: currentColor;
+  -webkit-mask: var(--m-day-marker) center / contain no-repeat;
+  mask: var(--m-day-marker) center / contain no-repeat;
+}
+
 /* The concept puts the day's name in the accent brass while the hairline stays quiet. */
 .m-day-heading-label {
   flex: 0 0 auto;
@@ -504,6 +516,14 @@ html[data-theme="light"] .m-activity {
   /* CSS escapes are backslash + hex, not a backslash-u sequence, which renders as the
      literal word after the backslash. */
   content: "\2726";
+}
+
+/* The Activity ledger carries its own in-flow "Ask Virgil about this activity" footer,
+   so the shell's floating trigger would be a second control for the same panel on this
+   one screen. The footer opens the identical advisor; only the trigger stands down, and
+   the open panel keeps its own close control. */
+body:has([data-workspace-section="activity"]:not([hidden])) #advisor-fab.m-advisor-trigger {
+  display: none !important;
 }
 
 /* Pattern evidence: human, clickable rows (merchant · date · amount) that open

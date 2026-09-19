@@ -301,9 +301,16 @@ activity" closing the ledger on the **existing** `data-open-advisor` hook. Measu
 4 rows → 4 chevrons (aria-hidden, hidden below 600px), a 229px divider rule, zero overflow;
 clicking the footer opens the real advisor in both editions.
 
-**Not delivered: the moon/sun marker.** The supplied set is exactly the 61 installed icons —
-`moon.svg` is present, **no sunburst is**, in this bundle or any other governing one. The
-handoff forbids approximating engraved art, so the slot is left empty and reported.
+**Delivered after the fact: the moon/sun marker**, on the owner's decision to author the
+missing sunburst. The supplied set is exactly the 61 installed icons — `moon.svg` is present,
+**no sunburst is**, in this bundle or any other governing one, and the kit is Bootstrap Icons
+(`bi-moon` ships, `bi-sun` does not). The sun is therefore authored in-repo to the kit's metrics
+and **outline weight**, declares that provenance in its own header, and is the one icon in that
+directory not covered by the LICENSE beside it. Verified against a mocked payload: Today →
+`moon.svg`, Yesterday and older → `sun.svg`.
+
+The shell's floating advisor trigger also stands down here, because the ledger footer opens the
+same panel — two controls for one panel on one screen is a duplicate, not a convenience.
 
 **Recorded deviation:** the banner stamp uses the app's middle-dot separator where the concept
 draws a bullet; the rest of Activity uses middle dots and one screen should not mix them.

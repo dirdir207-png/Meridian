@@ -1,0 +1,19 @@
+<!-- Authored in this repository on 2026-09-18. The concept's day divider puts a
+     sunburst on every day older than Today, but the supplied icon set is Bootstrap
+     Icons (MIT) and contains bi-moon without bi-sun, and no governing design bundle
+     ships a sun. Drawn to the kit's own metrics and to its OUTLINE weight -- the
+     supplied bi-moon and bi-star are the outline variants, so a solid disc would have
+     been the odd one out: 16x16 viewBox, currentColor, class="bi bi-sun", a ring plus
+     eight separated capsule rays.
+     NOT part of the supplied set -- see docs/project/CURRENT_STATUS.md. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" class="bi bi-sun" aria-hidden="true">
+  <circle cx="8" cy="8" r="2.9"/>
+  <line x1="8" y1="0.9" x2="8" y2="3"/>
+  <line x1="8" y1="0.9" x2="8" y2="3" transform="rotate(45 8 8)"/>
+  <line x1="8" y1="0.9" x2="8" y2="3" transform="rotate(90 8 8)"/>
+  <line x1="8" y1="0.9" x2="8" y2="3" transform="rotate(135 8 8)"/>
+  <line x1="8" y1="0.9" x2="8" y2="3" transform="rotate(180 8 8)"/>
+  <line x1="8" y1="0.9" x2="8" y2="3" transform="rotate(225 8 8)"/>
+  <line x1="8" y1="0.9" x2="8" y2="3" transform="rotate(270 8 8)"/>
+  <line x1="8" y1="0.9" x2="8" y2="3" transform="rotate(315 8 8)"/>
+</svg>

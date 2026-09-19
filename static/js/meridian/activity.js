@@ -2,7 +2,7 @@
 
 import { MeridianApiError, activityBannerCopy, meridianFetch } from "./api.js";
 import { describeTransactionAccount } from "./archived-accounts.js";
-import { dayDividerLabel, dayKey, dayLabel, formatCurrency } from "./format.js";
+import { dayDividerLabel, dayKey, dayLabel, dayOffset, formatCurrency } from "./format.js";
 import { ACTION_ICONS, categoryIsAssigned, kitIconUrl, transactionIconName } from "./kit-icons.js";
 
 const state = {
@@ -237,18 +237,23 @@ function buildRow(transaction) {
   return row;
 }
 
-/* Concept 03's day divider: the day's name bound to its short date, a hairline rule
-   that runs to the edge, and a four-pointed star at the rule's end. The rule and the
-   star are decorative and stay out of the accessibility tree; the label carries the
-   heading's meaning on its own.
+/* Concept 03's day divider: a marker, the day's name bound to its short date, a
+   hairline rule that runs to the edge, and a four-pointed star at the rule's end. The
+   marker, rule and star are decorative and stay out of the accessibility tree; the label
+   carries the heading's meaning on its own.
 
-   The divider's moon/sun marker is NOT built here yet: the kit ships a crescent
-   (`moon.svg`) but no sunburst, and the concept puts a sunburst on every older day.
-   Rather than approximate artwork the handoff forbids approximating, the marker slot is
-   left for the missing asset. */
+   The marker is the concept's own pair: a crescent on Today, a sunburst on every older
+   day. The crescent is the kit's shipped `moon.svg`. The sunburst is NOT from the
+   supplied set -- the kit is Bootstrap Icons and ships bi-moon without bi-sun -- so it
+   is authored in this repository to the kit's metrics and says so in its own header. */
 function dayHeading(isoTimestamp) {
   const heading = document.createElement("h2");
   heading.className = "m-day-heading";
+  const marker = document.createElement("span");
+  marker.className = "m-day-heading-marker";
+  marker.setAttribute("aria-hidden", "true");
+  marker.dataset.dayMarker = dayOffset(isoTimestamp) === 0 ? "moon" : "sun";
+  marker.style.setProperty("--m-day-marker", kitIconUrl(marker.dataset.dayMarker));
   const label = document.createElement("span");
   label.className = "m-day-heading-label";
   label.textContent = dayDividerLabel(isoTimestamp);
@@ -258,7 +263,7 @@ function dayHeading(isoTimestamp) {
   const star = document.createElement("span");
   star.className = "m-day-heading-star";
   star.setAttribute("aria-hidden", "true");
-  heading.append(label, rule, star);
+  heading.append(marker, label, rule, star);
   return heading;
 }
 

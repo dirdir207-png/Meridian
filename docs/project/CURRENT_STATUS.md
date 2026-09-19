@@ -304,6 +304,35 @@ One recorded deviation: the banner's stamp uses the app's existing middle-dot se
 the concept draws a bullet, because every other separator in Activity is a middle dot and one
 screen should not mix them.
 
+### The concept's crescent and sunburst, and one trigger instead of two
+
+The divider markers are now the concept's own pair: **a crescent on Today, a sunburst on every
+older day**, chosen from a single `dayOffset()` so the marker and the label cannot disagree about
+which day is today. `dayLabel` reads the same helper rather than repeating the arithmetic.
+
+**The sunburst is authored in this repository, and that is a recorded decision rather than an
+oversight.** The supplied icon set is exactly the 61 icons installed; it is **Bootstrap Icons**
+(MIT, "The Bootstrap Authors"), and it ships `bi-moon` without `bi-sun`, while no governing design
+bundle has a sun either. I searched the npm cache and both checkouts for a local copy and found
+none, and there is no internet from this workspace, so the alternative to authoring it was to
+wait. **The owner chose to author it.** The file states its own provenance in its header, is drawn
+to the kit's metrics (16x16, `currentColor`) **and to its outline weight** -- `bi-moon` and
+`bi-star` are the outline variants, so a solid disc would have been the odd one out -- and was
+compared beside the supplied moon and star at 8x before being wired in. It is nonetheless the one
+icon in that directory **not covered by the Bootstrap Icons LICENSE** sitting next to it, and
+Astra has not reviewed it.
+
+The shell's floating advisor trigger now stands down on Activity, where the ledger's own "Ask
+Virgil about this activity" footer opens the same panel. Two controls for one panel on one screen
+is a duplicate affordance, not a convenience. The rule uses the same `body:has(...)` mechanism
+`advisor.css` already uses to hide the trigger while the panel is open, and only the trigger
+stands down -- the open panel keeps its own close control.
+
+The fixture gained a row dated to the **capture clock's** day, deliberately: the dividers and
+their markers are decided against the browser's clock and governed captures are taken with
+`--frozen-clock 2026-09-18T19:50:00-04:00`, so without that anchor a capture shows a fourth
+sunburst and never the crescent.
+
 ### Two defects in the inline category editor
 
 The owner reported: *"when manually writing a category, pressing the space key brings up the

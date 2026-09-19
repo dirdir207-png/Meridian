@@ -110,8 +110,7 @@ ACCOUNTS = {
     "data_freshness": {"status": "fresh", "last_updated_at": "2026-09-08T13:42:00Z"},
 }
 
-ACTIVITY_ROWS = [
-    {"id": "synthetic-tx-1", "amount": -84.00, "currency": "USD",
+ACTIVITY_ROWS = [    {"id": "synthetic-tx-1", "amount": -84.00, "currency": "USD",
      "description": "Electric", "merchant": "Electric", "provider": "crew",
      "occurred_at": "2026-09-11T12:00:00Z", "classification": {"category": "Utilities", "confidence": 0.86},
      "suggested_category": "Utilities", "category_options": ["Utilities", "Home"]},
@@ -130,6 +129,17 @@ ACTIVITY_ROWS = [
      "provider": "crew", "occurred_at": "2026-09-16T09:30:00Z",
      "classification": {"category": "uncategorized", "confidence": 0.2},
      "suggested_category": None, "category_options": ["Groceries", "Dining"]},
+    # Dated to the CAPTURE CLOCK's day, deliberately. The ledger's dividers and their
+    # moon/sun markers are decided against the browser's clock, and governed captures
+    # are taken with --frozen-clock 2026-09-18T19:50:00-04:00. Anchoring this row there
+    # is what makes a capture show the concept's "Today" divider with its crescent
+    # rather than a fourth sunburst. Opened without a frozen clock the same ledger just
+    # reads as an older day, which is the honest result. Confidence sits above the
+    # review threshold, so the review_count above is unmoved.
+    {"id": "synthetic-tx-5", "amount": -23.75, "currency": "USD",
+     "description": "Corner Market", "merchant": "Corner Market", "provider": "crew",
+     "occurred_at": "2026-09-18T16:00:00Z", "classification": {"category": "Groceries", "confidence": 0.92},
+     "suggested_category": "Groceries", "category_options": ["Groceries", "Dining"]},
 ]
 
 ACTIVITY = {

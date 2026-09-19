@@ -62,23 +62,32 @@ export function dayKey(isoTimestamp) {
   return parts.join("-");
 }
 
-export function dayLabel(isoTimestamp) {
+/* Local calendar-day distance from today: 0 is today, -1 yesterday. Extracted so the
+   ledger's divider marker and its label cannot disagree about which day is "today". */
+export function dayOffset(isoTimestamp) {
   const parsed = new Date(isoTimestamp);
   if (Number.isNaN(parsed.getTime())) {
-    return "Unknown date";
+    return null;
   }
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfDay = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
   const dayMs = 24 * 60 * 60 * 1000;
-  const diffDays = Math.round((startOfDay.getTime() - startOfToday.getTime()) / dayMs);
+  return Math.round((startOfDay.getTime() - startOfToday.getTime()) / dayMs);
+}
+
+export function dayLabel(isoTimestamp) {
+  const diffDays = dayOffset(isoTimestamp);
+  if (diffDays === null) {
+    return "Unknown date";
+  }
   if (diffDays === 0) {
     return "Today";
   }
   if (diffDays === -1) {
     return "Yesterday";
   }
-  return parsed.toLocaleDateString(undefined, {
+  return new Date(isoTimestamp).toLocaleDateString(undefined, {
     weekday: "long",
     month: "long",
     day: "numeric",
