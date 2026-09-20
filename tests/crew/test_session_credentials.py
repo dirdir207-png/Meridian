@@ -38,7 +38,14 @@ def test_cipher_round_trip_and_unique_nonces():
 
 def test_cipher_rejects_tampering_and_wrong_key():
     encrypted = SessionCipher(StaticKeyProvider()).encrypt(credential())
-    tampered = encrypted.__class__(encrypted.version, encrypted.nonce, encrypted.ciphertext[:-1] + b"x")
+    # Flip the final byte rather than overwriting it. The previous form appended b"x", which is a
+    # no-op whenever the ciphertext already ended in 0x78 -- the "tampered" value was then
+    # byte-identical to the original, decryption correctly succeeded, and this security test
+    # failed roughly one run in 256. Verified by reproduction before the fix.
+    flipped = bytes([encrypted.ciphertext[-1] ^ 0x01])
+    tampered_bytes = encrypted.ciphertext[:-1] + flipped
+    assert tampered_bytes != encrypted.ciphertext, "the tamper must actually change a byte"
+    tampered = encrypted.__class__(encrypted.version, encrypted.nonce, tampered_bytes)
     with pytest.raises(CredentialDecryptionError):
         SessionCipher(StaticKeyProvider()).decrypt(tampered)
     with pytest.raises(CredentialDecryptionError):
