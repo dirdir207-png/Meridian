@@ -683,6 +683,20 @@
       "base_sha": "9bcb8a8781e9bdc23226dc2bc0c032668c49ef42",
       "since": "2026-09-20T00:00:00+00:00",
       "note": "Truthfulness fix, not a capability change: correct only. Removed spend_pocket/delete_pocket/delete_autopilot_rule from the deferred list (all three have live forms in the same pane, which BUILD_SPEC line 203 forbids); narrowed virtual_card to update_virtual_card; added the genuinely-unwired edit_autopilot_rule; rewrote the parity contract to derive from meridian/crew_commands.py and fail closed on drift. No provider mutation, no authority change, no new capability wired."
+    },
+    {
+      "agent": "deepseek-os067",
+      "claim_id": "os067-evidence-triage-20260920",
+      "description": "OS-067: read-only triage of the Gmail/calendar evidence pipeline and the evidence viewer; no provider call, no intake run.",
+      "generation": 1,
+      "files": [
+        "docs/project/EVIDENCE_PIPELINE_TRIAGE_2026-09-20.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "7c0ccd758c0cda9116f906c5f4133936e77c2e95",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "TRIAGE ONLY -- documents and ledger, no code fix. Confirmed: Gmail intake is manual-only with no frontend caller; calendar's connector is referenced only for its OAuth scope constant and has no intake path; the evidence blob store holds 0 files against 732 metadata rows, so every evidence view 404s. No provider call, no backfill, no intake run, and no credential/token/body/content-hash values were read or printed."
     }
   ]
 }
