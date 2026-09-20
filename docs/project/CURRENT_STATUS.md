@@ -117,16 +117,21 @@ tight, and it may be coincidence or it may be deliberate — **Meridian must not
 recorded because it is the sharpest statement of current exposure, and because a display that hid the gap would
 hide exactly this. Confirmed by the owner: AUTOMATIC TOP-UPS = off and OPTIMIZE CASH FLOW = on, as recorded above.
 
-**How Rent's date got where it is (owner, 2026-09-20).** Rent is normally due the **5th**; the owner changed it
-to the **16th**; then his **direct deposit switched to Crew**, which moved it to the **18th** — in his words,
-*"a correction I didn't make."* So a bill date is **neither necessarily owner-set nor stable**, and Meridian must
-state **what it observed** rather than **who caused it**, because it cannot know. Relatedly, the distinction the
-owner draws between *"bills specifically that say payment arrangement, and normal bills"* lives in the **bill
-data**: `Verizon Payment Arrangement` exists as its own bill beside the plain `Verizon`. A workaround is therefore
-often a **new coexisting bill** rather than an edit to the original — which is why the bill set's shape changes and
-then reverts. Meridian must never treat that as an error, never infer a "payment arrangement" type from it, and
-never assume the previous bill set. He also restates the expectation: once caught up, it is **consistent
-month-to-month**, and the manual changes are a running-behind accommodation, not a new normal.
+**Rent's date, corrected — and the error is the lesson (2026-09-20).** An earlier version of this note said Rent's
+due date moved `5th → 16th → 18th` and that Crew had moved it. **That was wrong, and the owner corrected it: the
+due date never changed from the 16th in either Meridian or Crew.** What changed was the **direct deposit date** —
+he switched direct deposit **to Crew**, which **does not offer early direct deposit**; previously his check arrived
+at **Envelope Bank on Wednesday** and he moved the money with **Cash App over two days**. So **the 18th is an
+income-arrival date, not a due date**, and the two must never be conflated: **funding-event timing follows income
+arrival, not the bill's due date.** The mistake also proves the rule it violated — Meridian states **what it
+observed**, never **who caused it**, because an inferred cause was recorded as fact here and turned out to be
+false. Relatedly, the distinction the owner draws between *"bills specifically that say payment arrangement, and
+normal bills"* lives in the **bill data**: `Verizon Payment Arrangement` exists as its own bill beside the plain
+`Verizon`. A workaround is therefore often a **new coexisting bill** rather than an edit to the original — which is
+why the bill set's shape changes and then reverts. Meridian must never treat that as an error, never infer a
+"payment arrangement" type from it, and never assume the previous bill set. He also restates the expectation: once
+caught up, it is **consistent month-to-month**, and the manual changes are a running-behind accommodation, not a
+new normal.
 
 **The original ask behind Meridian's AI features, now recorded as roadmap Track I.5 / OS-063.** The owner restated
 the capability that motivated the project: *"I had to pay 500 dollars to repair my car, I can't cover this bill,

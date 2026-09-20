@@ -133,6 +133,30 @@ any compaction or handover, re-read `AGENTS.md`, this document, `CURRENT_STATUS.
 commits and the relevant source before continuing. Never assume work survived without verifying it. A
 documented claim is not a verified claim: mark `[E]` only what you read or ran.
 
+### 3.0 The vision lives in conversations that were never recorded — close that gap as you go (owner, 2026-09-20)
+
+The owner's correction, and it is a standing instruction: *"it has all been discussed, but in chats or with chatgpt
+etc, not necessary recorded in governing docs etc, it shouldnt be forgotten."* **Much of Meridian's actual intent —
+including the point of the whole product — existed only in chats, not in this repo.** That is a real failure mode,
+because a lane that re-orients from the documents cannot see it: work then proceeds faithfully on the parts that
+*happened* to be written down, and the parts that did not are quietly lost. Three rules:
+
+1. **Capture at the moment of statement.** When the owner states intent, rationale or a constraint — especially one
+   introduced as "as we discussed" — write it into the repo **in that turn**: the roadmap if it changes the
+   trajectory, `MERIDIAN_DECISIONS.md` if it is binding, the ledger if it is work, with the durable insight in
+   Memory Space as well. Do not defer it to a later cleanup; the next compaction is the deadline.
+2. **Record the WHY, not just the WHAT.** The owner's own words: *"The why is important."* A decision without its
+   reason gets re-litigated, misapplied, or "fixed" backwards by a later session that can only see the conclusion.
+   The two errors in this lane on 2026-09-20 are the evidence: a stale rationale made the dated-occurrence drift
+   look unfixed after it was fixed, and an inferred cause was recorded as fact and was false. **Quote the owner's
+   wording where it carries the intent**, and mark what is a claim versus what was verified.
+3. **Absence from the docs is not absence of a decision.** When the owner references prior context that is not
+   written down, **treat it as authoritative and record it**, rather than re-deriving it, asking again, or
+   building on a guess. Ask only if the two genuinely conflict.
+
+This is not documentation for its own sake: it is the only mechanism by which a new session, a future lane, or a
+different agent inherits the vision instead of guessing at it.
+
 ### 3.1 Advisory model recommendations
 
 These recommendations help the owner choose a model when a governed section starts. They are **advisory**:
@@ -224,6 +248,25 @@ Fixtures only — never live bank data for fidelity captures.
 
 ### Track I — Higher intelligence and the agent council *(high priority)*
 
+**Intelligence, not prescription — one constraint that outranks the blueprint, stated by the owner (2026-09-20):**
+
+> *"An intelligence is needed because it shouldnt be prescribed to a preordained set of variables, virgil decides
+> what needs to be done based on my input and proposes action."*
+
+This is **architectural, not aspirational**. The plan-forming layer must **reason over the actual situation** and
+decide what needs doing; it must **not** be a hardcoded decision table, a closed list of recognised variables, or a
+rule engine that can only act on cases somebody anticipated. Concretely that forbids: a fixed enumeration of
+"things Meridian can adjust" that silently becomes the ceiling on what it can propose; a lookup that maps a
+detected condition to a canned response; and any design where a situation not in the table produces nothing at
+all. **Authority is unchanged:** the intelligence **decides and proposes** and never executes — the approval gate,
+provider verification, provenance, the OS-056 rule (no score may ever remove an approval) and the one-way reserve
+lock all still bind, and better reasoning widens no authority.
+
+**Where deterministic work still belongs:** as **tools and checks the intelligence uses** — arithmetic, the
+stipulation-satisfaction check, freshness and provenance, readback verification. Determinism is what makes those
+*auditable*; it must not stand in for the decision itself. The review test for this track: *could this capability
+handle a situation nobody wrote down?* If not, it is prescription wearing intelligence's name.
+
 No blueprint existed for this. The risk is building a "council" as a vibe rather than an interface. Blueprint,
 in order:
 
@@ -274,6 +317,70 @@ pocket rule is for 600 dollars to free to spend."* One capability, three parts:
 **Sequencing, stated plainly so it is not attempted early:** this lands at V2/V3 planning on top of I.2 -> I.3, so
 it cannot be built first. Its prerequisites and its bounds are recorded in the task ledger as **OS-063**. The
 point of writing it down here is that Track I is not idle architecture: this is what it is *for*.
+
+**And the owner frames it as ONE thing, not four (2026-09-20).** *"That's the whole point of shortfall, virgil's
+brief, proposals, automation. Its why almost full feature parity was so important. This was the whole point and
+vision all along."* So the shortfall machinery, Virgil's brief, the proposal engine and automation are a single
+arc, not separate features:
+
+> **detect a shortfall honestly** (evidence; no invented numbers) -> **analyse the foreseeable future** ->
+> **generate proposals across every setting that can be adjusted, honouring the owner's stipulations** ->
+> **owner approves** -> **execute** -> **verify against the provider** -> **automate only what the owner has
+> explicitly preapproved.**
+
+And the front door is natural language: *"I should be able to ask Virgil to analyze my financial situation and
+generate proposals to make all the in app adjustments I need to see me through, with any stipulations
+included."* Two consequences that change ordering rather than adding scope:
+
+1. **Feature parity is a prerequisite, not polish.** To "make all the in-app adjustments", Meridian must be able
+   to **read and adjust everything the owner can adjust in Crew** — bills, reserves, pockets, autopilot rules and
+   funding settings — because **an adjustment Meridian cannot read is an adjustment it cannot propose**. That is
+   why the connector readback gaps (OS-059) sit **on** this critical path rather than beside it.
+2. **Virgil is the interface to this arc, not a separate project.** VIRGIL-A1/A3 are the voice-and-proposal front
+   door to exactly this capability; A3 already reads "connect Virgil to the existing proposal state machine and
+   approval UI", and its negative test — that speech or model output can never select direct mutation
+   provenance — is the safety property the whole arc rests on.
+
+**The proactive half — the same arc pointing outward (owner, 2026-09-20).** *"The later roadmap is where proactive
+comes in: 'I noticed you had to spend an extra 500 on ____, I propose to do these things to stay solvent without
+being cash starved in the meantime, and then return to steady state on this date, with your approval, I'll take
+care of all of it.'"* That is **V4** (proactive help with a closed feedback loop, no alert storms) carrying the
+**I.5** payload — and it adds four requirements the reactive form does not have:
+
+1. **Meridian notices.** The trigger is an **observed deviation**, not a request — detection, not prompting.
+2. **Solvency and liquidity are BOTH goals.** "Stay solvent **without being cash starved in the meantime**" makes
+   the liquidity floor **integral to the plan**, not an optional nicety. A plan that rebuilds the reserve by
+   starving spendable cash is not a solution; it reproduces the exact failure it was meant to prevent.
+3. **The plan names a recovery date.** "Return to steady state **on this date**" — a proposal must state when
+   normal resumes, because a plan with no end date is not a plan, and the owner's whole point is not being left
+   with nothing again.
+4. **Approval, then execution.** "With your approval, I'll take care of all of it" — one approval authorises the
+   whole plan, Meridian executes it, and the receipt is honest. **Approval remains the gate**; nothing is applied
+   before it and no part of the plan is exempt from it.
+
+**Two constraints that follow from records already held:** proactivity is where **alert storms** become the live
+risk, so V4's suppression/dedupe/feedback lifecycle is a **prerequisite, not a detail** — `proactive.py` is
+already wired but its lifecycle is **unverified** in `docs/project/CONCEPT_COVERAGE.md`; and the detection side
+must obey the OS-056 rule, so a classifier may only **add** friction. The natural front door for the proactive
+offer is **VIRGIL-A4**, which the addendum gates on C-V4 plus one proven I.2 role.
+
+**And a second trigger class, from the owner's inbox (owner, 2026-09-20).** *"Or, I saw your bill increased by 40
+dollars in your email, heres what needs to be adjusted with your approval — I approve, and all adjustments occur
+etc."* So the triggers are **plural**, and one of them is **inbound notification** (email or statement rather than
+an observed transaction). Same shape — notice -> "here is what needs adjusting" -> one approval -> all adjustments
+occur — but it carries a **trust boundary that must be designed before it is built**, and none of it is optional:
+
+- **Read-only, least privilege, no credentials in logs.** Meridian reads notifications; it never sends, deletes or
+  mutates a mailbox, and no token, cookie, OTP or message body is logged, echoed into stored evidence, or handed
+  to a model as instructions.
+- **Email content is EVIDENCE, NEVER INSTRUCTIONS.** A notification is untrusted input: it can be wrong, and it can
+  be hostile. "Your bill increased by $40" is a **claim to verify against the bill of record**, never a value to
+  apply, and never text that can direct tool use — the same rule already applied to web search results.
+- **Suppression is a precondition, not a polish item.** One message per bill per cycle is not an alert stream, and
+  re-reading the same message must never re-propose the same change. V4's dedupe/lifecycle is what makes that
+  true, which is exactly why `proactive.py`'s unverified lifecycle blocks this.
+- **Verified against the bill of record before anything moves.** Email raises a *candidate* change; Crew's readback
+  is the authority; the proposal cites the observed provider value and shows it beside the claim.
 ### Track C — Capability spine (adopted from the second roadmap)
 
 | Slice | Outcome |
