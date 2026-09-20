@@ -394,7 +394,21 @@
       ],
       "base_sha": "ae11326",
       "since": "2026-09-20T00:00:00+00:00",
-      "note": "Follow-up to the measured OS-056b incident: migration 025 was applied by the ALREADY-RUNNING preview (its refresh constructs FinancialRepository, which runs migrations), and the stale in-memory BillReserveRecord then raised TypeError on the added columns -- 503ing /api/meridian/dial while /today and /accounts kept returning 200. Adds a mechanical guard pinning that a record built as **dict(row) declares exactly its table's migrated columns, with a negative control proving the guard bites, plus the incident record in CURRENT_STATUS and the coordination log. Tests and documentation only: no code, schema, provider, live or authority change."
+      "note": "Follow-up to the measured OS-056b incident: migration 025 was applied by the ALREADY-RUNNING preview (its refresh constructs FinancialRepository, which runs migrations), and the stale in-memory BillReserveRecord then raised TypeError on the added columns -- 503ing /api/meridian/dial while /today and /accounts kept returning 200. Adds a mechanical guard pinning that a record built as **dict(row) declares exactly its table's migrated columns, with a negative control proving the guard bites, plus the incident record in CURRENT_STATUS and the coordination log. Tests and documentation only: no code, schema, provider, live or authority change. Released at 7c568bf."
+    },
+    {
+      "agent": "deepseek-os057",
+      "claim_id": "os057-live-verification-20260920",
+      "generation": 1,
+      "files": [
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "7c568bf",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "OS-057 live verification, documentation only -- no code, schema, provider, live-sync-write, deployment or authority change. The preview was restarted at the owner's explicit instruction after the 025 incident; its refresh reports provider=crew status=complete accounts=6 transactions=100 errors=0 with zero failures and zero 503s, closing the outage. Read-only from a COPY of the live database: migration 025 applied; Crew's reported per-bill figures present for all five real bills and identical to Meridian's mirror (delta 0 cents on every row, so Crew's arithmetic has not moved); dial payload states basis=crew_reported with divergence=null; reserve row shows total_reserved_amount=1097.10, next_funding_date=2026-10-02 and the reserve-level estimate 1435.97 stored but unused. OS-057 closed; OS-058 filed for the 2026-10-02 measurement. The restart is agent-owned and can be swept when the shell resets; the durable home is the owner's terminal."
     }
   ]
 }

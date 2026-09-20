@@ -1,5 +1,57 @@
 # Enhanced SimpleCrew — Current Status
 
+## LIVE-VERIFIED — OS-056 + OS-056b against a real Crew read (2026-09-20, HEAD `7c568bf`)
+
+The preview was restarted at the owner's explicit instruction, and the whole slice is now confirmed on **real
+data**, not just fixtures. Restart: the stuck PID 28426 (running pre-025 code) was replaced by a fresh process;
+its refresh banner reports `provider=crew status=complete accounts=6 transactions=100 errors=0`, the new log
+contains **zero** `unexpected keyword argument` failures and **zero** 503s. The 025/dial incident is closed.
+
+**Migration and columns.** `schema_migrations` carries `025`; `commitments` has
+`estimated_next_funding_amount` and `reserved_by`; `crew_bill_reserves` has
+`estimated_next_funding_amount` and `next_funding_date`.
+
+**Crew's reported figures are stored, and they are the five-bill oracle.** Read read-only from a copy of the
+live database (never the live file), in cents:
+
+| bill | amount | Crew reported | Meridian mirror | delta |
+|---|---|---|---|---|
+| Rent | 1442.00 | 66327 | 66327 | 0 |
+| Verizon Payment Arrangement | 75.20 | 3459 | 3459 | 0 |
+| Verizon | 101.57 | 4672 | 4672 | 0 |
+| Eversource | 210.00 | 9660 | 9660 | 0 |
+| Xfinity | 93.00 | 4278 | 4278 | 0 |
+
+`reserved_by` is stored as Crew states it — `2026-10-16`, `2026-10-16`, `2026-09-22`, `2026-09-30`, `2026-09-30`
+for the rows above. **This is the divergence test passing on real data: the mirror equals Crew's own number on
+all five bills with no residual**, so Crew's arithmetic has not moved and the mirrored rule is verified against
+the provider's own statement rather than against itself. The local-only commitments (two `Journey Test Bill`
+rows and `Test`) correctly store **nothing** — the C01 absence rule holds: an unreported field is not written
+as a zero.
+
+**Reserve level.** `total_reserved_amount = 1097.10` (observed, unchanged), `next_funding_date = 2026-10-02`
+(confirming the handoff's predicted event), and the reserve-level `estimated_next_funding_amount = 1435.97` is
+now stored — still **unexplained** and still excluded from every arithmetic path. It is never a dividend, and
+the per-bill figures above come from the per-bill field.
+
+**The dial payload on real data.** Every bill in the horizon states Crew's own figure with Crew's own deadline:
+`basis = "crew_reported"`, `divergence = null`, contributions 4672 / 9660 / 4278 / 66327 / 3459 cents for
+Verizon / Eversource / Xfinity / Rent / Verizon Payment Arrangement. One caveat, stated rather than hidden: that
+payload run **widened the horizon with a labelled stub paycheck** so all five bills render at once; the stored
+observations and the per-bill comparison above involve no stub. The owner's browser had not yet been reloaded
+when this was written, so the first 503-free dial request from their session is still to be observed.
+
+**Durability, stated plainly.** This restart was performed by the agent because the owner asked it to, and the
+process is a child of the agent shell — it can be swept when that shell resets (which has happened twice today).
+The durable home for the preview is the owner's own terminal. Nothing about the restart touched Crew: it is a
+localhost preview of Meridian reading a read-only snapshot. **No provider mutation, no transfer, no live sync
+write, no deployment.**
+
+**Still open, unchanged:** the three questions the 2026-10-02 event will answer (`totalReservedAmount`'s
+derivation, the earmarking rule, what `$1,435.97` means) are now recorded as **OS-058**; the handoff's Decision 2
+(horizon width, which hides Rent) is still the owner's call; and `funding_rules` still holds zero rows — this
+slice mirrors Crew's rule directly and never drives `project_funding`.
+
 ## RESUME HERE — OS-056b: Crew's own reported funding fields are ingested, and the mirror is checked against them (2026-09-20)
 
 The second, handoff-authorized commit of the OS-056 slice (Decision 1B: *"compute first, ingest second"*).
