@@ -64,6 +64,26 @@ Three consequences that change how the product must read its own screens: a bill
 not a shortfall**, because funding happens on due dates; the reserve **cannot drain Checking**; and the reserve is
 **deliberately smaller** than the bills' total need, so it must never be measured against a sum of bill amounts.
 
+**Two more owner facts, and they are the ones that matter most for the dial.** (1) **Money cannot be transferred
+out of the reserve** — it is one-way, so the reserve is **never a liquidity source** for any action, proposal or
+projection. (2) **A bill can exceed the reserve earmarked for it**: the pending **Rent `1442.00`** against a
+reserve of **`1097.10`** leaves a **`344.90`** gap that must come from spendable cash. So **"funded" ≠ "covered"**,
+and the dial showing a funded figure beside a bill amount *without* that gap understates the owner's real
+exposure. Surfacing the gap is legitimate read-only observation; acting on it is not — any reallocation to cover
+it goes through propose → approve → execute → readback, never as a side effect of a display. The owner also
+described the **pocket rule as their liquidity guarantee** precisely *because* of the lock, and stated its value
+is currently **low because they are tight** and will be **raised on a normal budget** — a policy knob Meridian
+must not judge, treat as constant, or change.
+
+**An observation worth the owner's eye, explicitly NOT recorded as a rule.** Right now their whole account comes
+to **`1442.38`** — which is the **Rent bill (`1442.00`) plus 38 cents** — and their spendable funds (`345.28`
+across the pockets and Checking) are the **Rent gap (`344.90`) plus the same 38 cents**. Both are the one
+equation rearranged, so it is a single fact, not two confirmations: **at this moment the pending Rent payment
+consumes essentially the entire account.** That is consistent with the owner's own description of being very
+tight, and it may be coincidence or it may be deliberate — **Meridian must not model it as a rule.** It is
+recorded because it is the sharpest statement of current exposure, and because a display that hid the gap would
+hide exactly this. Confirmed by the owner: AUTOMATIC TOP-UPS = off and OPTIMIZE CASH FLOW = on, as recorded above.
+
 **Still open:** *which bill is credited with holding the reserve, and by what rule* — the funding order is settled
 but the attribution is not, and the stored data already contradicts "each bill accumulates its own allocation"
 (Rent holds the whole `1097.10` while its per-event need is `663.27`). That is measured at the **2026-10-02**

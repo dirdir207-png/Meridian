@@ -444,7 +444,22 @@
       ],
       "base_sha": "b5c3162",
       "since": "2026-09-20T00:00:00+00:00",
-      "note": "Owner-supplied funding derivation, earmarking ORDER and Crew's own Autopilot settings screen, recorded in D-015 with verified and unverified parts separated. Model: income lands in Checking (the reserve's only source, confirmed by billReserve.settings.funding.subaccount and by the SWEEP_EXCESS rule targeting Checking), bills are allocated, POCKET TRANSFERS claim the residual (so pocket money becomes unreachable by the reserve), then whatever exceeds a threshold in Checking is swept to the reserve by the real rule 'Sweep Excess Checking Funds'. Settings: SOURCE POCKET = Checking, SURPLUS POCKET = Checking, EARLY FUNDING = 0 days, AUTOMATIC TOP-UPS = off, OPTIMIZE CASH FLOW = on. Three product consequences recorded: a bill at 0.00 reserved is normal rather than a shortfall while EARLY FUNDING is 0; the reserve cannot drain Checking; and the reserve is deliberately smaller than the bills' total need, so it must never be measured against a sum of bill amounts. Deliberately left open rather than guessed: which bill is credited with holding the reserve (the data already refutes per-bill accumulation), the sweep THRESHOLD (the rule's condition returns empty, so 1800 in prose is undetermined between $18.00 and $1,800) and the pocket-transfer allocation settings -- filed as OS-059, a connector readback change. DOCUMENTATION ONLY: no code behaviour, schema, provider, live-sync write, deployment or authority change."
+      "note": "Owner-supplied funding derivation, earmarking ORDER and Crew's own Autopilot settings screen, recorded in D-015 with verified and unverified parts separated. Model: income lands in Checking (the reserve's only source, confirmed by billReserve.settings.funding.subaccount and by the SWEEP_EXCESS rule targeting Checking), bills are allocated, POCKET TRANSFERS claim the residual (so pocket money becomes unreachable by the reserve), then whatever exceeds a threshold in Checking is swept to the reserve by the real rule 'Sweep Excess Checking Funds'. Settings: SOURCE POCKET = Checking, SURPLUS POCKET = Checking, EARLY FUNDING = 0 days, AUTOMATIC TOP-UPS = off, OPTIMIZE CASH FLOW = on. Three product consequences recorded: a bill at 0.00 reserved is normal rather than a shortfall while EARLY FUNDING is 0; the reserve cannot drain Checking; and the reserve is deliberately smaller than the bills' total need, so it must never be measured against a sum of bill amounts. Deliberately left open rather than guessed: which bill is credited with holding the reserve (the data already refutes per-bill accumulation), the sweep THRESHOLD (the rule's condition returns empty, so 1800 in prose is undetermined between $18.00 and $1,800) and the pocket-transfer allocation settings -- filed as OS-059, a connector readback change. DOCUMENTATION ONLY: no code behaviour, schema, provider, live-sync write, deployment or authority change. Released at 4f12bef."
+    },
+    {
+      "agent": "deepseek-reserve-lock",
+      "claim_id": "reserve-one-way-lock-funded-not-covered-20260920",
+      "generation": 1,
+      "files": [
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "4f12bef",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "Two further owner facts recorded as binding semantics in D-015. (1) Money cannot be transferred OUT of the reserve -- it is one-way, so the reserve is never a liquidity source for any action, proposal or projection, and any Meridian action premised on withdrawing from it is invalid by construction. (2) A bill can exceed the reserve earmarked for it: the pending Rent payment is 1442.00 against a reserve of 1097.10, leaving a 344.90 gap that must come from spendable cash, so 'funded' must never stand in for 'covered' and showing the funded figure without the gap understates exposure. Also records the pocket rule as the owner's liquidity guarantee against the lock and as a policy knob set low while they are tight (never a constant, never judged, never changed automatically), and one numeric exposure observation (the account totals 1442.38 = Rent + 0.38, spendable 345.28 = the Rent gap + the same 0.38) carrying explicit uncertainty and explicitly NOT modelled as a rule. Confirms the two load-bearing Autopilot toggles were read correctly. Files OS-060 for the reserve-versus-amount gap display with five prohibitions. DOCUMENTATION ONLY: no code behaviour, schema, provider, live-sync write, deployment or authority change."
     }
   ]
 }
