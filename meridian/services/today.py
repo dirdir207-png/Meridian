@@ -149,6 +149,73 @@ def _unfunded_bill_total(commitment_repository):
     return round(total, 2)
 
 
+def _coverage_exposure(commitment_repository) -> Optional[dict]:
+    """OS-060: bills whose observed reserve does not cover them, stated plainly.
+
+    The reserve is a ONE-WAY LOCK: money enters (bill allocations, then the residual
+    sweep) and cannot be transferred back out, and a bill can exceed the reserve
+    earmarked for it. Meridian showed the funded figure but never the gap, so a bill
+    the reserve cannot cover read as "funded" when it was not *covered* -- "funded" was
+    being presented where the owner needs "covered".
+
+    What qualifies, and the distinction is the whole safety property: a bill whose
+    amount EXCEEDS its OBSERVED reserved figure, and only when a reserved figure was
+    actually reported (``reserved_amount_reported``, 024's flag -- ``commitments.
+    funded_amount`` is ``NOT NULL DEFAULT 0``, so the column alone cannot tell a
+    reported 0 from silence). This is deliberately ``0 < funded < amount``, which is
+    the dial's existing "partial" status, and NOT ``funded < amount``:
+
+    * A bill reading ``0.00`` with the report flag SET is NORMAL and means "not funded
+      yet" -- funded is not covered (D-015) -- and flagging it would read as a
+      shortfall, which is the false positive this must never produce. Four live bills
+      read exactly that way, so the broader test would turn Today into a wall of
+      "uncovered" markers.
+    * A bill whose reserve was never reported has no observed figure to subtract, so
+      there is no gap to state and it is excluded rather than defaulted to zero.
+
+    Read-only arithmetic over two observed values -- the bill amount and Crew's own
+    reservedAmount -- and nothing else. It is NOT a forecast, NOT a plan, and NOT a
+    judgement of the owner's pocket allocation. Nothing is ever re-targeted at a gap:
+    the shortfall is a fact to state, never a condition to repair, and it is resolved
+    when the bill is paid from spendable funds. In particular this never implies the
+    reserve can be tapped or topped up, because it cannot.
+    """
+    if commitment_repository is None:
+        return None
+    items: list[dict] = []
+    for commitment in commitment_repository.list_active():
+        if commitment.type != CommitmentType.BILL:
+            continue
+        if not getattr(commitment, "reserved_amount_reported", False):
+            # No observed figure: absence is not a report of zero, so there is no
+            # gap to state and nothing may be assumed about the reserve.
+            continue
+        amount = commitment.amount if commitment.amount is not None else commitment.target_amount
+        if amount is None:
+            continue
+        reserved = commitment.funded_amount or 0.0
+        if reserved <= 0 or reserved >= amount:
+            # 0 is "not funded yet"; >= amount is already covered. Neither is a gap.
+            continue
+        items.append(
+            {
+                "id": commitment.id,
+                "name": commitment.name,
+                "currency": commitment.currency,
+                "amount": round(amount, 2),
+                "reserved": round(reserved, 2),
+                # The difference between what the bill is and what is set aside now.
+                "gap": round(amount - reserved, 2),
+            }
+        )
+    if not items:
+        # An explicit nothing, so a consumer never has to distinguish an absent key
+        # from an empty one, and can never render a figure it was not given.
+        return {"count": 0, "items": []}
+    items.sort(key=lambda item: (-item["gap"], item["name"]))
+    return {"count": len(items), "items": items}
+
+
 def _next_paycheck_inflow(paycheck, *, now=None):
     """Next expected income from the paycheck config (funding source).
 
@@ -414,6 +481,12 @@ def build_today(
         "brief": _build_virgil_brief(beacon, beacon, safe_amount, safe_status),
         "data_freshness": freshness,
         "breakdown": breakdown,
+        # OS-060: a bill the observed reserve cannot cover, stated as an exposure
+        # rather than left reading as "funded". Read-only arithmetic over observed
+        # values; it proposes nothing and moves nothing.
+        "reserve_exposure": (
+            _coverage_exposure(commitment_repository) if commitment_repository else None
+        ),
         "setup": setup,
         "next_run": next_run,
     }

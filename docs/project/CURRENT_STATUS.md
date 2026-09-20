@@ -33,6 +33,108 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## READ-ONLY — OS-060: a bill the reserve cannot cover now reads as an exposure (2026-09-20, base `5db363c`)
+
+**The owner's real problem.** The reserve is a **one-way lock** — money goes in and cannot come back out — and
+a bill can **exceed** the reserve earmarked for it. Meridian showed the funded figure but never the gap, so a
+bill the reserve could not cover read as *"funded"* when it was not ***covered***. That is the whole defect:
+"funded" was being presented where the owner needs "covered".
+
+**The owner approved it conditionally** — *"if its something you can do, and the visual display of it is easy to
+understand and informative, then absolutely"* — and then fixed the scope: show a gap **only** where a bill's
+amount exceeds its **observed** reserved figure **and** a reserved report actually exists.
+
+**What the data then decided.** Exactly **one** live bill qualifies:
+
+| Bill | amount | reserved (observed) | gap |
+|---|---|---|---|
+| **Rent** | 1442.00 | 1097.10 | **344.90** |
+
+The four other live bills — Eversource, Verizon, Xfinity, Verizon Payment Arrangement — all read
+`funded_amount 0.00` **with the report flag SET**. That is **normal "funded is not covered" (D-015)**, *not* an
+exposure: the reserve has simply not been filled yet. The broader `reserved < amount` rule would have marked
+**four of five** bills "uncovered" — arithmetic that is right and a display that has **failed the owner's own
+legibility condition**. The qualifying rule is therefore `0 < reserved < amount`, which is exactly the dial's
+existing `"partial"` status.
+
+**The finding that changed the shape of the slice: Rent is outside the dial's event window.** Rent's next
+occurrence is **2026-10-16**; Today's horizon ends **2026-10-04**. Putting the field inside the dial's event
+loop — the obvious place, beside `fundingStatus` and `reserved` — would have shipped a feature that **renders
+nothing on live data**. Verified by computing `_next_occurrence` against the real stored values, not assumed.
+The exposure is therefore **window-independent**: a statement about the bill's reserve *pool right now*, not
+about a dated occurrence. That is also why it needs no occurrence date and does not surface `due_date`
+(anchor-versus-deadline remains OS-038/OS-060's question; the January anchors were **not** touched).
+
+**Shipped.**
+
+| Piece | What it does |
+|---|---|
+| `_coverage_exposure()` (`meridian/services/today.py`) | Pure function of the commitment list — testable with no database — emitting `reserve_exposure {count, items[]}` (name, amount, reserved, gap; ordered by gap descending) |
+| `today.html` | A bare hidden `<p>`: a statement, never a control |
+| `renderReserveExposure()` (`today.js`) | One factual sentence; **hidden unless a gap was actually observed**, so a missing or unobserved reserve can never read as a shortfall |
+| `.m-exposure-line` (`observatory.css`) | Theme-aware ink token (not the dark-only `--obs-paper`), wraps rather than overflowing |
+
+**Wording, and one phrase deliberately rejected.** Chosen:
+*"Rent: $1,442.00 needed · $1,097.10 set aside — $344.90 not yet covered"*. **Rejected:** *"has to come from
+spendable cash"* — the ledger asks the display to name where the shortfall comes from, but that phrasing
+borders on implying a transfer. Factual, no verb of action, no source named.
+
+**No other number moves.** `known_obligations` already counts each bill's *unfunded remainder*, so the 344.90
+was **already inside safe-to-spend**; the exposure names what was already counted and adds no second deduction.
+Pinned by test.
+
+**Falsification caught a defect in my own test.** On the first attempt, removing the `reserved > 0` guard left
+the false-positive test **green** — because that test created its bill *without* the `reserved_amount_reported`
+flag, so the bill was excluded by the *other* guard. It was passing for the wrong reason and proving nothing.
+After fixing it to `reported=True` (the live shape), removing the guard correctly fails **4** tests; removing
+the reported gate fails **1**. That gate is recorded honestly as **defence in depth**, not load-bearing:
+`commitments._validate` normalises any positive `funded_amount` to `reported=True` and an unreported read
+stores `0.0`, so every repository-reachable state is already caught by `reserved > 0`.
+
+**Verification.** 21 new tests; full non-browser suite **1460 passed / 1 skipped** (1439 + 21, zero
+regressions). Ruff clean; `git diff --check` clean; guardrails OK. Read-only re-read of a **copy** of
+`/tmp/gate-preview/gate.db` confirms exactly one qualifying bill.
+
+**No migration, no backfill, no schema change, no provider mutation, no transfer, no reserve withdrawal (none
+is possible), no live sync, no authority change, no forecast and no lateness modelling.** The gap is never
+re-targeted: it is a fact to state, never a condition to repair, and it clears when the bill is paid. This is a
+`meridian/**.py` change, so **the preview needs a restart to show it.**
+
+## OWNER DECISIONS — 2026-09-20 (recorded; neither authorises work)
+
+**1. The OS-063 stipulation floor is a MOVING TARGET.** Owner's words: *"the stipulation floor is going to be a
+moving target until I catch up and get to a steady state budget."* So it is a **time-varying** owner-set policy
+value — **not** an unknown-but-fixed number, and **not** `$600`. Four consequences, recorded in the OS-063
+ledger row:
+
+1. The store must be **append-with-validity**, not one mutable scalar: each floor carries the window it applies
+   over, and a superseded floor is **retained**, so the system can state what the floor *was* at any past time.
+2. The satisfaction checker must judge against the floor **in force at the time being evaluated** — never
+   against "the" floor, or a plan gets judged by a rule the owner had not set yet.
+3. **Never extrapolate the trend** into a steady-state target. The floor rises because the owner is steering it;
+   there is no forward curve to fit, and an inferred destination is absence-as-assertion.
+4. It **collides with OS-063's own proactive requirement** to name a recovery date: recovery is defined against a
+   destination, and the destination is moving — so that requirement must **fail closed** and say the position is
+   not yet determinable rather than invent a date.
+
+The **cadence** half needed no owner input: income is `Veterans Home`, 1663.00, **biweekly** — so "pay period"
+means biweekly. Verified that nothing in `meridian/` or `tests/` hardcodes a floor.
+
+**2. Owner decision #4 (the unwritten vision) is CLOSED — captured as Mnemon Document `da793b36`,
+"Meridian vision recovery — the unwritten AI-replanning vision".** It records the Sep 8 observe→verify
+philosophy, the Sep 10 "absurdly far reaching" progression (financial digital twin, agent council,
+constitutional autonomy, **intent compiler**, crisis mode, bounded autonomous CFO), Sep 15's Virgil as a
+**native interface into the same persistent intelligence**, Sep 19's cortex/reflexes/nervous-system event split,
+and the **verbatim** unexpected-expense exchange naming *Intent-to-Plan Reconfiguration*.
+
+**Provenance governs that document and must not be flattened**: `[V]` verbatim / `[R]` reconstructed design
+evidence / `[O]` operational corroboration. Chat titles and full transcripts are **not** recoverable, dates come
+from memory summaries and are not independently verified, and **recovered ≠ accepted requirement**.
+
+It **confirms** the arc the roadmap already gates (Track I.5 = OS-063; feature parity is a prerequisite because
+an adjustment Meridian cannot read is one it cannot propose; Virgil is the front door) and it **authorises
+nothing**: every mutation still travels propose → approve → execute → readback.
+
 ## LIVE-VERIFIED — OS-053: one candidate-to-commitment mapping, one declared fallback (2026-09-20, base `8b00a98`)
 
 **What this closed.** The same provider read was mapped into commitments **twice** — once in

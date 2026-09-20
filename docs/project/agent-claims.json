@@ -626,6 +626,27 @@
       "base_sha": "8b00a98aae9ce6a64fbf7653fe7ac993fba252c4",
       "since": "2026-09-20T00:00:00+00:00",
       "note": "OS-053: unify the candidate-to-commitment mapping so both entry points (sync_providers and sync_live_crew) call ONE shared implementation, collapse the two divergent recurrence fallbacks (one_time vs monthly) into one named, tested constant, and extend the parity test to pin recurrence across both paths. LATENT refactor with no behaviour change to any real bill: the owner confirmed Crew always reports a frequency. No migration, no backfill, no schema change, no provider mutation, no live sync, no authority change. Does NOT delete sync_providers -- it also performs reimbursements, reconcile() and _reclassify_relations, which production would lose."
+    },
+    {
+      "agent": "deepseek-os060",
+      "claim_id": "os060-reserve-exposure-20260920",
+      "description": "OS-060 read-only reserve-versus-amount exposure on Today: show a gap only where a bill's amount exceeds its OBSERVED reserved figure AND the reserved report exists, worded factually with no verb of action. No provider mutation, no transfer, no authority change.",
+      "generation": 1,
+      "files": [
+        "meridian/services/today.py",
+        "templates/meridian/partials/today.html",
+        "static/js/meridian/today.js",
+        "static/css/meridian/observatory.css",
+        "tests/meridian/services/test_reserve_exposure.py",
+        "tests/meridian/test_today_exposure_js.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "5db363cda2ff6354bfddd0d4eb7b7091eb4825b8",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "OS-060 read-only reserve-versus-amount exposure on Today, per the owner's 2026-09-20 scope decision: show a gap ONLY where the bill's amount exceeds its OBSERVED reserved figure AND a reserved report exists (reserved_amount_reported). A bill reading funded 0.00 with the report flag set is NORMAL funded-not-covered (D-015) and must show NOTHING, so only 0 < funded < amount qualifies -- which is exactly the dial's existing 'partial' status. Presented OUTSIDE the dial's event window because Rent's next occurrence (2026-10-16) falls after the 14-day horizon end (2026-10-04), so an event-field approach would ship a feature that displays nothing. Wording is factual with no verb of action: 'Rent 1442.00 - set aside 1097.10 - 344.90 not yet covered'. No provider mutation, no transfer, no reserve withdrawal, no authority change, no forecast, no lateness modelling, no re-targeting. Arithmetic is amount minus the observed reserved figure and nothing else."
     }
   ]
 }

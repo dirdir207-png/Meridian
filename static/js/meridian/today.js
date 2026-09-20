@@ -267,8 +267,44 @@ function renderEvidenceLinks(container, evidence) {
   container.hidden = false;
 }
 
+/* OS-060: a bill the observed reserve cannot cover, stated factually.
+   The wording carries NO verb of action and names no source to draw from, by owner
+   decision: a phrase like "has to come from spendable cash" would imply a transfer,
+   and the reserve is a one-way lock that can never be tapped or topped up. Nothing
+   is re-targeted at a gap either -- it is a fact to state, and it clears when the
+   bill is paid. The line stays HIDDEN unless a gap was actually observed, so a
+   missing or unobserved reserve can never render as a shortfall. */
+function renderReserveExposure(root, payload) {
+  const node = root.querySelector("[data-reserve-exposure]");
+  if (!node) {
+    return;
+  }
+  const exposure = payload.reserve_exposure;
+  const items = exposure && Array.isArray(exposure.items) ? exposure.items : [];
+  if (!items.length) {
+    node.hidden = true;
+    node.textContent = "";
+    return;
+  }
+  const describing = (item) =>
+    `${item.name}: ${formatCurrency(item.amount, item.currency || "USD")} needed · ` +
+    `${formatCurrency(item.reserved, item.currency || "USD")} set aside — ` +
+    `${formatCurrency(item.gap, item.currency || "USD")} not yet covered`;
+  // Lead with the largest gap: it is the one the owner most needs to see, and the
+  // shortened remainder keeps the line legible rather than listing every bill.
+  const lead = describing(items[0]);
+  node.textContent =
+    items.length === 1
+      ? lead
+      : `${lead} · and ${items.length - 1} more bill${items.length === 2 ? "" : "s"}`;
+  node.hidden = false;
+}
+
 function render(root, payload) {
   const forecast = payload.forecast || {};
+
+  // OS-060: state a bill the observed reserve cannot cover.
+  renderReserveExposure(root, payload);
 
   // R20: coherent cash / bills / goals breakdown + setup + next run.
   const breakdownWrap = root.querySelector("[data-today-breakdown]");

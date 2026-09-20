@@ -40,6 +40,12 @@
         <div data-observatory-dial data-model-url="/api/meridian/dial"></div>
       </section>
 
+      {# OS-060: a bill the observed reserve cannot cover, stated factually. Hidden
+         unless a gap was actually observed, and deliberately NOT a control: no
+         action, no transfer, and no implication that the reserve (a one-way lock)
+         can be tapped or topped up. #}
+      <p class="m-exposure-line" data-reserve-exposure hidden></p>
+
       <div class="m-observatory-advice">
         <button class="obs-control" type="button" data-open-advisor>Ask Virgil about this plan</button>
       </div>

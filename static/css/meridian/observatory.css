@@ -812,3 +812,19 @@ html[data-theme="light"] .obs-shell .m-theme-toggle--compact {
     text-transform: uppercase;
   }
 }
+
+/* OS-060: a bill the observed reserve cannot cover.
+   A plain factual statement under the dial, never a control: it carries no action,
+   no button and no link, because nothing is being proposed and the reserve is a
+   one-way lock that can never be tapped or topped up. It uses the theme-aware muted
+   ink token so it reads in both editions, and it wraps rather than overflowing --
+   the line names a bill and three figures, so it is the longest text in the orbit. */
+.obs-shell .m-exposure-line {
+  margin: var(--m-space-3, 12px) 0 0;
+  max-width: 60ch;
+  color: var(--m-ink-muted);
+  font-family: var(--obs-font-serif);
+  font-size: var(--m-text-md);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
