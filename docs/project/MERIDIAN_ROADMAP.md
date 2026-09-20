@@ -267,6 +267,32 @@ stipulation-satisfaction check, freshness and provenance, readback verification.
 *auditable*; it must not stand in for the decision itself. The review test for this track: *could this capability
 handle a situation nobody wrote down?* If not, it is prescription wearing intelligence's name.
 
+**The wakeful triage layer beneath it, and why the owner reached for Jev (2026-09-20).** *"Thats also why I
+thought Jev might be a good addition, a cheaper underlying layer than can determine if virgil is needed at all for
+a set of actions, and is cheaper to essentially be 'always awake and checking conditions' — although there might
+be better machinery."* The role is a **cost** role, not an authority role: deep reasoning cannot run on every tick,
+so a cheap layer watches continuously and decides **whether the expensive intelligence needs to wake at all**. That
+fits the constitution's logic — and it is also the exact place a cheap layer can do harm, so the boundary is
+recorded with the role:
+
+- **Triage may decide WHEN TO SPEND; it may never decide WHAT IS SAFE TO IGNORE.** Those are different powers, and
+  only the first is cheap. A layer that can decline to escalate is a **silent-loss channel** — the same objection
+  the owner raised against a model veto in memory admission — and it stays safe only if escalation decisions are
+  **logged, attributable and replayable**, so "what did it pass over?" is always answerable.
+- **Deterministic owner-set triggers cannot be suppressed by it.** A stipulation violation, a bill exceeding its
+  reserve, a shortfall, a failed verification: these escalate **because a rule says so**, whatever the cheap layer
+  thinks of them. This is the OS-056 rule applied to routing — the layer may only **add** friction (raise scrutiny,
+  flag, escalate to a proposal) and can never remove an approval or gate an action; "confidence >= .95 -> act" must
+  never ship.
+- **The honest alternative, which the owner left open ("there might be better machinery").** For *known* conditions,
+  plain **deterministic checks are the always-awake layer**: free, replayable and unsuppressible. For conditions
+  **nobody wrote down** — precisely where "intelligence, not prescription" needs an intelligence — a cheap model is
+  the only thing that can notice. The likely shape is therefore **layered**: deterministic watchers for the known
+  and the critical, a cheap model for the unmodelled, and the expensive intelligence woken only when either says so.
+  Recorded as a **design direction, not a settled choice**.
+- **Authorization status is unchanged:** ORSC-side JEV work is **on hold** (evaluation runs in the Harness lane), so
+  this records the intended role and its boundary — not a green light to build it.
+
 No blueprint existed for this. The risk is building a "council" as a vibe rather than an interface. Blueprint,
 in order:
 
