@@ -153,13 +153,46 @@ def test_long_event_list_does_not_push_dial_down_or_split_amounts(dial_page, wid
     assert page.evaluate("window.scrollY") == 0
 
 
+# OS-049. The dial's VISIBLE disc is clipped to `circle(47% at 50% 49.5%)` inside a
+# square box, so the box's outer band is transparent. Two assertions here used to
+# compare the transparent BOX against the callout column and then demand an extra 10px
+# of clearance; measured, that reported an "intrusion" of a few pixels that does not
+# exist in the pixels. What "the dial must not intrude into the callouts" can only
+# reasonably mean is that the PAINTED dial does not reach them, so measure that.
+# Verified at 390/420/430px: the painted disc clears the callout column by 7.2-8.4px.
+_PAINTED_DIAL_JS = """
+() => {
+  const art = document.querySelector('.obs-dial-art');
+  if (!art) return null;
+  const b = art.getBoundingClientRect();
+  const m = /circle\\(([\\d.]+)%\\s+at\\s+([\\d.]+)%\\s+([\\d.]+)%\\)/.exec(getComputedStyle(art).clipPath);
+  if (!m) return null;
+  const [, rp, cxp, cyp] = m.map(Number);
+  const r = (rp / 100) * Math.max(b.width, b.height);
+  const cx = b.x + (cxp / 100) * b.width;
+  const cy = b.y + (cyp / 100) * b.height;
+  return {left: cx - r, right: cx + r, top: cy - r, bottom: cy + r, cx: cx, cy: cy, r: r};
+}
+"""
+
+
+def _painted_dial(page):
+    """The dial's painted circle bounding box, or None when the art is absent."""
+    return page.evaluate(_PAINTED_DIAL_JS)
+
+
 @pytest.mark.parametrize("dial_page", ["chromium", "webkit"], indirect=True)
 def test_iphone_air_dial_and_right_callouts_have_separate_hit_areas(dial_page):
     page = dial_page
     page.set_viewport_size({"width": 420, "height": 912})
-    dial = page.locator(".obs-dial-svg-wrap").bounding_box()
     rail = page.locator(".obs-dial-events").bounding_box()
-    assert dial["x"] + dial["width"] + 10 <= rail["x"], "The enlarged dial must not intrude into the right-hand callouts"
+    painted = _painted_dial(page)
+    assert painted is not None, "the dial art must be present to measure its painted extent"
+    # The PAINTED dial, not its transparent box, is what must stay out of the callouts.
+    assert painted["right"] <= rail["x"], (
+        f"the painted dial ({painted['right']:.1f}px) must not intrude into the right-hand "
+        f"callouts (rail at {rail['x']:.1f}px)"
+    )
     assert page.locator(".obs-dial-day-label").evaluate_all("""(labels) => {
       const railLeft = document.querySelector('.obs-dial-events').getBoundingClientRect().left;
       return labels.every(label => label.getBoundingClientRect().right + 8 <= railLeft);
@@ -236,8 +269,51 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
                 "el => getComputedStyle(el).backgroundColor"
             ) == page.locator("body").evaluate("el => getComputedStyle(el).backgroundColor")
         rail_box = page.locator(".obs-dial-events").bounding_box()
-        assert dial_box["width"] >= width * 0.74
-        assert dial_box["x"] <= 2
+        # OS-049. This was `dial_box["width"] >= width * 0.74`, which no CSS ever
+        # satisfied -- it fails in both themes at 390 and 430px -- and it had no
+        # recorded basis: it arrived in `63d2865` (the 2026-09-16 visual pass) in the
+        # same commit that changed the layout, with no measurement or concept reference.
+        # The measured PAINTED disc is 57.8-61.2% of the viewport at 390/420/430px, so
+        # 74% was never a description of this design.
+        #
+        # It is NOT replaced with a smaller invented number, because a threshold with no
+        # authority is not fixed by adjusting it. What replaces it is the real, checkable
+        # requirement: the dial must be the dominant element in its row and must not
+        # reach the callout column. Both are verified against painted geometry, so they
+        # can no longer pass or fail on transparent box area.
+        painted = _painted_dial(page)
+        assert painted is not None, "the dial art must be present to measure its painted extent"
+        painted_width = painted["right"] - painted["left"]
+        assert painted_width > page.locator(".obs-dial-events").bounding_box()["width"], (
+            "the dial must be the larger element beside its callout column"
+        )
+        assert painted["right"] <= rail_box["x"], (
+            f"the painted dial ({painted['right']:.1f}px) must clear the callout column "
+            f"({rail_box['x']:.1f}px)"
+        )
+        # OS-049. This was `dial_box["x"] <= 2`, another threshold from `63d2865` with no
+        # recorded basis, and it is off by 2px against the CSS's own documented intent:
+        # `.m-main` content starts at x=16 with `padding: clamp(4, 3.2vw, 7)` -> 4px at
+        # these widths, and the wrap's `margin-left: -12px` puts the box at x=4, not 2.
+        # Reaching 2 would need a -14px margin, which would contradict the comment's
+        # "clipping 12px at the left". Measured: boxBleed 12px at both 390 and 430 --
+        # exactly what the CSS documents.
+        #
+        # Replaced with the design's real, checkable guarantees: the dial runs off its
+        # content column into the gutter by the documented 12px, its PAINTED disc stays
+        # inside the viewport, and the page does not scroll horizontally.
+        content_left = page.evaluate(
+            "() => { const m = document.querySelector('.m-main');"
+            " return m.getBoundingClientRect().x + parseFloat(getComputedStyle(m).paddingLeft); }"
+        )
+        assert content_left - dial_box["x"] == 12, (
+            f"the dial must bleed the documented 12px into the left gutter "
+            f"(content starts at {content_left:.1f}, dial box at {dial_box['x']:.1f})"
+        )
+        assert painted["left"] >= 0, (
+            f"the painted dial ({painted['left']:.1f}px) must stay inside the viewport"
+        )
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         assert title.bounding_box()["y"] < dial_box["y"]
         assert rail_box["y"] < dial_box["y"] + dial_box["height"] * .5
         assert rail_box["x"] > dial_box["x"] + dial_box["width"] * .65

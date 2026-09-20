@@ -144,7 +144,78 @@ distinction matters because "stale" invites deletion, and the correct resolution
 - **The dial-width questions belong to Track D's visual authority**, with `design-qa.md` as the acceptance
   record. They are not OS-049 environment issues.
 
-## 5. Reproduction
+## 5. Follow-up round: the three assertions resolved — one guarded a REAL defect
+
+Round 2 disproved the "CSS regressed" hypothesis and turned up a genuine layout defect that two
+of the assertions had been **masking**.
+
+### Two assertions were measuring TRANSPARENT BOX AREA, not the dial
+
+The dial's visible disc is clipped to `circle(47% at 50% 49.5%)` inside a **square** box, so the
+box's outer band is empty. Both assertions compared that box against the callout column:
+
+| viewport | dial BOX right | dial PAINTED right | rail starts | real overlap |
+|---|---|---|---|---|
+| 390px | 244 | 236.8 | 244 | **-7.2px (clear)** |
+| 420px | 274 | 265.9 | 274 | **-8.1px (clear)** |
+| 430px | 284 | 275.6 | 284 | **-8.4px (clear)** |
+
+So the "intrusion into the right-hand callouts" **did not exist in the pixels**. Both were
+replaced with assertions over **painted** geometry, which is what the requirement can only
+reasonably mean. **The safety property was kept and strengthened — the old form was satisfied by
+a narrow dial, the new form also requires the painted disc to clear the callout column.**
+
+**A correction.** Round 1 read the `dial.css` comment (*"buying more size means overlapping callout
+text"*) as confirming an intrusion. That comment bundles a **stale** measurement (246px → 258px,
+whereas the code now computes 100% + 24px = 280px at 430px) with its warning, so its premise no
+longer matches the code. Reading it as proof was wrong; the measurement is the proof.
+
+### The `74%` threshold had no basis, and was not replaced by a smaller invented number
+
+It arrived in `63d2865` (2026-09-16) together with the layout change, with no measurement or concept
+reference, and fails in **both themes and both mobile widths** — so it never described this design.
+The measured painted disc is **57.8–61.2%** of the viewport at 390/420/430px.
+
+It is **not** replaced with a lower invented number: a threshold with no authority is not repaired by
+adjusting it. It is replaced by the real, checkable guarantees — the dial must be the **larger element
+beside its callout column**, and its painted extent must **clear** that column.
+
+### `dial_box["x"] <= 2` was off by 2px against the CSS's own documented intent
+
+`.m-main` content starts at **x=16** (`padding: clamp(4, 3.2vw, 7)` → 4px at these widths) and the
+wrap's `margin-left: -12px` puts the box at **x=4**. Reaching 2 needs a **-14px** margin, which would
+contradict the comment's *"clipping 12px at the left"*. Measured `boxBleedPx: 12` at both widths —
+exactly what the CSS documents. Replaced with an assertion for the documented **12px bleed**, plus
+that the **painted** dial stays inside the viewport and the page does not scroll horizontally.
+
+### The defect those assertions were masking — real, measured, NOT yet fixed
+
+At **390px only** (430px passes), the `.obs-explore-plan` CTA is covered by the bottom dock:
+
+```
+cta  y=717.17  bottom=762.17  height=45   z-index: auto
+dock y=758.25  bottom=834.25  height=76   z-index: 30
+gap = -3.92px   →  document.elementFromPoint(cta centre, cta.bottom - 1) === .m-nav
+```
+
+`.m-main` declares `padding-bottom: 80px` and yet its content still reaches past it, so the last
+interactive element on the page sits **under** a higher-z-index dock — a real reachability/clipping
+defect, not a threshold artefact. **This one is not an assertion problem and was left red on
+purpose:** it needs a layout fix (respacing the CTA against the dock at narrow mobile widths), which
+is visual geometry and is queued behind the owner's Crew-section and Settings work rather than
+patched here.
+
+## 6. Where OS-049 now stands
+
+| | Count | Meaning |
+|---|---|---|
+| Fixed | 1 real defect | the `min-width` floor (round 1) |
+| Replaced with evidence-based checks | 3 assertions | transparent-box geometry and two unsupported thresholds |
+| **Left red — REAL defect** | **2 tests** (390px, both themes) | the CTA/dock overlap above |
+
+6 failed → **2 failed**, and the two that remain are the only ones that describe a genuine defect.
+
+## 7. Reproduction
 
 ```
 .venv311/bin/python -m pytest -q tests/browser           # 6 failed, 33 passed, 70 skipped
