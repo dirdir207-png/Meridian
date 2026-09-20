@@ -408,7 +408,28 @@
       ],
       "base_sha": "7c568bf",
       "since": "2026-09-20T00:00:00+00:00",
-      "note": "OS-057 live verification, documentation only -- no code, schema, provider, live-sync-write, deployment or authority change. The preview was restarted at the owner's explicit instruction after the 025 incident; its refresh reports provider=crew status=complete accounts=6 transactions=100 errors=0 with zero failures and zero 503s, closing the outage. Read-only from a COPY of the live database: migration 025 applied; Crew's reported per-bill figures present for all five real bills and identical to Meridian's mirror (delta 0 cents on every row, so Crew's arithmetic has not moved); dial payload states basis=crew_reported with divergence=null; reserve row shows total_reserved_amount=1097.10, next_funding_date=2026-10-02 and the reserve-level estimate 1435.97 stored but unused. OS-057 closed; OS-058 filed for the 2026-10-02 measurement. The restart is agent-owned and can be swept when the shell resets; the durable home is the owner's terminal."
+      "note": "OS-057 live verification, documentation only -- no code, schema, provider, live-sync-write, deployment or authority change. The preview was restarted at the owner's explicit instruction after the 025 incident; its refresh reports provider=crew status=complete accounts=6 transactions=100 errors=0 with zero failures and zero 503s, closing the outage. Read-only from a COPY of the live database: migration 025 applied; Crew's reported per-bill figures present for all five real bills and identical to Meridian's mirror (delta 0 cents on every row, so Crew's arithmetic has not moved); dial payload states basis=crew_reported with divergence=null; reserve row shows total_reserved_amount=1097.10, next_funding_date=2026-10-02 and the reserve-level estimate 1435.97 stored but unused. OS-057 closed; OS-058 filed for the 2026-10-02 measurement. The restart is agent-owned and can be swept when the shell resets; the durable home is the owner's terminal. Released at 4d1907d."
+    },
+    {
+      "agent": "deepseek-d015-resolution",
+      "claim_id": "d015-reserve-level-figure-resolved-20260920",
+      "generation": 1,
+      "files": [
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json",
+        "meridian/providers/base.py",
+        "meridian/providers/crewwork.py",
+        "meridian/repository.py",
+        "meridian/services/dial.py",
+        "meridian/sync.py",
+        "meridian/live.py"
+      ],
+      "base_sha": "4d1907d",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "Resolves the third open question from the OS-056 handoff, on the owner's clarification plus the provider payload's own arithmetic: Crew's reserve-level estimatedNextFundingAmount is an ACCOUNT-TOTAL snapshot, not a reserve figure (reserve 1097.10 + four subaccounts 345.28 = 1442.38, the owner's live total exactly), and it lags the live total (still 1435.97, 6.41 behind, while a fresh read showed the spendable part at 345.28 versus the 338.87 it was computed against). Recorded as RESOLVED in D-015, pointed at from CURRENT_STATUS, and stated in six source comments/docstrings that previously called the field unexplained. COMMENT-ONLY code change: no behaviour, schema, provider, live-sync write, deployment or authority change; the dial already ignored the field. Migration 025's own comment is deliberately left stale because a shipped migration is checksum-frozen (2026-09-11 immutability rule) -- documented as a known artifact. OS-058 narrowed to the two still-open questions plus when the field refreshes."
     }
   ]
 }

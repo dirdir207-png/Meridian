@@ -116,11 +116,14 @@ class NormalizedBillReserve:
     currency: str = "USD"
     observed_at: Optional[str] = None
     # Crew's own reserve-level ``estimatedNextFundingAmount``, or ``None`` when unreported.
-    # D-015 records it as UNEXPLAINED -- not the sum of the per-bill estimates, not the plan
-    # amount -- so it is stored as an observation with provenance and is deliberately kept
-    # out of every arithmetic path: ``total_reserved_amount`` is observed and must never be
-    # derived from it. It is kept because the 2026-10-02 funding event can be measured
-    # against what Crew predicted.
+    # RESOLVED 2026-09-20 (owner clarification plus the provider's own arithmetic, recorded in
+    # D-015): despite the name, this is an ACCOUNT-TOTAL figure, not a reserve figure -- the
+    # reserve plus the spendable subaccounts (1097.10 + 345.28 = 1442.38, the owner's live total
+    # to the cent) -- and it is a LAGGED SNAPSHOT rather than a live balance (it still reported
+    # 1435.97 while the total had moved, 6.41 behind). It is therefore kept out of every
+    # arithmetic path: never a dividend, never presented as the reserve, and
+    # ``total_reserved_amount`` is never derived from it. It is stored because it is an
+    # observation with provenance, and because the 2026-10-02 event will show when it refreshes.
     estimated_next_funding_amount: Optional[float] = None
     # Crew's own ``nextFundingDate``: the plan's next funding event, verbatim.
     next_funding_date: Optional[str] = None

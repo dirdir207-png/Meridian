@@ -31,8 +31,13 @@ as a zero.
 
 **Reserve level.** `total_reserved_amount = 1097.10` (observed, unchanged), `next_funding_date = 2026-10-02`
 (confirming the handoff's predicted event), and the reserve-level `estimated_next_funding_amount = 1435.97` is
-now stored — still **unexplained** and still excluded from every arithmetic path. It is never a dividend, and
-the per-bill figures above come from the per-bill field.
+now stored. **Its meaning is no longer a mystery — see the RESOLVED note in D-015:** on the owner's
+clarification and the provider's own arithmetic, it is an **account-total** figure, not a reserve figure
+(`1097.10` reserve `+ 345.28` across the four subaccounts `= 1442.38`, the owner's live total to the cent), and
+it is a **lagged snapshot** rather than a live balance — it still reported `1435.97` while the total had moved to
+`1442.38`, i.e. `6.41` behind. It therefore stays excluded from every arithmetic path: never a dividend, never
+presented as the reserve, and `total_reserved_amount` is never derived from it. The per-bill figures above come
+from the per-bill field.
 
 **The dial payload on real data.** Every bill in the horizon states Crew's own figure with Crew's own deadline:
 `basis = "crew_reported"`, `divergence = null`, contributions 4672 / 9660 / 4278 / 66327 / 3459 cents for
@@ -132,10 +137,10 @@ A migration that only creates a new table or adds a nullable column to a table r
 Must not be assumed: **no provider mutation, no live sync, no deployment, and no `:8081` restart by an agent.**
 The preview must be **restarted by the owner** for either OS-056 commit to take effect; migration 025 is
 ALREADY applied to the preview database, and the reported columns stay empty until a refresh runs under the new
-code. The reserve-level `$1,435.97` is now stored and still **unexplained** — it is never used as a dividend, and
-`totalReservedAmount` remains the only observed reserve balance. The three open questions and the
-**2026-10-02** decisive observation are unchanged; they are now measurable against what Crew predicted, which is
-what OS-057 records. The six pre-existing
+code. The reserve-level `$1,435.97` is now stored, and its meaning was resolved on 2026-09-20 (it is an
+**account-total** snapshot, not a reserve balance — see D-015's RESOLVED note); it is never used as a dividend,
+and `totalReservedAmount` remains the only observed reserve balance. Two questions remain open and the
+**2026-10-02** decisive observation is how they get measured; OS-058 records it. The six pre-existing
 `tests/browser/test_dial_fidelity.py` failures remain OS-049's baseline.
 
 ## RESUME HERE — OS-056: Today states Crew's per-event funding estimate (2026-09-20, base `5a88cc6`)
@@ -177,9 +182,11 @@ restart.** The running preview loads code at process start, so this changes noth
 owner authorizes a restart. `funding_rules` still has zero rows: this slice does not use `project_funding`, it
 mirrors Crew's published rule directly, which is the compute-first path Decision 1 chose. The six
 pre-existing `tests/browser/test_dial_fidelity.py` failures (dial-wrap vs rail geometry; theme-toggle label
-width) are OS-049's baseline, reproduced identically and not attributable to this slice. The three open
-questions — how `totalReservedAmount` is derived, the earmarking rule, and the reserve-level `$1,435.97` —
-remain unmeasured; the **2026-10-02** funding event is still the decisive observation.
+width) are OS-049's baseline, reproduced identically and not attributable to this slice. Of the three open
+questions recorded here at the time — how `totalReservedAmount` is derived, the earmarking rule, and the
+reserve-level `$1,435.97` — **the third is now RESOLVED** (2026-09-20: it is an account-total snapshot, not a
+reserve figure; see the LIVE-VERIFIED block above and D-015's RESOLVED note). The other two remain unmeasured,
+and the **2026-10-02** funding event is still the decisive observation.
 
 ## WHAT'S NEXT — mirror Crew's own funding math, and measure it at the 2026-10-02 event (2026-09-20, base `9ceadf5`)
 

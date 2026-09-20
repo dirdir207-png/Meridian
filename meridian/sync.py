@@ -305,8 +305,9 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
                     currency=reserve.currency,
                     observed_at=reserve.observed_at,
                     # Crew's own reserve-level schedule (025), NULL when unreported; the
-                    # reserve-level estimate is an unexplained observation and is never
-                    # used as a dividend for any per-bill figure.
+                    # reserve-level estimate is an ACCOUNT-TOTAL snapshot, not a reserve
+                    # figure (D-015, resolved 2026-09-20), so it is never used as a
+                    # dividend for any per-bill figure.
                     estimated_next_funding_amount=reserve.estimated_next_funding_amount,
                     next_funding_date=reserve.next_funding_date,
                 )

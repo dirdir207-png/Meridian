@@ -193,10 +193,12 @@ def _reported_reserve_schedules(graph) -> dict:
 
     Only Crew's own reported funding schedule is read from these rows (025):
     ``next_funding_date`` is its statement of the next funding event, and
-    ``estimated_next_funding_amount`` is stored but deliberately never used here -- D-015
-    records it as unexplained, and ``total_reserved_amount`` is an observed sum that must
-    never be derived from it. A retired reserve is excluded for the same reason a retired
-    plan is: a withdrawn record may not keep stating an event.
+    ``estimated_next_funding_amount`` is stored but deliberately never used here: since
+    2026-09-20 D-015 records it as an ACCOUNT-TOTAL snapshot rather than a reserve figure (the
+    reserve plus the spendable subaccounts, and lagging the live total), so treating it as an
+    amount set aside would overstate the reserve by the whole spendable balance. A retired
+    reserve is excluded for the same reason a retired plan is: a withdrawn record may not keep
+    stating an event.
     """
     index: dict[tuple[str, str], object] = {}
     for reserve in graph.list_bill_reserves():

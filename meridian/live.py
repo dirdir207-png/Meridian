@@ -162,8 +162,9 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
                 currency=reserve.currency,
                 observed_at=reserve.observed_at,
                 # Crew's own reserve-level schedule (025): the next funding event it states,
-                # and the reserve-level estimate D-015 records as unexplained. Both stay
-                # None when unreported, and neither is used as a dividend.
+                # and the reserve-level estimate, which D-015 resolved (2026-09-20) to be an
+                # ACCOUNT-TOTAL snapshot rather than a reserve figure. Both stay None when
+                # unreported, and neither is used as a dividend.
                 estimated_next_funding_amount=reserve.estimated_next_funding_amount,
                 next_funding_date=reserve.next_funding_date,
             )

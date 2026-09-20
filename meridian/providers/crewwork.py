@@ -269,8 +269,10 @@ class CrewWorkSnapshotAdapter:
 
         The reserve's own reported funding schedule (025) is merged in from its readback:
         ``nextFundingDate`` is Crew's statement of the next funding event, and the
-        reserve-level ``estimatedNextFundingAmount`` is an observation D-015 records as
-        unexplained. Both stay ``None`` when unreported.
+        reserve-level ``estimatedNextFundingAmount`` -- which D-015 resolved on 2026-09-20 to be
+        an ACCOUNT-TOTAL snapshot (the reserve plus the spendable subaccounts), not a reserve
+        figure -- is carried verbatim with its provenance and never treated as an amount set
+        aside. Both stay ``None`` when unreported.
         """
         totals = self.readback_reserve_totals()
         if totals is None:

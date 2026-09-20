@@ -113,10 +113,11 @@ class BillReserveRecord:
     created_at: str
     updated_at: str
     # Crew's own reserve-level ``estimatedNextFundingAmount`` (025), or ``None`` when this
-    # read did not report it. D-015 records it as UNEXPLAINED and it is deliberately kept out
-    # of every arithmetic path: ``total_reserved_amount`` is observed and must never be
-    # derived from it. It is stored so the 2026-10-02 funding event can be measured against
-    # what Crew predicted.
+    # read did not report it. RESOLVED 2026-09-20 (D-015): an ACCOUNT-TOTAL snapshot, not a
+    # reserve figure -- it is the reserve plus the spendable subaccounts, and it lags the live
+    # total. Kept out of every arithmetic path: ``total_reserved_amount`` is observed and must
+    # never be derived from it. Stored because it is an observation with provenance, and
+    # because the 2026-10-02 event will show when it refreshes.
     estimated_next_funding_amount: Optional[float] = None
     # Crew's own ``nextFundingDate`` (025): the plan's next funding event, stored verbatim so
     # a malformed value stays visible as malformed rather than becoming silence.
