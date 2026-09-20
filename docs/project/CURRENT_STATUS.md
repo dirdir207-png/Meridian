@@ -1,5 +1,38 @@
 # Enhanced SimpleCrew — Current Status
 
+## RUNNING THE PREVIEW — launcher, when a restart is needed, and phone access (2026-09-20)
+
+**The owner runs the preview from a Desktop shortcut.** Double-clicking **`Meridian Preview.command`** on
+the Desktop calls `scripts/restart_preview.command` in the repo (created by
+`scripts/install_desktop_shortcut.command`, which the owner runs once — the lane boundary correctly refuses
+agent writes outside the workspace). The launcher stops whatever is listening on 8081, starts a fresh preview
+detached so closing the window does not stop it, and **verifies the port is actually listening** before
+reporting success — so a silent failure cannot look like a successful start. It never talks to Crew and never
+moves money; it only starts a local web server reading a local snapshot.
+
+**The lane's standing instruction, recorded because the owner asked for it:** *tell the owner whenever the
+preview needs a restart.* Say so explicitly in the response, in plain words, at the moment the change lands.
+
+**When a restart IS needed — verified against `run_preview.py`, not assumed:**
+
+| Change | Restart? | Why |
+|---|---|---|
+| `meridian/**.py`, `app.py`, `run_preview.py` | **YES** | Python loads at process start (`use_reloader=False`) |
+| A migration that `ALTER`s a table whose record is built as `Model(**dict(row))` | **YES, as part of shipping it** | The running process applies the new `.sql` on its own refresh and then fails its reads — this is exactly what 503'd the dial on 2026-09-20 |
+| A migration that only creates a table, or alters one read column-by-column | Not required | The running process applies it harmlessly |
+| `templates/**` | No | `TEMPLATES_AUTO_RELOAD = True` and `jinja_env.auto_reload = True` in `run_preview.py` |
+| `static/**` (JS, CSS) | No | Served from disk on every request |
+| `docs/**` | No | Nothing reads them at runtime |
+
+**Phone access over Tailscale, verified 2026-09-20.** The app binds `0.0.0.0`, so the launcher preserves remote
+access; `lsof` shows `TCP *:8081 (LISTEN)` and the same page answers on all three interfaces — loopback, the LAN
+address `10.0.0.4`, and the **tailnet address `http://100.118.158.2:8081`** (each returns `302`, i.e. the app is
+responding and redirecting to the login). The macOS firewall is disabled, so nothing blocks it. Two honest
+caveats: the phone needs the Mac awake with the preview running and Tailscale up on both devices, and because the
+bind is `0.0.0.0` the preview is also reachable from the local network, not only the tailnet — the financial data
+stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
+enabling the firewall is the change to make.
+
 ## LIVE-VERIFIED — OS-056 + OS-056b against a real Crew read (2026-09-20, HEAD `7c568bf`)
 
 The preview was restarted at the owner's explicit instruction, and the whole slice is now confirmed on **real

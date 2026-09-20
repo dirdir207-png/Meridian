@@ -459,7 +459,22 @@
       ],
       "base_sha": "4f12bef",
       "since": "2026-09-20T00:00:00+00:00",
-      "note": "Two further owner facts recorded as binding semantics in D-015. (1) Money cannot be transferred OUT of the reserve -- it is one-way, so the reserve is never a liquidity source for any action, proposal or projection, and any Meridian action premised on withdrawing from it is invalid by construction. (2) A bill can exceed the reserve earmarked for it: the pending Rent payment is 1442.00 against a reserve of 1097.10, leaving a 344.90 gap that must come from spendable cash, so 'funded' must never stand in for 'covered' and showing the funded figure without the gap understates exposure. Also records the pocket rule as the owner's liquidity guarantee against the lock and as a policy knob set low while they are tight (never a constant, never judged, never changed automatically), and one numeric exposure observation (the account totals 1442.38 = Rent + 0.38, spendable 345.28 = the Rent gap + the same 0.38) carrying explicit uncertainty and explicitly NOT modelled as a rule. Confirms the two load-bearing Autopilot toggles were read correctly. Files OS-060 for the reserve-versus-amount gap display with five prohibitions. DOCUMENTATION ONLY: no code behaviour, schema, provider, live-sync write, deployment or authority change."
+      "note": "Two further owner facts recorded as binding semantics in D-015. (1) Money cannot be transferred OUT of the reserve -- it is one-way, so the reserve is never a liquidity source for any action, proposal or projection, and any Meridian action premised on withdrawing from it is invalid by construction. (2) A bill can exceed the reserve earmarked for it: the pending Rent payment is 1442.00 against a reserve of 1097.10, leaving a 344.90 gap that must come from spendable cash, so 'funded' must never stand in for 'covered' and showing the funded figure without the gap understates exposure. Also records the pocket rule as the owner's liquidity guarantee against the lock and as a policy knob set low while they are tight (never a constant, never judged, never changed automatically), and one numeric exposure observation (the account totals 1442.38 = Rent + 0.38, spendable 345.28 = the Rent gap + the same 0.38) carrying explicit uncertainty and explicitly NOT modelled as a rule. Confirms the two load-bearing Autopilot toggles were read correctly. Files OS-060 for the reserve-versus-amount gap display with five prohibitions. DOCUMENTATION ONLY: no code behaviour, schema, provider, live-sync write, deployment or authority change. Released at 4ad09c9."
+    },
+    {
+      "agent": "deepseek-preview-launcher",
+      "claim_id": "preview-launcher-restart-matrix-20260920",
+      "generation": 1,
+      "files": [
+        "scripts/restart_preview.command",
+        "scripts/install_desktop_shortcut.command",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "4ad09c9",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "Preview launcher for the owner plus the restart matrix and phone access, all verified. scripts/restart_preview.command stops only the 8081 LISTENER (lsof -sTCP:LISTEN, so it can never kill a client such as the owner's browser), starts a fresh preview detached with nohup, and verifies the port is listening before reporting success; tested end to end by stopping the running preview and starting a new one. scripts/install_desktop_shortcut.command writes the Desktop shortcut pointing at it, versioned here because the lane boundary correctly refused an agent write to ~/Desktop. Restart matrix verified against run_preview.py: RESTART needed for Python changes (use_reloader=False) and for a migration that ALTERs a table whose record is built as Model(**dict(row)) -- which must be restarted as part of shipping it, since the running process applies the SQL and then fails its reads (the 2026-09-20 dial 503); NOT needed for templates (TEMPLATES_AUTO_RELOAD = True), static assets (served from disk) or docs. Tailscale access verified over loopback, the LAN address and the tailnet address, all returning 302. NO APPLICATION CODE CHANGED: no behaviour, schema, provider, live-sync write, deployment or authority change."
     }
   ]
 }
