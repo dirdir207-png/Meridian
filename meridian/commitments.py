@@ -75,6 +75,15 @@ class Commitment:
     # silent read erase a known amount. The dial may only state a figure whose flag is
     # set, so "not yet set aside" and "missing" stop being the same stored 0.0.
     reserved_amount_reported: bool = False
+    # Crew's OWN per-event funding estimate for this bill (025), in dollars, or ``None``
+    # when the read did not report it. It is the same quantity the dial mirrors with
+    # ``funding.crew_proration_cents``, but stated by Crew rather than applied by Meridian,
+    # so it is an observation and outranks the mirror. ``None`` means unreported -- never
+    # zero -- and a read that omits it never clears a value Meridian already knew.
+    estimated_next_funding_amount: Optional[float] = None
+    # Crew's OWN deadline for this bill's reservation (``reservedBy``, 025), stored exactly
+    # as reported. ``None`` means the read did not state it.
+    reserved_by: Optional[str] = None
 
 
 _COLUMNS = (
@@ -82,7 +91,8 @@ _COLUMNS = (
     " funded_amount, amount, due_date, recurrence, cadence, minimum_payment,"
     " buffer_minimum, payoff_strategy, backing_account_id, legacy_source,"
     " legacy_id, migration_version, created_at, updated_at, absent_since,"
-    " bill_reserve_id, reserved_amount_reported"
+    " bill_reserve_id, reserved_amount_reported,"
+    " estimated_next_funding_amount, reserved_by"
 )
 
 
@@ -264,6 +274,22 @@ class CommitmentRepository:
         if (validated.get("funded_amount") or 0.0) > 0:
             validated["reserved_amount_reported"] = True
 
+        # Crew's own reported funding schedule (025). Both are nullable by design: NULL is
+        # "this read did not report it", which is not a zero, and the write paths pass the
+        # stored value through in that case rather than clearing it (C01).
+        if fields.get("estimated_next_funding_amount", ...) is not ...:
+            validated["estimated_next_funding_amount"] = _as_money(
+                fields.get("estimated_next_funding_amount"), "estimated_next_funding_amount"
+            )
+
+        if fields.get("reserved_by", ...) is not ...:
+            reserved_by = fields.get("reserved_by")
+            if reserved_by is not None and (
+                not isinstance(reserved_by, str) or not reserved_by.strip()
+            ):
+                raise ValueError("reserved_by must be a non-empty string when present")
+            validated["reserved_by"] = reserved_by
+
         if fields.get("backing_account_id", ...) is not ...:
             backing = fields.get("backing_account_id")
             if backing is not None:
@@ -326,6 +352,8 @@ class CommitmentRepository:
             "reserved_amount_reported": bool(
                 validated.get("reserved_amount_reported", False)
             ),
+            "estimated_next_funding_amount": validated.get("estimated_next_funding_amount"),
+            "reserved_by": validated.get("reserved_by"),
         }
 
     def insert_record(self, connection: sqlite3.Connection, record: dict) -> int:
@@ -336,6 +364,7 @@ class CommitmentRepository:
             "target_date", "due_date", "recurrence", "cadence", "payoff_strategy",
             "backing_account_id", "legacy_source", "legacy_id", "migration_version",
             "created_at", "updated_at", "bill_reserve_id", "reserved_amount_reported",
+            "estimated_next_funding_amount", "reserved_by",
         ]
         now = _now()
         values = {**record, "created_at": now, "updated_at": now}
@@ -497,4 +526,6 @@ class CommitmentRepository:
             absent_since=row["absent_since"],
             bill_reserve_id=row["bill_reserve_id"] or "",
             reserved_amount_reported=bool(row["reserved_amount_reported"]),
+            estimated_next_funding_amount=row["estimated_next_funding_amount"],
+            reserved_by=row["reserved_by"],
         )

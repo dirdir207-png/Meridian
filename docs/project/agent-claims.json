@@ -348,6 +348,38 @@
       "base_sha": "5a88cc6",
       "since": "2026-09-20T00:00:00+00:00",
       "note": "OS-056 bounded read-only slice: mirror Crew's proven ceiling proration in Today, expose an additive next-occurrence schedule with explicit projected provenance, and retire the derived even-split model. No provider mutation, migration, live sync or deployment."
+    },
+    {
+      "agent": "deepseek-os056b",
+      "claim_id": "os056b-crew-reported-funding-schedule-20260920",
+      "generation": 1,
+      "files": [
+        "meridian/migrations/025_crew_reported_funding_schedule.sql",
+        "docs/project/shipped-migrations.json",
+        "meridian/providers/base.py",
+        "meridian/providers/crewwork.py",
+        "meridian/repository.py",
+        "meridian/commitments.py",
+        "meridian/sync.py",
+        "meridian/live.py",
+        "meridian/services/dial.py",
+        "static/js/meridian/dial.js",
+        "tests/meridian/test_migrations.py",
+        "tests/meridian/test_bill_reserve_observations.py",
+        "tests/meridian/test_crew_funding_schedule_ingestion.py",
+        "tests/meridian/services/test_dial_schedule.py",
+        "tests/meridian/test_dial_js.py",
+        "tests/browser/test_dial_reserved_amount.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "design-qa.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "e6683a7",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "OS-056 Decision 1B (handoff-authorized second commit of the same slice): persist Crew's own reported funding fields -- per-bill estimatedNextFundingAmount and reservedBy, reserve-level estimatedNextFundingAmount and nextFundingDate -- so Crew's statement outranks Meridian's application of Crew's rule, and the computed-vs-reported divergence becomes measurable. Read-only toward Crew: a Meridian-local migration plus ingestion during the app's own refresh, with the C01 absence rule (an unreported field never clears a known value). No provider mutation, live sync, deployment or :8081 restart."
     }
   ]
 }

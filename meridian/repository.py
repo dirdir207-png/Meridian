@@ -112,6 +112,15 @@ class BillReserveRecord:
     absent_since: Optional[str]
     created_at: str
     updated_at: str
+    # Crew's own reserve-level ``estimatedNextFundingAmount`` (025), or ``None`` when this
+    # read did not report it. D-015 records it as UNEXPLAINED and it is deliberately kept out
+    # of every arithmetic path: ``total_reserved_amount`` is observed and must never be
+    # derived from it. It is stored so the 2026-10-02 funding event can be measured against
+    # what Crew predicted.
+    estimated_next_funding_amount: Optional[float] = None
+    # Crew's own ``nextFundingDate`` (025): the plan's next funding event, stored verbatim so
+    # a malformed value stays visible as malformed rather than becoming silence.
+    next_funding_date: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -1098,6 +1107,8 @@ class FinancialRepository:
         total_reserved_amount: Optional[float],
         currency: str = "USD",
         observed_at: Optional[str] = None,
+        estimated_next_funding_amount: Optional[float] = None,
+        next_funding_date: Optional[str] = None,
     ) -> BillReserveRecord:
         """Store the reserve state this provider read observed.
 
@@ -1109,6 +1120,11 @@ class FinancialRepository:
         bucket is empty, so it never overwrites a total Meridian already knew -- the same
         rule C01 applies to a single bill's reserve. A reported ``0.0`` does overwrite,
         because an emptied bucket is a real observation.
+
+        The reserve's own reported funding schedule (025) follows the identical rule: a
+        read that omits either field keeps the stored value rather than clearing it, and a
+        reported value replaces it. ``reservedAt``-style provenance is not invented here --
+        ``observed_at`` moves only when the read actually reported something.
         """
         timestamp = _now()
         with self._connect() as connection:
@@ -1116,8 +1132,9 @@ class FinancialRepository:
                 """
                 INSERT INTO crew_bill_reserves (
                     provider, external_id, total_reserved_amount, currency,
-                    observed_at, synced_at, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    observed_at, synced_at, created_at, updated_at,
+                    estimated_next_funding_amount, next_funding_date
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(provider, external_id) DO UPDATE SET
                     total_reserved_amount = COALESCE(
                         excluded.total_reserved_amount,
@@ -1131,7 +1148,17 @@ class FinancialRepository:
                     END,
                     synced_at = excluded.synced_at,
                     absent_since = NULL,
-                    updated_at = excluded.updated_at
+                    updated_at = excluded.updated_at,
+                    -- Same C01 rule for the reported schedule (025): an unreported field is
+                    -- evidence of nothing, so it keeps whatever Meridian already knew.
+                    estimated_next_funding_amount = COALESCE(
+                        excluded.estimated_next_funding_amount,
+                        crew_bill_reserves.estimated_next_funding_amount
+                    ),
+                    next_funding_date = COALESCE(
+                        excluded.next_funding_date,
+                        crew_bill_reserves.next_funding_date
+                    )
                 """,
                 (
                     provider,
@@ -1142,6 +1169,8 @@ class FinancialRepository:
                     timestamp,
                     timestamp,
                     timestamp,
+                    estimated_next_funding_amount,
+                    next_funding_date,
                 ),
             )
             row = connection.execute(

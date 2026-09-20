@@ -49,6 +49,8 @@ def test_dial_emits_next_occurrence_crew_schedule_with_estimate_basis(tmp_path):
         "planName": "Veterans Home",
         "basis": "crew_estimate",
         "intervalDays": 14,
+        # Nothing reported this bill's own figure, so there is nothing to diverge from.
+        "divergence": None,
     }
 
 

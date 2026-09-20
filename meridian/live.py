@@ -78,6 +78,11 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
                 # Only a reported reserveAmount sets this (C01/024); a silent read stores
                 # 0.0 and must not read as "Crew said the reserve is empty".
                 reserved_amount_reported=candidate.funded_amount is not None,
+                # Crew's own per-event estimate and deadline (025). Unreported stays NULL:
+                # these columns have no zero default, because a missing figure is not a
+                # zero and the mirror must be able to tell a report from silence.
+                estimated_next_funding_amount=candidate.estimated_next_funding_amount,
+                reserved_by=candidate.reserved_by,
             )
         else:
             commitment_repository.update(
@@ -101,6 +106,18 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
                     True
                     if candidate.funded_amount is not None
                     else existing.reserved_amount_reported
+                ),
+                # C01 for the reported schedule: a read that did not state the figure is not
+                # a report of nothing, so the stored value stands (025).
+                estimated_next_funding_amount=(
+                    candidate.estimated_next_funding_amount
+                    if candidate.estimated_next_funding_amount is not None
+                    else existing.estimated_next_funding_amount
+                ),
+                reserved_by=(
+                    candidate.reserved_by
+                    if candidate.reserved_by is not None
+                    else existing.reserved_by
                 ),
             )
     # A complete, error-free read may conclude that a bill Crew no longer returns
@@ -144,6 +161,11 @@ def sync_live_crew(db_path: str, *, snapshot: Optional[dict] = None, binary: str
                 total_reserved_amount=reserve.total_reserved_amount,
                 currency=reserve.currency,
                 observed_at=reserve.observed_at,
+                # Crew's own reserve-level schedule (025): the next funding event it states,
+                # and the reserve-level estimate D-015 records as unexplained. Both stay
+                # None when unreported, and neither is used as a dividend.
+                estimated_next_funding_amount=reserve.estimated_next_funding_amount,
+                next_funding_date=reserve.next_funding_date,
             )
         if snap.is_complete and not snap.errors:
             repository.mark_absent_bill_reserves(

@@ -1,5 +1,60 @@
 # Enhanced SimpleCrew — Current Status
 
+## RESUME HERE — OS-056b: Crew's own reported funding fields are ingested, and the mirror is checked against them (2026-09-20)
+
+The second, handoff-authorized commit of the OS-056 slice (Decision 1B: *"compute first, ingest second"*).
+OS-056 had Today **mirror** Crew's published rule. That is Meridian applying Crew's arithmetic to data
+Meridian already stored — useful, but only ever *Meridian's* statement. The provider states the same three
+facts in the same read, and the app was discarding them at the mapping boundary.
+
+**No connector change was needed, and that was verified rather than assumed.** `app.py`'s live `expenses`
+query already selects reserve-level `nextFundingDate`, `totalReservedAmount` and
+`estimatedNextFundingAmount`, and per bill `estimatedNextFundingAmount`, `reservedAmount` and `reservedBy`.
+`CrewWorkSnapshotAdapter` already walks that exact `bill` dict, so this was an ingestion gap.
+
+- Migration `025_crew_reported_funding_schedule.sql` adds four NULLABLE columns:
+  `commitments.estimated_next_funding_amount`, `commitments.reserved_by`,
+  `crew_bill_reserves.estimated_next_funding_amount`, `crew_bill_reserves.next_funding_date`. Registered in
+  all four places (the file, `shipped-migrations.json` with its sha256, `_LATER_MIGRATIONS`, and the exact
+  applied-version list). **No backfill**: pre-025 storage cannot distinguish a reported zero from silence, so
+  guessing one would manufacture provenance the provider never gave.
+- `CommitmentCandidate` and `NormalizedBillReserve` carry the fields; `crewwork.py` parses them with the
+  nullable cents conversion (never the zero-defaulting one) and a new `readback_reserve_funding_schedule()`
+  supplies the reserve-level pair — a separate readback on purpose, because `readback_reserve_totals`' shape is
+  the contract the reserve write-verification path compares against.
+- Both mapping sites (`sync.py` and `live.py`) copy them under the C01 absence rule: an unreported field keeps
+  the stored value instead of clearing it, and a reported value replaces it. `upsert_bill_reserve` uses the
+  same `COALESCE`-keeps semantics it already used for the total.
+- `dial.py` now states **Crew's own figure** when it exists (`basis: "crew_reported"`, with Crew's `reservedBy`
+  as the deadline and its reported `nextFundingDate` as the event), and falls back to the mirror
+  (`basis: "crew_estimate"`) otherwise. D-013's order of authority still holds: an observation outranks a
+  derivation of it.
+- **The divergence test is the point of the slice.** Both figures are computed whenever both exist, so a
+  disagreement is reported as `fundingSchedule.divergence = {reportedMinor, computedMinor, deltaMinor}` and a
+  change in Crew's arithmetic can no longer pass unnoticed. It is `null` when there is nothing to compare.
+- `dial.js` names the provenance in the copy and keeps both readings labelled as estimates:
+  `$29.89/event · Crew's own estimate` when Crew reported it, `$29.89/event · Crew estimate` when Meridian
+  applied Crew's rule. Neither is ever presented as money held.
+
+Verified: full non-browser suite **1413 passed, 1 skipped** (14 new tests in
+`tests/meridian/test_crew_funding_schedule_ingestion.py`: the migration, the adapter boundary, the live and
+the sync paths, the silent-read and reported-change absence rules, the two-path equality check, all five
+oracle rows agreeing with Crew's own numbers, the divergence case, and a pin that the reserve-level estimate
+never reaches a dividend); `tests/browser/test_dial_reserved_amount.py` **13 passed** across the contract's
+five viewports × both themes at the specified DPRs, with the measured row-geometry check still holding on the
+longer "Crew's own estimate" string; `node --check`; Ruff clean; `git diff --check` clean; guardrails clean for
+`deepseek-os056b`. Captures regenerated: `artifacts/observatory-dial-schedule-2026-09-20/` and
+`artifacts/dial-schedule-review-2026-09-20/` (both untracked by this lane's convention).
+
+Must not be assumed: **no provider mutation, no live sync, no deployment, and no `:8081` restart.** The
+preview running on `:8081` (PID 28426) started before both OS-056 commits, and a running preview loads code at
+process start, so **neither slice is live**; migration 025 will be applied by the next app start, and the
+reported columns stay empty until a read runs under the new code. The reserve-level `$1,435.97` is now stored
+and still **unexplained** — it is never used as a dividend, and `totalReservedAmount` remains the only observed
+reserve balance. The three open questions and the **2026-10-02** decisive observation are unchanged; they are
+now measurable against what Crew predicted, which is what OS-057 records. The six pre-existing
+`tests/browser/test_dial_fidelity.py` failures remain OS-049's baseline.
+
 ## RESUME HERE — OS-056: Today states Crew's per-event funding estimate (2026-09-20, base `5a88cc6`)
 
 The read-only half of D-015 is implemented and verified in the working tree. Today now mirrors Crew's own

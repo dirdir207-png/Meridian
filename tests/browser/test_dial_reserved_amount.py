@@ -81,8 +81,11 @@ MODEL = {
                 "deadline": "2026-09-20",
                 "nextFundingDate": "2026-09-19",
                 "planName": "Veterans Home",
-                "basis": "crew_estimate",
+                # Crew reported this figure itself (025), so the copy names that provenance
+                # while still calling it an estimate.
+                "basis": "crew_reported",
                 "intervalDays": 14,
+                "divergence": None,
             },
             "fundingSource": None,
             "source": "crew",
@@ -130,6 +133,7 @@ MODEL = {
                 "planName": "Veterans Home",
                 "basis": "crew_estimate",
                 "intervalDays": 14,
+                "divergence": None,
             },
             "fundingSource": None,
             "source": "crew",
@@ -251,8 +255,7 @@ def test_the_stated_reserve_renders_with_its_author_and_an_unlabelled_one_does_n
     internet = _meta_for(page, "Internet")
     assert "not yet set aside" in internet
     assert "$29.89/event" in internet
-    assert "Crew estimate" in internet
-    assert "estimated by Crew" not in internet
+    assert "Crew's own estimate" in internet
     assert "Meridian estimate" not in internet
 
     # "not yet set aside" and "unknown" are different statements, and this model only
@@ -304,7 +307,7 @@ def test_the_ticket_names_the_bill_level_author_and_the_funding_schedule(dial_pa
     schedule_rows = page.locator(".obs-evidence-ticket .obs-ticket-rows").inner_text().lower()
     assert "funding schedule" in schedule_rows
     assert "$29.89/event" in schedule_rows
-    assert "crew estimate" in schedule_rows
+    assert "crew's own estimate" in schedule_rows
     assert "due sep 20" in schedule_rows
     assert "meridian estimate" not in schedule_rows
 
@@ -373,7 +376,7 @@ def test_the_longer_reserve_line_stays_inside_the_viewport(dial_page):
     )
     # The figure is present in this run, not silently dropped by a layout rule.
     assert "set aside" in _meta_for(page, "Rent")
-    assert "Crew estimate" in _meta_for(page, "Internet")
+    assert "Crew's own estimate" in _meta_for(page, "Internet")
     rail = page.locator(".obs-dial-events")
     assert rail.bounding_box()["width"] > 0
 

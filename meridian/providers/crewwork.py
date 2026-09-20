@@ -192,6 +192,14 @@ class CrewWorkSnapshotAdapter:
                 # Use the nullable form: an unreported reserve must stay absent
                 # rather than reading as an emptied one (C01).
                 reserved = _cents_to_dollars_or_none(bill.get("reservedAmount"))
+                # Crew states its own per-event contribution and deadline for this bill in
+                # the same read (025). Both use the nullable conversion: an unreported field
+                # is missing data, not a zero, and the sync refuses to let it erase a value
+                # Meridian already knew.
+                reported_estimate = _cents_to_dollars_or_none(
+                    bill.get("estimatedNextFundingAmount")
+                )
+                reserved_by = str(bill.get("reservedBy") or "") or None
                 result.append(
                     CommitmentCandidate(
                         external_id=external_id,
@@ -202,6 +210,8 @@ class CrewWorkSnapshotAdapter:
                         recurrence=frequency,
                         funded_amount=reserved,
                         bill_reserve_id=bill_reserve_id,
+                        estimated_next_funding_amount=reported_estimate,
+                        reserved_by=reserved_by,
                     )
                 )
         return result
@@ -256,10 +266,16 @@ class CrewWorkSnapshotAdapter:
         The total is nullable on purpose (C01): a reserve Crew did not report a total
         for must stay absent rather than read as an emptied bucket, so
         ``_cents_to_dollars_or_none`` is the conversion -- not the zero-defaulting one.
+
+        The reserve's own reported funding schedule (025) is merged in from its readback:
+        ``nextFundingDate`` is Crew's statement of the next funding event, and the
+        reserve-level ``estimatedNextFundingAmount`` is an observation D-015 records as
+        unexplained. Both stay ``None`` when unreported.
         """
         totals = self.readback_reserve_totals()
         if totals is None:
             return None
+        schedule = self.readback_reserve_funding_schedule() or {}
         captured_at = str(self._snapshot.get("captured_at") or "") or None
         return [
             NormalizedBillReserve(
@@ -267,6 +283,12 @@ class CrewWorkSnapshotAdapter:
                 total_reserved_amount=_cents_to_dollars_or_none(total),
                 currency="USD",
                 observed_at=captured_at,
+                estimated_next_funding_amount=_cents_to_dollars_or_none(
+                    (schedule.get(reserve_id) or {}).get("estimatedNextFundingAmount")
+                ),
+                next_funding_date=str(
+                    (schedule.get(reserve_id) or {}).get("nextFundingDate") or ""
+                ) or None,
             )
             for reserve_id, total in totals.items()
         ]
@@ -400,6 +422,33 @@ class CrewWorkSnapshotAdapter:
                 continue
             totals[reserve_id] = reserve.get("totalReservedAmount")
         return totals
+
+    def readback_reserve_funding_schedule(self) -> Optional[dict]:
+        """``{billReserveId: {estimatedNextFundingAmount, nextFundingDate}}`` or None.
+
+        A separate readback rather than a wider return from
+        :meth:`readback_reserve_totals`, because that method's shape is the contract the
+        reserve write-verification path depends on: widening it would change what a verifier
+        compares. ``None`` (facet not returned) versus a dict (observed, possibly with
+        unreported fields inside) is preserved exactly, and the values are returned RAW --
+        cents and the provider's own date string -- so the caller does the one conversion at
+        the provider boundary, exactly as it does for the total.
+        """
+        payload = self._facet_payload("expenses")
+        if payload is None:
+            return None
+        accounts = _as_list(_as_dict(payload.get("currentUser")).get("accounts"))
+        schedule = {}
+        for account in accounts:
+            reserve = _as_dict(_as_dict(account).get("billReserve"))
+            reserve_id = str(reserve.get("id") or "")
+            if not reserve_id:
+                continue
+            schedule[reserve_id] = {
+                "estimatedNextFundingAmount": reserve.get("estimatedNextFundingAmount"),
+                "nextFundingDate": reserve.get("nextFundingDate"),
+            }
+        return schedule
 
     def readback_reassignment_rules(self) -> Optional[list]:
         """The pocket reassignment rules observed, or None if unobserved.

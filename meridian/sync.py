@@ -204,6 +204,10 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
                     # Only a reported reserveAmount sets this (C01/024): a silent read
                     # stores 0.0 and must not read as "Crew said the reserve is empty".
                     reserved_amount_reported=candidate.funded_amount is not None,
+                    # Crew's own per-event estimate and deadline (025), NULL when the read
+                    # did not report them: a missing figure is not a zero.
+                    estimated_next_funding_amount=candidate.estimated_next_funding_amount,
+                    reserved_by=candidate.reserved_by,
                 )
             else:
                 commitment_repository.update(
@@ -230,6 +234,18 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
                         True
                         if candidate.funded_amount is not None
                         else existing.reserved_amount_reported
+                    ),
+                    # C01 for the reported schedule (025): an unreported figure keeps the
+                    # stored value rather than clearing it.
+                    estimated_next_funding_amount=(
+                        candidate.estimated_next_funding_amount
+                        if candidate.estimated_next_funding_amount is not None
+                        else existing.estimated_next_funding_amount
+                    ),
+                    reserved_by=(
+                        candidate.reserved_by
+                        if candidate.reserved_by is not None
+                        else existing.reserved_by
                     ),
                 )
         if report.status == "complete":
@@ -288,6 +304,11 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
                     total_reserved_amount=reserve.total_reserved_amount,
                     currency=reserve.currency,
                     observed_at=reserve.observed_at,
+                    # Crew's own reserve-level schedule (025), NULL when unreported; the
+                    # reserve-level estimate is an unexplained observation and is never
+                    # used as a dividend for any per-bill figure.
+                    estimated_next_funding_amount=reserve.estimated_next_funding_amount,
+                    next_funding_date=reserve.next_funding_date,
                 )
             if report.status == "complete":
                 repository.mark_absent_bill_reserves(

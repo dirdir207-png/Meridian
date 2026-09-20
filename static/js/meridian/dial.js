@@ -432,12 +432,20 @@ function renderInstrumentOverlay(state) {
      note     "$29.89/event · Crew estimate, due Sep 20 for Veterans Home"
               the ticket's full statement, naming the deadline it is measured against.
 
-   Every form says "estimate". This is a projection from Crew's published rule, never money
-   held, so it must never read as the observed `reserved` figure beside it. */
+   Every form says "estimate" and the AUTHOR is read from the schedule's own basis, so the
+   two provenances stay distinguishable: Crew reported the figure itself, or Meridian
+   applied Crew's published rule to an observed plan. Either way it is an estimate, never
+   money held, and it must never read as the observed `reserved` figure beside it. */
+
+const SCHEDULE_BASES = new Set(["crew_reported", "crew_estimate"]);
+
+function scheduleAuthor(schedule) {
+  return schedule.basis === "crew_reported" ? "Crew's own estimate" : "Crew estimate";
+}
 
 export function fundingScheduleValue(event) {
   const schedule = event && event.fundingSchedule;
-  if (!schedule || schedule.basis !== "crew_estimate" || !schedule.contribution) return "";
+  if (!schedule || !SCHEDULE_BASES.has(schedule.basis) || !schedule.contribution) return "";
   const contribution = minorToDisplay(schedule.contribution);
   if (!contribution) return "";
   return `${contribution}/event`;
@@ -445,14 +453,15 @@ export function fundingScheduleValue(event) {
 
 function fundingScheduleSummary(event) {
   const value = fundingScheduleValue(event);
-  return value ? `${value} · Crew estimate` : "";
+  if (!value) return "";
+  return `${value} · ${scheduleAuthor(event.fundingSchedule)}`;
 }
 
 function fundingScheduleNote(event) {
   const value = fundingScheduleValue(event);
   if (!value) return "";
   const schedule = event.fundingSchedule;
-  const parts = [`${value} · Crew estimate`];
+  const parts = [`${value} · ${scheduleAuthor(schedule)}`];
   if (schedule.deadline) parts.push(`due ${formatShortDay(schedule.deadline)}`);
   if (schedule.planName) parts.push(`for ${schedule.planName}`);
   return parts.join(", ");

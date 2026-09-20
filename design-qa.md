@@ -24,16 +24,23 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
-## Today — the dial states Crew's per-event funding estimate (2026-09-20, OS-056, base `5a88cc6`)
+## Today — the dial states Crew's per-event funding estimate (2026-09-20, OS-056 + OS-056b, base `5a88cc6`)
 
 ![Today iPhone Air dark, the per-event Crew estimate on the Internet row](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/dial-schedule-review-2026-09-20/dial-reserved-420x912-dark.jpg)
 
 **Changed:** a bill whose funding plan is observed now carries Crew's own per-event estimate for its
-**next occurrence only** — the Internet row reads `$65.00 — not yet set aside · $29.89/event · Crew estimate`,
-and its evidence ticket reads `$29.89/event · Crew estimate, due Sep 20 for Veterans Home`. The figure is
-`ceil(amount × interval_days ÷ 30.4375)`, proven against Crew's own five-bill payload in
+**next occurrence only** — the Internet row reads `$65.00 — not yet set aside · $29.89/event · Crew's own
+estimate`, and its evidence ticket reads `$29.89/event · Crew's own estimate, due Sep 20 for Veterans Home`.
+The figure is `ceil(amount × interval_days ÷ 30.4375)`, proven against Crew's own five-bill payload in
 `docs/project/CREW_FUNDING_MATH_2026-09-19.md`; the interval comes only from a cadence that maps exactly
 (weekly 7, biweekly 14), so an unrecognised cadence yields **no** schedule rather than a guessed one.
+
+**Two provenances, one vocabulary.** OS-056 computed the figure (Meridian applying Crew's published rule →
+`$29.89/event · Crew estimate`); OS-056b ingests Crew's *own* reported `estimatedNextFundingAmount` and
+`reservedBy` (025) and states that instead when it exists (`· Crew's own estimate`). An observation outranks a
+derivation of it, both readings still say "estimate", and the two values are compared whenever both exist —
+`fundingSchedule.divergence` reports the difference so a change in Crew's arithmetic cannot pass unnoticed.
+The Insurance row in the same model is the `crew_estimate` case, so one capture shows both forms.
 
 **Precedence is visible in the capture, deliberately.** Internet has both statements, and the centre readout
 shows the **observed** one (`$65.00 — not yet set aside`) because an observed figure outranks a projection
@@ -41,18 +48,19 @@ shows the **observed** one (`$65.00 — not yet set aside`) because an observed 
 is the case where the centre does fall to the schedule, and the browser test pins both directions.
 
 **The copy is in three lengths on purpose.** OS-048b's capture lesson was that a long label at 420px wrapped
-into its own value, so the row gets the compact marker (`$29.89/event · Crew estimate`) and only the ticket
-carries the sentence naming the deadline and the plan. Measured at the contract viewports (read-only probe,
-`synthetic` fixture, fixed clock, timers disabled), the meta line **wraps but never collides**: its right edge
-sits exactly on the amount column's left edge (0px gap, no overlap) at 1440/1024/430/390/420, and its height
-stays well inside its own row (Internet 14.8px in a 120px row at 1440; 40.5px in 125.8px at 420). Zero
-horizontal overflow at every viewport.
+into its own value, so the row gets the compact marker and only the ticket carries the sentence naming the
+deadline and the plan. Measured at the contract viewports with a read-only probe (synthetic fixture, fixed
+clock, timers disabled), the meta line **wraps but never collides**: its right edge sits exactly on the amount
+column's left edge (0px gap, no overlap) at 1440/1024/430/390/420, and its height stays well inside its own
+row (Internet 14.8px in a 120px row at 1440; 40.5px in 125.8px at 420). Zero horizontal overflow everywhere.
+The browser assertion re-measures all of that on the longer "Crew's own estimate" string, so the added words
+are checked rather than assumed to fit.
 
 **The retired vocabulary.** D-015 retired the even-split model, so the service can no longer emit a `derived`
-figure and the client no longer promotes one: `"observed"` is the only basis that may be stated, and a payload
-that still carries a `derived` figure renders as nothing on the row, the centre and the ticket. The
-"Meridian estimate, split across N bills" wording is gone from the product; a browser assertion pins that it
-cannot come back, and a Node round-trip pins that a legacy derived payload is not stated at all.
+figure and the client no longer promotes one: `"observed"` is the only basis a *reserved amount* may carry,
+and a payload that still carries a `derived` figure renders as nothing on the row, the centre and the ticket.
+The "Meridian estimate, split across N bills" wording is gone from the product; a browser assertion pins that
+it cannot come back, and a Node round-trip pins that a legacy derived payload is not stated at all.
 
 **What these captures are not.** There is no concept drawing of a funding estimate in any governing set, so
 nothing here is compared against a concept and nothing here is a parity claim. These are viewport captures of

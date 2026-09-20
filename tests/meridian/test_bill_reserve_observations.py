@@ -134,7 +134,10 @@ def test_migration_024_backfills_only_amounts_that_could_have_been_stated(tmp_pa
         connection.commit()
 
     monkeypatch.undo()
-    assert run_migrations(db) == ["024_crew_bill_reserve_observations.sql"]
+    assert run_migrations(db) == [
+        "024_crew_bill_reserve_observations.sql",
+        "025_crew_reported_funding_schedule.sql",
+    ]
 
     with sqlite3.connect(db) as connection:
         rows = dict(

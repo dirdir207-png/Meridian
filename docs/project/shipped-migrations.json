@@ -3,7 +3,7 @@
   "note": "Migrations that have shipped. Once a database applies a migration its checksum is frozen, so a listed path may never change or disappear -- ship a new migration instead. New *.sql files are allowed and reported as needing registration. This manifest is deliberately independent of any claim's HEAD.",
   "frozen_at_sha": "72370de78c529f6b88afa01f79d5ac05a3874b17",
   "frozen_at": "2026-09-13T07:29:51+00:00",
-  "migration_count": 24,
+  "migration_count": 25,
   "migrations": {
     "meridian/migrations/001_financial_graph.sql": "0a185eee376e676356191db9543aef173c4b6cf1db188965b16e2c36c58ab8a1",
     "meridian/migrations/002_financial_integrity.sql": "90dc2b034138170c1db71e9b30cc957b9ca1218329e7ee1863d6862d380f21dd",
@@ -28,6 +28,7 @@
     "meridian/migrations/021_commitment_absence_reconciliation.sql": "0473ffb49e97a719b37187cca1147546a475413c038b06a378a0a0b68ffd9f2d",
     "meridian/migrations/022_crew_funding_plans.sql": "987b8cbe2d24244c5fd8c0ffaf7f6b9f4543836ba2a9a4aa56daba076f45ef23",
     "meridian/migrations/023_commitment_bill_reserve.sql": "069b28afd0a2a77c56817f1f1c01346d8fb61c399ef0b947b1374f6c074d0b03",
-    "meridian/migrations/024_crew_bill_reserve_observations.sql": "9db6c5f8b52ce39f4f16ef1ad5d5ca56c8886184f443deb09dedfef4bc288f65"
+    "meridian/migrations/024_crew_bill_reserve_observations.sql": "9db6c5f8b52ce39f4f16ef1ad5d5ca56c8886184f443deb09dedfef4bc288f65",
+    "meridian/migrations/025_crew_reported_funding_schedule.sql": "5e2ecde3cc10a360ca2fda3e437df71973e65988c2a2a78326bee473aa4af74a"
   }
 }

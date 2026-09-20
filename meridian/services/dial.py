@@ -188,32 +188,100 @@ def _resolve_funding_source(commitment, sources: dict[tuple[str, str], list]):
     return None, (), None
 
 
-def _crew_schedule(commitment, amount: float, plan, event_date: date, as_of: date):
-    """Build one next-occurrence Crew-derived schedule, or no schedule.
+def _reported_reserve_schedules(graph) -> dict:
+    """Index the currently observed reserves by (provider, reserve id).
 
-    The cadence is only used when it maps to an exact interval and the plan carries an
-    anchor, so an unrecognised cadence yields NO schedule rather than a guessed one. The
-    unit is the bill's next occurrence only (D-010/D-013 as narrowed): the contribution is
-    per funding event, and nothing is multiplied forward across later due dates.
+    Only Crew's own reported funding schedule is read from these rows (025):
+    ``next_funding_date`` is its statement of the next funding event, and
+    ``estimated_next_funding_amount`` is stored but deliberately never used here -- D-015
+    records it as unexplained, and ``total_reserved_amount`` is an observed sum that must
+    never be derived from it. A retired reserve is excluded for the same reason a retired
+    plan is: a withdrawn record may not keep stating an event.
     """
-    if plan is None:
+    index: dict[tuple[str, str], object] = {}
+    for reserve in graph.list_bill_reserves():
+        index[(reserve.provider, reserve.external_id)] = reserve
+    return index
+
+
+def _crew_schedule(
+    commitment, amount: float, plan, reserve, event_date: date, as_of: date
+):
+    """Crew's funding schedule for this bill's next occurrence, or no schedule.
+
+    TWO statements are possible, and the order between them is D-013's order of authority:
+    an observation outranks a derivation of it.
+
+    * ``crew_reported`` -- Crew's own ``estimatedNextFundingAmount`` for this bill (025).
+      This is the provider's own figure, so it is what the payload states. Its
+      ``reservedBy`` is the deadline, because that is the deadline Crew reserved against.
+    * ``crew_estimate`` -- Meridian applies Crew's published rule
+      (``ceil(amount * interval_days / 30.4375)``) using the observed plan's cadence and
+      anchor. This is a projection and says so.
+
+    Both are computed whenever they are available so the two can be COMPARED: when they
+    disagree the difference is reported in ``divergence``, which is the only way a change
+    in Crew's arithmetic becomes visible. Neither figure is ever derived from the other.
+
+    Unrecognised cadences and missing anchors produce no computed figure rather than a
+    guessed one, and a bill with neither statement yields no schedule at all -- an empty
+    schedule would read as a zero. The unit is the next occurrence only (D-010/D-013 as
+    narrowed): the contribution is per funding event and is never multiplied forward.
+    """
+    reported_cents = None
+    if getattr(commitment, "estimated_next_funding_amount", None) is not None:
+        reported_cents = _minor(
+            commitment.estimated_next_funding_amount, commitment.currency
+        )
+
+    computed_cents = None
+    interval_days = None
+    computed_next_funding = None
+    if plan is not None:
+        interval_days = cadence_interval_days(plan.cadence)
+        anchor = _date_of(plan.anchor_date)
+        if interval_days is not None and anchor is not None:
+            computed_cents = crew_proration_cents(
+                _minor(amount, commitment.currency), interval_days
+            )
+            computed_next_funding = anchor
+            while computed_next_funding < as_of:
+                computed_next_funding += timedelta(days=interval_days)
+
+    if reported_cents is None and computed_cents is None:
         return None
-    interval_days = cadence_interval_days(plan.cadence)
-    anchor = _date_of(plan.anchor_date)
-    if interval_days is None or anchor is None:
-        return None
-    next_funding = anchor
-    while next_funding < as_of:
-        next_funding += timedelta(days=interval_days)
-    contribution = crew_proration_cents(_minor(amount, commitment.currency), interval_days)
+
+    basis = "crew_reported" if reported_cents is not None else "crew_estimate"
+    contribution = reported_cents if reported_cents is not None else computed_cents
+
+    # Crew's own deadline outranks the occurrence date Meridian rolled from the anchor: it
+    # is the deadline the provider reserved against.
+    reported_deadline = _date_of(getattr(commitment, "reserved_by", None))
+    deadline = reported_deadline or event_date
+
+    # Crew's own next funding event outranks the one Meridian would compute from the plan.
+    reported_next_funding = _date_of(getattr(reserve, "next_funding_date", None))
+    next_funding = reported_next_funding or computed_next_funding or deadline
+
+    divergence = None
+    if reported_cents is not None and computed_cents is not None and reported_cents != computed_cents:
+        divergence = {
+            "reportedMinor": reported_cents,
+            "computedMinor": computed_cents,
+            "deltaMinor": reported_cents - computed_cents,
+        }
+
     return {
         "eventDate": next_funding.isoformat(),
         "contribution": {"minor": contribution, "currency": commitment.currency},
-        "deadline": event_date.isoformat(),
+        "deadline": deadline.isoformat(),
         "nextFundingDate": next_funding.isoformat(),
-        "planName": plan.name or "",
-        "basis": "crew_estimate",
+        "planName": (plan.name or "") if plan is not None else "",
+        "basis": basis,
         "intervalDays": interval_days,
+        # Present only when Crew's own figure and the mirror disagree, which is the
+        # evidence that Crew's arithmetic moved.
+        "divergence": divergence,
     }
 
 
@@ -254,8 +322,10 @@ def _commitment_events(
     as_of: date,
     horizon_end: date,
     funding_sources: Optional[dict[tuple[str, str], list]] = None,
+    reserve_schedules: Optional[dict[tuple[str, str], object]] = None,
 ) -> list[dict]:
     sources = funding_sources if funding_sources is not None else {}
+    reserves = reserve_schedules if reserve_schedules is not None else {}
     events: list[dict] = []
     for commitment in commitments:
         if commitment.type not in (CommitmentType.BILL, CommitmentType.GOAL):
@@ -270,6 +340,12 @@ def _commitment_events(
                 continue
             funding_source, ambiguous_ids, funding_plan = _resolve_funding_source(
                 commitment, sources
+            )
+            # Crew's own reserve record, for its reported ``nextFundingDate`` and (stored,
+            # unused here) reserve-level estimate. Keyed the same way as the plan join.
+            reserve = reserves.get(
+                (getattr(commitment, "legacy_source", None),
+                 getattr(commitment, "bill_reserve_id", "") or "")
             )
             current, period = next_occurrence_with_index(anchor, recurrence, as_of)
             guard = 0
@@ -293,7 +369,7 @@ def _commitment_events(
                         else None
                     )
                     funding_schedule = _crew_schedule(
-                        commitment, amount, funding_plan, current, as_of
+                        commitment, amount, funding_plan, reserve, current, as_of
                     )
                 else:
                     # D-010/D-013: one reserve is not a per-occurrence amount. Repeating
@@ -461,6 +537,7 @@ def build_dial(
         as_of,
         horizon_end,
         _funding_sources_by_reserve(graph),
+        _reported_reserve_schedules(graph),
     )
     events.extend(_paycheck_events(paycheck, as_of, horizon_end))
     events.sort(key=lambda event: (event["date"], event["kind"], event["title"]))

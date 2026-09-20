@@ -60,6 +60,16 @@ class CommitmentCandidate:
     # their income source, and it keys on the provider's record id rather than on any
     # name the owner renames (D-010).
     bill_reserve_id: str = ""
+    # The provider's OWN per-event funding estimate for this bill, in dollars, or ``None``
+    # when the read did not report it. It is the same quantity Meridian mirrors with
+    # ``funding.crew_proration_cents``, but stated by Crew instead of applied by Meridian,
+    # so it is an observation and outranks the mirror (D-013's order of authority). Storing
+    # both is what makes the divergence test possible.
+    estimated_next_funding_amount: Optional[float] = None
+    # The provider's OWN deadline for this bill's reservation (Crew's ``reservedBy``), or
+    # ``None`` when the read did not report it. Stored verbatim rather than parsed, so a
+    # malformed value stays visible as malformed instead of becoming silence.
+    reserved_by: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -105,6 +115,15 @@ class NormalizedBillReserve:
     total_reserved_amount: Optional[float] = None
     currency: str = "USD"
     observed_at: Optional[str] = None
+    # Crew's own reserve-level ``estimatedNextFundingAmount``, or ``None`` when unreported.
+    # D-015 records it as UNEXPLAINED -- not the sum of the per-bill estimates, not the plan
+    # amount -- so it is stored as an observation with provenance and is deliberately kept
+    # out of every arithmetic path: ``total_reserved_amount`` is observed and must never be
+    # derived from it. It is kept because the 2026-10-02 funding event can be measured
+    # against what Crew predicted.
+    estimated_next_funding_amount: Optional[float] = None
+    # Crew's own ``nextFundingDate``: the plan's next funding event, verbatim.
+    next_funding_date: Optional[str] = None
 
 
 @dataclass(frozen=True)
