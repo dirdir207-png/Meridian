@@ -503,7 +503,23 @@
       ],
       "base_sha": "3ad4772",
       "since": "2026-09-20T00:00:00+00:00",
-      "note": "Fixes a flaky SECURITY test found while running the suite for an unrelated docs-only slice: tests/crew/test_session_credentials.py::test_cipher_rejects_tampering_and_wrong_key failed once then passed 5/5 in isolation. Root cause REPRODUCED, not inferred: the tampered value was built as ciphertext[:-1] + b'x', which overwrites the last byte instead of changing it, so whenever the ciphertext already ended in 0x78 the 'tampered' value was byte-identical to the original, decryption correctly succeeded, and pytest.raises failed -- roughly 1 run in 256. A reproduction hit the case on attempt 14 and showed byte-identical: True with decrypt returning no error. Fix: flip the final byte with XOR plus an explicit assert that the tamper changed something. Verified over 5000 fresh encryptions with zero failures to detect, 8/8 consecutive test runs, Ruff clean, full non-browser suite green at 1417 passed / 1 skipped. TEST-ONLY: no application behaviour, schema, provider, live-sync write or authority change; no preview restart needed because the app never imports tests. Filed as OS-062 (done)."
+      "note": "Fixes a flaky SECURITY test found while running the suite for an unrelated docs-only slice: tests/crew/test_session_credentials.py::test_cipher_rejects_tampering_and_wrong_key failed once then passed 5/5 in isolation. Root cause REPRODUCED, not inferred: the tampered value was built as ciphertext[:-1] + b'x', which overwrites the last byte instead of changing it, so whenever the ciphertext already ended in 0x78 the 'tampered' value was byte-identical to the original, decryption correctly succeeded, and pytest.raises failed -- roughly 1 run in 256. A reproduction hit the case on attempt 14 and showed byte-identical: True with decrypt returning no error. Fix: flip the final byte with XOR plus an explicit assert that the tamper changed something. Verified over 5000 fresh encryptions with zero failures to detect, 8/8 consecutive test runs, Ruff clean, full non-browser suite green at 1417 passed / 1 skipped. TEST-ONLY: no application behaviour, schema, provider, live-sync write or authority change; no preview restart needed because the app never imports tests. Filed as OS-062 (done). Released at 034d323."
+    },
+    {
+      "agent": "deepseek-owner-original-ask",
+      "claim_id": "owner-original-ask-track-I5-OS063-20260920",
+      "generation": 1,
+      "files": [
+        "docs/project/MERIDIAN_ROADMAP.md",
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "3707cf2",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "Records the owner's ORIGINAL motivation for Meridian's AI features, in his words, as roadmap Track I.5 and ledger OS-063: 'I had to pay 500 dollars to repair my car, I cant cover this bill, look at the foreseeable future and make any budget/bill/autopilot adjustments necessary (proposals are then generated). I may add a stipulation like, I need at least 600 dollars free to spend each pay period, so meridian would make sure my pocket rule is for 600 dollars to free to spend.' Three parts recorded: unforeseen cost + goal as input; OWNER STIPULATIONS as standing constraints that bound the proposal space (owner-set policy held in Meridian, Crew has no equivalent; not a classifier, can never remove an approval; an unsatisfiable stipulation yields a refusal or a named shortfall, never a silently weakened constraint); proposals across budget/bill/autopilot as output (I.3's one validated plan). RECORDED, NOT AUTHORISED TO START -- prerequisites named explicitly (I.1 envelope+permissions, I.2 one role, I.3 council, Track C V2/V3, OS-059 readback gaps, and the existing propose/approve/execute engine which must not be rebuilt); first safe step when reached is the stipulation store plus a read-only satisfaction checker. Also records two date rules from the Rent history (5th -> 16th -> 18th, the last a system correction the owner did NOT make: never assume a due date was owner-set, never present a moved date as drift, and state what was observed rather than who caused it) and that payment-arrangement bills are ordinary bills named as such (Verizon Payment Arrangement beside Verizon), so a workaround is usually a coexisting new bill and the bill set's shape changes and reverts. DOCUMENTATION AND LEDGER ONLY: no code behaviour, schema, provider, live-sync write, deployment or authority change."
     }
   ]
 }

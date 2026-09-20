@@ -117,6 +117,27 @@ tight, and it may be coincidence or it may be deliberate — **Meridian must not
 recorded because it is the sharpest statement of current exposure, and because a display that hid the gap would
 hide exactly this. Confirmed by the owner: AUTOMATIC TOP-UPS = off and OPTIMIZE CASH FLOW = on, as recorded above.
 
+**How Rent's date got where it is (owner, 2026-09-20).** Rent is normally due the **5th**; the owner changed it
+to the **16th**; then his **direct deposit switched to Crew**, which moved it to the **18th** — in his words,
+*"a correction I didn't make."* So a bill date is **neither necessarily owner-set nor stable**, and Meridian must
+state **what it observed** rather than **who caused it**, because it cannot know. Relatedly, the distinction the
+owner draws between *"bills specifically that say payment arrangement, and normal bills"* lives in the **bill
+data**: `Verizon Payment Arrangement` exists as its own bill beside the plain `Verizon`. A workaround is therefore
+often a **new coexisting bill** rather than an edit to the original — which is why the bill set's shape changes and
+then reverts. Meridian must never treat that as an error, never infer a "payment arrangement" type from it, and
+never assume the previous bill set. He also restates the expectation: once caught up, it is **consistent
+month-to-month**, and the manual changes are a running-behind accommodation, not a new normal.
+
+**The original ask behind Meridian's AI features, now recorded as roadmap Track I.5 / OS-063.** The owner restated
+the capability that motivated the project: *"I had to pay 500 dollars to repair my car, I can't cover this bill,
+look at the foreseeable future and make any budget/bill/autopilot adjustments necessary (proposals are then
+generated). I may add a stipulation like, I need at least 600 dollars free to spend each pay period, so meridian
+would make sure my pocket rule is for 600 dollars to free to spend."* Recorded with its three parts (an unforeseen
+cost plus a goal as input; **owner stipulations** as standing constraints that bound the proposal space; proposals
+across budget/bill/autopilot as output) and with its dependency chain stated so it is not attempted early — it sits
+at Track C V2/V3 planning on top of I.2 → I.3, and needs OS-059's readback gaps closed before the pocket rule can
+even be read. **It is recorded, not authorised to start.**
+
 **Still open:** *which bill is credited with holding the reserve, and by what rule* — the funding order is settled
 but the attribution is not, and the stored data already contradicts "each bill accumulates its own allocation"
 (Rent holds the whole `1097.10` while its per-event need is `663.27`). That is measured at the **2026-10-02**

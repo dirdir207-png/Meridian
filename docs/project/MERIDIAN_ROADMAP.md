@@ -254,6 +254,26 @@ for the executor — never a debate transcript.
 **I.4 - Evaluation.** Measured usefulness on a real journey, refusal correctness when evidence is missing,
 citation accuracy, cost per useful proposal. Only after that, consider multi-model routing - recording
 provider/model metadata per run.
+
+**I.5 - The owner's original ask, which everything above exists to serve (recorded 2026-09-20).** This is the
+capability that motivated Meridian's AI features in the first place, in the owner's words: *"the ability to say
+something like, I had to pay 500 dollars to repair my car, I can't cover this bill, look at the foreseeable
+future and make any budget/bill/autopilot adjustments necessary (proposals are then generated). I may add a
+stipulation like, I need at least 600 dollars free to spend each pay period, so meridian would make sure my
+pocket rule is for 600 dollars to free to spend."* One capability, three parts:
+
+1. **An unforeseen cost plus a goal is the input** — "I paid 500 for the car", "I can't cover this bill".
+2. **Owner stipulations are standing constraints the plan must satisfy**, e.g. a minimum free-to-spend per pay
+   period, which would set the pocket rule accordingly. These are **owner-set policy held in Meridian** (Crew has
+   no equivalent) and they *bound the proposal space*. They are not a classifier, they cannot remove an approval,
+   and per the OS-056 rule no score may ever become a path around one.
+3. **The output is proposals** across budget, bill and autopilot settings — the "one validated plan for the
+   executor" that I.3 already specifies, never applied automatically, with each change approved, executed and
+   provider-verified.
+
+**Sequencing, stated plainly so it is not attempted early:** this lands at V2/V3 planning on top of I.2 -> I.3, so
+it cannot be built first. Its prerequisites and its bounds are recorded in the task ledger as **OS-063**. The
+point of writing it down here is that Track I is not idle architecture: this is what it is *for*.
 ### Track C — Capability spine (adopted from the second roadmap)
 
 | Slice | Outcome |
