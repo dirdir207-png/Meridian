@@ -312,6 +312,19 @@
       "base_sha": "9ceadf57682fa1a53beccbd690f471f4796a51c9",
       "since": "2026-09-20T02:40:00+00:00",
       "note": "Documentation only, no code. Records the reverse-engineered Crew funding arithmetic from one read-only connector snapshot (crew-readonly snapshot, mode read-only, complete) against the live :8081 database: per-bill estimatedNextFundingAmount = ceil(amount * interval_days / 30.4375), proven on 5 of 5 bills, plus the reservedBy (next due date) and nextFundingDate fields Meridian was discarding. Also records what is NOT explained (totalReservedAmount, the earmarking rule, the reserve-level estimate) rather than guessing, and names the 2026-10-02 funding event as the decisive free observation. Refines OS-055/OS-056 to mirror Crew's own formula instead of an invented split; adds D-015. No provider mutation, no live sync, no schema change, no behaviour change."
+    },
+    {
+      "agent": "deepseek-os056-handoff",
+      "claim_id": "os056-handoff-20260920",
+      "generation": 1,
+      "files": [
+        "docs/project/HANDOFF_OS056_2026-09-20.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "f587a1ae346f621042343a02803fdab233ae918e",
+      "since": "2026-09-20T00:25:00+00:00",
+      "note": "Cold-start handoff for OS-056 (mirror Crew's proven funding math in Today). Documentation only: records the proven formula with its five-row test oracle, the two Crew fields Meridian discards, the falsified rules, four decisions to make before coding (compute vs ingest, horizon, next-occurrence-only unit, retirement of the derived branch), the expected file surface, hard non-goals, the three measurements pending at the 2026-10-02 event, and the environment traps that cost this session time. No code, schema, provider, authority or behaviour change."
     }
   ]
 }
