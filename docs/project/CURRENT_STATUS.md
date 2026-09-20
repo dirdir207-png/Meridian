@@ -1,5 +1,48 @@
 # Enhanced SimpleCrew — Current Status
 
+## RESUME HERE — OS-056: Today states Crew's per-event funding estimate (2026-09-20, base `5a88cc6`)
+
+The read-only half of D-015 is implemented and verified in the working tree. Today now mirrors Crew's own
+arithmetic for a bill's **next occurrence only**, and the invented even-split model is retired rather than
+left dormant beside it.
+
+- `meridian/funding.py` gains two pure functions: `crew_proration_cents(amount_cents, interval_days)` —
+  `ceil(amount × interval ÷ 30.4375)` computed in `Decimal` with `ROUND_CEILING`, which is exactly the
+  five-row oracle in `CREW_FUNDING_MATH_2026-09-19.md` — and `cadence_interval_days`, which returns days only
+  for cadences Meridian expresses exactly (`weekly` 7, `biweekly` 14) and `None` otherwise. A cadence that
+  cannot be expressed yields **no** schedule rather than a guessed interval.
+- `meridian/services/dial.py` emits an additive `fundingSchedule` on the earliest occurrence in the horizon,
+  built only when the bill's reserve resolves to exactly one observed plan, that plan's cadence maps exactly,
+  and it carries an anchor: `{eventDate, contribution, deadline, nextFundingDate, planName, basis:
+  "crew_estimate", intervalDays}`. The unit is the next occurrence (D-010 as narrowed by D-013); nothing is
+  multiplied across later due dates, and later occurrences keep `fundingSchedule: null`.
+- **The observed figure still outranks the projection everywhere.** `reserved`/`fundingStatus` are unchanged,
+  and the centre readout states the observed figure when there is one — a reported zero included. The
+  estimate is a separate, always-labelled statement: `$29.89/event · Crew estimate` on the row,
+  `$29.89/event · Crew estimate, due Sep 20 for Veterans Home` in the ticket.
+- **The `derived` branch is removed, service-side and client-side** (D-015 §1). `"observed"` is the only basis
+  that may be stated; a payload still carrying a `derived` figure renders as nothing. The
+  "Meridian estimate, split across N bills" wording is gone. OS-055's fabrication risk is closed by removal.
+- `_resolve_funding_source` returns the matched plan record separately so the schedule can read its anchor
+  date; the `fundingSource` payload shape is deliberately unchanged, because its own tests pin it.
+
+Verified: focused non-browser suites **136 passed** (funding oracle, dial schedule, dial reserved amount, dial
+JS Node round-trip); full non-browser suite **1399 passed, 1 skipped**; the dial browser file
+`tests/browser/test_dial_reserved_amount.py` **13 passed** — the contract's five viewports × both themes at
+the specified DPRs, zero horizontal overflow, zero console errors, plus a measured check that the wrapped row
+line cannot overlap the amount column or leave its row; `node --check`; Ruff clean; `git diff --check` clean;
+guardrails clean for `deepseek-os056`. Captures: `artifacts/observatory-dial-schedule-2026-09-20/` with review
+JPEGs in `artifacts/dial-schedule-review-2026-09-20/`; the reasoning is in `design-qa.md`.
+
+Must not be assumed: **no provider mutation, no live sync, no migration, no deployment, and no `:8081`
+restart.** The running preview loads code at process start, so this changes nothing on the live app until the
+owner authorizes a restart. `funding_rules` still has zero rows: this slice does not use `project_funding`, it
+mirrors Crew's published rule directly, which is the compute-first path Decision 1 chose. The six
+pre-existing `tests/browser/test_dial_fidelity.py` failures (dial-wrap vs rail geometry; theme-toggle label
+width) are OS-049's baseline, reproduced identically and not attributable to this slice. The three open
+questions — how `totalReservedAmount` is derived, the earmarking rule, and the reserve-level `$1,435.97` —
+remain unmeasured; the **2026-10-02** funding event is still the decisive observation.
+
 ## WHAT'S NEXT — mirror Crew's own funding math, and measure it at the 2026-10-02 event (2026-09-20, base `9ceadf5`)
 
 Owner direction: *"ideally it should be deterministic based on the due date of the bill, paycheck amount, cadence so that bills are funded by their due date, or at the last funding event before the due date"*, modelled on *"how the beacon budget app works, or Simple Bank before it shut down"*. Asked whether Crew's actual calculations could be discerned rather than assumed — they could, from one read-only connector snapshot, and the answer removes most of the guesswork. Full evidence in `docs/project/CREW_FUNDING_MATH_2026-09-19.md`; the ruling is D-015.

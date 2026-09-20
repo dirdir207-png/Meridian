@@ -136,7 +136,7 @@ def test_an_observed_reserved_amount_wins_over_the_derived_split(tmp_path):
 # --- 2. the derived fallback is labelled and attributed to Meridian ---------------
 
 
-def test_a_derived_split_carries_its_basis_and_divisor(tmp_path):
+def test_retired_derived_split_stays_unknown(tmp_path):
     repository = _repository(tmp_path)
     commitments = CommitmentRepository(repository.db_path)
     _reserve(repository, total=3000.0)
@@ -145,15 +145,15 @@ def test_a_derived_split_carries_its_basis_and_divisor(tmp_path):
 
     event = _bill_event(_dial(repository, commitments))
 
-    # 3000.00 / 2 bills = 1500.00, which covers the 1500.00 bill.
-    assert event["reserved"] == {"minor": 150000, "currency": "USD"}
-    assert event["fundingStatus"] == "reserved"
-    assert event["fundingBasis"] == "derived"
-    assert event["fundingBasisDivisor"] == 2
-    assert event["fundingObservedAt"] == "2026-09-11T21:00:00Z"
+    # D-015 retires the even split: a reserve total is not a per-bill balance.
+    assert event["reserved"] is None
+    assert event["fundingStatus"] == "unknown"
+    assert event["fundingBasis"] == "unknown"
+    assert event["fundingBasisDivisor"] is None
+    assert event["fundingObservedAt"] is None
 
 
-def test_a_derived_split_is_never_attributed_to_crew(tmp_path):
+def test_retired_derived_split_has_no_attribution(tmp_path):
     """D-013: a Meridian-side figure must never be attributed to Crew or read as observed."""
     repository = _repository(tmp_path)
     commitments = CommitmentRepository(repository.db_path)
@@ -163,15 +163,12 @@ def test_a_derived_split_is_never_attributed_to_crew(tmp_path):
 
     event = _bill_event(_dial(repository, commitments))
 
-    assert event["fundingAttribution"] == "meridian"
-    assert event["fundingBasis"] != "observed"
-    # The amount the split produces is not Crew's per-bill statement, so nothing may
-    # present it as one: no Crow attribution, and the divisor is stated so a consumer
-    # can always reconstruct that it was divided.
-    assert event["fundingBasisDivisor"] == 2
+    assert event["fundingAttribution"] is None
+    assert event["fundingBasis"] == "unknown"
+    assert event["fundingBasisDivisor"] is None
 
 
-def test_a_derived_split_can_be_short(tmp_path):
+def test_retired_derived_split_does_not_create_a_shortfall_figure(tmp_path):
     """The fallback obeys the same shortfall arithmetic as an observation."""
     repository = _repository(tmp_path)
     commitments = CommitmentRepository(repository.db_path)
@@ -182,9 +179,9 @@ def test_a_derived_split_can_be_short(tmp_path):
 
     event = _bill_event(_dial(repository, commitments))
 
-    assert event["reserved"] == {"minor": 100000, "currency": "USD"}
-    assert event["fundingStatus"] == "partial"
-    assert event["fundingBasis"] == "derived"
+    assert event["reserved"] is None
+    assert event["fundingStatus"] == "unknown"
+    assert event["fundingBasis"] == "unknown"
 
 
 def test_an_unobserved_reserve_total_leaves_the_figure_unknown(tmp_path):
@@ -295,8 +292,8 @@ def test_the_same_reserve_total_is_never_multiplied_by_future_dates(tmp_path):
               if event["title"] == "Rent"]
 
     assert len(events) >= 2
-    total_stated = sum(event["reserved"]["minor"] for event in events if event["reserved"])
-    assert total_stated == 100000, "one bill's share, never multiplied by future dates"
+    assert all(event["reserved"] is None for event in events)
+    assert all(event["fundingBasis"] == "unknown" for event in events)
 
 
 # --- 6. D-010 identity survives, and local money is never called Crew's -----------

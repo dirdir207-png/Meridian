@@ -325,6 +325,29 @@
       "base_sha": "f587a1ae346f621042343a02803fdab233ae918e",
       "since": "2026-09-20T00:25:00+00:00",
       "note": "Cold-start handoff for OS-056 (mirror Crew's proven funding math in Today). Documentation only: records the proven formula with its five-row test oracle, the two Crew fields Meridian discards, the falsified rules, four decisions to make before coding (compute vs ingest, horizon, next-occurrence-only unit, retirement of the derived branch), the expected file surface, hard non-goals, the three measurements pending at the 2026-10-02 event, and the environment traps that cost this session time. No code, schema, provider, authority or behaviour change."
+    },
+    {
+      "agent": "deepseek-os056",
+      "claim_id": "os056-crew-schedule-20260920",
+      "generation": 1,
+      "files": [
+        "meridian/funding.py",
+        "meridian/services/dial.py",
+        "static/js/meridian/dial.js",
+        "tests/meridian/test_funding.py",
+        "tests/meridian/services/test_dial_schedule.py",
+        "tests/meridian/services/test_dial_reserved_amount.py",
+        "tests/meridian/test_dial_js.py",
+        "tests/browser/test_dial_reserved_amount.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "design-qa.md"
+      ],
+      "base_sha": "5a88cc6",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "OS-056 bounded read-only slice: mirror Crew's proven ceiling proration in Today, expose an additive next-occurrence schedule with explicit projected provenance, and retire the derived even-split model. No provider mutation, migration, live sync or deployment."
     }
   ]
 }

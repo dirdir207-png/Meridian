@@ -107,6 +107,14 @@ Found while verifying, and fixed in the same slice because the feature is otherw
 
 Ratified by the owner on 2026-09-19, shown the delivered copy: *"Split across 3 bills is fine, I can always adjust after."* The derived figure's divisor wording ("Meridian estimate, split across 3 bills" in the evidence ticket, "(Meridian estimate)" on the row and in the centre) is accepted as delivered, and is explicitly a presentation choice the owner may revise — changing it touches no storage, no precedence and no provenance.
 
+**§3's `derived` tier was RETIRED on 2026-09-20 by OS-056, implementing D-015 §1.** `_reserve_figure` now
+returns `observed` or `unknown` only — the even split of a reserve total is no longer computed, stored in a
+payload, or rendered, and `"observed"` is the only basis the client will state. Do not re-introduce a
+derived per-bill share: it models something Crew does not do (the total is the *sum* of Crew's own per-bill
+allocations), and while it existed it could have handed an unreported bill a share of other bills' money
+(OS-055). A per-bill amount that Crew did not report is now stated as unknown, and the honest projection
+beside it is Crew's own per-event estimate.
+
 **Correction to D-013's premise, from live data (2026-09-19, after the owner authorized restarting `:8081`).** D-013 permits the even split on the owner's belief that the reserve is *"a single bucket"* whose per-bill allocation inside Crew is unknown. The live read says Crew does allocate per bill: in reserve `BillReserve:8d2f3e8f-…`, Rent reports `reservedAmount` 1097.10 and the other four bills report 0.00 each — explicitly reported, not absent (`reserved_amount_reported = 1` on all five) — and `totalReservedAmount` = 1097.10 is exactly their **sum**. So the total is not a pooled figure to be divided; it is the sum of allocations Crew already made. Consequences, recorded rather than acted on: the `derived` branch is **dormant** on this data (precedence correctly stops at `observed`, so the approved copy currently appears nowhere), and if it ever fired on a partially-reported reserve it would hand an unreported bill a share of *other bills'* money. That is OS-055, an owner decision with candidate rules; **no behaviour was changed silently**, because the risk is dormant and the choice is a product one. The precedence itself (D-013 §3) is unaffected and was confirmed correct on live data: all three bills in the current horizon emit `fundingBasis: "observed"`, `fundingAttribution: "crew"`, `reserved: null`, and state Crew's own "not yet set aside" instead of "unknown".
 
 ## D-015 — Mirror Crew's own funding arithmetic; retire the invented split (owner direction, 2026-09-19)

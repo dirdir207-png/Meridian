@@ -8,7 +8,7 @@ Decimal-based, and free of I/O: no providers, no database, no clock reads.
 import calendar
 from dataclasses import dataclass, field
 from datetime import date, timedelta
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Mapping, Optional, Sequence
 
 _KINDS = frozenset(
@@ -26,6 +26,24 @@ _BIWEEKLY_DAYS = 14
 
 _ZERO = Decimal("0")
 _CENT = Decimal("0.01")
+_CREW_MONTH_DAYS = Decimal("30.4375")
+
+
+def crew_proration_cents(amount_cents: int, interval_days: int) -> int:
+    """Crew's observed per-event bill estimate, in cents.
+
+    The provider applies a daily-rate proration of the monthly bill and rounds
+    upward to the next cent. This is a projection only; it is never a balance.
+    """
+    if amount_cents < 0 or interval_days <= 0:
+        raise ValueError("amount_cents must be non-negative and interval_days positive")
+    value = Decimal(amount_cents) * Decimal(interval_days) / _CREW_MONTH_DAYS
+    return int(value.to_integral_value(rounding=ROUND_CEILING))
+
+
+def cadence_interval_days(cadence: Optional[str]) -> Optional[int]:
+    """Return the exact funding interval supported by the stored cadence."""
+    return {"weekly": 7, "biweekly": 14}.get((cadence or "").lower())
 
 
 @dataclass(frozen=True)

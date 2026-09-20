@@ -497,11 +497,12 @@ def test_the_day_arc_starts_clear_of_the_dials_building_art():
 def test_dial_js_states_the_reserved_amount_and_its_basis():
     """OS-048b: the four copy states, executed rather than grepped.
 
-    D-013 fixes the precedence (an observed per-bill figure outranks a Meridian
-    derivation) and requires a derived figure to be labelled and never attributed to
-    Crew. ``test_dial_reserved_amount.py`` pins which basis the service emits; this
-    pins what the owner reads for each of them, including the two that must stay
-    silent and the surplus that must not read as a negative shortfall.
+    D-013 requires a stated figure to carry its basis, and D-015 retired the even-split
+    model so "observed" is the only basis that may be stated at all.
+    ``test_dial_reserved_amount.py`` pins which basis the service emits; this pins what
+    the owner reads, including the two states that must stay silent, the surplus that
+    must not read as a negative shortfall, and a legacy "derived" payload that must no
+    longer be promoted into a stated figure.
 
     The money strings are built with the same ``Intl`` call the module uses, so the
     assertions hold under any locale while still requiring the exact wording.
@@ -558,32 +559,24 @@ def test_dial_js_states_the_reserved_amount_and_its_basis():
         throw new Error('surplus copy: ' + fundingReserveSummary(over));
       }
 
-      // derived is labelled wherever it is stated, names its divisor in the ticket, and
-      // is never Crew's
-      const derived = { ...base, reserved: { minor: 150000, currency: 'USD' },
-                        fundingBasis: 'derived', fundingAttribution: 'meridian',
-                        fundingBasisDivisor: 3 };
-      const wantDerived = money(150000) + ' of ' + money(150000)
-                          + ' set aside (Meridian estimate)';
-      if (fundingReserveSummary(derived) !== wantDerived) {
-        throw new Error('derived copy: ' + fundingReserveSummary(derived));
+      // D-015 retired the even-split model, so a legacy payload still carrying a
+      // "derived" figure must no longer be promoted into a stated amount. No surface may
+      // show it as money, and the estimate vocabulary must not survive anywhere.
+      const legacyDerived = { ...base, reserved: { minor: 150000, currency: 'USD' },
+                              fundingBasis: 'derived', fundingAttribution: 'meridian',
+                              fundingBasisDivisor: 3 };
+      if (fundingReserveSummary(legacyDerived) !== '') {
+        throw new Error('a retired derivation must not be stated: '
+                        + fundingReserveSummary(legacyDerived));
       }
-      // The row uses the same function as the centre, so the label cannot be dropped
-      // from one surface while the other keeps it.
-      if (fundingReserveValue(derived).indexOf('Meridian estimate') !== -1) {
-        throw new Error('only the summary may carry the basis label');
+      if (fundingReserveValue(legacyDerived) !== '') {
+        throw new Error('a retired derivation must not be stated');
       }
-      if (fundingBasisNote(derived) !== 'Meridian estimate, split across 3 bills') {
-        throw new Error('derived note: ' + fundingBasisNote(derived));
+      if (fundingBasisNote(legacyDerived) !== '') {
+        throw new Error('a retired derivation must have no ticket note');
       }
-      if (fundingBasisNote(derived).indexOf('Crew') !== -1) {
-        throw new Error('a derivation must never be attributed to Crew');
-      }
-      if (fundingBasisNote(derived).indexOf('observed') !== -1) {
-        throw new Error('a derivation must never read as an observation');
-      }
-      if (fundingReserveSummary(derived).indexOf('Crew') !== -1) {
-        throw new Error('a derivation must never be attributed to Crew on the row either');
+      if (fundingReserveSummary(legacyDerived).indexOf('Meridian estimate') !== -1) {
+        throw new Error('the retired estimate vocabulary must not survive');
       }
       if (fundingBasisNote(covered).indexOf('observed from Crew') !== 0) {
         throw new Error('observed note: ' + fundingBasisNote(covered));

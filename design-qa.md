@@ -24,6 +24,44 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Today — the dial states Crew's per-event funding estimate (2026-09-20, OS-056, base `5a88cc6`)
+
+![Today iPhone Air dark, the per-event Crew estimate on the Internet row](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/dial-schedule-review-2026-09-20/dial-reserved-420x912-dark.jpg)
+
+**Changed:** a bill whose funding plan is observed now carries Crew's own per-event estimate for its
+**next occurrence only** — the Internet row reads `$65.00 — not yet set aside · $29.89/event · Crew estimate`,
+and its evidence ticket reads `$29.89/event · Crew estimate, due Sep 20 for Veterans Home`. The figure is
+`ceil(amount × interval_days ÷ 30.4375)`, proven against Crew's own five-bill payload in
+`docs/project/CREW_FUNDING_MATH_2026-09-19.md`; the interval comes only from a cadence that maps exactly
+(weekly 7, biweekly 14), so an unrecognised cadence yields **no** schedule rather than a guessed one.
+
+**Precedence is visible in the capture, deliberately.** Internet has both statements, and the centre readout
+shows the **observed** one (`$65.00 — not yet set aside`) because an observed figure outranks a projection
+(D-013). The estimate is still in the row and the ticket. Selecting the Insurance row — nothing observed —
+is the case where the centre does fall to the schedule, and the browser test pins both directions.
+
+**The copy is in three lengths on purpose.** OS-048b's capture lesson was that a long label at 420px wrapped
+into its own value, so the row gets the compact marker (`$29.89/event · Crew estimate`) and only the ticket
+carries the sentence naming the deadline and the plan. Measured at the contract viewports (read-only probe,
+`synthetic` fixture, fixed clock, timers disabled), the meta line **wraps but never collides**: its right edge
+sits exactly on the amount column's left edge (0px gap, no overlap) at 1440/1024/430/390/420, and its height
+stays well inside its own row (Internet 14.8px in a 120px row at 1440; 40.5px in 125.8px at 420). Zero
+horizontal overflow at every viewport.
+
+**The retired vocabulary.** D-015 retired the even-split model, so the service can no longer emit a `derived`
+figure and the client no longer promotes one: `"observed"` is the only basis that may be stated, and a payload
+that still carries a `derived` figure renders as nothing on the row, the centre and the ticket. The
+"Meridian estimate, split across N bills" wording is gone from the product; a browser assertion pins that it
+cannot come back, and a Node round-trip pins that a legacy derived payload is not stated at all.
+
+**What these captures are not.** There is no concept drawing of a funding estimate in any governing set, so
+nothing here is compared against a concept and nothing here is a parity claim. These are viewport captures of
+a synthetic self-consistency check (`tests/browser/test_dial_reserved_amount.py`; no app, no credentials, no
+bank data), 10 records = the contract's five viewports × both themes at the specified DPRs, in
+`artifacts/observatory-dial-schedule-2026-09-20/` with 760px review JPEGs in
+`artifacts/dial-schedule-review-2026-09-20/`. The six pre-existing `tests/browser/test_dial_fidelity.py`
+failures (dial-wrap vs rail geometry; theme-toggle label width) are OS-049's baseline and were not touched.
+
 ## Today — the dial states a per-bill reserved amount (2026-09-19, OS-048b, base `2f2e833`)
 
 ![Today iPhone Air dark, the stated reserve on the earliest bill](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/observatory-dial-reserved-2026-09-19/dial-reserved-420x912-dark.png)

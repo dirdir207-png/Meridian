@@ -5,6 +5,8 @@ import pytest
 
 from meridian.funding import (
     FundingRule,
+    cadence_interval_days,
+    crew_proration_cents,
     project_funding,
 )
 
@@ -37,6 +39,25 @@ def _goal(target="1000.00", funded="0", target_date=None):
 
 def _paychecks(*pairs):
     return [(day, Decimal(amount)) for day, amount in pairs]
+
+
+@pytest.mark.parametrize(
+    ("amount", "expected"),
+    [(144200, 66327), (7520, 3459), (10157, 4672), (21000, 9660), (9300, 4278)],
+)
+def test_crew_proration_matches_the_five_row_oracle(amount, expected):
+    assert crew_proration_cents(amount, 14) == expected
+
+
+def test_crew_proration_is_a_ceiling_not_nearest_rounding():
+    assert crew_proration_cents(21000, 14) == 9660
+    assert crew_proration_cents(144200, 14) == 66327
+
+
+def test_cadence_interval_days_is_explicit_and_conservative():
+    assert cadence_interval_days("biweekly") == 14
+    assert cadence_interval_days("weekly") == 7
+    assert cadence_interval_days("monthly") is None
 
 
 def test_fixed_per_paycheck_funds_every_paycheck_in_the_horizon():

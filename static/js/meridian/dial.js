@@ -164,6 +164,7 @@ function normalizeEvent(event) {
           currency: reserved.currency || amount.currency || "USD",
         }
       : null,
+    fundingSchedule: event.fundingSchedule || null,
     // Observed funding-source identity, kept separate from the reserved amount above.
     // A source without a provider record id is not citable, so it is dropped rather
     // than shown as an unnamed source.
@@ -182,15 +183,11 @@ function normalizeEvent(event) {
     fundingSourceCandidateIds: Array.isArray(event.fundingSourceCandidateIds)
       ? event.fundingSourceCandidateIds.slice()
       : [],
-    // The basis of the reserved amount above (D-013). Normalised to the service's own
-    // vocabulary and defaulted to "unknown", so a payload that predates this slice — or
-    // a figure that arrives without provenance — can never be rendered as an observation.
-    fundingBasis:
-      event.fundingBasis === "observed" || event.fundingBasis === "derived"
-        ? event.fundingBasis
-        : "unknown",
-    fundingBasisDivisor:
-      event.fundingBasisDivisor == null ? null : Number(event.fundingBasisDivisor),
+    // The basis of the reserved amount above (D-013). "observed" is the ONLY basis a
+    // stated figure may carry since D-015 retired the even-split model, so a payload
+    // that predates this slice — including one still carrying a "derived" figure, which
+    // the service can no longer produce — can never be rendered as an observation.
+    fundingBasis: event.fundingBasis === "observed" ? "observed" : "unknown",
     fundingAttribution:
       event.fundingAttribution === "crew" || event.fundingAttribution === "meridian"
         ? event.fundingAttribution
@@ -350,6 +347,7 @@ function renderInstrumentOverlay(state) {
     // out here because the centre has no adjacent date label of its own.
     status.textContent =
       fundingReserveLine(selected) ||
+      fundingScheduleSummary(selected) ||
       fundingSourceSummary(selected) ||
       fundingLabel(selected.fundingStatus);
   } else if (state.model.availableToSpend && state.model.availableToSpend.minor != null) {
@@ -423,6 +421,43 @@ function renderInstrumentOverlay(state) {
 
 
 
+/* Crew's per-event estimate for one bill, in three forms so no surface has to abbreviate a
+   sentence it cannot fit:
+
+     value    "$29.89/event"        the amount and its unit, alone.
+     summary  "$29.89/event · Crew estimate"
+              the SHORT form for the event row and the centre. The OS-048b lesson was that
+              a long label wrapped and collided with its own value at 420px, so the row
+              gets a compact marker and the ticket carries the sentence.
+     note     "$29.89/event · Crew estimate, due Sep 20 for Veterans Home"
+              the ticket's full statement, naming the deadline it is measured against.
+
+   Every form says "estimate". This is a projection from Crew's published rule, never money
+   held, so it must never read as the observed `reserved` figure beside it. */
+
+export function fundingScheduleValue(event) {
+  const schedule = event && event.fundingSchedule;
+  if (!schedule || schedule.basis !== "crew_estimate" || !schedule.contribution) return "";
+  const contribution = minorToDisplay(schedule.contribution);
+  if (!contribution) return "";
+  return `${contribution}/event`;
+}
+
+function fundingScheduleSummary(event) {
+  const value = fundingScheduleValue(event);
+  return value ? `${value} · Crew estimate` : "";
+}
+
+function fundingScheduleNote(event) {
+  const value = fundingScheduleValue(event);
+  if (!value) return "";
+  const schedule = event.fundingSchedule;
+  const parts = [`${value} · Crew estimate`];
+  if (schedule.deadline) parts.push(`due ${formatShortDay(schedule.deadline)}`);
+  if (schedule.planName) parts.push(`for ${schedule.planName}`);
+  return parts.join(", ");
+}
+
 function fundingLabel(status) {
   const labels = {
     reserved: "Reserved",
@@ -462,17 +497,15 @@ export function fundingSourceSummary(event) {
    so the same reserve is never multiplied across future due dates (D-010), and every
    figure arrives with `fundingBasis`:
 
-     observed  Crew reported this bill's own reservedAmount.
-     derived   Meridian's even split of the reserve's observed total set-aside funds.
-               It is labelled as an estimate and is never attributed to Crew.
+     observed  Crew reported this bill's own reservedAmount. This is the only basis.
      unknown   nothing is stated, and no figure is shown.
 
-   A figure with no basis is rendered as nothing at all: an unlabelled number could only
-   be read as an observation, which is exactly what D-013 forbids. */
+   D-015 retired the even-split model, so a "derived" figure no longer exists and a
+   payload still carrying one is treated as unknown: an unlabelled or no-longer-supported
+   number could only be read as an observation, which is what D-013 forbids. */
 
 function isStatedFigure(event) {
-  const basis = event && event.fundingBasis;
-  return basis === "observed" || basis === "derived";
+  return Boolean(event) && event.fundingBasis === "observed";
 }
 
 function shortfallText(event) {
@@ -502,14 +535,9 @@ export function fundingReserveValue(event) {
 }
 
 export function fundingReserveSummary(event) {
-  const value = fundingReserveValue(event);
-  if (!value) return "";
-  // D-013: a derived figure must be labelled wherever it is stated, not only in the
-  // ticket. The row gets the compact marker; the ticket carries the divisor.
-  if (event.fundingBasis === "derived") {
-    return `${value} (Meridian estimate)`;
-  }
-  return value;
+  // Only an observed figure can reach here since D-015 retired the even-split model, so
+  // there is no estimate marker to add: the ticket carries the observation's provenance.
+  return fundingReserveValue(event);
 }
 
 /* The day-context form: the same statement, naming the occurrence it belongs to. Used
@@ -521,16 +549,11 @@ export function fundingReserveLine(event) {
   return `Next due ${formatShortDay(event.date)} · ${summary}`;
 }
 
-/* The bill-level provenance for the evidence ticket. A derived figure names its divisor
-   and Meridian as its author; an observed one names the provider read that reported it.
-   Neither is ever mixed: a derivation must not read as an observation. */
+/* The bill-level provenance for the evidence ticket. An observed figure names the
+   provider read that reported it. Since D-015 there is no derived figure to distinguish
+   it from: the even-split model is retired, so a stated figure has exactly one author. */
 export function fundingBasisNote(event) {
   if (!event || !isStatedFigure(event)) return "";
-  if (event.fundingBasis === "derived") {
-    const count = Number(event.fundingBasisDivisor);
-    const bills = count === 1 ? "1 bill" : `${count} bills`;
-    return `Meridian estimate, split across ${bills}`;
-  }
   const by = event.fundingAttribution === "crew" ? "observed from Crew" : "Meridian-side amount";
   // Date only: the ticket header already stamps the full observation time, and repeating
   // the time of day here wrapped the value over three extra lines at the mobile viewport.
@@ -846,15 +869,16 @@ function renderEventList(state, container) {
       if (event.kind !== "income") {
         const meta = document.createElement("span");
         meta.className = "obs-event-meta";
-        // A stated reserved amount is a stronger statement than "unknown", and it is a
-        // different statement from the source identity, which is why the two are joined
-        // rather than substituted for one another: the source is a fact about the bill on
-        // every row, the figure belongs to the one occurrence it was measured against.
-        // fundingReserveSummary (not the bare value) so a derived figure is labelled here
-        // too -- a row must not read as an observation.
+        // Three different statements are joined rather than substituted for one another.
+        // The source is a fact about the bill on every row; the observed figure belongs
+        // to the one occurrence it was measured against; the schedule is Crew's own
+        // per-event estimate toward that occurrence's deadline. Only a figure the
+        // provider reported is stated as money (D-013); the schedule says "estimated by
+        // Crew" in its own words, so a projection can never read as a balance.
         const reserveValue = fundingReserveSummary(event);
         const sourceSummary = fundingSourceSummary(event);
-        meta.textContent = [sourceSummary, reserveValue].filter(Boolean).join(" · ")
+        const scheduleSummary = fundingScheduleSummary(event);
+        meta.textContent = [sourceSummary, reserveValue, scheduleSummary].filter(Boolean).join(" · ")
           || fundingLabel(event.fundingStatus);
         body.append(meta);
       }
@@ -1010,10 +1034,13 @@ function renderEvidenceTicket(state, event) {
     // Identity first, then what is still unresolved about the money.
     rowData.push(["Funding source", sourceValue]);
   }
+  if (event.fundingSchedule) {
+    rowData.push(["Funding schedule", fundingScheduleNote(event)]);
+  }
   if (isStatedFigure(event)) {
     // The bill-level statement, with its author: "$1,200.00 · observed from Crew ·
-    // Sep 8, 2026" or "$65.00 · Meridian estimate, split across 3 bills". The label stays
-    // short on purpose: the ticket's row grid gives AMOUNT / FUNDING SOURCE / RESERVED
+    // Sep 8, 2026". The label stays short on purpose: the ticket's row grid gives
+    // AMOUNT / FUNDING SOURCE / RESERVED
     // widths this long label overflows at 420px, where a wrapped label collided with its
     // own value. A stated-zero reserve reads "$0.00" here while the row states it in
     // words, so the ticket never has to invent a figure for missing data.
