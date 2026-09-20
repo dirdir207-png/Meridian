@@ -208,12 +208,20 @@
       These Crew actions are not yet exposed as a Meridian control. The rest of
       the write surface (bills, pockets, autopilot rules, top-up) is wired.
     </p>
+    {# OS-066: this list must name ONLY capabilities with no live control in this pane,
+       and each entry must correspond to a shipped command in meridian/crew_commands.py.
+       It previously also listed "Set active spend pocket", "Delete pocket" and "Delete
+       autopilot rule", all three of which have working forms directly below -- exactly
+       what BUILD_SPEC line 203 forbids ("No 'deferred' item next to a working duplicate
+       control"), and a false statement about the owner's own capabilities. "Create /
+       update virtual card" was narrowed to "Update" for the same reason: create IS
+       wired below, update is not. Keep this list consistent with the wired controls;
+       tests/browser/test_capability_parity.py now fails closed on drift. #}
     <ul class="m-parity-list">
-      <li data-parity-deferred="spend_pocket">Set active spend pocket</li>
-      <li data-parity-deferred="delete_pocket">Delete pocket</li>
-      <li data-parity-deferred="virtual_card">Create / update virtual card</li>
-      <li data-parity-deferred="pocket_reassignment">Pocket reassignment rules</li>
-      <li data-parity-deferred="delete_autopilot_rule">Delete autopilot rule</li>
+      <li data-parity-deferred="create_pocket_reassignment_rule">Create pocket reassignment rule</li>
+      <li data-parity-deferred="delete_pocket_reassignment_rule">Delete pocket reassignment rule</li>
+      <li data-parity-deferred="edit_autopilot_rule">Edit autopilot rule</li>
+      <li data-parity-deferred="update_virtual_card">Update virtual card</li>
     </ul>
   </section>
 

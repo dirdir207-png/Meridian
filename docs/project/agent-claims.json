@@ -667,6 +667,22 @@
       "base_sha": "5bfd9c6e1ab7a169760687885addaa2ec90dad38",
       "since": "2026-09-20T00:00:00+00:00",
       "note": "OS-049 environment/baseline slice: establish the true browser-suite baseline (was 43 failed / ~21 passed / 28 errors, unexplained) and fix the real defects it exposes. First defect isolated empirically: .m-theme-toggle-label carries a base min-width:3.5ch (20.875px) that the two mobile hiding rules override width:1px but NOT min-width, so the label keeps a full box and is hidden only visually by clip-path -- the (0,2,0) and (0,4,0) rules match yet width computes to 20.86px because min-width wins. Read-only toward Crew: no provider mutation, no live sync, no authority change."
+    },
+    {
+      "agent": "deepseek-os066",
+      "claim_id": "os066-crew-parity-truthfulness-20260921",
+      "description": "OS-066: the Plan Crew pane listed three already-wired capabilities as 'deferred'; correct the list and make the parity contract fail closed on drift.",
+      "generation": 1,
+      "files": [
+        "templates/meridian/partials/plan.html",
+        "tests/browser/test_capability_parity.py",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "9bcb8a8781e9bdc23226dc2bc0c032668c49ef42",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "Truthfulness fix, not a capability change: correct only. Removed spend_pocket/delete_pocket/delete_autopilot_rule from the deferred list (all three have live forms in the same pane, which BUILD_SPEC line 203 forbids); narrowed virtual_card to update_virtual_card; added the genuinely-unwired edit_autopilot_rule; rewrote the parity contract to derive from meridian/crew_commands.py and fail closed on drift. No provider mutation, no authority change, no new capability wired."
     }
   ]
 }
