@@ -474,7 +474,36 @@
       ],
       "base_sha": "4ad09c9",
       "since": "2026-09-20T00:00:00+00:00",
-      "note": "Preview launcher for the owner plus the restart matrix and phone access, all verified. scripts/restart_preview.command stops only the 8081 LISTENER (lsof -sTCP:LISTEN, so it can never kill a client such as the owner's browser), starts a fresh preview detached with nohup, and verifies the port is listening before reporting success; tested end to end by stopping the running preview and starting a new one. scripts/install_desktop_shortcut.command writes the Desktop shortcut pointing at it, versioned here because the lane boundary correctly refused an agent write to ~/Desktop. Restart matrix verified against run_preview.py: RESTART needed for Python changes (use_reloader=False) and for a migration that ALTERs a table whose record is built as Model(**dict(row)) -- which must be restarted as part of shipping it, since the running process applies the SQL and then fails its reads (the 2026-09-20 dial 503); NOT needed for templates (TEMPLATES_AUTO_RELOAD = True), static assets (served from disk) or docs. Tailscale access verified over loopback, the LAN address and the tailnet address, all returning 302. NO APPLICATION CODE CHANGED: no behaviour, schema, provider, live-sync write, deployment or authority change."
+      "note": "Preview launcher for the owner plus the restart matrix and phone access, all verified. scripts/restart_preview.command stops only the 8081 LISTENER (lsof -sTCP:LISTEN, so it can never kill a client such as the owner's browser), starts a fresh preview detached with nohup, and verifies the port is listening before reporting success; tested end to end by stopping the running preview and starting a new one. scripts/install_desktop_shortcut.command writes the Desktop shortcut pointing at it, versioned here because the lane boundary correctly refused an agent write to ~/Desktop. Restart matrix verified against run_preview.py: RESTART needed for Python changes (use_reloader=False) and for a migration that ALTERs a table whose record is built as Model(**dict(row)) -- which must be restarted as part of shipping it, since the running process applies the SQL and then fails its reads (the 2026-09-20 dial 503); NOT needed for templates (TEMPLATES_AUTO_RELOAD = True), static assets (served from disk) or docs. Tailscale access verified over loopback, the LAN address and the tailnet address, all returning 302. NO APPLICATION CODE CHANGED: no behaviour, schema, provider, live-sync write, deployment or authority change. Released at 3ad4772."
+    },
+    {
+      "agent": "deepseek-adjustments-are-data",
+      "claim_id": "owner-adjustments-are-data-stale-due-dates-20260920",
+      "generation": 1,
+      "files": [
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/MERIDIAN_ROADMAP.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "3ad4772",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "Two owner-approved corrections plus a binding framing. (1) ROADMAP: the keystone claim 'is currently drifting [T]' was stale and is corrected in four places with test evidence -- meridian/cadence.py clamps to the month's real length while preserving the anchor day (Jan 31 -> Feb 28 -> Mar 31; semimonthly = 15th + true month end), pinned by tests/meridian/test_cadence.py with 80 tests passing across cadence, funding and payday; history kept struck through rather than deleted; hazard 4's stale restart advice now points at the Desktop launcher and the real matrix. (2) FRAMING, recorded as binding in D-015: permanent mechanics versus temporary owner adjustments -- the owner's current tight configuration (low pocket allocation, Rent shortfall, adjusted dates/amounts, real-world lateness) is state to absorb fluidly, never a rule, special case or inferred intent, and never pinned as the steady state. (3) Corrects my own OS-061 clause that read as forbidding amount changes: amounts are a first-class case, since the owner is adjusting Verizon and Eversource dates AND amounts now; only an unrequested change riding along with a requested one stays forbidden. (4) Records measured stale due_date/cadence evidence: Verizon due_date 2026-01-22 and Eversource 2026-01-30 with empty cadence, against Crew's own reservedBy 2026-09-22 / 2026-09-30 -- the one-time-entry problem visible in data, and evidence that OS-053 (duplicate candidate-to-commitment mapping) may be the same root cause. DOCUMENTATION AND LEDGER ONLY: no code behaviour, schema, provider, live-sync write, deployment or authority change."
+    },
+    {
+      "agent": "deepseek-flaky-security-test",
+      "claim_id": "flaky-credential-tamper-test-20260920",
+      "generation": 1,
+      "files": [
+        "tests/crew/test_session_credentials.py",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "3ad4772",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "Fixes a flaky SECURITY test found while running the suite for an unrelated docs-only slice: tests/crew/test_session_credentials.py::test_cipher_rejects_tampering_and_wrong_key failed once then passed 5/5 in isolation. Root cause REPRODUCED, not inferred: the tampered value was built as ciphertext[:-1] + b'x', which overwrites the last byte instead of changing it, so whenever the ciphertext already ended in 0x78 the 'tampered' value was byte-identical to the original, decryption correctly succeeded, and pytest.raises failed -- roughly 1 run in 256. A reproduction hit the case on attempt 14 and showed byte-identical: True with decrypt returning no error. Fix: flip the final byte with XOR plus an explicit assert that the tamper changed something. Verified over 5000 fresh encryptions with zero failures to detect, 8/8 consecutive test runs, Ruff clean, full non-browser suite green at 1417 passed / 1 skipped. TEST-ONLY: no application behaviour, schema, provider, live-sync write or authority change; no preview restart needed because the app never imports tests. Filed as OS-062 (done)."
     }
   ]
 }

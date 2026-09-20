@@ -276,10 +276,10 @@ reprioritize the current keystone or grant implementation authority.
 
 **Three repairs to the adopted spine:**
 
-1. **Pull the dated-occurrence math into V1**, or narrow V1's trustworthiness claim. Proven `[T]`: the dial's
+1. ~~**Pull the dated-occurrence math into V1**, or narrow V1's trustworthiness claim.~~ — **DONE, corrected in place 2026-09-20.** The repair was right when written and the defect was real; the claim below is kept as history because it is struck through, not deleted. Proven `[T]`: the dial's
    own recurrence engine drifts — `Jan 31 → Feb 28 → Mar 28` permanently, and "semimonthly" as `+15 days`
    walks off the calendar (`01-15 → 01-30 → 02-14 → 03-01`). V1 cannot be "trustworthy" while its dates drift,
-   and every green test stays green because the preview fixture hardcodes its dates.
+   and every green test stays green because the preview fixture hardcodes its dates. **CORRECTED 2026-09-20: this defect is fixed, so the trust conclusion above no longer applies.** `meridian/cadence.py` now clamps to the month's real length while **preserving the anchor day**, so `Jan 31 → Feb 28 → Mar 31`, and semimonthly is the 15th plus the true month end rather than `+15 days`. The drift cases are pinned at engine level — `test_monthly_anchor_on_the_31st_returns_to_the_31st`, `test_semimonthly_is_the_15th_and_the_last_day_of_the_month`, `test_next_occurrence_does_not_snap_a_clamped_month_forward_permanently` — with 80 tests passing across cadence, funding and payday. **V1's trustworthiness claim is no longer weakened by date drift.**
 2. **Adopt the command contract and its line:** authenticated intent → typed reviewed parameters + base
    revision → durable authorization and claim → one submission → structured provider evidence →
    confirmed/unresolved receipt. This corrects a real ambiguity in the first roadmap.
@@ -303,13 +303,21 @@ Track C (V1 ─► V2 ─► V3 ─► V4 ─► V5 ─► V6 ─► V7)   V8 ga
   files" is not a lock. Use **one integrator**, give **explicit interface ownership** to one agent per shared
   contract, and make write claims **mutually exclusive**. The claims table aids communication; it is not
   exclusion.
-- **The keystone** is V1/V2's dated-occurrence model: the dial, Today, Plan, Beacon and funding all read it,
-  and it is currently drifting `[T]`.
-- **The dial is already connected to live data** `[E]` - the earlier instruction not to wire it is stale. The
-  dated-occurrence defects therefore already reach the rendered surface, which raises the priority of Track C V1/V2.
-- **Next move (agreed with the cross-review):** finish Today's device acceptance, then develop the shared
-  dated-event model alongside the guarded agent interface, then one useful, evidence-backed intelligence role.
-  The council stays high priority, with each added role proving its value on a real user task.
+- **The keystone** is V1/V2's dated-occurrence model: the dial, Today, Plan, Beacon and funding all read it.
+  **It no longer drifts** `[E]` — corrected 2026-09-20 — because `meridian/cadence.py` clamps to the month's real
+  length while preserving the anchor day, with the drift cases pinned in `tests/meridian/test_cadence.py`. What
+  remains is *consuming* it consistently, not repairing it: the same anchor semantics must reach Today, Plan,
+  Beacon and funding.
+- **The dial is already connected to live data** `[E]` - the earlier instruction not to wire it is stale. Because
+  the model no longer drifts, the priority argument that used to follow from that defect is spent; the live cost
+  now is *inconsistent consumption* of the model across surfaces.
+- **Next move (revised 2026-09-20):** this line used to ask for the shared dated-event model first. That was
+  delivered, so the sequence starts one step later: close Track D's remainder (`OS-038` design gaps, `OS-049`
+  browser baseline), then build **Track I.1** — the envelope *and its permissions*, with a test per role proving
+  it cannot reach a provider write path — then one useful, evidence-backed role (I.2). In parallel, the Crew
+  funding-math arc has reached its measurement phase (`OS-058`, the 2026-10-02 event) and the reserve-versus-amount
+  gap display (`OS-060`) is the next product slice. The council stays high priority, with each added role proving
+  its value on a real user task.
 ---
 
 ## 7. Verification strategy and operational hazards
@@ -326,9 +334,12 @@ and a precise commit. Never claim completion because a schema, endpoint, button 
    `pkill -9 -f 'chromiumdev_[p]rofile'` — bracket a character so the pattern cannot match your own command line.
 3. **Migration immutability.** Once any database has applied a migration file its checksum is frozen; editing
    it 503s every financial endpoint. The preview uses `/tmp/gate-preview/gate.db`. Ship a new migration.
-4. **Committed is not served.** Template refresh no longer needs a restart (fixed 2026-09-12), but Python
-   changes and a dead preview process still require restarting it.
-   for a change to take effect.
+4. **Committed is not served.** Templates and static assets no longer need a restart (`TEMPLATES_AUTO_RELOAD` is
+   set, and `static/` is served from disk), but **Python changes do** (`use_reloader = False`), and so does a
+   migration that `ALTER`s a table whose record is built as `Model(**dict(row))` — which must be restarted *as part
+   of shipping it*, because the running process applies the schema itself and then fails its reads: this is what
+   503'd the dial on 2026-09-20. The owner restarts the preview from the Desktop launcher
+   (`scripts/restart_preview.command`); the full matrix is in `docs/project/CURRENT_STATUS.md`.
 5. **Verification latency.** `update_crew_bill` now shells out synchronously to `crew-readonly` (120 s timeout)
    before it can be verified.
 6. **No clean-lint baseline.** `ruff check .` reports **11 pre-existing errors** `[E]` — five in `scripts/`,
@@ -357,7 +368,11 @@ Consolidation | Approval needed for the destructive half of §0 (moving the unve
 
 No autonomous external transfers · no automatic subscription cancellation · no self-deploying code · no live
 connector repair · no agent council as eight processes · no household integrations · no policy activation
-without owner approval · no commercial compliance, multi-tenancy or pricing.
+without owner approval · no commercial compliance, multi-tenancy or pricing · **no payment-arrangement,
+one-time-bill or budget-workaround modelling** (Crew has no single-due-date bill option, so the owner works
+around it by creating or one-time-modifying bills; owner adjustments are *data*, and modelling them as features
+would invent requirements the owner has explicitly disclaimed) · **no lateness or deferral modelling** (real-world
+lateness is the owner's business, not the system's).
 
 ---
 
