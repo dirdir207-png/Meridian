@@ -191,7 +191,73 @@ different mechanisms, and "no link row" is not "no evidence".
 silent truncation — evidence beyond the 400 most recent mail items per bill lookup is invisible to
 the matcher. Worth reviewing, since a fresh backfill will push the count further past it.
 
-## 7. IMPLEMENTED — semi-regular polling (the owner's direction)
+## 7. THE BACKFILL WAS ATTEMPTED AND IS BLOCKED — ALL GOOGLE TOKENS ARE DEAD
+
+The owner approved the backfill ("go ahead approved, and I'll restart"). It was run and it
+**failed at authentication, before any fetch**. This is a blocking finding, not a code defect.
+
+```
+BEFORE  mail_items=730  blobs=0
+RUNNING since_days=45  max_per_account=50
+Google token refresh failed (HTTP 400)
+```
+
+**Every stored token fails, not just one** (`tmp/diagnose_tokens.py`, outcome only — no tokens,
+addresses or bodies printed):
+
+```
+kind=gmail    accounts=4   account[0..3] has_refresh=True refresh=FAILED HTTP 400
+kind=calendar accounts=1   account[0]    has_refresh=True refresh=FAILED HTTP 400
+```
+
+**The store was not damaged.** After the failure: 732 items, 0 blobs — identical to before,
+because the refusal happens in `list_message_ids` before any write. That is the fail-safe
+working: a run that cannot authenticate changes nothing.
+
+### The likely cause, and it is a configuration issue rather than a bug
+
+| | |
+|---|---|
+| all 5 tokens created | **2026-09-06** |
+| today | **2026-09-20** |
+| age | **exactly 14 days** |
+
+Google expires refresh tokens after **7 days** while the OAuth consent screen is in
+**"Testing"** publishing status. `HTTP 400` on refresh with a present `refresh_token` is that
+signature — the token is not malformed, it has been invalidated. It also fits the whole picture:
+the store froze on exactly the day the tokens were minted and nothing has refreshed since.
+
+**This must be confirmed against the Google Cloud console rather than assumed** — the same 400
+is also what a revoked or rotated token produces, and an expired *client secret* looks similar.
+The console check is: OAuth consent screen publishing status, and whether the refresh tokens are
+still listed for the app.
+
+### What this means for the fix I just shipped
+
+The polling service is correct and will work **once there is a live token** — but **it cannot
+fix this on its own.** With a dead refresh token it will log a failure every 30 minutes forever.
+Two consequences worth stating plainly:
+
+1. **The owner must re-authorize Gmail (and calendar) once**, from the Meridian settings UI,
+   because consent is the one step Meridian cannot self-serve.
+2. **Publishing the OAuth app to "In production" is what prevents this recurring.** In Testing
+   status the same 7-day expiry will kill the tokens again, and the symptom will look identical
+   to the bug just fixed. Publishing is a Google Cloud console action only the owner can take.
+
+A partial mitigation now exists in the code: because polling reports a **verified blob delta**,
+a cycle that authenticates but writes no content is visible in the log. A cycle that cannot
+authenticate still only logs a line, so the failure is quieter than it should be.
+
+### Current status of the four defects in this triage
+
+| # | Defect | Status |
+|---|---|---|
+| 1 | Gmail not polled (manual-only) | **FIXED** — polling service shipped; blocked from *delivering* by the dead token |
+| 2 | Calendar wired to nothing | **OPEN** — connector exists, token was also dead; needs a scope decision |
+| 3 | Blob store empty → every view 404s | **ROOT-CAUSED** — needs one successful authenticated run; blocked by the dead token |
+| 4 | Bills DO have evidence | **NOT A DEFECT** — my §6 correction |
+
+## 8. IMPLEMENTED — semi-regular polling (the owner's direction)
 
 > *"it should semi-regularly poll though, I shouldnt have to request a back fill through the harness any
 > time I want evidence information, defeats the purpose."*
@@ -227,7 +293,7 @@ provider-poll floor.
 provider calls and needs the owner's go-ahead), calendar remains wired to nothing, and the 14-day
 window is *mitigated* by the wider default but only actually recovered by running the backfill.
 
-## 8. What this triage did NOT do
+## 9. What this triage did NOT do
 
 - No provider call, no intake run, no backfill, no calendar fetch.
 - No credential, token, message body or content hash value was read out or printed.
