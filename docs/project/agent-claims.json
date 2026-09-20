@@ -607,6 +607,25 @@
       "base_sha": "dc81799",
       "since": "2026-09-20T00:00:00+00:00",
       "note": "Fixes a defect I shipped: scripts/install_desktop_shortcut.command was committed with mode 100644 (no executable bit) and sat on disk as -rw-------, so double-clicking it in Finder failed with 'you do not have appropriate access privileges' and the owner could not install the Desktop preview launcher at all. This is the exact failure class the mission warns about: I verified the script EXISTED and never verified it could RUN, then told the owner to double-click it -- 'exists' treated as 'works'. Fixed with chmod 755 on both launchers AND git update-index --chmod=+x, because a fresh clone takes its modes from git rather than from the working tree, so a filesystem-only fix would have left the bug in the repository. Added tests/test_launcher_scripts.py (4 tests) asserting every tracked scripts/*.command and scripts/*.sh is executable in the WORKING TREE (what Finder executes) and IN GIT (what a clone materialises), and carries a shebang; FALSIFIED BEFORE TRUSTING IT -- reintroducing chmod 644 makes the working-tree test fail, restoring it passes all four. Also records an incident: a diagnostic loop over every tracked file timed out at 300 s and reset the persistent shell (second reset in this lane), so such checks must stay bounded by pathspec. No financial, provider, schema or authority change; the preview still needs STARTING by the owner, which is what the launcher is for."
+    },
+    {
+      "agent": "deepseek-os053",
+      "claim_id": "unify-candidate-commitment-mapping-20260920",
+      "generation": 1,
+      "files": [
+        "meridian/commitments.py",
+        "meridian/sync.py",
+        "meridian/live.py",
+        "tests/meridian/test_commitment_candidate_mapping.py",
+        "tests/meridian/test_bill_reserve_observations.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "8b00a98aae9ce6a64fbf7653fe7ac993fba252c4",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "OS-053: unify the candidate-to-commitment mapping so both entry points (sync_providers and sync_live_crew) call ONE shared implementation, collapse the two divergent recurrence fallbacks (one_time vs monthly) into one named, tested constant, and extend the parity test to pin recurrence across both paths. LATENT refactor with no behaviour change to any real bill: the owner confirmed Crew always reports a frequency. No migration, no backfill, no schema change, no provider mutation, no live sync, no authority change. Does NOT delete sync_providers -- it also performs reimbursements, reconcile() and _reclassify_relations, which production would lose."
     }
   ]
 }

@@ -33,6 +33,74 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## LIVE-VERIFIED — OS-053: one candidate-to-commitment mapping, one declared fallback (2026-09-20, base `8b00a98`)
+
+**What this closed.** The same provider read was mapped into commitments **twice** — once in
+`meridian/sync.py::sync_providers`, once in `meridian/live.py::sync_live_crew` — and the copies had already
+diverged. The only visible difference was the fallback for a bill reporting no frequency: production stored
+`monthly`, the unused copy stored `one_time`. So the *same silence* produced two different stored commitments
+depending on which entry point ran.
+
+**Why the fix is not the one the handoff drafted.** The handoff recommended Option B — "delete the duplicate;
+make `sync_providers` delegate or remove it". **That would have silently destroyed capability.**
+`sync_providers` is not only a duplicate of the candidate loop: it also persists `expected_inflows` via
+`upsert_reimbursement`, and it runs `reconcile()` and `_reclassify_relations()`. `live.py` does **none** of
+those three, so deleting the function — or "delegating" the loop away without re-homing that work — would have
+left production without them. The function therefore **stays and is rewired**, not removed. This is the reason
+the slice was read line by line rather than applied as written.
+
+**What shipped.** One shared mapping in `meridian/commitments.py`:
+
+| Symbol | Role |
+|---|---|
+| `CandidateObservation` | The observed bill, carrying the absence convention explicitly: `None`/`""` mean *the read did not report*, never zero |
+| `observation_of_candidate` | One explicit translator from the provider's candidate, so a new provider field cannot leak into a commitment row un-decided |
+| `commitment_fields_from_candidate` | The **create** half |
+| `commitment_update_fields` | The **update** half, whose rule is C01: an unreported field keeps the stored value |
+| `UNREPORTED_RECURRENCE_FALLBACK` | **The** single fallback — `"monthly"` — named once instead of an inline `or` in two files |
+
+Both entry points now call the same two functions; the two duplicated loops are gone (`sync.py` −61 lines,
+`live.py` −66, +159 in `commitments.py`).
+
+**`monthly` rather than `one_time`, and why the handoff was wrong to call this nearly academic.** The two are
+**not** equivalent, and the difference is whether the obligation stays in the forecast.
+`plan._next_occurrence` rolls a recurrence forward only for `weekly/biweekly/monthly/semimonthly` and returns
+the anchor **unchanged** for anything else — including `one_time`. Crew's `anchorDate` is frequently in the
+**past** (four live bills anchor in January 2026), so a past anchor under `one_time` **drops the bill out of
+the foreseeable future entirely**, while `monthly` keeps it. *The expensive failure is erasing an obligation,
+not continuing one.* Given that Track I.5 / OS-063 reasons over exactly this "foreseeable future", a fallback
+that silently deletes obligations would be the worse default.
+
+**No behaviour change — verified, not assumed.** The owner's ruling (*"There is always a frequency"*) makes the
+fallback dead code, and the suite is **identical before and after: 1421 passed / 1 skipped**.
+
+**Read-only data check on a copy of the live preview DB** (`cp /tmp/gate-preview/gate.db /tmp/os053-1643.db`,
+then `sqlite3`):
+
+| Check | Result |
+|---|---|
+| Bills | 11 |
+| Bills with **no** stored recurrence | **0** |
+| Distinct stored `recurrence` values | `{'monthly'}` |
+
+So nothing was invented and no stored value changed — the fallback was never reached, exactly as the owner
+said. This is a **latent** defect closed: **no migration, no backfill, no schema change, no provider mutation,
+no live sync, no authority change.**
+
+**Evidence.** 18 new tests in `tests/meridian/test_commitment_candidate_mapping.py`; OS-048b's parity test
+extended to pin `recurrence` alongside the reserve facts. Suite **1439 passed / 1 skipped** (1421 + 18, no
+regressions). **Falsified before trusted, twice:** repointing the one fallback to `one_time` fails **3** tests;
+re-introducing the inline `or "monthly"` duplicate in `live.py` fails **7**. Ruff clean on `meridian/` and
+`tests/meridian/`; `git diff --check` clean; `check_guardrails.py` OK.
+
+**Explicitly left alone.** The January `due_date` values are Crew's `anchorDate` and were **not** rewritten
+(that is OS-038/OS-060); the principled C01 form — storing "unreported" as unreported — is a schema change for
+a case that does not occur and stays out of scope; no payment-arrangement or one-time-bill modelling.
+One thing **observed but deliberately not edited**: the "absent bill" guard is phrased differently in the two
+files (`sync.py` tests `report.status == "complete"`, `live.py` tests `snap.is_complete and not snap.errors`)
+but is **semantically equivalent** — `sync_provider` sets `status="complete"` only when `snapshot.is_complete`
+and its accumulated error counter is `0`. It was left as-is rather than churned.
+
 ## LIVE-VERIFIED — OS-056 + OS-056b against a real Crew read (2026-09-20, HEAD `7c568bf`)
 
 The preview was restarted at the owner's explicit instruction, and the whole slice is now confirmed on **real

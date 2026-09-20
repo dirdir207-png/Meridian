@@ -4,7 +4,13 @@ from dataclasses import dataclass
 
 from .ai.classifier import classify_with_ai_fallback
 from .classify import AssignmentRule, ClassificationInput, classify_deterministic
-from .commitments import CommitmentRepository, CommitmentType
+from .commitments import (
+    CommitmentRepository,
+    CommitmentType,
+    commitment_fields_from_candidate,
+    commitment_update_fields,
+    observation_of_candidate,
+)
 from .providers.base import ProviderAdapter
 from .reconcile import reconcile
 
@@ -188,65 +194,18 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
             existing = commitment_repository.get_commitment_by_legacy(
                 adapter.provider_name, candidate.external_id
             )
+            observation = observation_of_candidate(candidate)
             if existing is None:
                 commitment_repository.create(
                     type=CommitmentType.BILL,
-                    name=candidate.name,
-                    amount=candidate.amount,
-                    currency=candidate.currency,
-                    recurrence=candidate.recurrence or "one_time",
-                    due_date=candidate.due_date,
-                    target_amount=candidate.amount,
-                    funded_amount=(candidate.funded_amount if candidate.funded_amount is not None else 0.0),
                     legacy_source=adapter.provider_name,
                     legacy_id=candidate.external_id,
-                    bill_reserve_id=candidate.bill_reserve_id,
-                    # Only a reported reserveAmount sets this (C01/024): a silent read
-                    # stores 0.0 and must not read as "Crew said the reserve is empty".
-                    reserved_amount_reported=candidate.funded_amount is not None,
-                    # Crew's own per-event estimate and deadline (025), NULL when the read
-                    # did not report them: a missing figure is not a zero.
-                    estimated_next_funding_amount=candidate.estimated_next_funding_amount,
-                    reserved_by=candidate.reserved_by,
+                    **commitment_fields_from_candidate(observation),
                 )
             else:
                 commitment_repository.update(
                     existing.id,
-                    name=candidate.name,
-                    amount=candidate.amount,
-                    currency=candidate.currency,
-                    due_date=candidate.due_date or existing.due_date,
-                    recurrence=candidate.recurrence or existing.recurrence,
-                    funded_amount=(
-                        candidate.funded_amount
-                        if candidate.funded_amount is not None
-                        else existing.funded_amount
-                    ),
-                    # An unobserved reserve id ("" from the adapter) is not evidence
-                    # that the bill left its reserve, so it never overwrites an
-                    # observed membership. A different observed id does replace it,
-                    # which is how a bill moved between reserves is picked up.
-                    bill_reserve_id=candidate.bill_reserve_id or existing.bill_reserve_id,
-                    # Symmetric with the membership: a read that did not report the
-                    # amount is not a report of nothing, so the flag it already had
-                    # stands rather than being cleared.
-                    reserved_amount_reported=(
-                        True
-                        if candidate.funded_amount is not None
-                        else existing.reserved_amount_reported
-                    ),
-                    # C01 for the reported schedule (025): an unreported figure keeps the
-                    # stored value rather than clearing it.
-                    estimated_next_funding_amount=(
-                        candidate.estimated_next_funding_amount
-                        if candidate.estimated_next_funding_amount is not None
-                        else existing.estimated_next_funding_amount
-                    ),
-                    reserved_by=(
-                        candidate.reserved_by
-                        if candidate.reserved_by is not None
-                        else existing.reserved_by
-                    ),
+                    **commitment_update_fields(observation, existing),
                 )
         if report.status == "complete":
             # Only a complete, error-free read of this provider may conclude that a

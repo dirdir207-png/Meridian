@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from enum import Enum
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from .db import run_migrations
 
@@ -122,6 +122,163 @@ def _require_positive(value, field: str) -> float:
     if money <= 0:
         raise ValueError(f"{field} must be a positive amount")
     return money
+
+
+# OS-053. The provider's bills are read through exactly one mapping, below, because
+# the same read used to be mapped twice -- sync.py and live.py each carried their own
+# copy -- and the copies had already drifted: the same candidate that reported no
+# frequency was stored as "one_time" by one path and "monthly" by the other. Every
+# field added to both loops doubled the chance of another silent drift, so the mapping
+# now exists once and both entry points call it.
+#
+# There is one fallback, and it is a single named constant rather than an inline `or`.
+# An unreported frequency means the read changed (a partial payload, a new bill type,
+# schema drift), never that a frequency is there to be invented, so it is applied in
+# one place and pinned by tests as a deliberate decision.
+#
+# Why "monthly" and not "one_time": the two are not equivalent, and the difference is
+# whether the obligation stays in the forecast. Plan's `_next_occurrence` rolls a
+# recurrence forward only for weekly/biweekly/monthly/semimonthly and returns the
+# anchor unchanged for anything else -- including "one_time". Crew's anchorDate is
+# frequently in the past (four live bills anchor in January 2026 but keep a later
+# `reserved_by`), so a past anchor under "one_time" drops the bill out of the
+# foreseeable future entirely, while "monthly" keeps the obligation visible.
+# The failure that costs money is erasing an obligation, not continuing one; and the
+# owner has confirmed Crew always reports a frequency, so this is unreachable in
+# practice and exists only so that the unreachable case is declared rather than
+# inherited.
+UNREPORTED_RECURRENCE_FALLBACK = "monthly"
+
+
+@dataclass(frozen=True)
+class CandidateObservation:
+    """One provider bill as read, before any Meridian-local default is applied.
+
+    The absence convention is the important part of this type, and it is not
+    uniform across the fields because the provider surface is not: ``None`` and
+    ``""`` both mean *the read did not report this*, never "the value is zero".
+    A provider that reports no reserve amount is not reporting an empty reserve,
+    which is why ``funded_amount is None`` is preserved rather than flattened --
+    the flag below depends on being able to tell that silence from a reported 0.0.
+    """
+
+    external_id: str
+    name: str
+    amount: float
+    currency: str = "USD"
+    # None when the read did not state a frequency. No default is applied here;
+    # the two mapping functions below decide, and both reach for the one constant.
+    recurrence: Optional[str] = None
+    # None when the read did not report a due date (the provider's anchorDate).
+    due_date: Optional[str] = None
+    # None means the read did not report a reserved amount. That is NOT 0.0:
+    # funded_amount is NOT NULL DEFAULT 0 per C01/024, so the distinction is
+    # carried on ``reserved_amount_reported`` instead of being lost here.
+    funded_amount: Optional[float] = None
+    # "" means no reserve membership was observed -- never "in no reserve".
+    bill_reserve_id: str = ""
+    # None when the read did not state its own per-event funding estimate.
+    estimated_next_funding_amount: Optional[float] = None
+    # None when the read did not state its own reservation deadline.
+    reserved_by: Optional[str] = None
+
+
+def observation_of_candidate(candidate: Any) -> CandidateObservation:
+    """Translate a provider ``CommitmentCandidate`` into a ``CandidateObservation``.
+
+    The adapter's candidate and this mapping's input deliberately carry the same
+    field names, so the translation is explicit and additive rather than
+    ``CandidateObservation(**vars(candidate))``: the adapter's type is free to grow
+    fields this mapping does not consume, and a provider field that Meridian has not
+    decided what to do with must not leak into a commitment row just because it
+    appeared on the candidate. Adding a field here is therefore the single visible
+    place where a new observed fact enters both entry points at once (OS-053).
+    """
+    return CandidateObservation(
+        external_id=candidate.external_id,
+        name=candidate.name,
+        amount=candidate.amount,
+        currency=candidate.currency,
+        recurrence=candidate.recurrence,
+        due_date=candidate.due_date,
+        funded_amount=candidate.funded_amount,
+        bill_reserve_id=candidate.bill_reserve_id,
+        estimated_next_funding_amount=candidate.estimated_next_funding_amount,
+        reserved_by=candidate.reserved_by,
+    )
+
+
+def commitment_fields_from_candidate(candidate: CandidateObservation) -> Dict[str, Any]:
+    """Map one observed provider bill to the fields a NEW commitment is created with.
+
+    This is the ``create`` half of OS-053's single mapping. The provider's identity
+    is not included: ``legacy_source``/``legacy_id`` belong to the adapter, not to
+    the row's observed content, and each entry point already holds the adapter.
+    """
+    return {
+        "name": candidate.name,
+        "amount": candidate.amount,
+        "currency": candidate.currency,
+        "recurrence": candidate.recurrence or UNREPORTED_RECURRENCE_FALLBACK,
+        "due_date": candidate.due_date,
+        "target_amount": candidate.amount,
+        # A silent read stores 0.0 (the column is NOT NULL DEFAULT 0 per C01) and
+        # the flag, not the number, records that Crew never said it.
+        "funded_amount": (
+            candidate.funded_amount if candidate.funded_amount is not None else 0.0
+        ),
+        "bill_reserve_id": candidate.bill_reserve_id,
+        "reserved_amount_reported": candidate.funded_amount is not None,
+        # Crew's own estimate and deadline stay None when unreported: these columns
+        # have no zero default, because a missing figure is not a zero.
+        "estimated_next_funding_amount": candidate.estimated_next_funding_amount,
+        "reserved_by": candidate.reserved_by,
+    }
+
+
+def commitment_update_fields(candidate: CandidateObservation, existing) -> Dict[str, Any]:
+    """Map one observed provider bill onto the fields that UPDATE an existing row.
+
+    This is the ``update`` half, and its rule is C01: a field the read did not
+    report is evidence of nothing, so the stored value stands rather than being
+    cleared or defaulted. Each provider-identity field is therefore either the
+    observed value or the stored one -- and for the two fields Crew reports as
+    "nothing seen" rather than ``None``, ``or`` is the correct test, because "" is
+    that absence signal and is never a legitimate stored id.
+    """
+    return {
+        "name": candidate.name,
+        "amount": candidate.amount,
+        "currency": candidate.currency,
+        "due_date": candidate.due_date or existing.due_date,
+        # An unreported frequency keeps the frequency the row already has. It is
+        # never replaced by UNREPORTED_RECURRENCE_FALLBACK: that constant describes
+        # a row with no observed frequency at all, which is only ever the create
+        # branch, and applying it here would overwrite Crew's own value with it.
+        "recurrence": candidate.recurrence or existing.recurrence,
+        "funded_amount": (
+            candidate.funded_amount
+            if candidate.funded_amount is not None
+            else existing.funded_amount
+        ),
+        # An unobserved reserve id never erases an observed membership; a different
+        # observed one replaces it, which is how a bill moved between reserves is
+        # picked up.
+        "bill_reserve_id": candidate.bill_reserve_id or existing.bill_reserve_id,
+        # A read that did not report the amount is not a report of nothing, so the
+        # flag it already had stands rather than being cleared.
+        "reserved_amount_reported": (
+            True if candidate.funded_amount is not None else existing.reserved_amount_reported
+        ),
+        "estimated_next_funding_amount": (
+            candidate.estimated_next_funding_amount
+            if candidate.estimated_next_funding_amount is not None
+            else existing.estimated_next_funding_amount
+        ),
+        "reserved_by": (
+            candidate.reserved_by if candidate.reserved_by is not None else existing.reserved_by
+        ),
+    }
 
 
 class CommitmentRepository:

@@ -316,6 +316,12 @@ def test_both_mapping_sites_store_the_same_reserve_facts(tmp_path):
     OS-048a copied the membership field into both rather than silently changing
     production semantics. The reserve observation and the reported flag are copied the
     same way, and this pins that the two paths agree.
+
+    EXTENDED by OS-053, which unified the two loops into one mapping (see
+    ``meridian/commitments.py`` and ``test_commitment_candidate_mapping.py``). This test
+    is kept as the safety net that fails if a second copy is ever re-introduced, and it
+    now pins ``recurrence`` as well -- the field whose divergence was the original
+    defect (``monthly`` in production vs ``one_time`` in the unused copy).
     """
     live_db = _migrated(tmp_path / "live")
     sync_db = _migrated(tmp_path / "sync")
@@ -339,3 +345,5 @@ def test_both_mapping_sites_store_the_same_reserve_facts(tmp_path):
     assert live_commitment.reserved_amount_reported is True
     assert sync_commitment.reserved_amount_reported is True
     assert live_commitment.funded_amount == sync_commitment.funded_amount == 500.0
+    # OS-053: the same read must not store a different recurrence on either path.
+    assert live_commitment.recurrence == sync_commitment.recurrence == "monthly"
