@@ -207,13 +207,41 @@ patched here.
 
 ## 6. Where OS-049 now stands
 
+**FINAL (2026-09-20): the browser suite is GREEN — 39 passed, 0 failed, 72 skipped.**
+
 | | Count | Meaning |
 |---|---|---|
 | Fixed | 1 real defect | the `min-width` floor (round 1) |
-| Replaced with evidence-based checks | 3 assertions | transparent-box geometry and two unsupported thresholds |
-| **Left red — REAL defect** | **2 tests** (390px, both themes) | the CTA/dock overlap above |
+| Replaced with evidence-based checks | 4 assertions | transparent-box geometry, two unsupported thresholds, and one asked at the wrong scroll position |
+| **Remaining failures** | **0** | — |
 
-6 failed → **2 failed**, and the two that remain are the only ones that describe a genuine defect.
+```
+6 failed  (start of OS-049)
+ → 2 failed  (after the painted-geometry refactor)
+ → 0 failed  (after the reachability assertion)
+```
+
+### The last two failures were also not a defect — the assertion asked at the wrong scroll position
+
+`assert cta_box["y"] + cta_box["height"] + 8 <= dock_box["y"]` is evaluated at
+**scrollTop = 0**, and it fails at 390px in both themes. But `.m-main` is a `1fr` grid row with
+`overflow-y: auto` — the mobile composition gives the dock its **own** grid row precisely so it
+*"cannot overlay content"* — so the CTA simply sits below the fold before you scroll. Measured:
+
+| | at scrollTop=0 | after `scrollIntoView` |
+|---|---|---|
+| CTA bottom | 762.17 (scrollport edge 758.25) | **435.17 — fully inside** |
+| gap to dock | −3.92 | **+323.08** |
+| `elementFromPoint` at CTA centre | — | **the CTA itself** (`obs-button obs-explore-plan`) |
+
+"The last element in a scrolling column is past the fold before you scroll" is **normal**, not a
+collision. A CSS padding increase was tried first and **reverted**, because it did not change this
+measurement — keeping it would have left a change that claimed to fix something it did not.
+
+The replacement asserts the property that actually matters: the CTA can be brought **fully into
+view**, it **clears the dock** once there, and it is **the element a tap actually hits**. That last
+check is what makes it a real guard — falsified by forcing the dock to `position: fixed`, which
+fails the test at 390px.
 
 ## 7. Reproduction
 

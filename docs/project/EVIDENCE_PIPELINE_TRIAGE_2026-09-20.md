@@ -155,24 +155,79 @@ condition. Worth checking deliberately rather than discovering later.
    evidence, and under what linking rule), so it belongs in a task, not a patch.
 5. **Then the bills/evidence linking gap** — see §6.
 
-## 6. A separate defect found while triaging: bills are not linked to evidence
+## 6. CORRECTION — bills DO have evidence; my first claim here was wrong
 
-`evidence_links` holds **15** links in total, and **all 15** target `transaction`:
+**I originally wrote that "bills are not linked to evidence" and that bill evidence would not
+appear even after restoring the blobs. That was WRONG and the owner corrected it. The mechanism
+exists and works through a path I did not check.**
 
-| target_kind | relation | count |
+Bill invoices are rendered on the Plan page from `commitment.invoice_evidence`:
+
+- `static/js/meridian/plan.js:583-594` builds a clickable link per invoice —
+  `Invoice · {title}` — opening `invoice.content_url` (the evidence-content endpoint).
+- `meridian/services/plan.py:182` `_bill_invoice_evidence(...)` resolves it, exposed at
+  `plan.py:418-419` as `"invoice_evidence"`.
+
+The mistake was mine and worth naming precisely: I queried the `evidence_links` **table** for
+`target_kind='bill'`, found none, and concluded the capability was missing. In fact bill evidence is
+resolved **at read time by name/domain matching** over the mail store, not through a stored link row:
+
+```
+meridian/services/plan.py:182   def _bill_invoice_evidence(evidence_repository, bill_name, limit=4)
+  … items = evidence_repository.list_items(source_kind="mail", limit=400)
+  … matches sender domain first, then biller-name tokens in the subject
+```
+
+`evidence_links` is used for the **transaction** linkage only
+(`gmail_intake.py:157` `link_mail_evidence_to_transactions`). Both are legitimate; they are just
+different mechanisms, and "no link row" is not "no evidence".
+
+**What survives, and is now the single reason invoices do not open:** §3 — the blob store holds
+**0 files against 732 metadata rows**, so every `content_url` the Plan page produces returns the
+`evidence_content_missing` 404. One root cause, not two.
+
+**One real caveat found while correcting this:** `_bill_invoice_evidence` calls
+`list_items(source_kind="mail", limit=400)` while the store holds **730** mail items. That cap is a
+silent truncation — evidence beyond the 400 most recent mail items per bill lookup is invisible to
+the matcher. Worth reviewing, since a fresh backfill will push the count further past it.
+
+## 7. IMPLEMENTED — semi-regular polling (the owner's direction)
+
+> *"it should semi-regularly poll though, I shouldnt have to request a back fill through the harness any
+> time I want evidence information, defeats the purpose."*
+
+`meridian/evidence_refresh.py` now runs the read-only intake on an interval, wired into `app.py`
+beside the existing Crew refresh (started from `ensure_meridian_refresh`, never on import).
+
+| knob | default | why |
 |---|---|---|
-| `transaction` | `documents` | 15 |
+| `MERIDIAN_EVIDENCE_INTERVAL` | 1800s | floor **300s** — this makes authenticated calls to Google, so it is deliberately *far* slower than the 15s graph reconcile |
+| `MERIDIAN_EVIDENCE_SINCE_DAYS` | 45 | widened from the old hardcoded 30, so a backfill reaches at least as far back as the run it repairs |
+| `MERIDIAN_EVIDENCE_MAX_MESSAGES` | 50 | per account |
 
-**Zero links target a bill** — against **11 bills** in the database — and only **8 distinct evidence
-items** of 732 are linked to anything at all. So even with the blobs restored, a bill detail view has
-no routine that finds bill-linked evidence: Gmail intake populates
-`link_mail_evidence_to_transactions` (`meridian/gmail_intake.py:157`), and there is **no bill
-equivalent**. That is a second, independent reason "viewing bills" looks broken, and fixing §3 alone
-will not fix it.
+Three properties are load-bearing, and each is pinned by a test:
 
----
+1. **It reports what it OBSERVED, not what it ATTEMPTED.** Because `ingest_record` swallows
+   blob-write failures, the service counts the blob store before and after every cycle and reports
+   `blobs_written`. "Ingested" can therefore never again silently mean "metadata only" — the exact
+   failure that produced 732 rows and 0 blobs.
+2. **Single-flight.** A concurrent cycle is **refused, not queued**, so a tick that overruns cannot
+   stack provider calls.
+3. **Read-only at the provider.** Fetches only — no send, label, archive or delete. No financial
+   write path, no approval authority.
 
-## 7. What this triage did NOT do
+The manual route now also honours `MERIDIAN_EVIDENCE_SINCE_DAYS` (default 45) instead of a hardcoded
+30, so a deliberate backfill is not stuck with the window that caused the problem.
+
+**Falsified three ways**, each failing exactly one test: removing the single-flight refusal,
+replacing the verified blob delta with the intake's own `total_stored` claim, and dropping the
+provider-poll floor.
+
+**Still open, and deliberately not done:** the backfill itself has **not** been run (it makes real
+provider calls and needs the owner's go-ahead), calendar remains wired to nothing, and the 14-day
+window is *mitigated* by the wider default but only actually recovered by running the backfill.
+
+## 8. What this triage did NOT do
 
 - No provider call, no intake run, no backfill, no calendar fetch.
 - No credential, token, message body or content hash value was read out or printed.

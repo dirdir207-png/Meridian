@@ -322,7 +322,43 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
         cta_box = page.locator(".obs-explore-plan").bounding_box()
         dock_box = page.locator(".m-nav").bounding_box()
         assert ticket_box["height"] <= 180
-        assert cta_box["y"] + cta_box["height"] + 8 <= dock_box["y"]
+        # OS-049. This was `cta_box["y"] + cta_box["height"] + 8 <= dock_box["y"]`, measured
+        # at scrollTop=0, and it fails at 390px in both themes. It is not a real defect and
+        # the assertion was asking the wrong question. `.m-main` is a `1fr` grid row with
+        # `overflow-y: auto` (the mobile composition gives the dock its OWN grid row
+        # precisely so it "cannot overlay content"), so the CTA sits below the fold at
+        # scrollTop=0 — 762.2 against a scrollport edge of 758.25 — and "the last element is
+        # past the fold before you scroll" is normal for a scrolling column, not a collision.
+        # Measured after `scrollIntoView`: the CTA lands fully inside the scrollport
+        # (390.2..435.2 against a 758.25 edge), 323px clear of the dock, and
+        # `elementFromPoint` at its centre returns the CTA itself
+        # (`obs-button obs-explore-plan`) — so it is reachable and unobstructed.
+        #
+        # The property worth asserting is that the last interactive element CAN be brought
+        # fully into view and is not covered by the dock when it is, which is what replaces
+        # the old scroll-position comparison. If the dock ever regressed to overlaying the
+        # canvas, `elementFromPoint` would stop returning the CTA and this fails.
+        page.locator(".obs-explore-plan").scroll_into_view_if_needed()
+        reachable = page.locator(".obs-explore-plan").evaluate("""(el) => {
+          const box = el.getBoundingClientRect();
+          const port = document.querySelector('.m-main').getBoundingClientRect();
+          const dock = document.querySelector('.m-nav').getBoundingClientRect();
+          const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+          return {
+            fullyInsideScrollport: box.y >= port.y - 0.5 && box.bottom <= port.bottom + 0.5,
+            clearOfDock: box.bottom <= dock.y,
+            notObstructed: !!hit && (hit === el || el.contains(hit)),
+          };
+        }""")
+        assert reachable["fullyInsideScrollport"], (
+            "the Explore CTA must be scrollable fully into view, not stranded past the "
+            "scrollport edge"
+        )
+        assert reachable["clearOfDock"], "the Explore CTA must clear the dock once scrolled into view"
+        assert reachable["notObstructed"], (
+            "the Explore CTA must be the element a tap actually hits; the dock must not "
+            "overlay it"
+        )
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
     page.get_by_role("button", name="Internet", exact=False).click()
     assert page.locator(".obs-ticket-title").inner_text() == "Internet"

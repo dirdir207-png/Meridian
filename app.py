@@ -901,6 +901,65 @@ def get_meridian_refresh_service() -> "MeridianRefreshService":
         app.config["MERIDIAN_REFRESH_SERVICE"] = _meridian_refresh_service
     return _meridian_refresh_service
 
+
+# --- Semi-regular evidence polling (Gmail/iCloud -> evidence store) ---------------
+# Evidence used to be manual-only: the owner had to POST /api/meridian/gmail/intake by
+# hand, so the store sat frozen at whatever the last hand-run captured (measured
+# 2026-09-20: 730 mail rows, all dated 2026-09-06, and zero blobs on disk). This polls
+# on an interval instead. Read-only at the provider; it never sends, labels or deletes
+# mail, holds no approval authority, and touches no financial write path.
+meridian_evidence_interval = int(
+    os.environ.get("MERIDIAN_EVIDENCE_INTERVAL", "1800")
+)
+meridian_evidence_since_days = int(os.environ.get("MERIDIAN_EVIDENCE_SINCE_DAYS", "45"))
+meridian_evidence_max_messages = int(
+    os.environ.get("MERIDIAN_EVIDENCE_MAX_MESSAGES", "50")
+)
+_meridian_evidence_service = None
+
+
+def _evidence_blob_count() -> int:
+    """Count persisted evidence blobs, so a cycle reports what was VERIFIED."""
+    from meridian.evidence_refresh import count_stored_blobs
+
+    return count_stored_blobs(os.path.join(os.path.dirname(os.path.abspath(DB_FILE)), "evidence"))
+
+
+def _meridian_evidence_run_once():
+    """Zero-arg evidence cycle for the poll thread (lazy imports)."""
+    from meridian.connectors.google_auth import GoogleOAuth2Client, GoogleOAuthConfig
+    from meridian.evidence import EvidenceRepository
+    from meridian.evidence_refresh import run_evidence_cycle
+
+    db_path = FinancialRepository(DB_FILE).db_path
+
+    def _token_client():
+        return GoogleOAuth2Client(GoogleOAuthConfig.from_env(), scopes=("email",))
+
+    return run_evidence_cycle(
+        db_path=db_path,
+        evidence_repo=EvidenceRepository(db_path),
+        token_client=_token_client(),
+        blob_store=_evidence_store_factory(),
+        since_days=meridian_evidence_since_days,
+        max_messages_per_account=meridian_evidence_max_messages,
+    )
+
+
+def get_meridian_evidence_service():
+    global _meridian_evidence_service
+    if _meridian_evidence_service is None:
+        from meridian.evidence_refresh import EvidenceRefreshService
+
+        _meridian_evidence_service = EvidenceRefreshService(
+            _meridian_evidence_run_once,
+            interval_seconds=meridian_evidence_interval,
+            blob_count=_evidence_blob_count,
+            logger=lambda message: print(message, flush=True),
+        )
+        app.config["MERIDIAN_EVIDENCE_SERVICE"] = _meridian_evidence_service
+    return _meridian_evidence_service
+
 def store_crew_credential(value):
     """Persist a renewed Crew credential through the same path as manual saves."""
     conn = sqlite3.connect(DB_FILE)
@@ -7150,6 +7209,16 @@ def ensure_meridian_refresh():
     except Exception as exc:  # noqa: BLE001 - refresh must never break startup
         app.logger.warning("Meridian refresh start failed: %s", exc)
         print("❌ Meridian refresh start failed: %s" % exc, flush=True)
+    try:
+        get_meridian_evidence_service().start()
+        print(
+            "🔄 Meridian evidence polling started (every %ss, %s-day window)"
+            % (meridian_evidence_interval, meridian_evidence_since_days),
+            flush=True,
+        )
+    except Exception as exc:  # noqa: BLE001 - evidence polling must never break startup
+        app.logger.warning("Meridian evidence polling start failed: %s", exc)
+        print("❌ Meridian evidence polling start failed: %s" % exc, flush=True)
 
 @app.before_request
 def ensure_background_thread():

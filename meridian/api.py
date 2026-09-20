@@ -707,7 +707,12 @@ def gmail_intake():
         evidence_repo=EvidenceRepository(graph.db_path),
         token_client=_token_client(),
         max_messages_per_account=50,
-        since_days=30,
+        # OS-067: the window is configurable and defaults WIDER than the old hardcoded
+        # 30 days. The store was found frozen at a single 2026-09-06 run, and a 30-day
+        # window re-run on 2026-09-20 would begin at 2026-08-21 -- permanently skipping
+        # mail from 2026-08-07..2026-08-20 that the first run had captured. A backfill
+        # must reach at least as far back as the run it is repairing.
+        since_days=int(os.environ.get("MERIDIAN_EVIDENCE_SINCE_DAYS", "45")),
         blob_store=_evidence_blob_store(graph),
     )
     return jsonify({"state": "ingested", "summary": summary})
