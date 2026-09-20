@@ -495,10 +495,13 @@ and a precise commit. Never claim completion because a schema, endpoint, button 
    (`scripts/restart_preview.command`); the full matrix is in `docs/project/CURRENT_STATUS.md`.
 5. **Verification latency.** `update_crew_bill` now shells out synchronously to `crew-readonly` (120 s timeout)
    before it can be verified.
-6. **No clean-lint baseline.** `ruff check .` reports **11 pre-existing errors** `[E]` — five in `scripts/`,
-   two in the untracked capture harness, one in `tmp/`, plus import sorts. A lint gate added today would fail
-   immediately. Scope the config (exclude `artifacts/`, `tmp/`) and clear the tracked files before making
-   lint a gate.
+6. **No clean-lint baseline.** ~~`ruff check .` reports **11 pre-existing errors** `[E]` — five in `scripts/`,
+   two in the untracked capture harness, one in `tmp/`, plus import sorts.~~ **RE-MEASURED 2026-09-20 `[E]`:**
+   `ruff check .` reports **17 errors, and every one is in scratch code** — `artifacts/**` (3 files) and `tmp/**`
+   (9 files). **`meridian/`, `scripts/` and `tests/` are all clean.** So the earlier "five in `scripts/`" claim is
+   stale and the conclusion changes: the tracked source already passes, and only the **untracked scratch
+   directories** fail. A lint gate on the tracked tree is therefore *nearly* available today — it needs
+   `artifacts/` and `tmp/` excluded (they are scratch and stay untracked by convention), not a cleanup of source.
 
 ---
 
