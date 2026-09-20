@@ -107,6 +107,18 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-20 — The preview launcher could not run: a script that exists is not a script that runs
+
+**The owner tried to install the Desktop preview launcher and Finder refused:** *"install_desktop_shortcut.command could not be executed because you do not have appropriate access privileges."* Cause, verified rather than guessed: the file was committed with mode **`100644`** — no executable bit — and sat on disk as `-rw-------`, so macOS will not execute it. `scripts/restart_preview.command` was fine (`100755` in git, `711` on disk).
+
+**This is my defect, and it is precisely the failure the mission warns about.** I wrote the launcher, committed it, verified it *existed*, and told the owner to double-click it — **without ever verifying it could run.** "A script exists" was treated as "a script works", the same error class as claiming completion because a button or endpoint exists. The owner could not install the launcher at all, and both the suite and review missed it because **nothing asserted runnability**.
+
+**Fixed in both places that matter.** `chmod 755` on both launchers, **and** `git update-index --chmod=+x` so the mode is correct **in the index** — because a fresh clone takes its modes from git, not from this working tree, so fixing only the filesystem would have left the bug in the repository.
+
+**And pinned with a test that was falsified before it was trusted.** `tests/test_launcher_scripts.py` (4 tests) asserts every tracked `scripts/*.command` / `*.sh` is executable **in the working tree** (what Finder executes) **and in git** (what a clone materialises), and that each carries a shebang. Verification: reintroducing the bug with `chmod 644` makes the working-tree test **fail**; restoring it makes all four **pass**. A regression test never seen to fail proves nothing.
+
+**Incident note:** an earlier diagnostic looped over every tracked file and **timed out at 300 s, resetting the persistent shell** — the second such reset in this lane. Keep those checks bounded (filter by pathspec and extension; never read every tracked file).
+
 ### 2026-09-20 — OS-053 handoff written, the duplication located in code, and two of my own prior claims corrected
 
 The owner asked for a handoff so a fresh session can start OS-053. Written to `docs/project/HANDOFF_OS-053_2026-09-20.md` — self-sufficient, with `[E]` marks on what was verified and `[?]` on what was not — and the ledger row updated to point at it.
