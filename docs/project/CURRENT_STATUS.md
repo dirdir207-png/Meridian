@@ -46,13 +46,44 @@ longer "Crew's own estimate" string; `node --check`; Ruff clean; `git diff --che
 `deepseek-os056b`. Captures regenerated: `artifacts/observatory-dial-schedule-2026-09-20/` and
 `artifacts/dial-schedule-review-2026-09-20/` (both untracked by this lane's convention).
 
-Must not be assumed: **no provider mutation, no live sync, no deployment, and no `:8081` restart.** The
-preview running on `:8081` (PID 28426) started before both OS-056 commits, and a running preview loads code at
-process start, so **neither slice is live**; migration 025 will be applied by the next app start, and the
-reported columns stay empty until a read runs under the new code. The reserve-level `$1,435.97` is now stored
-and still **unexplained** — it is never used as a dividend, and `totalReservedAmount` remains the only observed
-reserve balance. The three open questions and the **2026-10-02** decisive observation are unchanged; they are
-now measurable against what Crew predicted, which is what OS-057 records. The six pre-existing
+### INCIDENT, 2026-09-20 — shipping migration 025 while the preview was running 503'd the dial
+
+Measured, not inferred. The preview on `:8081` (PID 28426, started 20:29:44, i.e. before both OS-056 commits)
+was still executing **pre-025 code**, but it constructs `FinancialRepository(...)` on every 15-second refresh
+and that constructor runs `run_migrations`. So the **running** process applied `025` to
+`/tmp/gate-preview/gate.db` on its own next tick — the same mechanism that applied 024, but with a different
+outcome, because 025 `ALTER`s a table whose record class is built as `BillReserveRecord(**dict(row))`. The old
+in-memory dataclass does not declare the two added columns, so every reserve read raised
+`TypeError: BillReserveRecord.__init__() got an unexpected keyword argument 'estimated_next_funding_amount'`.
+That killed the refresh tick (84 logged failures) and the dial's own read path, so `/api/meridian/dial` returned
+**503** while `/api/meridian/today`, `/accounts` and `/memory/today` kept returning 200 — a dial-only outage,
+which is why it reads as "the dial can't be loaded".
+
+**It is not self-healing, and undoing an applied migration is not an option** (that is the 2026-09-11 shortage in
+reverse: the checksum is frozen and the history is authoritative). The only repair is a preview **restart**, and
+it is owner-gated; the owner is starting it in their own terminal.
+
+**Pre-flight, verified read-only against a copy of the live database with the new code** (never the live file):
+`list_bill_reserves()` reads cleanly (`total_reserved_amount = 1097.10`), `build_dial` succeeds with
+`freshness: fresh`, and the three bills in the horizon carry their schedules with the proven values —
+Verizon `4672`, Eversource `9660`, Xfinity `4278` cents, all `basis: "crew_estimate"` with
+`divergence: null` because the reported columns are still empty. So the restart does not merely clear the 503;
+it produces the expected payload on real data. The first refresh after it also populates the reported fields,
+which flips those rows to `basis: "crew_reported"` and switches the divergence check on — the real-data
+verification OS-057 was written to wait for.
+
+**The durable rule this establishes:** shipping a migration that `ALTER`s a table whose record class is built
+with `**dict(row)` will break an already-running preview the moment that process applies it, because the
+schema moves under in-memory code. Restart the preview as part of such a migration, or accept a 503 window.
+A migration that only creates a new table or adds a nullable column to a table read column-by-column is safe.
+
+Must not be assumed: **no provider mutation, no live sync, no deployment, and no `:8081` restart by an agent.**
+The preview must be **restarted by the owner** for either OS-056 commit to take effect; migration 025 is
+ALREADY applied to the preview database, and the reported columns stay empty until a refresh runs under the new
+code. The reserve-level `$1,435.97` is now stored and still **unexplained** — it is never used as a dividend, and
+`totalReservedAmount` remains the only observed reserve balance. The three open questions and the
+**2026-10-02** decisive observation are unchanged; they are now measurable against what Crew predicted, which is
+what OS-057 records. The six pre-existing
 `tests/browser/test_dial_fidelity.py` failures remain OS-049's baseline.
 
 ## RESUME HERE — OS-056: Today states Crew's per-event funding estimate (2026-09-20, base `5a88cc6`)

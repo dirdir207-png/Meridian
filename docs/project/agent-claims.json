@@ -379,7 +379,22 @@
       ],
       "base_sha": "e6683a7",
       "since": "2026-09-20T00:00:00+00:00",
-      "note": "OS-056 Decision 1B (handoff-authorized second commit of the same slice): persist Crew's own reported funding fields -- per-bill estimatedNextFundingAmount and reservedBy, reserve-level estimatedNextFundingAmount and nextFundingDate -- so Crew's statement outranks Meridian's application of Crew's rule, and the computed-vs-reported divergence becomes measurable. Read-only toward Crew: a Meridian-local migration plus ingestion during the app's own refresh, with the C01 absence rule (an unreported field never clears a known value). No provider mutation, live sync, deployment or :8081 restart."
+      "note": "OS-056 Decision 1B (handoff-authorized second commit of the same slice): persist Crew's own reported funding fields -- per-bill estimatedNextFundingAmount and reservedBy, reserve-level estimatedNextFundingAmount and nextFundingDate -- so Crew's statement outranks Meridian's application of Crew's rule, and the computed-vs-reported divergence becomes measurable. Read-only toward Crew: a Meridian-local migration plus ingestion during the app's own refresh, with the C01 absence rule (an unreported field never clears a known value). No provider mutation, live sync, deployment or :8081 restart. Released at ae11326."
+    },
+    {
+      "agent": "deepseek-os056b-guard",
+      "claim_id": "os056b-schema-alignment-guard-20260920",
+      "generation": 1,
+      "files": [
+        "tests/meridian/test_record_schema_alignment.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json",
+        "docs/project/MERIDIAN_OS_TASKS.json"
+      ],
+      "base_sha": "ae11326",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "Follow-up to the measured OS-056b incident: migration 025 was applied by the ALREADY-RUNNING preview (its refresh constructs FinancialRepository, which runs migrations), and the stale in-memory BillReserveRecord then raised TypeError on the added columns -- 503ing /api/meridian/dial while /today and /accounts kept returning 200. Adds a mechanical guard pinning that a record built as **dict(row) declares exactly its table's migrated columns, with a negative control proving the guard bites, plus the incident record in CURRENT_STATUS and the coordination log. Tests and documentation only: no code, schema, provider, live or authority change."
     }
   ]
 }
