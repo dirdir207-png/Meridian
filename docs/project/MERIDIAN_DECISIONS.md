@@ -138,6 +138,53 @@ What this settles:
 
 Explicitly still open, and not to be guessed: how `totalReservedAmount` is derived, and how Crew chooses which bill holds the balance. The **`2026-10-02`** funding event converts both from inference into measurement, from data Meridian already refreshes every 15 seconds.
 
+**THE FUNDING DERIVATION AND THE EARMARKING RULE — owner's account, 2026-09-20, with the verifiable parts verified.** The owner describes the funding event as an ordered allocation out of **Checking**, which is also the reserve's only source:
+
+1. The **paycheck** lands in Checking. (`billReserve.settings.funding.subaccount` = **Checking**, confirmed in the stored payload — "the reserve only pulls from checking".)
+2. **Bill allocations** are set aside into the reserve per bill — the per-event proration Meridian already mirrors, which matched Crew to the cent on all five real bills.
+3. **Pocket transfers** move the configured amounts out to the pockets. The owner says this is a **setting**.
+4. **Whatever remains in Checking above the sweep threshold is swept into the reserve.** This is a real, named rule in the payload — `SWEEP_EXCESS`, on a condition matching the **Checking** subaccount, triggered by `ACCOUNT_BALANCE_UPDATED`, not paused and not broken: *"Sweep Excess Checking Funds … Removes funds over 1800 in the checking pocket"*. A second rule, **Round Ups** (`ROUND_UP_TRANSFER`, `roundToNearest: 100` = $1.00, into the Fun Money pocket), exists but is `isBroken: true`.
+5. **At the observed event the sweep produced nothing**, and the owner's explanation is that the pocket-transfer component *exceeded what was available after the bill allocations* — so Checking never showed an excess. Their sharper point is the risk: **without that pocket-transfer rule, the residual would have been swept and the whole paycheck would have gone into the reserve.**
+
+### What this settles, and what it deliberately does not
+
+**Settled.** The reserve is fed by a **residual sweep** on top of per-bill proration, not by a per-bill split of a bucket; the reserve draws only from Checking; the sweep is a real configured rule; and the pockets claim the residual before the sweep can. This is consistent with the stored observations — Checking `-96.61` (no excess), the reserve unchanged by any sweep, and the per-bill figures matching Crew to the cent.
+
+**One tension left deliberately open, recorded so nobody smooths it over.** The owner's step 2 says bills are allocated into the reserve, but the stored attribution does **not** look like a per-bill ledger: **Rent alone holds the entire reserve** (`funded_amount` = `1097.10`), while its own per-event need is only `663.27`; the other four bills hold `0.00` despite carrying per-event estimates of `46.72 / 34.59 / 96.60 / 42.78`. Nor is the reserve a simple accumulation of bill allocations (one event's five allocations sum to `883.96`, so two events would exceed `1097.10`). So the *funding* order above is settled, while **which bill is credited with holding the reserve — and by what rule — remains open**, to be measured at the 2026-10-02 event rather than inferred. Do not assume each bill accumulates its own allocation; the data already contradicts that.
+
+**Not settled, and not to be guessed — two numbers the payload does not expose.** Both are *connector readback gaps*, not mysteries about the owner's setup:
+
+- **The sweep threshold.** It appears **only in the rule's human description** (`over 1800`); the rule's condition object comes back as `{}` from the current query, so the field is not selected. Whether `1800` means **$18.00 or $1,800** is therefore **undetermined**. Payload amounts are cents elsewhere (`roundToNearest: 100` = $1.00), which is suggestive but not decisive for a prose field, and a guess here would materially change any sweep model. **Do not pick one.**
+- **The pocket-transfer allocation.** Each pocket subaccount returns only `clearedBalance / overallBalance / piggyBanked / goal / status` — no transfer amount, percent, schedule, or goal value (`goal` is `null` on all four). So the "pocket transfer component" is **not readable by Meridian today at all**. The owner's statement that it exceeded available funds is *consistent* with the observations but is recorded as **the owner's account, not a measurement**.
+
+**THE ORDERING IS THE RULE — the pockets claim the residual before the reserve can (owner, 2026-09-20).** The owner's sharpening: *if the pocket rule allocates the remaining funds to the Free to Spend pocket, those funds are no longer available to be pulled into the reserve from Checking.* So the reserve and the pockets are competing claimants on one pool — the paycheck sitting in Checking — and the pocket allocation is applied **before** the sweep. Once money has left Checking for a pocket it is out of reach of the reserve. That single ordering explains the observed event completely: the residual went to Free to Spend, Checking never showed an excess, and the sweep took nothing.
+
+Three consequences Meridian must respect:
+
+1. **The reserve is the *last* claimant on a paycheck**, not the first: it receives only what the earlier steps (bill allocations, then pocket transfers) leave in Checking above the threshold. A projection that ordered the sweep first, or that treated a paycheck as reserve-funding on arrival, would overstate the reserve.
+2. **Pocket balances are NOT reserve-funding capacity.** Counting Free to Spend (441.89), Emergency Fund or Fun Money as available to fund the reserve would invent capacity that does not exist — the mirror image of the over-reservation error D-015 already forbids. Reserve-funding capacity is a **Checking-only** quantity.
+3. **The reverse is also true and must not be conflated.** Pocket money *is* spendable by the owner (it is their money, and they may move it back to Checking themselves), but the reserve cannot pull it. So Meridian must never answer "can the reserve cover this?" and "can the owner spend this?" with the same number: the first is Checking-and-earmark-bounded, the second is not. The two questions stay separate, and neither may be answered by the account total (1442.38), which mixes the reserve with the pockets and is exactly the figure the reserve-level `estimatedNextFundingAmount` misleadingly carries.
+
+**THE AUTOPILOT SETTINGS THAT DRIVE ALL OF IT (owner-supplied screenshot of Crew's "Autopilot settings", 2026-09-20).** The owner supplied the settings surface behind the derivation above; it is the authoritative description of the funding model, and each consequence below traces to one line of it.
+
+| Setting | Value | Crew's own caption |
+|---|---|---|
+| SOURCE POCKET | Checking | "For bill adjustments and manual top-ups" |
+| SURPLUS POCKET | Checking | "Leftover income will be sent here." |
+| EARLY FUNDING (DAYS) | 0 | "Ensure bills and pocket transfers are ready on their due dates." |
+| AUTOMATIC TOP-UPS | off | "Keep your reserve on track by pulling from the source pocket, even if that pocket goes negative." |
+| OPTIMIZE CASH FLOW | on | "Maintain a smaller reserve by funding strategically. (Recommended)" |
+
+1. **SOURCE POCKET = Checking** is the same fact as `billReserve.settings.funding.subaccount = Checking` and the `SWEEP_EXCESS` rule targeting Checking — three independent surfaces agreeing that the reserve draws from Checking alone.
+2. **SURPLUS POCKET = Checking** — "leftover income will be sent here" — is where the sweep's input comes from: leftover income lands in Checking and the rule then moves what exceeds the threshold into the reserve.
+3. **EARLY FUNDING = 0 days** means bills *and* pocket transfers are funded **on their due dates, not in advance**. A bill showing `reservedAmount = 0.00` is therefore **normal and expected rather than a shortfall**: four of the five bills sit at `0.00` because their due dates are not here yet. **Meridian must never render "unfunded" as "in trouble" while this setting is 0** — the money is in Checking by design and Crew pulls it on the day. The dial's current "not yet set aside" wording is accurate as *state*; it must not acquire a warning connotation.
+4. **AUTOMATIC TOP-UPS = off** means the reserve does **not** force-pull from Checking when that would drive the source pocket negative, so the reserve cannot drain Checking and takes surplus only. This is the rule the owner meant by *"if that rule wasn't there, my whole paycheck would have gone into reserve"*: with top-ups on, the reserve pulls to stay on track regardless of the source pocket.
+5. **OPTIMIZE CASH FLOW = on** means the reserve is **deliberately kept smaller** than the bills' total need — "maintain a smaller reserve by funding strategically". So `totalReservedAmount` is **not** "the money needed for the bills" and must never be compared against a sum of bill amounts as though the difference were a shortfall. This also resolves the size half of the tension noted just above: the reserve sitting below the sum of the five per-event figures is this setting working as designed, not an anomaly.
+
+**None of these five settings is visible to Meridian today.** The stored `autopilot` node carries only the two rules, and the pockets facet returns balances only — so Meridian currently cannot read the settings that define the funding model, and must not infer them (see OS-059). What Meridian *can* honestly say today is what is observed: the reserve total, the per-bill figures, the next funding date, and the sweep rule's existence.
+
+**Why this matters beyond curiosity.** Because the sweep is a *residual* rule, it can absorb a large share of a paycheck; the pocket-transfer setting is what protects liquidity. Any Meridian projection that modelled "sweep the remainder into the reserve" **without** the pocket component would produce a materially over-reserved picture — presenting money as set aside that is not. Meridian models no sweep at all today, which is the correct posture until those two settings are readable; the honest route is to expose them in the connector's query (see OS-059) rather than to infer them.
+
 **RESOLVED — what the reserve-level `estimatedNextFundingAmount` means (owner clarification + arithmetic, 2026-09-20).** This was the third open question above, and it is closed rather than still pending. The owner states that `1435.97` is their **total account balance** and `1097.10` is the **actual amount sitting in the reserve** — and the provider's own payload confirms the accounting identity exactly, to the cent:
 
 ```

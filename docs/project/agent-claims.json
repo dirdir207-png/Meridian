@@ -429,7 +429,22 @@
       ],
       "base_sha": "4d1907d",
       "since": "2026-09-20T00:00:00+00:00",
-      "note": "Resolves the third open question from the OS-056 handoff, on the owner's clarification plus the provider payload's own arithmetic: Crew's reserve-level estimatedNextFundingAmount is an ACCOUNT-TOTAL snapshot, not a reserve figure (reserve 1097.10 + four subaccounts 345.28 = 1442.38, the owner's live total exactly), and it lags the live total (still 1435.97, 6.41 behind, while a fresh read showed the spendable part at 345.28 versus the 338.87 it was computed against). Recorded as RESOLVED in D-015, pointed at from CURRENT_STATUS, and stated in six source comments/docstrings that previously called the field unexplained. COMMENT-ONLY code change: no behaviour, schema, provider, live-sync write, deployment or authority change; the dial already ignored the field. Migration 025's own comment is deliberately left stale because a shipped migration is checksum-frozen (2026-09-11 immutability rule) -- documented as a known artifact. OS-058 narrowed to the two still-open questions plus when the field refreshes."
+      "note": "Resolves the third open question from the OS-056 handoff, on the owner's clarification plus the provider payload's own arithmetic: Crew's reserve-level estimatedNextFundingAmount is an ACCOUNT-TOTAL snapshot, not a reserve figure (reserve 1097.10 + four subaccounts 345.28 = 1442.38, the owner's live total exactly), and it lags the live total (still 1435.97, 6.41 behind, while a fresh read showed the spendable part at 345.28 versus the 338.87 it was computed against). Recorded as RESOLVED in D-015, pointed at from CURRENT_STATUS, and stated in six source comments/docstrings that previously called the field unexplained. COMMENT-ONLY code change: no behaviour, schema, provider, live-sync write, deployment or authority change; the dial already ignored the field. Migration 025's own comment is deliberately left stale because a shipped migration is checksum-frozen (2026-09-11 immutability rule) -- documented as a known artifact. OS-058 narrowed to the two still-open questions plus when the field refreshes. Released at b5c3162."
+    },
+    {
+      "agent": "deepseek-funding-model",
+      "claim_id": "funding-derivation-earmarking-autopilot-20260920",
+      "generation": 1,
+      "files": [
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "b5c3162",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "Owner-supplied funding derivation, earmarking ORDER and Crew's own Autopilot settings screen, recorded in D-015 with verified and unverified parts separated. Model: income lands in Checking (the reserve's only source, confirmed by billReserve.settings.funding.subaccount and by the SWEEP_EXCESS rule targeting Checking), bills are allocated, POCKET TRANSFERS claim the residual (so pocket money becomes unreachable by the reserve), then whatever exceeds a threshold in Checking is swept to the reserve by the real rule 'Sweep Excess Checking Funds'. Settings: SOURCE POCKET = Checking, SURPLUS POCKET = Checking, EARLY FUNDING = 0 days, AUTOMATIC TOP-UPS = off, OPTIMIZE CASH FLOW = on. Three product consequences recorded: a bill at 0.00 reserved is normal rather than a shortfall while EARLY FUNDING is 0; the reserve cannot drain Checking; and the reserve is deliberately smaller than the bills' total need, so it must never be measured against a sum of bill amounts. Deliberately left open rather than guessed: which bill is credited with holding the reserve (the data already refutes per-bill accumulation), the sweep THRESHOLD (the rule's condition returns empty, so 1800 in prose is undetermined between $18.00 and $1,800) and the pocket-transfer allocation settings -- filed as OS-059, a connector readback change. DOCUMENTATION ONLY: no code behaviour, schema, provider, live-sync write, deployment or authority change."
     }
   ]
 }

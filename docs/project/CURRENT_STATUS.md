@@ -52,10 +52,26 @@ The durable home for the preview is the owner's own terminal. Nothing about the 
 localhost preview of Meridian reading a read-only snapshot. **No provider mutation, no transfer, no live sync
 write, no deployment.**
 
-**Still open, unchanged:** the three questions the 2026-10-02 event will answer (`totalReservedAmount`'s
-derivation, the earmarking rule, what `$1,435.97` means) are now recorded as **OS-058**; the handoff's Decision 2
-(horizon width, which hides Rent) is still the owner's call; and `funding_rules` still holds zero rows — this
-slice mirrors Crew's rule directly and never drives `project_funding`.
+**The funding model is now described by the owner, and two of the three questions are answered.** The owner
+supplied the derivation, the earmarking order and Crew's own Autopilot settings screen (all recorded in D-015):
+paychecks land in **Checking**, which is the reserve's **only** source; bills are allocated, then the **pocket
+transfers** claim the residual (so pocket money is no longer reachable by the reserve), then whatever exceeds the
+sweep threshold in Checking goes to the reserve via a real rule named **"Sweep Excess Checking Funds"**
+(`SWEEP_EXCESS`, description *"removes funds over 1800 in the checking pocket"*). The settings behind it:
+SOURCE POCKET = Checking, SURPLUS POCKET = Checking ("leftover income will be sent here"), **EARLY FUNDING = 0
+days**, AUTOMATIC TOP-UPS = off, OPTIMIZE CASH FLOW = on ("maintain a smaller reserve by funding strategically").
+Three consequences that change how the product must read its own screens: a bill at `0.00` reserved is **normal,
+not a shortfall**, because funding happens on due dates; the reserve **cannot drain Checking**; and the reserve is
+**deliberately smaller** than the bills' total need, so it must never be measured against a sum of bill amounts.
+
+**Still open:** *which bill is credited with holding the reserve, and by what rule* — the funding order is settled
+but the attribution is not, and the stored data already contradicts "each bill accumulates its own allocation"
+(Rent holds the whole `1097.10` while its per-event need is `663.27`). That is measured at the **2026-10-02**
+event, recorded as **OS-058**. Two further numbers are **not readable by Meridian at all** — the sweep threshold
+(the rule's condition returns empty; "1800" exists only in its prose, so **$18.00 vs $1,800 is undetermined**) and
+the pocket-transfer allocation settings — recorded as **OS-059** (a connector readback change, not a Meridian
+guess). The handoff's Decision 2 (horizon width, which hides Rent) is still the owner's call, and `funding_rules`
+still holds zero rows: this slice mirrors Crew's rule directly and never drives `project_funding`.
 
 ## RESUME HERE — OS-056b: Crew's own reported funding fields are ingested, and the mirror is checked against them (2026-09-20)
 
@@ -184,9 +200,11 @@ mirrors Crew's published rule directly, which is the compute-first path Decision
 pre-existing `tests/browser/test_dial_fidelity.py` failures (dial-wrap vs rail geometry; theme-toggle label
 width) are OS-049's baseline, reproduced identically and not attributable to this slice. Of the three open
 questions recorded here at the time — how `totalReservedAmount` is derived, the earmarking rule, and the
-reserve-level `$1,435.97` — **the third is now RESOLVED** (2026-09-20: it is an account-total snapshot, not a
-reserve figure; see the LIVE-VERIFIED block above and D-015's RESOLVED note). The other two remain unmeasured,
-and the **2026-10-02** funding event is still the decisive observation.
+reserve-level `$1,435.97` — **all three have since been answered by the owner** (2026-09-20): the third is an
+account-total snapshot rather than a reserve figure, and the other two are the funding derivation and earmarking
+order now recorded in D-015 (bills, then pocket transfers, then a residual sweep from Checking). What remains
+unmeasured is **which bill is credited with holding the reserve**, plus two settings Meridian cannot read yet
+(OS-058, OS-059); the **2026-10-02** funding event is still the decisive observation.
 
 ## WHAT'S NEXT — mirror Crew's own funding math, and measure it at the 2026-10-02 event (2026-09-20, base `9ceadf5`)
 
