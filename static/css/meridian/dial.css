@@ -1133,6 +1133,11 @@ body.obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab.
     position: absolute;
     width: 1px;
     height: 1px;
+    /* OS-049: same floor as shell.css's copy of this rule -- `.m-theme-toggle-label`
+       sets `min-width: 3.5ch` so the toggle does not shift on a theme flip, and that
+       floor outsizes `width: 1px`, leaving a 20.9px box hidden only by clip-path.
+       Override it so the label is genuinely collapsed, not just visually clipped. */
+    min-width: 0;
     overflow: hidden;
     clip-path: inset(50%);
   }

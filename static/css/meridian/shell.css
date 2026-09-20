@@ -554,6 +554,14 @@
     position: absolute;
     width: 1px;
     height: 1px;
+    /* OS-049: the base `.m-theme-toggle-label` rule sets `min-width: 3.5ch` to reserve
+       the label's space so the toggle does not shift when the theme flips. A min-width
+       BEATS this rule's `width: 1px` (specificity picks the declaration, but the used
+       width is then floored by min-width), so the label kept a full ~20.9px box and was
+       hidden only VISUALLY by clip-path -- still occupying layout and still a real
+       focus/hit target. Override the floor explicitly: this rule intends the label gone,
+       not merely invisible. */
+    min-width: 0;
     overflow: hidden;
     clip-path: inset(50%);
   }

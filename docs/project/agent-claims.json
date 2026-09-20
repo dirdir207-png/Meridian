@@ -647,6 +647,26 @@
       "base_sha": "5db363cda2ff6354bfddd0d4eb7b7091eb4825b8",
       "since": "2026-09-20T00:00:00+00:00",
       "note": "OS-060 read-only reserve-versus-amount exposure on Today, per the owner's 2026-09-20 scope decision: show a gap ONLY where the bill's amount exceeds its OBSERVED reserved figure AND a reserved report exists (reserved_amount_reported). A bill reading funded 0.00 with the report flag set is NORMAL funded-not-covered (D-015) and must show NOTHING, so only 0 < funded < amount qualifies -- which is exactly the dial's existing 'partial' status. Presented OUTSIDE the dial's event window because Rent's next occurrence (2026-10-16) falls after the 14-day horizon end (2026-10-04), so an event-field approach would ship a feature that displays nothing. Wording is factual with no verb of action: 'Rent 1442.00 - set aside 1097.10 - 344.90 not yet covered'. No provider mutation, no transfer, no reserve withdrawal, no authority change, no forecast, no lateness modelling, no re-targeting. Arithmetic is amount minus the observed reserved figure and nothing else."
+    },
+    {
+      "agent": "deepseek-os049",
+      "claim_id": "os049-browser-baseline-20260920",
+      "description": "OS-049: measure the browser-suite baseline, isolate each remaining failure, and fix the real defects so the suite is known-good.",
+      "generation": 1,
+      "files": [
+        "static/css/meridian/shell.css",
+        "static/css/meridian/dial.css",
+        "tests/browser/test_dial_fidelity.py",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json",
+        "tmp/os049_probe.py",
+        "docs/project/OS049_BROWSER_BASELINE_2026-09-20.md"
+      ],
+      "base_sha": "5bfd9c6e1ab7a169760687885addaa2ec90dad38",
+      "since": "2026-09-20T00:00:00+00:00",
+      "note": "OS-049 environment/baseline slice: establish the true browser-suite baseline (was 43 failed / ~21 passed / 28 errors, unexplained) and fix the real defects it exposes. First defect isolated empirically: .m-theme-toggle-label carries a base min-width:3.5ch (20.875px) that the two mobile hiding rules override width:1px but NOT min-width, so the label keeps a full box and is hidden only visually by clip-path -- the (0,2,0) and (0,4,0) rules match yet width computes to 20.86px because min-width wins. Read-only toward Crew: no provider mutation, no live sync, no authority change."
     }
   ]
 }
