@@ -33,6 +33,68 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## OS-038 item 5 CLOSED — the Accounts connectors are the concept's bow, not a straight rail (2026-09-21, base `7a4d34b`)
+
+**Track D's stated next move, first item.** Roadmap §6 says "close Track D's remainder (`OS-038` design gaps,
+`OS-049` browser baseline)"; `OS-049` is done, so this is the design-gap half. **Presentation only:** no route, data,
+financial, provider or authority change.
+
+**The authority question was settled by reading, not assuming.** Roadmap §6 says "verify whether
+`design/observatory-drafts-2026-09-08/` is superseded before relying on it", and `AGENTS.md` line 17 still names that
+set as the one to verify. It IS superseded — but only where the newer set speaks. `design/observatory-extension-2026-09-18/`
+supplies four concepts (`review`, `settings`, `timeline`, `virgil`) and does not contain an Accounts concept, so
+Accounts is still governed by `04-accounts.png` in the 09-08 set, whose `BUILD_SPEC.md` the 09-18 handoff explicitly
+tells the builder to read for the existing design language. Settings and Virgil ARE governed by the 09-18 set. One
+authority per surface, and the two do not overlap.
+
+**What Finding 4 recorded, and what the concept actually shows.** Finding 4 item 5 measured the concept as "curved
+dashed paths bowing outward, one node circle at each end, coloured per row (lilac -> mint -> apricot), plus dotted row
+separators with a brass star at each end", and named the straight vertical dashed rail then built as *"the wrong
+construction"*. Read directly off the concept PNG this session, one detail matters that the prose does not settle: the
+bow is a **continuous slack cord through the row nodes**, not a per-row arc, and each separator is a fine dotted rule
+with a small brass star at its **right** end.
+
+**Built.** `static/js/meridian/accounts.js::connectorGeometry` is a **pure function** of measured row centres returning
+a path string plus one node per row — the same JS-generated-SVG vocabulary Today already uses. The bow is a string of
+quadratic segments through the two gaps **adjacent** to each node rather than one continuous path, so a row that leaves
+the list drops out of the chain instead of dragging the curve through a row it no longer touches; it emits **nothing**
+for fewer than two rows. Node x is 21 with control-point depth 9, both chosen against the measured row gutter
+(`padding-left: 30px`) so the bow never reaches the sheet edge and needs no clipping. Separators became
+`border-bottom: 1px dotted` in brass with the star as a `::before` **mask of the kit's own `star.svg`**, so it takes the
+brass ink as a shape and adds no decorative text to the accessibility tree. The layer is absolute, clipped,
+`pointer-events: none`, `z-index: 0`.
+
+**THREE DEFECTS FOUND WHILE VERIFYING — each caught before commit, two of them only by looking at the pixels.**
+
+1. **Scoping the layer to a single `.m-account-list` drew nothing at all.** A list holds one financial ROLE, and this
+   preview holds one account per role, so the per-list geometry saw a single row and — correctly — emitted no bow. The
+   first governed capture showed the gap, and had it not been read the slice would have been committed as "the
+   connectors are done" with no connectors on the page. The sheet is the constellation.
+2. **The corrected selector matched nothing either.** `<groups> .m-account-list-sheet` cannot match, because the sheet
+   is the **parent** of `[data-accounts-groups]`, not a descendant. The re-capture looked identical to the first, which
+   is why a read-only Playwright probe of the live DOM was needed to place the fault; a second capture alone would have
+   shown the same absence for a different reason.
+3. **`const root = document.querySelector(...)` made `accounts.js` unimportable in Node**, so the new pure geometry
+   could not be tested there. It is now `typeof document === "undefined" ? null : ...`, the guard `dial.js` already used.
+
+**Evidence.** `tests/meridian/test_accounts_rail.py` rewritten to 11 guards, three of which run the pure geometry under
+Node (single row -> `null`, one node per row carrying that row's tint, control points at the bow depth) and two of which
+pin the stylesheet's node colours and the JS `TINT_COLORS` table to the same values so the two cannot drift. Full
+non-browser suite **1184 passed**. Capture `artifacts/observatory-accounts-connectors-2026-09-21/` — Accounts x five
+governed viewports x two themes, **zero horizontal overflow, zero console errors**, and both themes reviewed
+independently because the spec forbids inferring the light edition from a dark capture. Ruff clean on the tracked tree
+(the 2 remaining errors are pre-existing in `tests/browser/test_dial_fidelity.py`), `git diff --check` clean.
+
+**Recorded deviation, not a quietly missed target.** The node sits at x=21 inside a 38px layer and the medallion plate
+starts at that same x, so the node's right edge tucks under the medallion's left rim rather than floating clear of it —
+which is what the concept draws, the nodes reading as threaded onto their medallions.
+
+**Still open on OS-038:** the richer brass medallion glyphs (Finding 4 item 7) are recorded there as an **asset decision
+for Astra**, not a CSS fix, because the kit's SVGs are "semantic substitutes, not exact tracings". OS-038 is **not**
+closed and is not claimed to be.
+
+**No preview restart is needed for this change** — `static/` is served from disk on every request.
+
 ## OWNER CORRECTIONS — Settings and Virgil were never built; both records fixed (2026-09-21, base `f7bd962`)
 
 **Two corrections, both accurate, both verified against the artifacts rather than accepted on faith — and together they

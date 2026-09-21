@@ -2,7 +2,12 @@ import { meridianFetch } from "./api.js";
 import { describeArchivedAccount } from "./archived-accounts.js";
 import { formatCurrency } from "./format.js";
 
-const root = document.querySelector("[data-accounts]");
+/* Guarded so the module can be imported where there is no DOM (Node, for the pure
+   connector-geometry tests) exactly as dial.js is. Everything below is a no-op without
+   a root. */
+const root = typeof document === "undefined"
+  ? null
+  : document.querySelector("[data-accounts]");
 
 /* ---------- Inline icon system (line set, stroke = currentColor) ---------- */
 
@@ -40,6 +45,145 @@ const ROLE_TINTS = {
 
 function roleTint(role) {
   return ROLE_TINTS[role] || "slate";
+}
+
+/* The same tints the medallions carry, as colour values, so the connector nodes can
+   take their row's ink without the stylesheet repeating a second colour table. Kept
+   beside ROLE_TINTS so the two cannot drift apart unnoticed. */
+const TINT_COLORS = {
+  lilac: "#c1a9e2",
+  mint: "#a5d4bf",
+  apricot: "#f3b272",
+  coral: "#e8a48c",
+  slate: "#b9c2d2",
+};
+
+/* ---------- Connector geometry (concept 04) ---------- */
+
+/* Concept 04 does not thread its account rows on a straight rail. The dashed line is a
+   BOW: it leaves one row's node, curves left into the gutter, and returns to the next
+   row's node, so the medallions read as one constellation strung on a slack cord. The
+   earlier build used a straight vertical border, which is the wrong construction
+   (artifacts/astra-fidelity-review-2026-09-16/README.md, Finding 4 item 5).
+
+   The geometry is a pure function of measured positions, so it can be reasoned about and
+   tested without a browser. One property matters more than the shape: with fewer than two
+   rows there is nothing to string together, so no path is emitted at all. A lone row gets
+   no arc -- a constellation of one is not a thing, and drawing a fixed bow unconditionally
+   is how that defect reaches the page.
+
+   The bow is built as a string of quadratic segments through the two gaps ADJACENT to each
+   node rather than one continuous path, so a row that leaves the list cannot drag the
+   curve through a row it no longer touches.
+
+   `rows` are the node-carrying rows in visual order, each measured to its centre in
+   list-relative coordinates. */
+export function connectorGeometry(rows, options = {}) {
+  const nodeX = options.nodeX ?? 21;
+  const bow = options.bow ?? 12;
+  if (!Array.isArray(rows) || rows.length < 2) return null;
+
+  const centres = rows.map((row) => row.centerY);
+  const minX = nodeX - bow;
+  const segments = [];
+  for (let index = 0; index < rows.length; index += 1) {
+    // Upward curve to the row above, bulging left across that gap.
+    if (index > 0) {
+      const midY = (centres[index - 1] + centres[index]) / 2;
+      segments.push(
+        `M${nodeX} ${centres[index].toFixed(1)}`
+        + ` Q${minX.toFixed(1)} ${midY.toFixed(1)} ${nodeX} ${centres[index - 1].toFixed(1)}`
+      );
+    }
+    // Downward curve to the row below, so every adjacent pair has its own segment and a
+    // hidden row simply drops out of the chain.
+    if (index < rows.length - 1) {
+      const midY = (centres[index] + centres[index + 1]) / 2;
+      segments.push(
+        `M${nodeX} ${centres[index].toFixed(1)}`
+        + ` Q${minX.toFixed(1)} ${midY.toFixed(1)} ${nodeX} ${centres[index + 1].toFixed(1)}`
+      );
+    }
+  }
+
+  return {
+    d: segments.join(" "),
+    nodes: rows.map((row) => ({
+      x: nodeX,
+      y: row.centerY,
+      tint: Object.prototype.hasOwnProperty.call(TINT_COLORS, row.tint) ? row.tint : "slate",
+    })),
+  };
+}
+
+/* ---------- Connector rendering ---------- */
+
+/* The layer is decorative and is never a hit target. It carries one NODE per row that
+   owns a medallion; archived rows carry no medallion, so they get neither node nor curve.
+
+   It hangs off the account SHEET, not off one `.m-account-list`. The sheet is the
+   constellation: grouping splits accounts into a list per financial role, and a preview
+   holds one account per group, so a per-list layer would see a single row in each and
+   draw nothing at all -- which is exactly what the first capture of this slice showed.
+   Mounting on the sheet strings every medallion-bearing row on the page in visual order,
+   which is what the concept draws. The sheet also shares its left edge with the rows
+   (only the rows add their own gutter), so one node x serves every row.
+
+   Archived rows live in a separate section, outside `[data-accounts-groups]`, so they are
+   never measured and never join the chain. */
+function renderConnectors(sheet) {
+  if (!sheet) return;
+  let layer = sheet.querySelector(".m-account-connectors");
+  const rows = [...sheet.querySelectorAll(".m-account-row:not(.m-account-row-archived)")];
+  const sheetBox = sheet.getBoundingClientRect();
+  const measured = rows
+    .map((row) => {
+      const box = row.getBoundingClientRect();
+      return {
+        centerY: box.top - sheetBox.top + box.height / 2,
+        tint: row.dataset.tint || "slate",
+      };
+    })
+    .filter((row) => Number.isFinite(row.centerY));
+  const geometry = connectorGeometry(measured);
+  if (!geometry) {
+    // Nothing to string together; drop any layer rather than leave a stale curve behind
+    // on a sheet that has since collapsed to a single row.
+    if (layer) layer.remove();
+    return;
+  }
+  if (!layer) {
+    layer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    layer.setAttribute("class", "m-account-connectors");
+    layer.setAttribute("aria-hidden", "true");
+    layer.setAttribute("focusable", "false");
+    sheet.append(layer);
+  }
+  while (layer.firstChild) layer.removeChild(layer.firstChild);
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("class", "m-account-connector");
+  path.setAttribute("d", geometry.d);
+  layer.append(path);
+  for (const node of geometry.nodes) {
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("class", "m-account-connector-node");
+    circle.setAttribute("data-tint", node.tint);
+    circle.setAttribute("cx", node.x.toFixed(1));
+    circle.setAttribute("cy", node.y.toFixed(1));
+    circle.setAttribute("r", "3.5");
+    layer.append(circle);
+  }
+}
+
+function renderAllConnectors() {
+  if (!root) return;
+  // The sheet is the PARENT of `[data-accounts-groups]`, not a descendant of it, so this
+  // selects from the root. Scoping it under the groups container matched nothing and
+  // silently drew no connectors at all.
+  for (const sheet of root.querySelectorAll(".m-account-list-sheet")) {
+    renderConnectors(sheet);
+  }
 }
 
 /* ---------- Formatting helpers ---------- */
@@ -352,6 +496,7 @@ async function loadAccounts() {
     const payload = await meridianFetch("/api/meridian/accounts");
     const groups = payload.groups || [];
     renderGroups(groups);
+    renderAllConnectors();
     renderSummary(summarize(groups));
     renderArchived(payload.archived || []);
     renderReimbursements(payload.reimbursements || []);
@@ -364,31 +509,42 @@ async function loadAccounts() {
   }
 }
 
-loadAccounts();
+if (!root) {
+  // No Accounts surface on this page (or no DOM at all); nothing to boot.
+} else {
+  loadAccounts();
 
-/* ---------- Refresh now (live-data trigger) ---------- */
+  /* The connector layer is measured from live row boxes, so a rotation or a resize moves
+     the medallions and the curve has to follow them. Redrawn only, never re-fetched. */
+  let connectorFrame = 0;
+  window.addEventListener("resize", () => {
+    window.cancelAnimationFrame(connectorFrame);
+    connectorFrame = window.requestAnimationFrame(renderAllConnectors);
+  });
 
-document.addEventListener("click", async (event) => {
-  const button = event.target.closest("[data-connections-refresh]");
-  if (!button || !root) return;
-  event.preventDefault();
-  button.setAttribute("aria-busy", "true");
-  button.disabled = true;
-  const previousLabel = button.textContent;
-  button.textContent = "Refreshing…";
-  try {
-    const result = await meridianFetch("/api/meridian/sync");
-    if (result && result.success) {
-      button.textContent = "Updated";
-      await loadAccounts();
-      window.setTimeout(() => { button.textContent = "Refresh now"; }, 1500);
-    } else {
+  /* ---------- Refresh now (live-data trigger) ---------- */
+
+  document.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-connections-refresh]");
+    if (!button) return;
+    event.preventDefault();
+    button.setAttribute("aria-busy", "true");
+    button.disabled = true;
+    button.textContent = "Refreshing…";
+    try {
+      const result = await meridianFetch("/api/meridian/sync");
+      if (result && result.success) {
+        button.textContent = "Updated";
+        await loadAccounts();
+        window.setTimeout(() => { button.textContent = "Refresh now"; }, 1500);
+      } else {
+        button.textContent = "Retry";
+      }
+    } catch (_) {
       button.textContent = "Retry";
+    } finally {
+      button.removeAttribute("aria-busy");
+      button.disabled = false;
     }
-  } catch (_) {
-    button.textContent = "Retry";
-  } finally {
-    button.removeAttribute("aria-busy");
-    button.disabled = false;
-  }
-});
+  });
+}

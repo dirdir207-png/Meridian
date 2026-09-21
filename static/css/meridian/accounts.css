@@ -261,14 +261,17 @@
 }
 
 .m-account-row {
+  position: relative;
   min-width: 0;
-  padding: var(--m-space-4) 0;
+  /* The gutter the connector bow lives in. The rows stay the layout authority for the
+     gutter, so the generated layer measures against a row that is already inset. */
+  padding: var(--m-space-4) 0 var(--m-space-4) 30px;
   border-bottom: 1px solid var(--m-border);
 }
 
-.m-account-row:last-child {
-  border-bottom: 0;
-}
+/* The concept keeps a dotted rule under the final row too: it is the sheet's edge, not a
+   gap, and the star tips it. A `border-bottom: 0` here would leave the last account
+   unterminated while the ones above are ruled. */
 
 /* Account medallion (concept 04). The kit's medallion-frame.png is a brass double ring
    with four rivets, specified as a "decorative frame above a code-owned colored disk and
@@ -325,49 +328,97 @@
   height: 22px;
 }
 
-/* ---------- Connector rail (concept 04) ---------- */
+/* ---------- Connector bow + star-tipped separators (concept 04) ---------- */
 
-/* The concept threads its account rows on a dashed rail with a small node per row, so
-   the medallions read as one constellation rather than a stack of separate tiles. The
-   rail lives in the row's left gutter, clear of the medallion, and it is decorative. The
-   line stops at the medallion centres on the first and last rows instead of dangling
-   past them. Archived rows carry no medallion, so they are excluded rather than given a
-   node that marks nothing. */
-.m-account-row {
+/* Concept 04 threads its account rows on a dashed BOW with a small node per row, so the
+   medallions read as one constellation rather than a stack of separate tiles. Finding 4
+   (artifacts/astra-fidelity-review-2026-09-16/README.md) records the straight vertical
+   dashed rail this replaces as "the wrong construction": the concept's paths bow outward
+   with a node circle at each end, and its row separators are dotted lines tipped with a
+   brass star.
+
+   The curve needs measured row positions, so it is generated as SVG from the same data
+   that lays the rows out (static/js/meridian/accounts.js, renderConnectors) -- the
+   vocabulary Today already uses for its dial connectors. The layer itself is inert: it
+   is absolutely positioned out of flow, clipped to the list, and never a hit target. */
+.m-account-list-sheet {
   position: relative;
-  padding-left: 30px;
 }
 
-.m-account-list .m-account-row:not(.m-account-row-archived)::before {
-  content: "";
+.m-account-connectors {
   position: absolute;
-  left: 7px;
+  left: var(--m-space-5);
   top: 0;
-  bottom: 0;
-  width: 0;
-  border-left: 1px dashed var(--m-border-strong);
+  width: 38px;
+  height: 100%;
+  overflow: hidden;
   pointer-events: none;
+  z-index: 0;
 }
 
-.m-account-list .m-account-row:first-child::before {
-  top: 50%;
+/* The bow is a slack cord, drawn thinner and dimmer than the medallion ring it links so
+   the nodes stay the brightest marks on the rail. */
+.m-account-connector {
+  fill: none;
+  stroke: var(--m-border-strong);
+  stroke-width: 1.25;
+  stroke-dasharray: 3 4;
+  stroke-linecap: round;
 }
 
-.m-account-list .m-account-row:last-child::before {
-  bottom: 50%;
+/* Each node takes its row's tint -- the same colour as that row's medallion disk -- so
+   the two cannot disagree about what the row is. */
+.m-account-connector-node {
+  stroke: none;
 }
 
-.m-account-list .m-account-row:not(.m-account-row-archived)::after {
+.m-account-connector-node[data-tint="lilac"] {
+  fill: #c1a9e2;
+}
+
+.m-account-connector-node[data-tint="mint"] {
+  fill: #a5d4bf;
+}
+
+.m-account-connector-node[data-tint="apricot"] {
+  fill: #f3b272;
+}
+
+.m-account-connector-node[data-tint="coral"] {
+  fill: #e8a48c;
+}
+
+.m-account-connector-node[data-tint="slate"] {
+  fill: #b9c2d2;
+}
+
+/* The row separator. The concept draws a fine dotted rule the full width of the sheet,
+   tipped at its right end with a small brass star, rather than a plain border. */
+.m-account-row {
+  border-bottom: 1px dotted var(--obs-brass, #c6aa71);
+}
+
+/* A dotted border only reads as a rule at full opacity; under the muted border token it
+   smeared beneath the star. The star is the kit's own glyph, masked so it takes the brass
+   ink as a shape, so the accessibility tree never gains a decorative character. */
+.m-account-row::before {
   content: "";
   position: absolute;
-  left: 3px;
+  right: 0;
   top: 50%;
   width: 9px;
   height: 9px;
-  border-radius: 50%;
-  background: var(--medallion-tint, var(--m-ink-faint));
   transform: translateY(-50%);
+  background: var(--obs-brass, #c6aa71);
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
   pointer-events: none;
+}
+
+.m-account-history {
+  margin: var(--m-space-1) 0 0;
+  font-size: var(--m-text-xs);
+  color: var(--m-ink-muted);
 }
 
 .m-account-identity {
