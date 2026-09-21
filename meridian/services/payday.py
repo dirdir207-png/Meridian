@@ -52,6 +52,35 @@ def build_learning_window(graph, transactions=None) -> dict[str, object]:
 
 def build_payday_settings(graph, commitments, rules, *, as_of: date) -> dict[str, object]:
     transactions, _cursor = graph.list_transactions(limit=200)
+
+    # Crew's funding plans, so the surface can ADDRESS one. The plan id is Crew's own
+    # external_id and is the identity the write path needs: the write operations are
+    # update/delete_crew_paycheck_funding_plan, and the manifest records that the update is
+    # 'Identified by the approved proposal's fundingPlanId'. The NAME is deliberately not the
+    # key -- the record's own docstring says the owner renames the plan, so anything keyed on
+    # the name breaks on the next rename. Best-effort like the paycheck context path: a read
+    # failure must not take the whole settings page down.
+    funding_plans: list[dict[str, object]] = []
+    try:
+        from meridian.repository import FinancialRepository
+
+        financial = (
+            graph
+            if isinstance(graph, FinancialRepository)
+            else FinancialRepository(graph.db_path)
+        )
+        funding_plans = [
+            {
+                "id": record.external_id,
+                "name": record.name,
+                "amount": record.amount,
+                "cadence": record.cadence,
+            }
+            for record in financial.list_funding_plans()
+            if getattr(record, "absent_since", None) is None
+        ]
+    except Exception:  # noqa: BLE001 - observations are best-effort context
+        funding_plans = []
     # The owner's learning window (OS-051). It governs which observations may be learned
     # from, so it is read BEFORE recognition and reported alongside the result.
     learning = build_learning_window(graph, transactions)
@@ -114,6 +143,7 @@ def build_payday_settings(graph, commitments, rules, *, as_of: date) -> dict[str
             if cash_accounts
             else None
         ),
+        "funding_plans": funding_plans,
         "rules": rule_views,
         "next_run": next_run,
         "learning": learning,

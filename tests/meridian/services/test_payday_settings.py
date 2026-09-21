@@ -180,3 +180,55 @@ def test_no_income_leaves_the_window_reported_and_the_pattern_unavailable(reposi
     assert payload["state"] == "unavailable"
     assert payload["learning"]["active"] is True
     assert payload["learning"]["included"] == 0
+
+
+def test_payday_payload_exposes_crew_funding_plans_under_crews_own_ids(repository):
+    """The surface can only ADDRESS a plan it can name, so the payload must carry Crew's plan id.
+
+    OS-083. The write path is update_crew_paycheck_funding_plan, and the manifest records that it is
+    "Identified by the approved proposal's fundingPlanId". Before this, the payday payload exposed
+    only funding_source (a Meridian account), so no control could have addressed a plan even though
+    the write executor and its readback verifier already shipped.
+    """
+    repository.upsert_funding_plan(
+        provider="crew",
+        external_id="plan_state_of_nh",
+        bill_reserve_id="reserve-1",
+        name="State of New Hampshire",
+        amount=1200.0,
+        cadence="monthly",
+    )
+    payload = build_payday_settings(repository, _Commitments(), _Rules(), as_of=date(2026, 9, 21))
+    plans = payload["funding_plans"]
+    assert isinstance(plans, list) and plans, "the payload exposes no funding plan to address"
+    assert plans[0]["id"] == "plan_state_of_nh", "the id must be Crew's own external_id"
+    assert plans[0]["name"] == "State of New Hampshire"
+    assert plans[0]["amount"] == 1200.0
+
+
+def test_a_renamed_plan_keeps_its_identity(repository):
+    """Identity is the id, never the name -- otherwise a rename orphans the control.
+
+    FundingPlanRecord's own docstring is explicit that the owner renames the plan, so anything
+    keyed on the name breaks on the next rename.
+    """
+    kwargs = dict(
+        provider="crew",
+        external_id="plan_x",
+        bill_reserve_id="reserve-1",
+        name="Old Name",
+        amount=10.0,
+    )
+    repository.upsert_funding_plan(**kwargs)
+    original = build_payday_settings(
+        repository, _Commitments(), _Rules(), as_of=date(2026, 9, 21)
+    )["funding_plans"][0]["id"]
+
+    kwargs["name"] = "New Name"
+    repository.upsert_funding_plan(**kwargs)
+    plans = build_payday_settings(repository, _Commitments(), _Rules(), as_of=date(2026, 9, 21))[
+        "funding_plans"
+    ]
+    assert len(plans) == 1, "a rename created a second plan record"
+    assert plans[0]["id"] == original
+    assert plans[0]["name"] == "New Name"
