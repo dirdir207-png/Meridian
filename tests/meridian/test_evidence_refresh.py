@@ -200,3 +200,143 @@ def test_cycle_passes_the_wider_window_and_the_blob_store(monkeypatch):
     assert seen["blob_store"] is blob_store, (
         "the blob store must reach the intake, or content is never persisted"
     )
+
+
+# --- credential health (OS-067: the signal that was missing for 14 days) -----------
+#
+# A stored authorization saying "connected" is NOT evidence that its token works. The
+# live case: the Connections UI showed Gmail "Connected" while all four Gmail refresh
+# tokens had been failing with HTTP 400 for days. Polling is the only place a token is
+# actually exercised, so it owns this signal.
+
+def _service(**kwargs):
+    return EvidenceRefreshService(lambda: {"outcome": "ok"}, interval_seconds=MIN_INTERVAL_SECONDS, **kwargs)
+
+
+def test_no_health_is_claimed_before_any_attempt():
+    # Empty until a cycle really tried a credential, so a verdict can never be invented
+    # from a saved authorization record.
+    assert _service().credential_health() == {}
+
+
+def test_a_failure_is_recorded_as_unavailable_with_an_actionable_reason():
+    service = _service()
+    service.record_credential_failure("gmail", "Google token refresh failed (HTTP 400)")
+    health = service.credential_health()
+    assert health["gmail"]["available"] is False
+    assert health["gmail"]["reason"] == "reauthorize_required"
+
+
+def test_an_invalid_grant_is_also_reauthorize_required():
+    service = _service()
+    service.record_credential_failure("gmail", "oauth error: invalid_grant")
+    assert service.credential_health()["gmail"]["reason"] == "reauthorize_required"
+
+
+def test_rejected_and_unreachable_are_distinguished():
+    service = _service()
+    service.record_credential_failure("gmail", "HTTP 401 unauthorized")
+    assert service.credential_health()["gmail"]["reason"] == "authorization_rejected"
+    service.record_credential_failure("icloud", "connection timed out")
+    assert service.credential_health()["icloud"]["reason"] == "provider_unreachable"
+
+
+def test_an_unrecognised_failure_is_not_labelled_confidently():
+    # Conservative by design: never claim a cause we cannot identify.
+    service = _service()
+    service.record_credential_failure("gmail", "something novel went wrong")
+    assert service.credential_health()["gmail"]["reason"] == "unavailable"
+
+
+def test_stored_detail_is_bounded_and_single_line():
+    # Error strings can echo a provider response body, so keep the first line and cap it.
+    service = _service()
+    service.record_credential_failure("gmail", "line one\n" + "x" * 5000)
+    detail = service.credential_health()["gmail"]["detail"]
+    assert "\n" not in detail
+    assert len(detail) <= 200
+
+
+def test_a_successful_use_clears_the_failure():
+    service = _service()
+    service.record_credential_failure("gmail", "HTTP 400")
+    assert "gmail" in service.credential_health()
+    service.record_credential_success("gmail")
+    assert "gmail" not in service.credential_health()
+
+
+def test_credentials_are_tracked_independently():
+    service = _service()
+    service.record_credential_failure("gmail", "HTTP 400")
+    service.record_credential_failure("icloud", "timed out")
+    service.record_credential_success("icloud")
+    health = service.credential_health()
+    assert "gmail" in health and "icloud" not in health
+
+
+def test_the_health_snapshot_cannot_mutate_service_state():
+    service = _service()
+    service.record_credential_failure("gmail", "HTTP 400")
+    snapshot = service.credential_health()
+    snapshot["gmail"]["reason"] = "tampered"
+    snapshot["injected"] = {"kind": "injected"}
+    fresh = service.credential_health()
+    assert fresh["gmail"]["reason"] == "reauthorize_required"
+    assert "injected" not in fresh
+
+
+# --- per-account resilience (one dead token must not hide the others) ---------------
+
+def test_one_bad_account_does_not_abort_the_others(monkeypatch):
+    import meridian.connectors.google_auth as google_auth
+    import meridian.gmail_intake as intake
+
+    class _Store:
+        def __init__(self, _db): pass
+        def list_accounts(self, kind): return [{"account_email": "a@x"}, {"account_email": "b@x"}]
+        def get(self, kind, account_email): return {"access_token": "t", "refresh_token": "r"}
+
+    monkeypatch.setattr(google_auth, "OAuthTokenStore", _Store)
+    calls = {"n": 0}
+
+    def fake_recent(**kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("Google token refresh failed (HTTP 400)")
+        return {"fetched": 3, "stored": 3}
+
+    monkeypatch.setattr(intake, "ingest_gmail_recent", fake_recent)
+    errors = []
+    summary = intake.ingest_all_gmail_accounts(
+        db_path=":memory:", evidence_repo=object(), token_client=object(),
+        on_account_error=lambda email, exc: errors.append((email, str(exc))),
+    )
+    assert summary["accounts_unavailable"] == 1
+    assert summary["total_stored"] == 3, "the healthy account must still be ingested"
+    assert len(errors) == 1 and "HTTP 400" in errors[0][1]
+
+
+def test_a_reporting_callback_error_does_not_break_intake(monkeypatch):
+    import meridian.connectors.google_auth as google_auth
+    import meridian.gmail_intake as intake
+
+    class _Store:
+        def __init__(self, _db): pass
+        def list_accounts(self, kind): return [{"account_email": "a@x"}]
+        def get(self, kind, account_email): return {"access_token": "t", "refresh_token": "r"}
+
+    monkeypatch.setattr(google_auth, "OAuthTokenStore", _Store)
+
+    def boom(**kwargs):
+        raise RuntimeError("dead")
+
+    monkeypatch.setattr(intake, "ingest_gmail_recent", boom)
+
+    def bad_callback(_email, _exc):
+        raise ValueError("callback itself is broken")
+
+    summary = intake.ingest_all_gmail_accounts(
+        db_path=":memory:", evidence_repo=object(), token_client=object(),
+        on_account_error=bad_callback,
+    )
+    assert summary["accounts_unavailable"] == 1

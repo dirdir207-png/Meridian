@@ -24,6 +24,7 @@ Three properties matter more than the schedule:
 from __future__ import annotations
 
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -85,6 +86,7 @@ class EvidenceRefreshService:
         self._thread: Optional[threading.Thread] = None
         self._cycles = 0
         self._last_report: Optional[dict] = None
+        self._credential_health: dict[str, dict] = {}
 
     @property
     def interval_seconds(self) -> int:
@@ -97,6 +99,63 @@ class EvidenceRefreshService:
     @property
     def last_report(self) -> Optional[dict]:
         return self._last_report
+
+    # --- credential health ---------------------------------------------------------
+    # A stored authorization saying "connected" is NOT evidence that its token still
+    # works. Measured 2026-09-20: the Connections UI showed Gmail "Connected" while all
+    # four Gmail refresh tokens had been failing with HTTP 400 for days, because the
+    # payload read the AUTHORIZATION record rather than the credential. Polling is the
+    # one place that actually exercises a token, so it owns this signal.
+
+    def record_credential_failure(self, kind: str, detail: str) -> None:
+        """Record that a token could not be used, so the UI stops claiming it works."""
+        with self._lock:
+            self._credential_health[kind] = {
+                "kind": kind,
+                "available": False,
+                "reason": self._classify_credential_error(detail),
+                "detail": self._safe_detail(detail),
+                "observed_at": datetime.now(timezone.utc).isoformat(),
+            }
+
+    def record_credential_success(self, kind: str) -> None:
+        """A token was used successfully; clear any prior failure for that kind."""
+        with self._lock:
+            self._credential_health.pop(kind, None)
+
+    def credential_health(self) -> dict[str, dict]:
+        """Per-kind credential findings from real poll attempts.
+
+        Returns a copy so callers cannot mutate the service's state.
+        """
+        with self._lock:
+            return {kind: dict(value) for kind, value in self._credential_health.items()}
+
+    @staticmethod
+    def _safe_detail(detail: str) -> str:
+        """Bound the stored text.
+
+        Error strings can echo a provider response body, so keep the first line and cap
+        the length rather than persisting whatever arrives.
+        """
+        first = (detail or "").splitlines()[0] if detail else ""
+        return first[:200]
+
+    @staticmethod
+    def _classify_credential_error(detail: str) -> str:
+        """Turn a provider error into a reason the owner can act on.
+
+        Deliberately conservative: an unrecognised failure stays "unavailable" with a
+        generic reason rather than being labelled as something it might not be.
+        """
+        text = (detail or "").lower()
+        if "http 400" in text or "invalid_grant" in text:
+            return "reauthorize_required"
+        if "http 401" in text or "http 403" in text:
+            return "authorization_rejected"
+        if "timeout" in text or "timed out" in text:
+            return "provider_unreachable"
+        return "unavailable"
 
     def refresh_once(self) -> Optional[dict]:
         """Single-flight: refuse rather than queue a concurrent cycle.
@@ -132,7 +191,6 @@ class EvidenceRefreshService:
                     f"meridian evidence poll failed: {type(exc).__name__}: {exc}"
                 )
             self._stop.wait(self._interval_seconds)
-
     @staticmethod
     def _describe(report: dict) -> str:
         """One line an operator can act on; the blob delta is the load-bearing part."""
@@ -174,14 +232,25 @@ def run_evidence_cycle(
     since_days: int = DEFAULT_SINCE_DAYS,
     max_messages_per_account: int = DEFAULT_MAX_MESSAGES,
     icloud: Optional[Callable[[], dict]] = None,
+    on_credential_error: Optional[Callable[[str, str], None]] = None,
+    on_credential_ok: Optional[Callable[[str], None]] = None,
 ) -> dict:
     """One evidence cycle: Gmail from every account, then optional iCloud.
 
     ``since_days`` defaults wider than the manual route's 30 so a cycle reaches mail
     the previous narrower window would have skipped; the manual route is left alone so
     its behaviour does not change as a side effect of adding polling.
+
+    ``on_credential_error(kind, detail)`` / ``on_credential_ok(kind)`` let the calling
+    service turn a real auth attempt into a health signal, which is the only way the UI
+    can learn that a stored token no longer works (a saved authorization always looks
+    "connected" regardless).
     """
     from .gmail_intake import ingest_all_gmail_accounts
+
+    def _account_failed(_email, exc):
+        if on_credential_error is not None:
+            on_credential_error("gmail", str(exc))
 
     summary = ingest_all_gmail_accounts(
         db_path=db_path,
@@ -190,17 +259,26 @@ def run_evidence_cycle(
         max_messages_per_account=max_messages_per_account,
         since_days=since_days,
         blob_store=blob_store,
+        on_account_error=_account_failed,
     )
+    if on_credential_ok is not None and int(summary.get("accounts_unavailable", 0)) == 0:
+        # Only clear the signal when a cycle actually authenticated; a cycle with no
+        # accounts at all is not evidence that a credential recovered.
+        if summary.get("accounts"):
+            on_credential_ok("gmail")
     report: dict = {
-        "outcome": "ok",
+        "outcome": "ok" if not summary.get("accounts_unavailable") else "degraded",
         "since_days": since_days,
         "gmail": summary,
         "total_fetched": summary.get("total_fetched", 0),
         "total_stored": summary.get("total_stored", 0),
+        "accounts_unavailable": summary.get("accounts_unavailable", 0),
     }
     if icloud is not None:
         try:
             report["icloud"] = icloud()
         except Exception as exc:  # noqa: BLE001 - Gmail result must survive
             report["icloud"] = {"outcome": "error", "error": type(exc).__name__}
+            if on_credential_error is not None:
+                on_credential_error("icloud", str(exc))
     return report

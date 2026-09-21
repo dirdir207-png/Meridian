@@ -925,6 +925,42 @@ def _evidence_blob_count() -> int:
     return count_stored_blobs(os.path.join(os.path.dirname(os.path.abspath(DB_FILE)), "evidence"))
 
 
+def _icloud_configured() -> bool:
+    """iCloud needs BOTH a username and an app-specific password to be usable."""
+    return bool(
+        os.environ.get("ICLOUD_MAIL_USERNAME") and os.environ.get("ICLOUD_MAIL_APP_PASSWORD")
+    )
+
+
+def _meridian_icloud_cycle() -> dict:
+    """One iCloud Mail evidence pass for the poll thread.
+
+    This closes a real gap: iCloud was reachable ONLY by hand through
+    ``POST /api/meridian/icloud/intake``, while the poll cycle supported an iCloud
+    callable that app.py never passed. So mail forwarded into iCloud — including the
+    Gmail forwarding an owner may set up as an alternative to OAuth, whose app
+    password never expires — sat unread by Meridian.
+
+    Read-only: IMAP fetch only, no send, no flag change, no delete.
+    """
+    from meridian.connectors.icloud_mail import IcloudMailTransport
+    from meridian.evidence import EvidenceRepository
+    from meridian.gmail_intake import ingest_icloud_recent
+    from meridian.repository import FinancialRepository
+
+    financial = FinancialRepository(DB_FILE)
+    transactions, _cursor = financial.list_transactions(limit=200)
+    summary = ingest_icloud_recent(
+        transport=IcloudMailTransport(),
+        evidence_repo=EvidenceRepository(DB_FILE),
+        transactions=transactions,
+        max_messages=meridian_evidence_max_messages,
+        since_days=meridian_evidence_since_days,
+        blob_store=_evidence_store_factory(),
+    )
+    return {"outcome": "ok", **summary}
+
+
 def _meridian_evidence_run_once():
     """Zero-arg evidence cycle for the poll thread (lazy imports)."""
     from meridian.connectors.google_auth import GoogleOAuth2Client, GoogleOAuthConfig
@@ -932,9 +968,14 @@ def _meridian_evidence_run_once():
     from meridian.evidence_refresh import run_evidence_cycle
 
     db_path = FinancialRepository(DB_FILE).db_path
+    service = get_meridian_evidence_service()
 
     def _token_client():
         return GoogleOAuth2Client(GoogleOAuthConfig.from_env(), scopes=("email",))
+
+    # Only pass the iCloud callable when it is actually configured; an unconfigured
+    # mailbox would otherwise report a failure every cycle forever.
+    icloud = _meridian_icloud_cycle if _icloud_configured() else None
 
     return run_evidence_cycle(
         db_path=db_path,
@@ -943,7 +984,28 @@ def _meridian_evidence_run_once():
         blob_store=_evidence_store_factory(),
         since_days=meridian_evidence_since_days,
         max_messages_per_account=meridian_evidence_max_messages,
+        icloud=icloud,
+        # Polling is the only place a stored credential is actually exercised, so it owns
+        # the credential-health signal. Without this the Connections UI keeps reporting
+        # "Connected" for a token that has been failing for days.
+        on_credential_error=service.record_credential_failure,
+        on_credential_ok=service.record_credential_success,
     )
+
+
+def meridian_credential_health() -> dict:
+    """Credential findings from real poll attempts, for the Connections UI.
+
+    Read-only, and empty until a cycle has actually tried a token — so it can never
+    invent a health verdict from a stored authorization record.
+    """
+    service = app.config.get("MERIDIAN_EVIDENCE_SERVICE")
+    if service is None:
+        return {}
+    try:
+        return service.credential_health()
+    except Exception:  # noqa: BLE001 - a health lookup must never break a page
+        return {}
 
 
 def get_meridian_evidence_service():

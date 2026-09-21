@@ -112,12 +112,18 @@ def ingest_all_gmail_accounts(
     max_messages_per_account: int = 10,
     since_days: int = 30,
     blob_store=None,
+    on_account_error=None,
 ) -> dict[str, object]:
     """Ingest recent Gmail from every connected Gmail account.
 
     Enumerates all stored Gmail OAuth tokens (multi-account), builds a transport
     for each, and stores each account's recent messages as evidence. Read-only
     Gmail; no mutation. Returns a per-account summary plus a total.
+
+    One account failing must not hide the others: a token that cannot be refreshed is
+    reported through ``on_account_error(email, exception)`` and the run continues with
+    the remaining accounts. Before this, the first dead token raised out of the whole
+    call, so a single expired credential looked like a total Gmail outage.
     """
     from .connectors.google_auth import OAuthTokenStore
 
@@ -125,6 +131,7 @@ def ingest_all_gmail_accounts(
     accounts = store.list_accounts(kind="gmail")
     total_fetched = 0
     total_stored = 0
+    failed = 0
     per_account: list[dict[str, object]] = []
     for acct in accounts:
         email = str(acct.get("account_email") or "")
@@ -136,13 +143,24 @@ def ingest_all_gmail_accounts(
             return token_client.refresh(_tok["refresh_token"])
 
         transport = GmailTransport(access_token=token["access_token"], refresh=_refresh)
-        summary = ingest_gmail_recent(
-            transport=transport,
-            evidence_repo=evidence_repo,
-            max_messages=max_messages_per_account,
-            since_days=since_days,
-            blob_store=blob_store,
-        )
+        try:
+            summary = ingest_gmail_recent(
+                transport=transport,
+                evidence_repo=evidence_repo,
+                max_messages=max_messages_per_account,
+                since_days=since_days,
+                blob_store=blob_store,
+            )
+        except Exception as exc:  # noqa: BLE001 - one dead token must not stop the rest
+            failed += 1
+            if on_account_error is not None:
+                try:
+                    on_account_error(email, exc)
+                except Exception:  # noqa: BLE001 - reporting must never break intake
+                    pass
+            per_account.append({"account_email": email, "state": "unavailable",
+                                "error": type(exc).__name__})
+            continue
         per_account.append({"account_email": email, **summary})
         total_fetched += int(summary["fetched"])
         total_stored += int(summary["stored"])
@@ -151,6 +169,7 @@ def ingest_all_gmail_accounts(
         "accounts": per_account,
         "total_fetched": total_fetched,
         "total_stored": total_stored,
+        "accounts_unavailable": failed,
     }
 
 
