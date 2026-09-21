@@ -139,3 +139,41 @@ def test_a_third_party_asset_kit_ships_its_licence():
         "a third-party asset kit ships files without its licence in the index: "
         + ", ".join(sorted(absent))
     )
+
+
+#: The trees that are SHIPPED wholesale: anything here is served to a browser or rendered into a
+#: page, whether or not today's code happens to mention it.
+SHIPPED_TREES = ("static", "templates")
+
+
+def test_every_file_in_the_shipped_trees_is_tracked():
+    """The sweep, not only the references -- and it closes a CLASS, not an instance.
+
+    Every other check in this file is REFERENCE-DERIVED: it can only adjudicate an asset that
+    today's shipped source happens to mention. The 2026-09-21 incident was invisible in one
+    direction (icons referenced by CSS but absent from the index), and the mirror direction is
+    just as invisible and has no guard at all -- a stylesheet, a font, a template partial or a new
+    icon added locally and never committed, referenced by nothing yet. Disk says it is there; the
+    index says it is not shipped; and every capture, every browser test and every source-presence
+    test reads disk.
+
+    Measured before this was added, so the assertion is not theoretical: static/ held 206 files
+    and templates/ 41, all 247 tracked and none untracked. The check passes because the tree is
+    genuinely clean, which is the only condition under which it is worth having.
+    """
+    tracked = _tracked_paths()
+    untracked = []
+    for tree in SHIPPED_TREES:
+        base = ROOT / tree
+        if not base.is_dir():
+            continue
+        for path in sorted(base.rglob("*")):
+            if not path.is_file() or "__pycache__" in path.parts:
+                continue
+            relative = path.relative_to(ROOT).as_posix()
+            if relative not in tracked:
+                untracked.append(relative)
+    assert not untracked, (
+        f"{len(untracked)} file(s) exist in a shipped tree but are NOT in the git index, so they "
+        f"work locally and vanish in any clone: {untracked[:10]}"
+    )
