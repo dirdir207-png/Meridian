@@ -18,8 +18,22 @@ ROOT = Path(__file__).resolve().parents[2]
 SETTINGS_CSS = ROOT / "static/css/meridian/settings.css"
 
 
-def _mobile_block(css: str) -> str:
-    return css.split("@media (max-width: 900px) {", 1)[1].split("\n}\n", 1)[0]
+def _mobile_block(css: str, selector: str) -> str:
+    """The phone block that actually defines `selector`.
+
+    This used to take the FIRST `@media (max-width: 900px)` block in the file, which silently
+    assumed the shell's was the only one. OS-081 added a second phone-scoped block for the
+    Settings top bar and that assumption broke: the helper returned the wrong block and the
+    failure arrived as a parse error rather than as a signal about the layout. A helper that
+    asserts less than it means is the same class of defect as a guard that encodes a judgement
+    -- it fails confusingly at the wrong moment -- so it now finds the block that defines what
+    the caller asked for, and says so when there is none.
+    """
+    for chunk in css.split("@media (max-width: 900px) {")[1:]:
+        block = chunk.split("\n}\n", 1)[0]
+        if selector in block:
+            return block
+    raise AssertionError(f"no phone block defines {selector}")
 
 
 def _rule(block: str, selector: str) -> str:
@@ -27,7 +41,7 @@ def _rule(block: str, selector: str) -> str:
 
 
 def test_the_settings_content_column_is_the_scroller_on_a_phone():
-    block = _mobile_block(SETTINGS_CSS.read_text(encoding="utf-8"))
+    block = _mobile_block(SETTINGS_CSS.read_text(encoding="utf-8"), "  .m-settings-main")
 
     main = _rule(block, "  .m-settings-main")
     assert "overflow-y: auto;" in main
