@@ -245,6 +245,23 @@ Fixtures only — never live bank data for fidelity captures.
   overlaps the bottom navigation on mobile; light-theme foregrounds are unverified (a computed-ratio probe is
   *not* a valid method here — gradient and parchment backgrounds defeat it; inspect the capture).
 - **Explicit:** a visual redesign never closes a correctness finding.
+- **Two Track D items were MISSING FROM THE LEDGER ENTIRELY until 2026-09-21 `[E]`, and they are the larger
+  part of what remains.** The **2026-09-18 extended concept set** (`design/observatory-extension-2026-09-18/concepts/`)
+  contains **four** concepts, but only two were ever tracked: **Review** and **Timeline** were covered
+  (`OS-044`, `OS-045`, `OS-047`, all complete). **Settings had a task whose record was WRONG** — it claimed
+  Settings was "built and styled" and reduced the work to a capture-fixture gap — and **Virgil had no task at
+  all**. Both were named in that same day's build order (`BUILD_HANDOFF.md` steps 3 and 4), so this is not a
+  question of intent: the ledger simply never carried them. The owner's correction is the authority here —
+  *"the settings page was NEVER worked on or made to look like the concept"* and *"The virgil visual redesign
+  was also never started or worked on"* — and inspection confirms it: `templates/meridian/partials/settings-navigation.html`
+  is a flat five-link text nav with no groups, no icons and no chevrons, and `find templates -iname '*virgil*'`
+  returns nothing at all across `templates/` and `static/`. **Consequence:** Track D is NOT two small gaps
+  from finished. It is Settings (`OS-065`) and Virgil (`OS-071`) as unbuilt surfaces, plus the `OS-038`
+  remainder. **Closing Track D (`OS-038` + `OS-065` + `OS-071`) is the immediate priority**, per the owner:
+  the project has "deviated long enough".
+- **A general rule this exposed:** presence of a file is not fidelity, and an inherited task record is not
+  evidence. Verify a claim against the concept and the rendered surface before repeating it — a "this is
+  mostly done" carried forward unchecked can be wrong in the direction that loses the most work.
 
 ### Track I — Higher intelligence and the agent council *(high priority)*
 
