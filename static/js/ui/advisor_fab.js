@@ -17,6 +17,23 @@ function _advisorLog() {
     return document.getElementById('advisor-fab-log');
 }
 
+/** Scroll the panel's content region to its end.
+ *
+ *  The scrolling element is the VIEW that holds the briefing and the transcript, not
+ *  the transcript alone — the log stopped being its own scroller when the briefing was
+ *  added, so scrolling it would silently do nothing and leave new messages off-screen.
+ */
+function _advisorScrollToEnd() {
+    const log = _advisorLog();
+    if (!log) return;
+    const scroller = log.closest('.m-virgil-view');
+    if (scroller) {
+        scroller.scrollTop = scroller.scrollHeight;
+    } else {
+        log.scrollTop = log.scrollHeight;
+    }
+}
+
 function advisorLoadPersisted() {
     try {
         const raw = localStorage.getItem(ADVISOR_HISTORY_KEY);
@@ -54,7 +71,7 @@ function advisorBubble(role, text, skipPersist) {
         : 'm-advisor-bubble m-advisor-bubble--assistant';
     bubble.textContent = text;
     log.appendChild(bubble);
-    log.scrollTop = log.scrollHeight;
+    _advisorScrollToEnd();
     if (!skipPersist && role !== undefined) {
         // persisted by caller for user/assistant real messages
     }
@@ -67,6 +84,7 @@ function advisorSetOpen(open) {
     if (open) {
         if (!advisorFabReady) { advisorLoadPersisted(); advisorFabReady = true; }
         ensureAdvisorStatus();
+        advisorLoadBriefing();
         if (shell && typeof shell.openSheet === 'function') {
             // Reuse the shell's sheet primitive: it handles Escape, inert
             // background until the final close, and focus restore.
@@ -81,7 +99,7 @@ function advisorSetOpen(open) {
         if (input) input.focus();
         try { localStorage.setItem('sc_advisor_open', '1'); } catch (e) {}
         const log = _advisorLog();
-        if (log) log.scrollTop = log.scrollHeight;
+        if (log) _advisorScrollToEnd();
     } else {
         if (shell && typeof shell.closeSheet === 'function') {
             shell.closeSheet();
@@ -177,8 +195,204 @@ async function advisorFabSend() {
     }
 }
 
+/* ---------------------------------------------------------------------------
+ * Virgil briefing — the concept's cards, fed by read models that already exist.
+ *
+ * Both sources are plain GETs over read-only endpoints that predate this surface:
+ *   /api/meridian/weather  (proactive weather built from the Observatory dial)
+ *   /api/actions/pending   (proposals awaiting the owner's approval)
+ * Nothing here writes, proposes, approves or mutates, and no new endpoint is
+ * introduced by this surface. Both calls fail soft: a briefing that cannot be
+ * loaded leaves the conversation fully usable rather than breaking the panel.
+ * ------------------------------------------------------------------------- */
+
+/** Number words for the count in the card title. An unmapped count falls back to
+ *  digits, so the title can never quietly show the wrong word. */
+const ADVISOR_COUNT_WORDS = { 1: 'One', 2: 'Two', 3: 'Three', 4: 'Four', 5: 'Five' };
+
+function _advisorCountWord(n) {
+    return ADVISOR_COUNT_WORDS[n] || String(n);
+}
+
+function _advisorMonthDay(iso) {
+    const parsed = new Date(`${String(iso).slice(0, 10)}T12:00:00Z`);
+    if (Number.isNaN(parsed.getTime())) return String(iso || '');
+    return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+/** Flatten the weather payload's groups into the near-term items, capped.
+ *
+ *  The title states the REAL count. The concept's fixed "Two things worth a look"
+ *  is only true when there are exactly two, and a hardcoded count is the defect
+ *  BUILD_HANDOFF.md names for the Review concept ("render the actual total, never
+ *  hardcode three"). With nothing to report the card is hidden entirely rather
+ *  than shown empty with an assuring title.
+ */
+function advisorWeatherItems(weather, limit) {
+    const items = [];
+    for (const group of (weather && weather.groups) || []) {
+        for (const event of (group && group.events) || []) {
+            items.push(event);
+            if (items.length >= limit) return items;
+        }
+    }
+    return items;
+}
+
+function advisorRenderEvidence(weather) {
+    const card = document.querySelector('[data-virgil-evidence]');
+    if (!card) return;
+    const items = advisorWeatherItems(weather, 3);
+    if (!items.length) {
+        // ABSENCE IS THE HONEST ANSWER. The concept draws a filled card because it
+        // is a mock with mock data; an empty one would imply Meridian has something
+        // to say when it does not.
+        card.hidden = true;
+        return;
+    }
+    card.hidden = false;
+    const title = card.querySelector('[data-virgil-evidence-title]');
+    if (title) {
+        // "One thing" / "Two things" / "Three things" — the plural follows the count.
+        const word = _advisorCountWord(items.length);
+        title.textContent = items.length === 1
+            ? `${word} thing worth a look`
+            : `${word} things worth a look`;
+    }
+    const list = card.querySelector('[data-virgil-evidence-items]');
+    if (list) {
+        list.replaceChildren();
+        for (const item of items) {
+            const li = document.createElement('li');
+            li.textContent = item.explanation || item.title || 'An event needs attention.';
+            list.appendChild(li);
+        }
+    }
+    // Support links: real navigation into the surface that holds the record. Never
+    // a dead affordance, and never a claim that the record has been opened.
+    const links = card.querySelector('[data-virgil-evidence-links]');
+    if (links) {
+        links.replaceChildren();
+        const first = items[0];
+        const link = document.createElement('a');
+        link.className = 'm-virgil-evidence-link';
+        link.href = '/meridian?workspace=activity';
+        link.textContent = first && first.date
+            ? `Activity · ${_advisorMonthDay(first.date)}`
+            : 'Activity';
+        links.appendChild(link);
+    }
+}
+
+function advisorRenderReview(pendingActions) {
+    const card = document.querySelector('[data-virgil-review]');
+    if (!card) return;
+    const first = Array.isArray(pendingActions) ? pendingActions[0] : null;
+    // Shown ONLY when something genuinely awaits review. A decorative "Draft" card
+    // leading nowhere is the ambiguous-emptiness the ledger forbids.
+    if (!first) {
+        card.hidden = true;
+        return;
+    }
+    card.hidden = false;
+    const title = card.querySelector('[data-virgil-review-title]');
+    if (title) title.textContent = first.summary || first.title || first.type || 'A proposal is waiting';
+    const sub = card.querySelector('[data-virgil-review-sub]');
+    if (sub) sub.textContent = 'Review it before anything is actioned.';
+    // The state line is fixed text by design: a pending action HAS taken no action,
+    // and the dot beside it is neutral/lilac, NOT the concept's confirmed-green.
+}
+
+function advisorRenderSources(weather) {
+    const body = document.querySelector('[data-virgil-sources-body]');
+    if (!body) return;
+    body.replaceChildren();
+    if (!weather) {
+        body.appendChild(element('p', 'm-virgil-sources-empty', 'Sources are unavailable right now.'));
+        return;
+    }
+    const facts = [];
+    if (weather.freshness) facts.push(`Source age: ${weather.freshness}.`);
+    if (weather.observedAt) facts.push(`Observed ${weather.observedAt}.`);
+    if (weather.windowDays) facts.push(`Window: the next ${weather.windowDays} days.`);
+    if (typeof weather.suppressed === 'number' && weather.suppressed > 0) {
+        facts.push(`${weather.suppressed} event(s) were left out because they could not be identified.`);
+    }
+    for (const fact of facts) body.appendChild(element('p', '', fact));
+    const assumptions = Array.isArray(weather.assumptions) ? weather.assumptions : [];
+    if (assumptions.length) {
+        body.appendChild(element('p', 'm-virgil-sources-heading', 'Assumptions'));
+        const ul = document.createElement('ul');
+        for (const assumption of assumptions) {
+            const li = document.createElement('li');
+            li.textContent = assumption;
+            ul.appendChild(li);
+        }
+        body.appendChild(ul);
+    } else {
+        body.appendChild(element('p', '', 'No assumptions were stated for this view.'));
+    }
+}
+
+function element(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+}
+
+let advisorBriefingLoaded = false;
+
+async function advisorLoadBriefing() {
+    if (advisorBriefingLoaded) return;
+    advisorBriefingLoaded = true;
+    let weather = null;
+    try {
+        const response = await fetch('/api/meridian/weather', { credentials: 'same-origin' });
+        if (response.ok) weather = await response.json();
+    } catch (e) { /* the briefing is optional; the conversation is not */ }
+    let pending = [];
+    try {
+        const response = await fetch('/api/actions/pending', { credentials: 'same-origin' });
+        if (response.ok) {
+            const data = await response.json();
+            pending = (data && data.actions) || [];
+        }
+    } catch (e) { /* same */ }
+    advisorRenderEvidence(weather);
+    advisorRenderReview(pending);
+    advisorRenderSources(weather);
+}
+
+function advisorSetTab(name) {
+    const tabs = document.querySelectorAll('[data-virgil-tab]');
+    if (!tabs.length) return;
+    for (const tab of tabs) {
+        const selected = tab.dataset.virgilTab === name;
+        tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+        tab.classList.toggle('is-active', selected);
+    }
+    const conversation = document.getElementById('virgil-view-conversation');
+    const tasks = document.getElementById('virgil-view-tasks');
+    if (conversation) conversation.hidden = name !== 'conversation';
+    if (tasks) tasks.hidden = name !== 'tasks';
+}
+
 // Wire up on DOM ready
 document.addEventListener('DOMContentLoaded', function () {
+    for (const tab of document.querySelectorAll('[data-virgil-tab]')) {
+        tab.addEventListener('click', () => advisorSetTab(tab.dataset.virgilTab));
+    }
+    const suggest = document.querySelector('[data-virgil-suggest]');
+    if (suggest) suggest.addEventListener('click', () => {
+        // Fills the composer only. Asking stays the owner's action, and Send still
+        // goes through the single advisor call this panel has always made.
+        const input = document.getElementById('advisor-fab-input');
+        if (!input) return;
+        input.value = suggest.textContent.trim();
+        input.focus();
+    });
+
     const fab = document.getElementById('advisor-fab');
     const close = document.getElementById('advisor-close');
     const send = document.getElementById('advisor-fab-send');

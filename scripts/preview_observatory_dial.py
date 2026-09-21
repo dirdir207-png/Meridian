@@ -165,6 +165,48 @@ ACTIVITY = {
 }
 
 
+# Virgil briefing fixtures. Two SYNTHETIC items, because the governing concept draws a
+# card titled "Two things worth a look" and the real title is rendered from the count --
+# so the preview must supply exactly two to show the concept's wording at all. The values
+# are invented here and observed from no account; the shape matches what
+# `meridian/proactive.py::build_financial_weather` returns, so the panel is exercised
+# against its real contract rather than a convenient one.
+VIRGIL_WEATHER = {
+    "state": "watchful",
+    "confidence": 0.7,
+    "freshness": "2h",
+    "observedAt": "2026-09-08T11:42:00Z",
+    "headline": "Two things worth a look",
+    "explanation": "Synthetic preview: two near-term items need attention.",
+    "windowDays": 14,
+    "groups": [{
+        "key": "obligation",
+        "label": "Obligations",
+        "severity": "watch",
+        "explanation": "Synthetic preview group.",
+        "omitted": 0,
+        "events": [
+            {"id": "synthetic-1", "date": "2026-09-18", "kind": "renewal",
+             "title": "Example renewal", "amount_minor": 1200, "currency": "USD",
+             "funding_status": "funded",
+             "explanation": "A renewal is approaching."},
+            {"id": "synthetic-2", "date": "2026-09-18", "kind": "uncategorised",
+             "title": "Example transaction", "amount_minor": 4400, "currency": "USD",
+             "funding_status": "funded",
+             "explanation": "One transaction needs a category."},
+        ],
+    }],
+    "assumptions": ["Synthetic preview: balances are assumed current.", "Synthetic preview data."],
+    "suppressed": 0,
+}
+
+VIRGIL_PENDING = {"actions": [{
+    "id": "synthetic-draft-1",
+    "type": "review",
+    "summary": "Review the renewal",
+    "state": "draft",
+}]}
+
 # Connections-only Settings fixture. No credentials, account data or write handler.
 #
 # The two route rows mirror what `meridian/services/ingestion_routes.py` serves for real, so
@@ -335,6 +377,10 @@ class Handler(BaseHTTPRequestHandler):
             body, mime = json.dumps(ACTIVITY).encode(), "application/json"
         elif path == "/api/meridian/accounts":
             body, mime = json.dumps(ACCOUNTS).encode(), "application/json"
+        elif path == "/api/meridian/weather":
+            body, mime = json.dumps(VIRGIL_WEATHER).encode(), "application/json"
+        elif path == "/api/actions/pending":
+            body, mime = json.dumps(VIRGIL_PENDING).encode(), "application/json"
         elif path == "/api/advisor/status":
             body, mime = b'{"configured":false}', "application/json"
         elif path.startswith("/static/"):

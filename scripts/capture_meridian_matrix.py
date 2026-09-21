@@ -55,7 +55,11 @@ def _validate_workspaces(workspaces: Sequence[str] | None) -> list[str]:
     # Distinguish "not specified" (None -> every governed workspace) from an
     # explicitly empty list, which is a caller error rather than "all".
     selected = list(WORKSPACES) if workspaces is None else list(workspaces)
-    supported = [*WORKSPACES, "settings"]
+    # "virgil" is not a fifth workspace -- BUILD_HANDOFF.md forbids adding one -- it is
+    # the advisor PANEL, which opens over Today. It is a capture target so the surface
+    # can produce governed evidence (a validated manifest with overflow and console
+    # checks) rather than a hand-taken screenshot that nothing verifies.
+    supported = [*WORKSPACES, "settings", "virgil"]
     unknown = [name for name in selected if name not in supported]
     if unknown:
         raise ValueError(
@@ -159,10 +163,13 @@ def capture_matrix(
                         login(page, app_url)
                     for workspace in selected:
                         console_errors.clear()
+                        # The Virgil panel is an overlay, so its capture loads the
+                        # workspace it opens over and then opens the panel below.
+                        underlying = "today" if workspace == "virgil" else workspace
                         page.goto(
                             f"{app_url}/meridian/settings{settings_query}"
                             if workspace == "settings"
-                            else f"{app_url}/meridian?workspace={workspace}"
+                            else f"{app_url}/meridian?workspace={underlying}"
                         )
                         page.wait_for_load_state("networkidle", timeout=15000)
                         page.evaluate("() => document.fonts && document.fonts.ready")
@@ -171,9 +178,18 @@ def capture_matrix(
                         )
                         page.wait_for_function(
                             "(ws) => !document.querySelector(ws === 'settings' ? '[data-settings-shell] [aria-busy=true]' : `[data-workspace-section='${ws}'] [aria-busy='true']`)",
-                            arg=workspace,
+                            arg="settings" if workspace == "settings" else underlying,
                             timeout=12000,
                         )
+                        if workspace == "virgil":
+                            # Open it the way the shell's own [data-open-advisor]
+                            # buttons do, so the capture exercises the real entry
+                            # point rather than a test-only hook.
+                            page.evaluate(
+                                "() => window.advisorSetOpen && window.advisorSetOpen(true)"
+                            )
+                            page.wait_for_selector("#advisor-panel[data-open]", timeout=8000)
+                            page.wait_for_timeout(700)
                         # A concept may depict a non-default UI state, and comparing
                         # one state against another is meaningless. Drive the state
                         # explicitly and record what was actually captured, rather

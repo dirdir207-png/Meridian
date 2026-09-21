@@ -33,6 +33,68 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## OS-071 DELIVERED — Virgil is real, and it is a REFRESH of a surface that already existed (2026-09-21, base `9a55413`)
+
+**The finding that changed the slice.** OS-071 was recorded as "no Virgil surface exists in the
+product at all", verified by `find templates -iname '*virgil*'` returning nothing. That check was
+looking for the wrong name. The shell already carried a **live** advisor panel
+(`templates/partials/advisor_fab.html`, `static/js/ui/advisor_fab.js`,
+`static/css/meridian/advisor.css`) opened by every `[data-open-advisor]` button in Today and
+Activity — and BUILD_HANDOFF.md line 53 says to refresh *"Virgil's existing contextual
+conversation and proposal surfaces first"*. So this was a **redesign, not a greenfield build**,
+and the entry's own words ("the virgil visual redesign was also never started") were the accurate
+half.
+
+**What it now carries**, from `concepts/virgil.png`: the serif *Virgil* over the shell's shared
+violet wavy rule (reusing `.m-title-rule`, not a second copy of one ornament), "Clarity, with
+evidence.", "Read-only session", Conversation/Tasks tabs divided by star-tipped brass rules, the
+suggested-question chip, the parchment evidence card, the draft review card with the deep-orange
+review action, the "Sources & assumptions" disclosure, the composer with the violet send control,
+and the concept's own row — *"Voice & iPhone actions — planned / Not available in this session."*
+
+**NOTHING NEW WAS WIRED, which is the point.** The briefing reads two endpoints that already
+existed: `/api/meridian/weather` (which returns `build_financial_weather`) and
+`/api/actions/pending`. No endpoint was added, no provider is called, and the **only POST in the
+file remains the pre-existing advisor send** — a test asserts exactly that, so a future edit
+cannot quietly add a second one.
+
+**Two deliberate departures from the concept, both required by BUILD_HANDOFF.md** ("Generated art
+can disagree with semantics"). (1) The concept's "Draft" dot is **confirmed-green**; it is neutral
+**lilac** here, because a draft that has taken no action must not read as a success — measured in
+the browser as `rgb(193, 169, 226)`. (2) The concept titles its card **"Two things worth a look"**.
+That is a *count*, and a hardcoded count is precisely the defect the handoff names for the Review
+concept ("render the actual total, never hardcode three"), so the title renders from the real
+number — "One thing", "Two things", digits beyond the word list — and the template ships it
+**empty**, with a test that fails if it is ever hardcoded. Every card also degrades honestly: the
+evidence card *hides* when there is nothing to report rather than showing an empty one, and the
+review card appears *only* when something genuinely awaits review. A decorative "Draft" card
+leading nowhere is the ambiguous emptiness the ledger forbids.
+
+**A REAL DEFECT, FOUND BY MEASURING THE BROWSER.** The panel was a compact card capped at
+`min(70svh, 28rem)` = **448px** with `overflow: hidden`. Adding the briefing made its content
+**996px**, so the header sat **74px above the viewport** and the composer **394px below the
+panel's own box** — both clipped, with *no way to scroll to them*. Fixed structurally: the panel
+clips, the new `.m-virgil-view` **scrolls**, the transcript inside it no longer opens a second
+scroller, and on mobile the panel becomes the **full-height sheet** BUILD_HANDOFF.md specifies
+("full-height detail sheet") instead of a compact card. Measured after: panel 888/912px, header
+25–107, composer 843–887 and inside the panel, view `scrollHeight` 842 vs 430 visible, all lower
+blocks reachable, horizontal overflow 0. Both new guards were **falsified** against the pre-fix
+stylesheet — all three assertions fail there and pass here.
+
+**Evidence.** `tests/meridian/test_virgil_surface.py` (16 tests) mostly asserts **restraint**,
+because the risk in OS-071 is a surface that *looks* like it can do something it cannot: no new
+endpoint, no added mutation, no voice/device wiring, no approval affordance, and the Tasks tab
+stating its own unavailability. `virgil` is now a **governed capture target** (an overlay, not a
+fifth workspace — the handoff forbids a fifth): 10 frames across 5 viewports × 2 themes,
+**overflow 0, console errors 0**, `ui_state` recorded as `virgil:virgil-panel-open`. Full
+non-browser suite **1343 passed**; ruff and `git diff --check` clean.
+
+**One remainder, and it is an asset decision.** The concept draws a **lantern** beside the
+heading, which BUILD_HANDOFF.md names as the guide identity ("Use a lantern, not a floating
+character"). **No lantern artwork exists in any kit and none was fabricated** — it is an Astra
+asset decision, the same category as OS-038's brass medallion glyphs. The heading, rule and
+tagline carry the identity until that artwork is commissioned.
+
 ## Settings now shows its two ingestion routes — and a CSS regression was found by measuring, not by reading (2026-09-21, base `25181bd`)
 
 **The owner's framing, which is the whole point.** Email and calendar are *two different

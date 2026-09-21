@@ -1,7 +1,29 @@
-{# Meridian contextual advisor (branded "Virgil").
-   Desktop: right-rail briefing (right gutter). Mobile: full-height sheet.
-   Grounded in visible context and evidence. The shell shows an in-context
-   trigger, never a competing FAB. #}
+{# Meridian contextual advisor — the "Virgil" surface, built to
+   design/observatory-extension-2026-09-18/concepts/virgil.png (the governing visual
+   record for this surface). Desktop: right-rail panel. Mobile: full-height sheet.
+   Grounded in visible context and evidence. The shell shows an in-context trigger,
+   never a competing FAB.
+
+   READ-ONLY, AND THAT IS THE DESIGN (OS-071 limits). No A1-A5 capability is
+   implemented, enabled or implied here: no voice endpoint, no device action, no task
+   runner, no approval, no credential, no provider mutation. The two blocks the
+   concept draws but the product cannot yet honour DO NOT say "planned" in the
+   concept -- Voice & iPhone actions says it outright, and the Tasks tab does not.
+   Both are stated as unavailable here rather than drawn as if they worked, because
+   the concept's own row is the pattern to follow: "Voice & iPhone actions -- planned
+   / Not available in this session."
+
+   A DELIBERATE DEPARTURE FROM THE CONCEPT, twice, both required by
+   BUILD_HANDOFF.md ("Generated art can disagree with semantics"):
+   1. The concept's "Draft" status dot is CONFIRMED-GREEN. A draft that has taken no
+      action must not read as a success, so it is neutral/lilac here.
+   2. The concept's card is titled "Two things worth a look". That is a COUNT, and a
+      fixed count becomes a lie the moment the data holds one item or three -- the
+      same defect the handoff names for the Review concept ("render the actual total,
+      never hardcode three"). The title is rendered from the real number.
+   The concept's "Read-only session - Synthetic preview" line keeps only its first
+   half: the handoff requires hiding the synthetic-preview label in the real app,
+   while never hiding a real stale or unavailable state. #}
 
 {# In-context trigger: a discreet branded pill. The Meridian shell hides the
    floating FAB on mobile (where the bottom dock owns the screen) and relies on
@@ -29,10 +51,18 @@
 >
   <header class="m-advisor-header">
     <div class="m-advisor-heading">
-      <p class="m-advisor-kicker">Virgil</p>
       <h2 class="m-advisor-title">Virgil</h2>
+      {# The concept's violet wavy rule. Reuses the shell's existing `.m-title-rule`
+         (the same asset Today's title uses) rather than introducing a second
+         rendering of one ornament. #}
+      <span class="m-title-rule m-advisor-rule" aria-hidden="true"></span>
+      <p class="m-advisor-tagline">Clarity, with evidence.</p>
+      <p class="m-virgil-status">Read-only session</p>
     </div>
     <div class="m-advisor-header-actions">
+      {# A REAL state, never hidden. Empty while the advisor is configured and
+         reachable; it carries "not configured" / "offline" otherwise, which is why
+         the concept's decorative status line could not simply replace it. #}
       <span id="advisor-fab-status" class="m-advisor-status" role="status"></span>
       <button
         type="button"
@@ -50,27 +80,135 @@
     </div>
   </header>
 
+  {# The concept divides Conversation from Tasks with a rule ornamented by brass stars. #}
+  <div class="m-virgil-tabs" role="tablist" aria-label="Virgil views">
+    <span class="m-virgil-tab-edge" aria-hidden="true"></span>
+    <button
+      type="button"
+      role="tab"
+      id="virgil-tab-conversation"
+      class="m-virgil-tab"
+      aria-selected="true"
+      aria-controls="virgil-view-conversation"
+      data-virgil-tab="conversation"
+    >Conversation</button>
+    <button
+      type="button"
+      role="tab"
+      id="virgil-tab-tasks"
+      class="m-virgil-tab"
+      aria-selected="false"
+      aria-controls="virgil-view-tasks"
+      data-virgil-tab="tasks"
+    >Tasks</button>
+    <span class="m-virgil-tab-edge" aria-hidden="true"></span>
+  </div>
+
   <div
-    id="advisor-fab-log"
-    class="m-advisor-log"
-    role="log"
-    aria-live="polite"
-    aria-relevant="additions"
-  ></div>
+    id="virgil-view-tasks"
+    class="m-virgil-view m-virgil-view--tasks"
+    role="tabpanel"
+    aria-labelledby="virgil-tab-tasks"
+    hidden
+  >
+    {# No task runner exists and none is implied. The concept shows a Tasks tab; the
+       ledger's limits forbid building the runner behind it, so the tab states that
+       plainly instead of opening an empty shell. #}
+    <p class="m-virgil-planned-note">
+      <span class="m-virgil-row-tag">Planned</span>
+      Long-running investigations are not available in this session.
+    </p>
+  </div>
+
+  <div
+    id="virgil-view-conversation"
+    class="m-virgil-view"
+    role="tabpanel"
+    aria-labelledby="virgil-tab-conversation"
+  >
+    {# Suggested question, straight from the concept. It only fills the composer --
+       asking is the owner's action, and sending still goes through the same one
+       advisor call the composer has always used. #}
+    <button type="button" class="m-virgil-chip" data-virgil-suggest>
+      What needs my attention this week?
+    </button>
+
+    {# ---- Briefing: the concept's cards, fed by read models that already exist ---- #}
+    <div class="m-virgil-briefing" data-virgil-briefing aria-live="polite">
+      {# Evidence card (parchment). Title carries the REAL count. #}
+      <section class="m-virgil-evidence" data-virgil-evidence hidden>
+        <span class="m-virgil-evidence-mark m-virgil-icon--journal" aria-hidden="true"></span>
+        <div class="m-virgil-evidence-body">
+          <h3 class="m-virgil-evidence-title" data-virgil-evidence-title></h3>
+          <ul class="m-virgil-evidence-items" data-virgil-evidence-items></ul>
+        </div>
+        <span class="m-virgil-star" aria-hidden="true"></span>
+        <div class="m-virgil-evidence-links" data-virgil-evidence-links></div>
+      </section>
+
+      {# Review card. Present ONLY when something is actually awaiting review, so it
+         can never be a decorative "Draft" that leads nowhere. #}
+      <section class="m-virgil-review" data-virgil-review hidden>
+        <span class="m-virgil-review-mark m-virgil-icon--file-check" aria-hidden="true"></span>
+        <div class="m-virgil-review-body">
+          <h3 class="m-virgil-review-title" data-virgil-review-title></h3>
+          <p class="m-virgil-review-sub" data-virgil-review-sub></p>
+          <p class="m-virgil-review-state" data-virgil-review-state>
+            <span class="m-virgil-dot" aria-hidden="true"></span>Draft · No action taken
+          </p>
+        </div>
+        <span class="m-virgil-star" aria-hidden="true"></span>
+        <a class="m-virgil-review-open" data-virgil-review-open href="/meridian/settings?section=actions">
+          <span class="m-virgil-icon--journal" aria-hidden="true"></span>Open review
+        </a>
+      </section>
+
+      {# Sources & assumptions: a real disclosure, populated from the weather read
+         model's own assumptions and observation time. #}
+      <details class="m-virgil-sources" data-virgil-sources>
+        <summary>
+          <span class="m-virgil-sources-mark m-virgil-icon--book" aria-hidden="true"></span>
+          <span>Sources &amp; assumptions</span>
+          <span class="m-virgil-sources-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="m-virgil-sources-body" data-virgil-sources-body>
+          <p class="m-virgil-sources-empty">Nothing to disclose yet.</p>
+        </div>
+      </details>
+
+      {# Stated unavailable, exactly as the concept's own row does. #}
+      <p class="m-virgil-planned-row">
+        <span class="m-virgil-planned-mark m-virgil-icon--phone" aria-hidden="true"></span>
+        <span class="m-virgil-planned-text">
+          <strong>Voice &amp; iPhone actions — planned</strong>
+          <small>Not available in this session.</small>
+        </span>
+      </p>
+    </div>
+
+    <div
+      id="advisor-fab-log"
+      class="m-advisor-log"
+      role="log"
+      aria-live="polite"
+      aria-relevant="additions"
+    ></div>
+  </div>
 
   <div id="advisor-fab-inputrow" class="m-advisor-composer">
     <label class="m-visually-hidden" for="advisor-fab-input">Ask Virgil</label>
+    <span class="m-virgil-composer-mark m-virgil-icon--paperclip" aria-hidden="true"></span>
     <input
       type="text"
       id="advisor-fab-input"
       data-sheet-initial-focus
       class="m-advisor-input"
-      placeholder="Ask, or: move $20 from Checking to Rent"
+      placeholder="Ask a follow-up…"
       autocomplete="off"
       aria-describedby="advisor-fab-hint"
     >
     <span id="advisor-fab-hint" class="m-visually-hidden"
-      >Type a question and press enter. You can only propose actions — approvals happen in Pending Actions.</span
+      >Type a question and press enter. Virgil is read-only: he can only propose actions — approvals happen in Pending Actions.</span
     >
     <button
       type="button"
@@ -78,12 +216,7 @@
       class="m-advisor-send"
       aria-label="Send message"
     >
-      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
-        fill="none" stroke="currentColor" stroke-width="1.8"
-        stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 2 11 13"></path>
-        <path d="M22 2 15 22l-4-9-9-4 20-7z"></path>
-      </svg>
+      <span class="m-virgil-icon--send" aria-hidden="true"></span>
     </button>
   </div>
 </div>

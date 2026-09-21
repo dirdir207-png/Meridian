@@ -104,28 +104,41 @@ body:has(#advisor-panel[data-open]) #advisor-fab.m-advisor-trigger {
      Meridian shell and the legacy app, independent of any [hidden] rule. */
   display: none;
   flex-direction: column;
-  /* A compact card, not a tower: small footprint, minimal chrome. */
-  width: min(18rem, 24vw);
+  /* BUILD_HANDOFF.md gives the desktop treatment as a 320-360px side panel, so the
+     cards the concept draws have room to read. It was `min(18rem, 24vw)` = 288px,
+     narrower than the range the handoff specifies. */
+  width: min(22rem, 26vw);
   max-width: 100vw;
-  max-height: min(60svh, 30rem);
+  /* Tall enough for the briefing plus a conversation, still a panel rather than a
+     tower. The CONTENT scrolls (see .m-virgil-view); this bound only stops the
+     panel from owning the whole screen on desktop. */
+  max-height: min(80svh, 44rem);
   border-radius: 12px;
   background: var(--m-surface, #fff);
   border: 1px solid var(--m-border, #e3ded4);
   box-shadow: var(--m-elevation-2, 0 4px 16px rgba(0, 0, 0, 0.12));
   padding: var(--m-space-3, 12px);
   gap: var(--m-space-2, 8px);
+  /* The panel itself clips; the scrolling happens in the view inside it, so the
+     header, tabs and composer stay put while the briefing and transcript move. */
   overflow: hidden;
 }
 
-/* On mobile the panel is a compact centered sheet (not a full-height tower). */
+/* Mobile: the concept's full-height sheet, not the compact card this used to be.
+   BUILD_HANDOFF.md: "Contextual entry opens a mobile full-height sheet"; and "At
+   390/420/430px: single column, compact header and tabs, full-height detail sheet".
+   Measured before this change: the panel was capped at min(70svh, 28rem) = 448px
+   with `overflow: hidden`, so once the briefing existed the header sat 74px above
+   the viewport and the composer 394px below the panel's own box -- both clipped and
+   unreachable, with no way to scroll to them. */
 @media (max-width: 900px) {
   #advisor-panel.m-advisor {
     left: max(0.75rem, env(safe-area-inset-left));
     right: max(0.75rem, env(safe-area-inset-right));
-    bottom: auto;
     top: max(0.75rem, env(safe-area-inset-top));
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
     width: auto;
-    max-height: min(70svh, 28rem);
+    max-height: none;
   }
 }
 
@@ -304,6 +317,449 @@ body:has(#advisor-panel[data-open]) #advisor-fab.m-advisor-trigger {
 #advisor-panel .m-advisor-send:disabled {
   opacity: 0.55;
   cursor: default;
+}
+
+/* ------------------------------------------------------------------ */
+/* VIRGIL SURFACE — built to design/observatory-extension-2026-09-18/concepts/virgil.png
+   (the governing visual record for this surface). Read-only: OS-071's limits forbid
+   any capability behind these blocks, so where the concept draws something the
+   product cannot honour, it says so rather than looking functional.
+
+   Two deliberate departures from the concept, both required by BUILD_HANDOFF.md
+   ("Generated art can disagree with semantics"):
+     1. the "Draft" dot is NEUTRAL LILAC here; the concept draws it confirmed-green,
+        and a draft that has taken no action must not read as a success;
+     2. the evidence title is rendered from the REAL count; the concept's fixed "Two
+        things worth a look" becomes a lie at one item or at three.
+   ------------------------------------------------------------------ */
+
+.m-virgil-head { margin: 0; }
+
+.m-virgil-heading .m-advisor-title {
+  font-family: var(--obs-font-serif);
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  color: var(--obs-ink);
+}
+
+.m-advisor-rule {
+  /* The shared `.m-title-rule` supplies the asset and its size; only the placement
+     is Virgil's. */
+  margin: 4px 0 0;
+}
+
+.m-advisor-tagline {
+  margin: var(--m-space-2) 0 0;
+  color: var(--obs-ink);
+  font-family: var(--obs-font-serif);
+  font-size: 1rem;
+}
+
+.m-virgil-status {
+  margin: var(--m-space-1) 0 0;
+  color: var(--obs-muted);
+  font-size: var(--m-text-xs);
+  letter-spacing: 0.02em;
+}
+
+/* ---- Conversation / Tasks, divided by the concept's star-tipped rule ------- */
+
+.m-virgil-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-3);
+  margin: var(--m-space-4) 0;
+}
+
+.m-virgil-tab {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 var(--m-space-1);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--obs-muted);
+  font-family: var(--obs-font-serif);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.m-virgil-tab[aria-selected="true"] {
+  border-bottom-color: var(--obs-lilac);
+  color: var(--obs-ink);
+}
+
+.m-virgil-tab-edge {
+  /* The rule either side of the tabs, star-tipped at the outer edge as the concept
+     draws it. Pure ornament, so it stays out of the accessibility tree. */
+  position: relative;
+  flex: 1 1 auto;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(198, 170, 113, 0.45) 22%,
+    rgba(198, 170, 113, 0.45) 78%,
+    transparent
+  );
+}
+
+.m-virgil-tab-edge::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translateY(-50%);
+  background: var(--obs-brass);
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+}
+
+.m-virgil-tab-edge:first-child::after { left: 0; }
+.m-virgil-tab-edge:last-child::after { right: 0; }
+
+/* ---- Shared icon primitive (kit masks, the shell's existing convention) ---- */
+
+[class^="m-virgil-icon--"],
+[class*=" m-virgil-icon--"] {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+}
+
+.m-virgil-icon--journal {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/journal-text.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/journal-text.svg") center / contain no-repeat;
+}
+
+.m-virgil-icon--file-check {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/file-earmark-check.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/file-earmark-check.svg") center / contain no-repeat;
+}
+
+.m-virgil-icon--book {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/book.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/book.svg") center / contain no-repeat;
+}
+
+.m-virgil-icon--phone {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/phone.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/phone.svg") center / contain no-repeat;
+}
+
+.m-virgil-icon--paperclip {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/paperclip.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/paperclip.svg") center / contain no-repeat;
+}
+
+.m-virgil-icon--send {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/send.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/send.svg") center / contain no-repeat;
+}
+
+/* The brass star ornament the concept sprinkles on its cards. */
+.m-virgil-star {
+  width: 12px;
+  height: 12px;
+  margin-left: auto;
+  background: var(--obs-brass);
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+}
+
+/* ---- Suggested question chip ---------------------------------------------- */
+
+.m-virgil-chip {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: var(--m-space-3) var(--m-space-4);
+  border: 1px solid rgba(238, 228, 207, 0.2);
+  border-radius: var(--obs-radius-sm);
+  background: var(--obs-surface);
+  color: var(--obs-ink);
+  font-family: var(--obs-font-serif);
+  font-size: 1rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.m-virgil-chip:hover,
+.m-virgil-chip:focus-visible { border-color: var(--obs-lilac); }
+
+/* ---- Evidence card: the concept's parchment -------------------------------- */
+
+.m-virgil-evidence {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--m-space-3);
+  align-items: start;
+  margin: var(--m-space-4) 0 0;
+  padding: var(--m-space-4);
+  border-radius: var(--obs-radius-sm);
+  /* Parchment is a MATERIAL in this design language -- the settings group banners
+     use it too -- which is why it is allowed while the owner's "no lighter boxes"
+     rule forbids tinted surfaces. */
+  background: var(--obs-paper);
+  color: var(--obs-paper-ink);
+}
+
+.m-virgil-evidence-mark {
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  border: 1px solid rgba(32, 38, 59, 0.35);
+  border-radius: 50%;
+  /* Same trick as the settings medallions: a filled disc with the glyph punched
+     through it, so the icon reads in the parchment colour. */
+  background: var(--obs-paper-ink);
+}
+
+.m-virgil-evidence-title {
+  margin: 0;
+  font-family: var(--obs-font-serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.m-virgil-evidence-items {
+  margin: var(--m-space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--m-text-sm);
+  line-height: 1.5;
+}
+
+.m-virgil-evidence .m-virgil-star {
+  background: var(--obs-paper-ink);
+  opacity: 0.75;
+}
+
+.m-virgil-evidence-links {
+  grid-column: 1 / -1;
+  padding-top: var(--m-space-3);
+  border-top: 1px solid rgba(32, 38, 59, 0.25);
+}
+
+.m-virgil-evidence-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--obs-paper-ink);
+  font-size: var(--m-text-sm);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---- Review card: hairline on the page colour, per the "no lighter boxes" rule */
+
+.m-virgil-review {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--m-space-3);
+  align-items: start;
+  margin: var(--m-space-4) 0 0;
+  padding: var(--m-space-4);
+  border: 1px solid rgba(238, 228, 207, 0.2);
+  border-radius: var(--obs-radius-sm);
+  background: var(--obs-surface);
+}
+
+.m-virgil-review-mark {
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  border: 1px solid rgba(238, 228, 207, 0.35);
+  border-radius: 50%;
+  color: var(--obs-ink);
+}
+
+.m-virgil-review-title {
+  margin: 0;
+  font-family: var(--obs-font-serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--obs-ink);
+}
+
+.m-virgil-review-sub {
+  margin: var(--m-space-1) 0 0;
+  color: var(--obs-muted);
+  font-size: var(--m-text-sm);
+}
+
+.m-virgil-review-state {
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-2);
+  margin: var(--m-space-3) 0 0;
+  color: var(--obs-muted);
+  font-size: var(--m-text-xs);
+}
+
+.m-virgil-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  /* NOT the concept's confirmed-green: a draft that has taken no action is
+     neutral, and lilac is this design language's neutral. */
+  background: var(--obs-lilac);
+}
+
+.m-virgil-review-open {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--m-space-2);
+  min-height: 48px;
+  margin-top: var(--m-space-3);
+  border-radius: var(--obs-radius-sm);
+  /* The concept's deep-orange review action, from its measured #e99a48. */
+  background: #e99a48;
+  color: #20263b;
+  font-family: var(--obs-font-serif);
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.m-virgil-review-open .m-virgil-icon--journal { background: #20263b; }
+
+/* ---- Sources & assumptions ------------------------------------------------- */
+
+.m-virgil-sources {
+  margin: var(--m-space-3) 0 0;
+  border: 1px solid rgba(238, 228, 207, 0.13);
+  border-radius: var(--obs-radius-sm);
+}
+
+.m-virgil-sources > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-3);
+  min-height: 52px;
+  padding: 0 var(--m-space-4);
+  color: var(--obs-ink);
+  font-family: var(--obs-font-serif);
+  font-size: 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.m-virgil-sources > summary::-webkit-details-marker { display: none; }
+
+.m-virgil-sources-mark { color: var(--obs-brass); }
+
+.m-virgil-sources-chevron {
+  width: 12px;
+  height: 12px;
+  margin-left: auto;
+  border-right: 2px solid var(--obs-brass);
+  border-bottom: 2px solid var(--obs-brass);
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.m-virgil-sources[open] .m-virgil-sources-chevron {
+  transform: rotate(-135deg) translateY(-2px);
+}
+
+.m-virgil-sources-body {
+  padding: 0 var(--m-space-4) var(--m-space-4);
+  color: var(--obs-muted);
+  font-size: var(--m-text-sm);
+  line-height: 1.55;
+}
+
+.m-virgil-sources-body p { margin: 0 0 var(--m-space-2); }
+.m-virgil-sources-body ul { margin: 0; padding-left: 1.1em; }
+.m-virgil-sources-heading { color: var(--obs-ink); }
+.m-virgil-sources-empty { margin: 0; }
+
+/* ---- Planned rows: the concept's own "not available" pattern --------------- */
+
+.m-virgil-planned-row,
+.m-virgil-planned-note {
+  display: flex;
+  align-items: center;
+  gap: var(--m-space-3);
+  margin: var(--m-space-3) 0 0;
+  padding: var(--m-space-4);
+  border: 1px solid rgba(238, 228, 207, 0.13);
+  border-radius: var(--obs-radius-sm);
+  color: var(--obs-muted);
+  font-size: var(--m-text-sm);
+}
+
+.m-virgil-planned-mark {
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  padding: 5px;
+  border: 1px solid rgba(238, 228, 207, 0.28);
+  border-radius: 50%;
+  color: var(--obs-muted);
+}
+
+.m-virgil-planned-text { display: block; }
+.m-virgil-planned-text strong { display: block; color: var(--obs-ink); font-weight: 400; }
+.m-virgil-planned-text small { color: var(--obs-muted); }
+
+.m-virgil-row-tag {
+  padding: 2px var(--m-space-2);
+  border: 1px solid var(--obs-brass);
+  border-radius: var(--obs-radius-pill);
+  color: var(--obs-brass);
+  font-size: var(--m-text-xs);
+  white-space: nowrap;
+}
+
+/* ---- Composer: the concept's violet send control -------------------------- */
+
+.m-virgil-composer-mark { color: var(--obs-muted); }
+
+#advisor-panel .m-advisor-send {
+  background: var(--obs-lilac);
+  color: #20263b;
+}
+
+#advisor-panel .m-advisor-send .m-virgil-icon--send {
+  width: 18px;
+  height: 18px;
+  background: #20263b;
+}
+
+/* The scrolling region. The briefing and the transcript live inside it, so the
+   panel's header, tabs and composer stay put while the content moves -- and, crucially,
+   nothing is clipped and unreachable: the panel used to hide its own overflow, so any
+   content taller than the card simply could not be reached. */
+.m-virgil-view {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Inside the view, the transcript is ordinary flow. It must NOT scroll on its own, or
+   the briefing above it would be stranded outside a second scroller. */
+#advisor-panel .m-virgil-view .m-advisor-log {
+  flex: 0 0 auto;
+  min-height: auto;
+  overflow: visible;
+}
+
+/* The briefing sits above the conversation log, so the concept's cards are the
+   panel's opening state and the transcript grows beneath them. */
+.m-virgil-briefing { margin-bottom: var(--m-space-3); }
+
+@media (max-width: 430px) {
+  .m-virgil-evidence,
+  .m-virgil-review { padding: var(--m-space-3); }
+  .m-virgil-tabs { gap: var(--m-space-2); }
 }
 
 /* ------------------------------------------------------------------ */
