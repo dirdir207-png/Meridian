@@ -1,4 +1,20 @@
-<section class="m-card m-trials-panel" data-trials-panel aria-labelledby="trials-panel-heading">
-  <div class="m-card-header"><div><p class="m-eyebrow">Cancellation sentinel</p><h2 id="trials-panel-heading">Free trials and renewal deadlines</h2></div><button class="m-button m-button-secondary" type="button" data-trials-refresh>Refresh</button></div>
-  <p class="m-muted" data-trials-status>Loading trial deadlines…</p><div class="m-trials-list" data-trials-list></div>
+{# Observatory Settings: read-only trial and renewal deadlines.
+   Read-only by construction: the only request is a GET of the deadlines list, and this
+   pane cannot cancel anything. #}
+<section class="m-trials" data-trials-root>
+  <header class="m-settings-command">
+    <div>
+      <p class="m-workspace-kicker">Settings · Trials &amp; renewals</p>
+      <h1>Free trials,<br>kept visible.</h1>
+      <p>
+        See which trials are about to convert and which renewals are due, before they
+        charge. This pane is read-only; it never cancels anything on your behalf.
+      </p>
+    </div>
+  </header>
+
+  <section class="m-card m-trials-panel" data-trials-panel aria-labelledby="trials-panel-heading">
+    <div class="m-card-header"><div><p class="m-eyebrow">Cancellation sentinel</p><h2 id="trials-panel-heading">Free trials and renewal deadlines</h2></div><button class="m-button m-button-secondary" type="button" data-trials-refresh>Refresh</button></div>
+    <p class="m-muted" data-trials-status>Loading trial deadlines…</p><div class="m-trials-list" data-trials-list></div>
+  </section>
 </section>

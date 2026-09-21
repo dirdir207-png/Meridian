@@ -81,16 +81,42 @@ def test_javaScript_and_route_workspace_lists_match_the_governing_four():
 
 
 def test_trials_remains_reachable_as_a_settings_section():
-    settings_nav = SETTINGS_NAV.read_text()
-    assert "settings?section=trials" in settings_nav
+    """Restated 2026-09-21 for the Settings hub.
 
+    The original asserted a `settings?section=trials` link inside the flat nav. That nav is
+    now the 09-18 concept's grouped hub, whose nine rows do not include a Trials row, so the
+    link is deliberately gone -- restated rather than deleted, so the removal stays visible.
+    What must still hold is that the section is reachable by URL, renders, and that every
+    hub link resolves to a governed section.
+    """
     settings = SETTINGS.read_text()
     assert "active_settings_section == 'trials'" in settings
     assert "meridian/partials/trials.html" in settings
     assert "/static/js/meridian/trials.js" in settings
 
-    app_py = APP_PY.read_text()
-    assert "'connections', 'payday', 'actions', 'security', 'trials'" in app_py
+    # The governed section set now lives in ONE declaration (meridian/settings_hub.py)
+    # instead of being written inline in app.py, so the hub's links and the route's
+    # accepted sections cannot drift apart.
+    from meridian.settings_hub import (
+        HUB_EXTERNAL_ROUTES,
+        SETTINGS_HUB,
+        SETTINGS_SECTIONS,
+    )
+
+    assert SETTINGS_SECTIONS == {"connections", "payday", "actions", "security", "trials"}
+    for group in SETTINGS_HUB:
+        for row in group["rows"]:
+            if row["href"] is None:
+                continue
+            # A row points inside Settings (a governed section) or at another existing
+            # journey (declared external). Funding schedules is the latter: BUILD_HANDOFF
+            # requires it to link to the Plan journey rather than duplicate it.
+            if row.get("external"):
+                assert row["href"] in HUB_EXTERNAL_ROUTES, row["key"]
+            else:
+                assert row["section"] in SETTINGS_SECTIONS, row["key"]
+
+    assert "SETTINGS_HUB_SECTIONS" in APP_PY.read_text()
 
 
 def test_trials_is_not_loaded_as_a_fifth_workspace():

@@ -9,10 +9,21 @@ def _read(relative):
 
 
 def test_settings_navigation_and_template_include_actions():
-    nav = _read("templates/meridian/partials/settings-navigation.html")
+    """Restated 2026-09-21 for the Settings hub.
+
+    The flat nav's row label WAS "Actions & approvals". The 09-18 concept's grouped hub
+    names the same route "Approval boundaries" (subtitle "Review what Virgil may do"), so the
+    label and the href now live in one place: meridian/settings_hub.py. Restated rather than
+    deleted so the rename is visible.
+    """
+    from meridian.settings_hub import settings_hub_rows
+
+    row = next(r for r in settings_hub_rows() if r["key"] == "approval-boundaries")
+    assert row["href"] == "/meridian/settings?section=actions"
+    assert row["label"] == "Approval boundaries"
+    assert row["section"] == "actions"
+
     settings = _read("templates/meridian/settings.html")
-    assert 'href="/meridian/settings?section=actions"' in nav
-    assert "Actions &amp; approvals" in nav
     assert "active_settings_section == 'actions'" in settings
     assert "partials/actions.html" in settings
     assert "static/js/meridian/actions.js" in settings

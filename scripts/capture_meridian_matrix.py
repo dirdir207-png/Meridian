@@ -95,6 +95,7 @@ def capture_matrix(
     ui_state: str = "default",
     ui_state_selector: str | None = None,
     concept_file: str | None = None,
+    settings_query: str = "?section=connections",
 ) -> list[dict]:
     """Capture the governed matrix.
 
@@ -110,7 +111,10 @@ def capture_matrix(
     makes no provider call. That is the correct target for fidelity captures,
     because the specification requires fixtures only and forbids live bank data:
     the full runtime (`run_preview.py`) loads .env and starts a Crew sync loop, so
-    it must NOT be used to produce fidelity evidence.
+    it must NOT be used to produce fidelity evidence. ``settings_query`` selects WHICH
+    Settings surface the ``settings`` workspace captures: `?section=...` for a detail
+    section, or the empty string for the HUB, which is the no-section landing page.
+    It defaults to Connections so an existing run is unchanged.
     """
     _validate_capture_target(app_url, fixture, frozen_clock)
     selected = _validate_workspaces(workspaces)
@@ -156,7 +160,7 @@ def capture_matrix(
                     for workspace in selected:
                         console_errors.clear()
                         page.goto(
-                            f"{app_url}/meridian/settings?section=connections"
+                            f"{app_url}/meridian/settings{settings_query}"
                             if workspace == "settings"
                             else f"{app_url}/meridian?workspace={workspace}"
                         )
@@ -273,6 +277,14 @@ def main() -> None:
         help=(
             "concept filename inside --concept-dir to record as the comparison "
             "authority (default: the draft-set mapping for each workspace)"
+        ),
+    )
+    parser.add_argument(
+        "--settings-query",
+        default="?section=connections",
+        help=(
+            "query string appended to /meridian/settings for the settings workspace; "
+            "pass an empty string to capture the Settings HUB (default: ?section=connections)"
         ),
     )
     parser.add_argument(

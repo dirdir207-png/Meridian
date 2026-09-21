@@ -57,6 +57,304 @@
   padding: var(--m-space-6) clamp(var(--m-space-5), 3.5vw, var(--m-space-7));
 }
 
+/* ==========================================================================
+   Settings hub — the 09-18 concept's grouped directory
+   Authority: design/observatory-extension-2026-09-18/concepts/settings.png
+   ========================================================================== */
+
+/* The hub's single 'attention' ink, so the banner label and the Planned tag cannot drift
+   apart or be fixed in one theme only. Deliberately NOT a theme-flipping --m- token: the
+   banner is a parchment wash in both themes, so its ink is chosen per theme below. */
+.m-settings-nav {
+  --m-settings-planned-ink: var(--obs-brass, #c6aa71);
+}
+
+html[data-theme="light"] .m-settings-nav {
+  /* Brass on the light parchment wash measured unreadable; a deep warm brown keeps the
+     same "attention, not error" meaning at a contrast that can actually be read. */
+  --m-settings-planned-ink: #8a5a12;
+}
+
+.m-settings-hub-head {
+  margin-bottom: var(--m-space-5);
+}
+
+/* The hub nav is a full-width surface on phone (the concept is a phone frame): its rows
+   are the page's content, not a 210px sidebar. The desktop grid keeps it in its column. */
+@media (min-width: 901px) {
+  .m-settings-hub-head h1 {
+    margin: 0 0 var(--m-space-5);
+    font: 500 var(--m-text-xl)/1.1 var(--m-font-serif);
+  }
+
+  .m-settings-hub-sub {
+    display: none;
+  }
+}
+
+.m-settings-title-rule {
+  margin-bottom: var(--m-space-4);
+}
+
+.m-settings-hub-sub {
+  margin: var(--m-space-3) 0 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-sm);
+}
+
+/* "‹ Back" on a detail surface. */
+.m-settings-back {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--m-space-2);
+  margin-bottom: var(--m-space-4);
+  color: var(--m-ink-muted);
+  text-decoration: none;
+  font-size: var(--m-text-sm);
+}
+
+.m-settings-back:hover,
+.m-settings-back:focus-visible {
+  color: var(--m-ink);
+}
+
+.m-settings-back-chevron {
+  width: 8px;
+  height: 8px;
+  border-left: 1.6px solid currentColor;
+  border-bottom: 1.6px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.m-settings-group + .m-settings-group {
+  margin-top: var(--m-space-5);
+}
+
+/* The group banner is a muted parchment bar with a brass hairline and a star at each end.
+   Measured off the governing concept rather than guessed: the CONNECTIONS banner averages
+   rgb(142,128,111) -- a MUTED mid-tone, NOT the bright parchment the kit's ticket art
+   carries. A first attempt used `border-image ... fill` with that art and rendered a
+   near-solid brass bar, far too light against the canvas (the concept's own canvas beside
+   the banner measures rgb(25,34,49)). So this is a low-opacity parchment wash over the dark
+   surface -- which lands in the measured range -- under a brass border and stars. */
+.m-settings-group-banner {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 34px;
+  margin: 0 0 var(--m-space-2);
+  padding: 0 var(--m-space-5);
+  border: 1px solid color-mix(in srgb, var(--obs-brass, #c6aa71) 62%, transparent);
+  border-radius: var(--m-radius-sm);
+  background: linear-gradient(rgb(231 205 158 / 0.5), rgb(231 205 158 / 0.42));
+  /* The banner is a parchment wash in BOTH themes, so its label ink cannot be a
+     theme-flipping token. `--obs-ink` (cream) is right over the dark-theme wash but rendered
+     the label nearly INVISIBLE in the light theme, where the same wash sits on a light
+     surface -- caught by reading the light capture instead of assuming it inverted cleanly.
+     Cream on dark, paper ink on light. */
+  color: var(--m-settings-planned-ink);
+  font-family: var(--m-font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-align: center;
+}
+
+
+.m-settings-group-banner::before,
+.m-settings-group-banner::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translateY(-50%);
+  background: var(--obs-brass, #c6aa71);
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+}
+
+.m-settings-group-banner::before {
+  left: var(--m-space-3);
+}
+
+.m-settings-group-banner::after {
+  right: var(--m-space-3);
+}
+
+.m-settings-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--m-space-2);
+}
+
+.m-settings-row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: var(--m-space-3);
+  min-height: 56px;
+  padding: var(--m-space-2) var(--m-space-3);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-md);
+  background: var(--m-surface);
+  color: inherit;
+  text-decoration: none;
+}
+
+a.m-settings-row:hover,
+a.m-settings-row:focus-visible {
+  border-color: var(--m-border-strong);
+}
+
+/* A row with no read model. It must not read as pressable, and it must not borrow the
+   brass chevron that means "this goes somewhere". */
+.m-settings-row-planned {
+  border-style: dashed;
+  background: transparent;
+  cursor: default;
+}
+
+.m-settings-row-planned .m-settings-row-label {
+  color: var(--m-ink-muted);
+}
+
+.m-settings-row-icon {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.m-settings-row-icon--lilac {
+  background: #c1a9e2;
+}
+
+.m-settings-row-icon--mint {
+  background: #a5d4bf;
+}
+
+.m-settings-row-icon--apricot {
+  background: #f3b272;
+}
+
+.m-settings-row-icon--slate {
+  background: #b9c2d2;
+}
+
+.m-settings-icon {
+  width: 18px;
+  height: 18px;
+  background: var(--obs-paper-ink, #20263b);
+}
+
+.m-settings-icon--piggy-bank {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/piggy-bank.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/piggy-bank.svg") center / contain no-repeat;
+}
+
+.m-settings-icon--envelope {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/envelope.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/envelope.svg") center / contain no-repeat;
+}
+
+.m-settings-icon--shield-check {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/shield-check.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/shield-check.svg") center / contain no-repeat;
+}
+
+.m-settings-icon--eye {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/eye.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/eye.svg") center / contain no-repeat;
+}
+
+.m-settings-icon--bell {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/bell.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/bell.svg") center / contain no-repeat;
+}
+
+.m-settings-icon--palette {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/palette.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/palette.svg") center / contain no-repeat;
+}
+
+.m-settings-icon--calendar-check {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/calendar-check.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/calendar-check.svg") center / contain no-repeat;
+}
+
+.m-settings-icon--key {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/key.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/key.svg") center / contain no-repeat;
+}
+
+.m-settings-row-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.m-settings-row-label {
+  font-size: var(--m-text-md);
+  color: var(--m-ink);
+}
+
+.m-settings-row-detail {
+  font-size: var(--m-text-xs);
+  color: var(--m-ink-muted);
+}
+
+.m-settings-row-tag {
+  color: var(--m-settings-planned-ink);
+  font-weight: 600;
+}
+
+/* Brass chevron, drawn rather than fetched: the shipped kit carries no chevron glyph. */
+.m-settings-row-chevron {
+  width: 7px;
+  height: 7px;
+  border-right: 1.6px solid var(--obs-brass, #c6aa71);
+  border-top: 1.6px solid var(--obs-brass, #c6aa71);
+  transform: rotate(45deg);
+}
+
+.m-settings-hub-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--m-space-2);
+  margin: var(--m-space-6) 0 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+  text-align: center;
+}
+
+.m-settings-foot-star {
+  width: 10px;
+  height: 10px;
+  background: var(--obs-brass, #c6aa71);
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+}
+
+/* The hub's main column states what the surface is when no section is open. */
+.m-settings-hub-intro h1 {
+  margin: var(--m-space-2) 0 0;
+  font: 500 var(--m-text-2xl)/1.15 var(--m-font-serif);
+}
+
+.m-settings-hub-intro p:last-child {
+  max-width: 52ch;
+  margin: var(--m-space-4) 0 0;
+  color: var(--m-ink-muted);
+}
+
+
 .m-settings-command {
   display: flex;
   align-items: flex-start;
@@ -239,18 +537,66 @@
 @media (max-width: 900px) {
   .m-settings-shell {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "topbar" "main" "dock";
-    /* The shell is bounded to the viewport and clips (see the first report: height
-       resolved to exactly the viewport with overflow hidden), and its rows previously
-       summed to exactly that height. So the content row must be the scroller: `1fr`
-       would refuse to shrink below its content and push past the clip, and a grid
-       item's automatic minimum size would refuse even with `1fr`, hence minmax(0, ...). */
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    /* `settings-nav` is a WIDE row on phone, not the sidebar it is at desktop: the hub's
+       rows are the page content (the concept is a phone frame). */
+    grid-template-areas: "topbar" "settings-nav" "main" "dock";
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
   }
 
+  /* The hub used to be `display: none` here, which left Settings with no way to reach any
+     section on phone at all -- the primary governed viewport. It is now the page. */
   .m-settings-nav {
+    display: block;
+    padding: var(--m-space-5) var(--m-space-4) var(--m-space-3);
+    border-right: 0;
+    border-bottom: 1px solid var(--m-border);
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* A DETAIL surface carries its own command header, so the full hub above it would be a
+     wall before the content; collapse to the way back. The hub itself (no active section)
+     keeps every group. */
+  .m-settings-nav:has(+ .m-settings-main:not(.m-settings-main--hub)) .m-settings-group,
+  .m-settings-nav:has(+ .m-settings-main:not(.m-settings-main--hub)) .m-settings-hub-head,
+  .m-settings-nav:has(+ .m-settings-main:not(.m-settings-main--hub)) .m-settings-hub-foot {
     display: none;
   }
+
+  .m-settings-main {
+    padding: var(--m-space-5) var(--m-space-4) calc(var(--m-space-7) + env(safe-area-inset-bottom));
+    /* Owner report: "I am unable to scroll on the settings page". The middle column had
+       825px of content in a 784px box with overflow visible inside a clipping shell, so
+       the bottom of the page -- including the funding cadence controls -- was unreachable
+       and neither the page nor the column would scroll. */
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .m-settings-link {
+    display: none;
+  }
+
+  .m-settings-command {
+    display: grid;
+    margin-bottom: var(--m-space-6);
+  }
+
+  .m-settings-command h1 {
+    font-size: 2.3rem;
+  }
+
+  .m-settings-inspector {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    width: 100%;
+    min-height: 100dvh;
+    overflow: auto;
+  }
+}
 
   .m-settings-main {
     padding: var(--m-space-5) var(--m-space-4) calc(var(--m-space-7) + env(safe-area-inset-bottom));

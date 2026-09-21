@@ -9,10 +9,22 @@ def _read(relative):
 
 
 def test_settings_navigation_and_template_include_security():
-    nav = _read("templates/meridian/partials/settings-navigation.html")
+    """Restated 2026-09-21 for the Settings hub.
+
+    The flat nav's row label WAS "Security & data". The 09-18 concept's grouped hub names the
+    same route "Security & devices" (subtitle "Sessions, devices and data"), so label, href
+    and section now live in one place: meridian/settings_hub.py. The security PARTIAL still
+    identifies itself as "Security & Data" in its own heading, which is where that wording
+    remains accurate. Restated rather than deleted so the rename is visible.
+    """
+    from meridian.settings_hub import settings_hub_rows
+
+    row = next(r for r in settings_hub_rows() if r["key"] == "security-devices")
+    assert row["href"] == "/meridian/settings?section=security"
+    assert row["label"] == "Security & devices"
+    assert row["section"] == "security"
+
     settings = _read("templates/meridian/settings.html")
-    assert 'href="/meridian/settings?section=security"' in nav
-    assert "Security &amp; data" in nav
     assert "active_settings_section == 'security'" in settings
     assert "partials/security.html" in settings
     assert "static/js/meridian/security.js" in settings

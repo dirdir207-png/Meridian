@@ -33,6 +33,80 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## OS-065 COMPLETE — Settings is the concept's grouped hub, and all five sections are now capturable (2026-09-21, base `57ad2d5`)
+
+**Track D's last surface.** The owner's 2026-09-20 correction was that Settings "was NEVER worked
+on or made to look like the concept". That was accurate, and the deeper problem was that it could
+not be DISPROVED either: `scripts/preview_observatory_dial.py` served `/meridian/settings` only for
+`section=connections` and returned 404 for every other section, with only `SETTINGS_CONNECTIONS`
+existing. Since the isolated synthetic preview is the project's only permitted source of fidelity
+evidence, four fifths of the page was invisible to the capture harness. Both halves are now fixed.
+
+**Built to the concept, measured rather than described.** The 09-18 concept is a HUB of grouped
+rows leading to detail surfaces: three parchment group banners and **eight** rows, each an icon
+medallion, title, subtitle and chevron, under a violet wavy rule with the footer "Capabilities
+appear only when available.". `meridian/settings_hub.py` declares that structure once, so the
+route, the template and the tests cannot drift apart. The route renders the hub when no section is
+given and every pre-existing section unchanged when one is; **an unknown section still redirects
+to Connections**, so a bad link behaves exactly as it did before. No route was added.
+
+**FOUR RECORDS WERE WRONG, AND EACH WAS CAUGHT BY CHECKING THE ARTIFACT RATHER THAN THE NOTE.**
+
+1. **The row count is EIGHT, not nine.** The ledger's own acceptance criterion said nine; the
+   concept is 2 + 3 + 3. The wrong number survived into the first test draft and went red, which is
+   the only reason it was found. Both records corrected.
+2. **The shipped kit carries NO chevron-right or arrow-right glyph**, contrary to the ledger's
+   starting note. The 63 icons include only `arrow-counterclockwise`, `arrow-left-right`,
+   `arrow-repeat` and `cloud-arrow-down`. Chevrons are therefore drawn in CSS from two borders;
+   no asset was added and none was needed.
+3. **The group banner is a MUTED wash, not the kit's bright parchment.** Sampled from the concept:
+   banner `rgb(140,127,111)` against a `rgb(25,34,49)` canvas. A first attempt used the kit's
+   parchment nine-slice with `fill`, which rendered a near-solid brass bar far too light.
+4. **The banner label needs per-theme ink.** Cream (`--obs-ink`) is correct over the dark wash and
+   **nearly invisible** in the light theme, where the same wash sits on a light surface. Caught by
+   reading the light capture instead of assuming the theme inverts cleanly — which is exactly the
+   rule the capture specification exists to enforce. One semantic token, defined per theme.
+
+**A FIFTH DEFECT IN MY OWN WORK, CAUGHT ON RE-READ.** The first build linked "Funding schedules" to
+`?section=payday` — a *second* funding surface — while its own code comment claimed it pointed at
+Plan. `BUILD_HANDOFF.md` line 15 is explicit: *"Funding schedules link to the existing Plan
+journey."* The row now points at `/meridian?workspace=plan`, and a guard test fails if it grows a
+section of its own.
+
+**A row with no read model is not a link.** Four rows state **Planned** and are deliberately
+non-interactive: Memory & privacy, Briefings & quiet hours, and Appearance (the concept's Appearance
+*surface* — not the existing theme toggle, which is a different thing than the row names). They have
+no route, no partial and no read model, and the build handoff requires unavailable features to say
+so rather than show a working control. A row that opened an empty page would claim a capability that
+does not exist. Wiring one is a later slice that ships the read model with it, and a guard test
+fails if an href is added without it.
+
+**Also fixed: Settings was unreachable on phone.** `.m-settings-nav` was `display: none` at
+`max-width: 900px`, so on the primary governed viewport there was no way to reach ANY section. The
+hub is now the page there. That change moved the mobile grid from three rows to four, which shifted
+`1fr` off the content row — the mobile-scroll regression test caught it, and the scroll fix is
+preserved by asserting which row belongs to `main` rather than its position. A second
+`@media (max-width: 900px)` block was merged into the existing one rather than duplicated, because
+the duplicate silently truncated the block that test parses.
+
+**Evidence.** `tests/meridian/test_settings_hub.py` adds 12 guards; four existing tests were
+**restated, each carrying its reason in the docstring** rather than deleted, where the rename or the
+structure genuinely changed (`test_meridian_workspace_invariant`, `test_action_history`,
+`test_security_settings`, `test_settings_mobile_scroll`). `test_settings_visual_preview.py` now
+asserts all five sections and the hub are servable and that every fixture is recognisably synthetic
+— which caught a trials fixture carrying no synthetic marker. Full non-browser suite **1281 passed**.
+Ruff clean, `git diff --check` clean. Capture `artifacts/observatory-settings-hub-2026-09-21/` —
+10 frames, five viewports × two themes, zero overflow, zero console errors, **both themes reviewed
+independently**. `capture_meridian_matrix.py` gained `--settings-query` so the hub or any section
+can be captured; it defaults to Connections so an existing run is unchanged.
+
+**Honest limit.** The concept draws only the hub, so the five *detail* sections have no concept
+target and **no fidelity claim is made for them**. What this slice establishes is that they are now
+capturable — which is what the task required — not that they match a concept that does not exist.
+
+**This slice changes no template that the running preview reloads from disk, and `static/` is served
+per request, so no preview restart is needed.**
+
 ## OS-038 item 5 CLOSED — the Accounts connectors are the concept's bow, not a straight rail (2026-09-21, base `7a4d34b`)
 
 **Track D's stated next move, first item.** Roadmap §6 says "close Track D's remainder (`OS-038` design gaps,

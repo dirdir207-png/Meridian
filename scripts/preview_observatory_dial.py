@@ -6,6 +6,7 @@ No app import, environment loading, database, authentication, or provider access
 import json
 import mimetypes
 import re
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
@@ -13,6 +14,12 @@ from urllib.parse import parse_qs, unquote, urlsplit
 from jinja2 import Environment, FileSystemLoader
 
 ROOT = Path(__file__).resolve().parents[1]
+# The hub's structure is declared once in meridian.settings_hub and imported here, so the
+# preview renders the SAME structure the application does. Run as a path this script does
+# not get the project root on sys.path, so add it explicitly rather than duplicating the
+# structure (a duplicated copy is exactly how a preview stops predicting the real page).
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 TODAY = {
     "safe_to_spend": {"amount": 248.50, "currency": "USD", "through_date": "2026-09-16"},
     "forecast": {"available": True, "as_of": "2026-09-08", "runway_days": 14,
@@ -169,13 +176,65 @@ SETTINGS_CONNECTIONS = {"groups": [
     {"kind": "calendar", "label": "Calendar", "connections": []},
 ]}
 
+# The four sections that had no fixture at all, so the isolated preview could not serve
+# them and Settings parity could not be claimed OR disproved for four fifths of the page
+# (`if section != "connections": send_error(404)`). Every shape below is derived from the
+# consumer that reads it -- payday.js, actions.js, security.js, trials.js -- rather than
+# invented, because a fixture that guesses produces false gap reports.
+#
+# Every value is OBVIOUSLY SYNTHETIC: the "synthetic-" id prefix convention holds, and the
+# preview banner says so on the page. These reads exist to render the shells for capture;
+# they are not evidence about live data and must never be presented as such.
+SETTINGS_PAYDAY = {
+    "pattern": {"cadence": "biweekly", "confidence": 0.92, "evidence_count": 12,
+                "next_date": "2026-09-16", "typical_amount": 1660.00},
+    "next_run": {"date": "2026-09-16", "total": 780.00, "contributions": [
+        {"commitment": "Example bill", "amount": 480.00},
+        {"commitment": "Example reserve", "amount": 300.00},
+    ]},
+    "rules": [{"id": "synthetic-rule-1", "commitment_id": "synthetic-commitment-1",
+               "kind": "fixed_per_paycheck", "amount": 300.00,
+               "commitment": "Example reserve"}],
+    "learning": {"floor": "2026-01-01", "included": 12, "excluded": 3, "set_at": None},
+    "data_freshness": {"status": "fresh", "last_updated_at": "2026-09-08T13:42:00Z"},
+}
 
-def settings_preview_html():
+SETTINGS_ACTIONS = {"actions": [
+    {"id": "synthetic-action-1", "type": "set_rent", "state": "verified",
+     "rationale": "Owner stated an exact value.", "proposed_at": "2026-09-08T13:42:00Z"},
+    {"id": "synthetic-action-2", "type": "reallocate_surplus", "state": "pending",
+     "rationale": "Composed from the current shortfall.", "proposed_at": "2026-09-08T13:42:00Z"},
+]}
+
+SETTINGS_PASSKEYS = {"passkeys": [
+    {"id": "synthetic-passkey-1", "name": "Example device", "created_at": "2026-09-08T13:42:00Z",
+     "last_used_at": "2026-09-08T13:42:00Z"},
+]}
+
+SETTINGS_TRIALS = {"deadlines": [
+    {"service": "Synthetic trial", "kind": "converts_to_paid", "due_at": "2026-09-12",
+     "overdue": "false"},
+]}
+
+#: Settings sections the isolated preview can serve, and the read each one needs. The hub
+#: is the no-section landing page.
+SETTINGS_SECTIONS = ("connections", "payday", "actions", "security", "trials")
+
+
+def settings_preview_html(section=None):
+    """Render Settings at `section` (None = the hub) against synthetic reads only."""
+    from meridian.settings_hub import SETTINGS_HUB
+
     env = Environment(loader=FileSystemLoader(ROOT / "templates"), autoescape=True)
     html = env.get_template("meridian/settings.html").render(
-        active_workspace="", settings_active=True, active_settings_section="connections",
+        active_workspace="", settings_active=True, active_settings_section=section,
+        settings_hub=SETTINGS_HUB,
     )
-    banner = '<div class="design-preview-banner">Synthetic Settings preview · no bank connection</div>'
+    label = section or "hub"
+    banner = (
+        f'<div class="design-preview-banner">Synthetic Settings preview ({label}) '
+        '· no bank connection</div>'
+    )
     styles = '<style>.design-preview-banner{position:fixed;z-index:1000;bottom:0;left:0;right:0;padding:4px;background:#101a28;color:#eee4cf;text-align:center;font:10px system-ui}*{animation:none!important;transition:none!important}</style>'
     return html.replace("</head>", styles + "</head>").replace("</body>", banner + "</body>")
 
@@ -213,13 +272,26 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/meridian"):
             body, mime = preview_html().encode(), "text/html; charset=utf-8"
         elif path == "/meridian/settings":
-            section = parse_qs(urlsplit(self.path).query).get("section", ["connections"])[0]
-            if section != "connections":
-                self.send_error(404, "Only synthetic Connections is available in this preview")
+            # No section renders the HUB; a known section renders that section. An unknown
+            # section is still a 404: the preview must not pretend to serve a surface it
+            # has no fixture for, because a silent fallback would make a missing fixture
+            # look like a working page in a capture.
+            section = parse_qs(urlsplit(self.path).query).get("section", [None])[0]
+            if section is not None and section not in SETTINGS_SECTIONS:
+                self.send_error(404, "Unknown synthetic Settings section")
                 return
-            body, mime = settings_preview_html().encode(), "text/html; charset=utf-8"
+            body = settings_preview_html(section).encode()
+            mime = "text/html; charset=utf-8"
         elif path == "/api/meridian/settings/connections":
             body, mime = json.dumps(SETTINGS_CONNECTIONS).encode(), "application/json"
+        elif path == "/api/meridian/settings/payday":
+            body, mime = json.dumps(SETTINGS_PAYDAY).encode(), "application/json"
+        elif path == "/api/meridian/actions":
+            body, mime = json.dumps(SETTINGS_ACTIONS).encode(), "application/json"
+        elif path == "/api/auth/passkeys":
+            body, mime = json.dumps(SETTINGS_PASSKEYS).encode(), "application/json"
+        elif path == "/api/meridian/trials/deadlines":
+            body, mime = json.dumps(SETTINGS_TRIALS).encode(), "application/json"
         elif path == "/api/meridian/today":
             body, mime = json.dumps(TODAY).encode(), "application/json"
         elif path == "/api/meridian/plan":

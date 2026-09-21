@@ -29,7 +29,7 @@
 
     {% include 'meridian/partials/settings-navigation.html' %}
 
-    <main id="main" class="m-settings-main" tabindex="-1">
+    <main id="main" class="m-settings-main{% if not active_settings_section %} m-settings-main--hub{% endif %}" tabindex="-1">
       {% if active_settings_section == 'connections' %}
         {% include 'meridian/partials/connections.html' %}
       {% elif active_settings_section == 'payday' %}
@@ -41,7 +41,18 @@
       {% elif active_settings_section == 'trials' %}
         {% include 'meridian/partials/trials.html' %}
       {% else %}
-        <p class="m-empty-note">Payday &amp; Funding is the next implementation slice.</p>
+        {# No section: the hub IS the page. The concept's grouped directory is the
+           navigation, so it stays in the nav column, and the main column states what
+           this surface is rather than leaving an empty pane. #}
+        <div class="m-settings-hub-intro">
+          <p class="m-workspace-kicker">Settings</p>
+          <h1>How Meridian works for you.</h1>
+          <p>
+            Choose a group on the left. Each row opens the surface that serves it; rows
+            that state <strong>Planned</strong> have no surface yet, and say so rather
+            than opening an empty page.
+          </p>
+        </div>
       {% endif %}
     </main>
 

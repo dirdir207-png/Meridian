@@ -11,6 +11,7 @@ was clipped by the shell, the column could not scroll because it was not a scrol
 and the document could not scroll because nothing exceeded it. Both the page and the column
 were dead ends.
 """
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -37,7 +38,23 @@ def test_the_settings_content_column_is_the_scroller_on_a_phone():
     shell = _rule(block, "  .m-settings-shell")
     # `1fr` alone refuses to shrink below its content, which is what pushed the content past
     # the shell's clip in the first place.
-    assert "grid-template-rows: auto minmax(0, 1fr) auto;" in shell
+    #
+    # RESTATED 2026-09-21 for the Settings hub: the row count went from three to four because
+    # the nav is now a WIDE row on phone (it used to be `display: none`, which left Settings
+    # with no way to reach any section on phone at all). The property that matters is
+    # unchanged -- the CONTENT row is still `minmax(0, 1fr)`, so it can shrink and scroll --
+    # but `main` is no longer the third row, so a literal row list stopped describing the
+    # layout. This checks the row that belongs to `main` instead of its position.
+    assert 'grid-template-areas: "topbar" "settings-nav" "main" "dock";' in shell
+    rows = re.search(r"grid-template-rows:\s*([^;]+);", shell)
+    assert rows, "the mobile shell must declare its rows explicitly"
+    # Split on top-level whitespace only: a naive `.split()` breaks `minmax(0, 1fr)` apart.
+    declared = [t.replace(" ", "") for t in re.findall(r"minmax\([^)]*\)|\S+", rows.group(1))]
+    assert len(declared) == 4, rows.group(1)
+    # Row 3 belongs to `main`: it must be the shrinkable one.
+    assert declared[2] == "minmax(0,1fr)", rows.group(1)
+    # `auto` for the nav and the dock, so neither collapses to zero height.
+    assert declared[1] == "auto" and declared[3] == "auto", rows.group(1)
 
 
 def test_the_desktop_settings_layout_is_untouched_by_that_fix():

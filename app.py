@@ -78,6 +78,7 @@ from meridian.memory_actions import (
 )
 from meridian.refresh import MeridianRefreshService
 from meridian.repository import FinancialRepository
+from meridian.settings_hub import SETTINGS_HUB, SETTINGS_SECTIONS as SETTINGS_HUB_SECTIONS
 from meridian.sync_gate import MeridianSyncGate
 
 app = Flask(__name__)
@@ -3182,14 +3183,25 @@ def meridian():
 @app.route('/meridian/settings')
 @login_required
 def meridian_settings():
-    """Meridian utility settings; financial workspaces remain unchanged."""
-    section = request.args.get('section', 'connections')
-    if section not in {'connections', 'payday', 'actions', 'security', 'trials'}:
+    """Meridian utility settings; financial workspaces remain unchanged.
+
+    With no `section` this renders the Settings HUB -- the 09-18 concept's grouped
+    directory of three groups and nine rows (meridian.settings_hub, which is also the
+    single declaration of that structure). With a section it renders that detail surface
+    exactly as before, so every existing link stays valid and no route is added.
+
+    An UNKNOWN section still redirects to Connections rather than to the hub: that keeps
+    the behaviour a bad link already produced, instead of silently changing where an
+    unrecognised section lands.
+    """
+    section = request.args.get('section')
+    if section is not None and section not in SETTINGS_HUB_SECTIONS:
         return redirect(url_for('meridian_settings', section='connections'))
     return render_template(
         'meridian/settings.html',
         active_workspace=None,
         active_settings_section=section,
+        settings_hub=SETTINGS_HUB,
         settings_active=True,
     )
 

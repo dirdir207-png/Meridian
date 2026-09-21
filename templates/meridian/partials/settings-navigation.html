@@ -1,27 +1,83 @@
-<aside class="m-settings-nav" aria-label="Settings sections">
-  <h1>Settings</h1>
-  <nav>
-    <a
-      href="/meridian/settings?section=connections"
-      {% if active_settings_section == 'connections' %}aria-current="page"{% endif %}
-    >Connections</a>
-    <a
-      href="/meridian/settings?section=payday"
-      {% if active_settings_section == 'payday' %}aria-current="page"{% endif %}
-    >Payday &amp; Funding</a>
-    <a
-      href="/meridian/settings?section=actions"
-      {% if active_settings_section == 'actions' %}aria-current="page"{% endif %}
-    >Actions &amp; approvals</a>
-    <a
-      href="/meridian/settings?section=trials"
-      {% if active_settings_section == 'trials' %}aria-current="page"{% endif %}
-    >Trials &amp; renewals</a>
-    <a
-      href="/meridian/settings?section=security"
-      {% if active_settings_section == 'security' %}aria-current="page"{% endif %}
-    >Security &amp; data</a>
+{# Settings hub — the 09-18 concept's grouped directory.
+   Governing authority: design/observatory-extension-2026-09-18/concepts/settings.png.
+   The concept is a hub of grouped rows leading to detail surfaces, with three parchment
+   group banners (CONNECTIONS / VIRGIL & AUTHORITY / PREFERENCES) and nine rows, each an
+   icon medallion, a title, a subtitle and a chevron.
 
+   Three things this file is deliberate about:
 
-  </nav>
+   1. ONE ROW PER CONCEPT ROW, pointing at the section that serves it. The nine concept
+      rows resolve to five real routes (several rows share a surface -- both Connections
+      rows open the connections ledger, which already groups them by kind). Every href is a
+      route that already existed; this slice adds no route.
+   2. A ROW WITH NO READ MODEL IS NOT A LINK. "Memory & privacy", "Briefings & quiet hours"
+      and "Appearance" have no route, no partial and no read model today. The build handoff
+      is explicit that unavailable features must "say unavailable/planned, not show working
+      switches", and a row that opens an empty page would claim a surface that does not
+      exist. They render as non-interactive rows that state "Planned". Wiring one is a
+      later slice with its own read model; this file grants no capability.
+   3. The group banners reuse the parchment nine-slice already serving `.obs-evidence-ticket`,
+      and the row glyphs are the SHIPPED KIT's own SVGs referenced as CSS masks (the
+      established pattern), so no new artwork is invented and the assets stay single-sourced
+      under static/img where ASSET_MANIFEST is their authority. #}
+<aside class="m-settings-nav" aria-label="Settings sections" data-settings-hub>
+  <header class="m-settings-hub-head">
+    {% if active_settings_section %}
+      {# The concept's "‹ Back". On a detail surface the hub is the way out, and this is
+         also what makes the grouped rows discoverable from inside a section. #}
+      <a class="m-settings-back" href="/meridian/settings">
+        <span class="m-settings-back-chevron" aria-hidden="true"></span>
+        Settings
+      </a>
+    {% else %}
+      <h1>Settings</h1>
+      {# The concept's violet wavy rule: the same asset Today/Activity/Accounts use. #}
+      <span class="m-title-rule m-settings-title-rule" aria-hidden="true"></span>
+      <p class="m-settings-hub-sub">How Meridian works for you.</p>
+    {% endif %}
+  </header>
+
+  {% for group in settings_hub %}
+    <section class="m-settings-group" data-settings-group="{{ group.key }}">
+      <h2 class="m-settings-group-banner">
+        {{ group.label }}
+      </h2>
+      <ul class="m-settings-rows">
+        {% for row in group.rows %}
+          <li>
+            {% if row.href %}
+              <a class="m-settings-row" href="{{ row.href }}"
+                 data-settings-row="{{ row.key }}"
+                 {% if active_settings_section == row.section %}aria-current="page"{% endif %}>
+            {% else %}
+              <div class="m-settings-row m-settings-row-planned"
+                   data-settings-row="{{ row.key }}" aria-disabled="true">
+            {% endif %}
+              <span class="m-settings-row-icon m-settings-row-icon--{{ row.tint }}" aria-hidden="true">
+                <span class="m-settings-icon m-settings-icon--{{ row.icon }}"></span>
+              </span>
+              <span class="m-settings-row-copy">
+                <span class="m-settings-row-label">{{ row.label }}</span>
+                <span class="m-settings-row-detail">
+                  {%- if row.unavailable -%}
+                    {{ row.detail }} · <span class="m-settings-row-tag">Planned</span>
+                  {%- else -%}
+                    {{ row.detail }}
+                  {%- endif -%}
+                </span>
+              </span>
+              {% if row.href %}
+                <span class="m-settings-row-chevron" aria-hidden="true"></span>
+              {% endif %}
+            {% if row.href %}</a>{% else %}</div>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endfor %}
+
+  <p class="m-settings-hub-foot">
+    <span class="m-settings-foot-star" aria-hidden="true"></span>
+    Capabilities appear only when available.
+  </p>
 </aside>
