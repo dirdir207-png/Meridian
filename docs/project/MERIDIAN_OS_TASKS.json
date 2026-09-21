@@ -1248,6 +1248,7 @@
     },
     {
       "id": "VIRGIL-A0",
+      "progress": "PARTLY MOOT, per the owner, 2026-09-21: \"Also xcode, all of that, already done... on the 15th I think.\" The iOS TOOLCHAIN half of this task was completed around 2026-09-15, so it is not a blocker and must not be re-derived as one -- this title is exactly the kind that reads as an owner gate and then gets re-raised. What remains under this id is the CONTRACTS half (north-star, threat model, Meridian-Harness-iOS seams), and the owner states the decision it formalises has already been made more than once.",
       "title": "Approve Virgil contracts and establish the compatible iOS toolchain",
       "phase": "virgil-foundation",
       "status": "ready",
@@ -1288,7 +1289,7 @@
     },
     {
       "id": "VIRGIL-A1",
-      "blocked_reason": "THE ACTUAL GATE, and it is AGENT WORK, not an owner decision. Owner, 2026-09-21: \"The next part A1 (or whatever it is) is YOUR task, and is the actual gate.\" This is where the Virgil spine is actually held up. Earlier sessions recorded it as `blocked` with no reason, which invited the invention of an owner-gate; the owner has now stated the opposite plainly, and stated that the decision VIRGIL-A0 formalises has already been made more than once. So nothing is pending on the owner. The task is to do the work.",
+      "blocked_reason": "THE ACTUAL GATE, and it is AGENT WORK, not an owner decision. Owner, 2026-09-21: \"The next part A1 (or whatever it is) is YOUR task, and is the actual gate.\" This is where the Virgil spine is actually held up. Earlier sessions recorded it as `blocked` with no reason, which invited the invention of an owner-gate; the owner has now stated the opposite plainly, and stated that the decision VIRGIL-A0 formalises has already been made more than once. So nothing is pending on the owner. The task is to do the work. The iOS toolchain is NOT the blocker either: the owner confirms it was done around 2026-09-15 (see VIRGIL-A0), so any claim that this waits on Xcode, signing or the toolchain is false.",
       "title": "Authenticated read-only Virgil voice vertical slice",
       "phase": "virgil-reactive",
       "status": "ready",
