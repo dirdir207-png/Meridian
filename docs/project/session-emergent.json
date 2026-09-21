@@ -72,10 +72,11 @@
     },
     {
       "summary": "Desktop Settings: the hub renders inside the 210px rail with heavy text wrapping",
-      "why": "At >=901px the eight hub rows and their group banners sit in the narrow settings rail and wrap onto four or five lines, while the main column holds only an intro paragraph. Measured IDENTICAL before and after this session's CSS fix, so it dates from OS-065 and is not a regression. It is a desktop adaptation of the 2026-09-18 concept, which is a PHONE frame and therefore specifies no desktop treatment -- so inventing one is a design decision, not a bug fix. Needs the owner's visual authority: either promote the hub into the main column at desktop, or accept the rail and widen it.",
+      "why": "Promoted rather than left parked, because the owner made the decision this entry said it needed. At >=901px the eight hub rows and their group banners sat in the narrow settings rail and wrapped onto four or five lines, while the main column held only an intro paragraph; the 2026-09-18 concept is a PHONE frame and specified no desktop treatment, so inventing one was a design decision rather than a bug fix. Owner's decision, 2026-09-21: 'Promote the hub into the main column at desktop.' Folded into OS-081 together with the reachability defect found the same day -- every Settings link in the product points at ?section=connections, so the hub had no entry point at all.",
       "arose": "2026-09-21",
-      "decision_owed": true,
-      "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (checkpoint: Track D design-fidelity close-out, OS-038, which is where the remaining concept-vs-current visual gaps are reconciled)"
+      "promoted_to": "OS-081",
+      "decision_owed": false,
+      "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (checkpoint: Track D design-fidelity close-out, OS-038) -- still the right home for the RECORD, but the work itself is now scheduled under OS-081"
     },
     {
       "summary": "Investigator metadata-only model payload needs meaningful source facts for the user-facing surface",
@@ -84,6 +85,13 @@
       "promoted_to": "OS-076",
       "parked_in": "design/investigator-medallions-2026-09-21/IMPLEMENTATION.md",
       "decision_owed": true
+    },
+    {
+      "summary": "Virgil's panel summons the soft keyboard on open and leaves a black screen on close",
+      "why": "Owner-reported from the live app on his phone: the keyboard occludes the full-height sheet when the panel opens, and closing leaves a black or partially-black screen. advisor_fab.js:99 focuses the composer inside the open branch; :410-411 reopens the panel on every page load when localStorage 'sc_advisor_open' is '1', so the keyboard can appear with no user action at all; and the close branch (:103-116) delegates to shell.closeSheet() or tears down the panel itself, after which the page behind is still dark. PROMOTED to OS-080 so it is tracked rather than remembered. Deliberately NOT fixed in the session that found it, at the owner's instruction -- 'keep this in mind, don't let it derail'.",
+      "arose": "2026-09-21",
+      "promoted_to": "OS-080",
+      "decision_owed": false
     }
   ]
 }

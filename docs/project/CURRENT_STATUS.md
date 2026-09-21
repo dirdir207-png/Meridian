@@ -1,5 +1,62 @@
 # Enhanced SimpleCrew — Current Status
 
+## Three findings from checking the artifacts against the product: untracked assets, an unreachable Settings hub, and an AI that was never broken (`OS-080`, `OS-081`) (2026-09-21, base `f940cda`)
+
+**Everything here came from asking your question the other way round: not "was it built?" but "can it be
+reached, and is it actually in the repository?"** Settings and Virgil were both built, captured and committed on
+2026-09-21 after the earlier drift was caught (`f7bd962`, `0e73802`) — the records were wrong, the work was not
+missing. What follows is what the *product* still could not do.
+
+**1. Shipped CSS referenced sixteen assets that were never committed** — fixed in `791b1bb`. 61 of the 62 icons in
+`static/img/meridian/observatory/kit-2026-09-18/icons/` were **untracked**, along with the kit's MIT licence, while
+`advisor.css` (Virgil), `settings.css` (the Settings hub), `accounts.css` and `activity.css` referenced sixteen of
+them as CSS masks. They rendered in this working tree and in every governed capture **because the files were simply
+on disk**, so the capture harness, the browser tests and `test_settings_hub.py`'s existence check all passed; on a
+clean clone or anything built from git, all sixteen would have 404'd. The new
+`tests/meridian/test_static_assets_tracked.py` asks the **git index** instead of the working tree, which is the only
+view that can see this. It was written first and confirmed to fail on the untracked kit before the kit was added.
+
+**2. The Settings hub has no entry point, and is unusable at desktop width** — recorded as `OS-081`. Every Settings
+control in the product deep-links **past** the hub into a section: `templates/meridian/index.html:54` (topbar),
+`templates/meridian/partials/navigation.html:77` (rail) and `accounts.html:13,82` all carry
+`/meridian/settings?section=connections`. The only link to the bare hub is a "Back" link **inside** Settings, so the
+hub is reachable only by typing the URL. Your own phone's requests prove it: `?section=connections` was fetched,
+never the hub. The concept draws the **hub** as the Settings page, so that is the defect. Separately, at ≥901px the
+hub sits in the ~210px rail with subtitles wrapping three to five lines and PREFERENCES below the fold, while the
+main column holds three lines of intro copy — the item that was parked pending your visual authority, which you have
+now given: **promote the hub into the main column at desktop.** The durable fix is a guard test, because the hub was
+complete against its own acceptance criteria and ten reviewed captures while being unreachable in the product: every
+one of those checks entered the route directly, and a capture harness supplies the URL while a user follows a link.
+
+**3. Virgil: two defects you photographed, both invisible to the gate** — recorded as `OS-080`. Opening the panel
+**summons the soft keyboard** (`advisor_fab.js:99` focuses the composer inside the open branch, worsened by `:410`
+reopening the panel on every page load from `localStorage`), and **closing leaves a black or partially-black screen**
+(the close branch at `:103-116` delegates to `shell.closeSheet()` or tears down the panel, and the page behind stays
+dark). The capture matrix records the panel **open** with animations disabled, so it never raises a keyboard and
+never performs a close; sixteen surface guards assert restraint rather than those two transitions. A captured state
+is not the interaction that produces it.
+
+**4. The AI was never broken — and the suspicion was reasonable, because the app's own message is wrong.** You asked
+what broke DeepSeek. Nothing did: `.env` defines exactly one provider key (`DEEPSEEK_API_KEY`), the preview's loader
+picks it up, and `build_llm_chain()` reports `['deepseek']` with `llm_configured()` **True** — DeepSeek is configured
+and is the only provider. Your phone's log shows `GET /api/advisor/status` returning **200** at 11:42:55, and the
+transcript you photographed is rehydrated from `localStorage` (the panel keeps the last 20 messages), which is why no
+matching `POST` appears in the current server log. Four real defects sit underneath the confusion, and none of them
+is the key:
+- **The unconfigured message names the wrong variables.** `static/js/ui/advisor_fab.js:130` tells you to add
+  `OPENAI_API_KEY` or `OPENROUTER_API_KEY` — never `DEEPSEEK_API_KEY`, the one that is set and the documented primary.
+- **`.env` is loaded by exactly one entry point.** `run_preview.py::_load_local_env()` (added in `1a9c8b8`). `app.py`
+  has no loader and `python-dotenv` is not installed, so `Dockerfile:26` (`gunicorn app:app`) and a direct
+  `python app.py` both **ignore your .env** and report "No AI provider is configured".
+- **`/api/advisor/status` misstates the model**, returning `gpt-4o-mini` (from `llm_model()`, which reads only
+  `OPENAI_MODEL`) while the chain is DeepSeek. The panel ignores the field, so it is not user-visible.
+- **One provider makes the cooldown read like a fault.** A single transient DeepSeek failure puts it on a 300s
+  cooldown, and the next message says *"All AI providers are cooling down after recent failures"*. `/health` is
+  unauthenticated but returns only `{"status":"healthy"}`, so provider state cannot be checked without logging in.
+
+**No AI, provider or configuration behaviour was changed.** The only code committed here is the asset fix and its
+guard test.
+
 ## Safe to Spend ignored a NEGATIVE reserve — owner-reported, fixed, and now explained (`OS-078`, `D-019`) (2026-09-21, base `874b79c`)
 
 **Your finding, confirmed against Crew's own screen.** You reported Free to Spend **424.90** where the figure should be
