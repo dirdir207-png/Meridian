@@ -87,27 +87,48 @@ function advisorSetOpen(open) {
         advisorLoadBriefing();
         if (shell && typeof shell.openSheet === 'function') {
             // Reuse the shell's sheet primitive: it handles Escape, inert
-            // background until the final close, and focus restore.
+            // background until the final close, focus restore, and the initial
+            // focus target (`[data-sheet-initial-focus]`).
             shell.openSheet(panel, { modal: true });
         } else {
             panel.hidden = false;
             panel.setAttribute('data-open', '');
             panel.setAttribute('role', 'dialog');
             panel.setAttribute('aria-modal', 'true');
+            // The same initial-focus rule the shell applies, so the two paths agree about where
+            // focus lands instead of one focusing the composer and the other the panel.
+            const initial = panel.querySelector('[data-sheet-initial-focus]');
+            if (initial && typeof initial.focus === 'function') initial.focus();
         }
-        const input = document.getElementById('advisor-fab-input');
-        if (input) input.focus();
+        // OPENING VIRGIL MUST NOT SUMMON THE SOFT KEYBOARD. Focus still moves INTO the dialog --
+        // it has to, or the sheet becomes a keyboard trap -- but it lands on the panel rather than
+        // on the composer. On a phone the keyboard covers the briefing and the transcript the
+        // owner opened the panel to read, which made the surface feel broken. The keyboard
+        // appears when he taps the composer, which is when he wants it.
+        //
+        // This used to call `input.focus()` here, and removing only this line would NOT have
+        // fixed the defect: the input also carried `data-sheet-initial-focus`, which the shell
+        // focuses on open. Two causes, one symptom -- and fixing the visible one alone would have
+        // produced a "fixed" claim with the keyboard still appearing.
         try { localStorage.setItem('sc_advisor_open', '1'); } catch (e) {}
         const log = _advisorLog();
         if (log) _advisorScrollToEnd();
     } else {
         if (shell && typeof shell.closeSheet === 'function') {
             shell.closeSheet();
-        } else {
-            panel.hidden = true;
-            panel.removeAttribute('data-open');
-            panel.removeAttribute('role');
-            panel.removeAttribute('aria-modal');
+        }
+        // The closed state is asserted on the ELEMENT, in both paths, rather than left to the
+        // shell's stack bookkeeping. `#advisor-panel` is `display: none` only while it lacks
+        // [data-open] (advisor.css:105,145), and on a phone it covers everything but a 12px margin
+        // with a `--m-surface` fill, which is dark navy in the dark theme. So one missed stack pop
+        // left a near-full-screen dark sheet the owner could not dismiss: "a black or partially
+        // black screen". Doing the teardown here makes the visual outcome independent of whether
+        // the pop happened, and it is idempotent when the shell already did it.
+        panel.hidden = true;
+        panel.removeAttribute('data-open');
+        panel.removeAttribute('role');
+        panel.removeAttribute('aria-modal');
+        if (!shell || typeof shell.closeSheet !== 'function') {
             const fab = document.getElementById('advisor-fab');
             if (fab && typeof fab.focus === 'function') fab.focus();
         }

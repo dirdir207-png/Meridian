@@ -48,6 +48,13 @@
   aria-modal="true"
   aria-label="Virgil advisor"
   hidden
+  {# The sheet's initial focus target, deliberately the PANEL and not the composer. The shell
+     focuses `[data-sheet-initial-focus]` on open (shell.js:123-125), and while that marker sat
+     on the text input, opening Virgil raised the soft keyboard over the briefing the owner opened
+     the panel to read. `tabindex="-1"` keeps it a valid focus target without putting it in the
+     tab order, which is the usual dialog pattern. #}
+  tabindex="-1"
+  data-sheet-initial-focus
 >
   <header class="m-advisor-header">
     <div class="m-advisor-heading">
@@ -201,7 +208,6 @@
     <input
       type="text"
       id="advisor-fab-input"
-      data-sheet-initial-focus
       class="m-advisor-input"
       placeholder="Ask a follow-up…"
       autocomplete="off"
