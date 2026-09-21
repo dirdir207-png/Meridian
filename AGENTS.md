@@ -22,6 +22,19 @@ Use: DISCOVER → RECONCILE → ARCHITECT → PLAN → APPROVE → IMPLEMENT →
 
 Implement one bounded vertical slice at a time. Prefer test-first development. Run targeted tests, relevant browser/accessibility checks, lint, and `git diff --check`. Review the final diff for secrets and unrelated changes. Update `docs/project/CURRENT_STATUS.md` and commit only intended files.
 
+## Continuity — momentum and project state are checked together
+
+Every continuation, compaction resumption, or new session must reconcile **two** inputs before acting, and must never act on one alone:
+
+1. **Project state** — `docs/project/MERIDIAN_ROADMAP.md` (the trajectory and its stated next move), the task ledger, `docs/project/MERIDIAN_DECISIONS.md`, and open owner gates.
+2. **Session momentum** — what this session just did, and the claims table in `docs/project/AGENT_COORDINATION.md`.
+
+**Neither is authoritative by itself.** Session momentum is not the roadmap: finishing a slice creates an obvious next step, and that step can still be off the critical path. Conversely the roadmap is not a plan for this hour — it may already be satisfied, or superseded by a newer owner decision.
+
+The rule: **state in writing where the candidate work sits on the roadmap before starting it.** If it is not on the current critical path or in the ledger, say so plainly, record it as an earmark if it is worth keeping, and let the owner choose. Do not silently substitute momentum for priority, and do not quote a fact about the current code as though it were a design constraint.
+
+Existing workstreams can hold priority over new ones; the roadmap's own stated next move wins unless the owner redirects.
+
 ## Financial safety
 
 Agents may observe, explain, simulate, forecast, investigate, challenge, teach, draft, prepare, test, and propose. Only the constrained executor may mutate financial state. Never expose secrets. Never auto-retry mutations. Never perform external transfers autonomously. Preserve proposal → approval → execution → provider verification. Treat uncertain writes as unknown until readback. Keep actual, inferred, and simulated values separate; stale data must remain visibly stale; missing data is not zero.

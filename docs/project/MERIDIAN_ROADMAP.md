@@ -471,6 +471,15 @@ Track C (V1 ─► V2 ─► V3 ─► V4 ─► V5 ─► V6 ─► V7)   V8 ga
   funding-math arc has reached its measurement phase (`OS-058`, the 2026-10-02 event) and the reserve-versus-amount
   gap display (`OS-060`) is the next product slice. The council stays high priority, with each added role proving
   its value on a real user task.
+- **Evidence ingestion is an in-flight lane and must be closed before new Track C work is opened**
+  (added 2026-09-21). `OS-067` (high, `in_progress`) is the owner's own 2026-09-20 report that evidence was
+  stale, the calendar was wired to nothing, and no document would open. Two of its three parts are done and
+  verified; **the outstanding part is the CALENDAR, whose connector is still referenced only for its OAuth
+  scope constant while a stored token sits unused.** Because the roadmap previously named neither `OS-067`
+  nor the calendar, the project's stated next move and its highest-priority in-flight task  which
+  is precisely the drift `AGENTS.md`'s continuity rule now forbids. Naming it here makes the rule enforceable.
+  `OS-068`/`OS-069`/`OS-070` are earmarked Track C capability work and are **not** on this path; see the
+  ledger for their triggers and limits.
 ---
 
 ## 7. Verification strategy and operational hazards

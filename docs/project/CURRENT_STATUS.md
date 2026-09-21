@@ -33,6 +33,70 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## CONTINUITY RULE ADDED + OS-067 session record (2026-09-21, base `1b095b5`)
+
+### The rule the owner asked for, now in `AGENTS.md`
+
+Owner: *"Can we put something in so that continued work always self references both session momentum and
+project state as a whole?"* It is added as its own `AGENTS.md` section, because that file is re-read at every
+continuation, compaction resumption and new session — a rule kept anywhere else is read only when someone
+already suspects they need it.
+
+Every continuation must reconcile **two** inputs and never act on one alone: **project state** (the roadmap and
+its stated next move, the task ledger, the decisions, open owner gates) and **session momentum** (what this
+session just did, and the claims table). Neither is authoritative by itself. Session momentum is not the
+roadmap, because finishing a slice creates an obvious next step that can still be off the critical path; and
+the roadmap is not a plan for this hour, because it may already be satisfied or superseded by a newer owner
+decision. The operative requirement is to **state in writing where candidate work sits on the roadmap before
+starting it**, to record it as an earmark when it is worth keeping but not next, and to let the owner choose.
+It also forbids quoting a fact about the current code as though it were a design constraint.
+
+**Why it was needed, stated plainly.** This session ended with me proposing three pieces of work from momentum
+and presenting them as the natural next steps. On checking, **none was on the critical path** — the roadmap
+already had a stated next move (Track D's remainder, then Track I.1), and OS-067 was still `in_progress` with a
+named unfinished part. The three proposals were legitimate ideas, but they were *my* ideas presented in the
+roadmap's clothes, which is exactly the drift the rule now prevents.
+
+### The session's actual work, against the roadmap rather than against momentum
+
+**OS-067 — in progress, high priority, and its remaining named gap is the CALENDAR.** Its resolution field
+already records the unfinished part verbatim: *"the calendar connector remains wired to nothing."* The three
+things the owner originally reported are two-thirds done: polling is implemented and tested, the blob-loss root
+cause is fixed, and the document-open failure is fixed. **The calendar leg is the one piece of OS-067 still
+outstanding**, and it sits on the critical path in a way the earmarked ideas do not.
+
+Shipped this session against that task:
+
+- **`38763e0`** — a browser navigating to missing evidence now gets a readable page instead of raw JSON. The
+  route was correct; a new-tab link was being handed an API payload.
+- **`3a70ad5`** — the silent data-loss root cause: `ingest_record` wrote the metadata row BEFORE the blob inside
+  `except Exception: pass`, so a failed write left a complete-looking row pointing at nothing. Content is now
+  written first, failures propagate, and a missing blob store is refused. That mechanism is how **729 of 775**
+  items became unopenable, invisibly, for weeks.
+- **`29bd2fc`** + **`d7b926d`** — charge matching on a VERIFIABLE basis (amount + a corroborating date), because
+  "is this a bill email?" cannot be checked against anything while "is this amount a real charge?" can. The dry
+  run for the backfill caught the old amount-only matcher producing **270 links from 45 receipts**; the rewrite
+  produces **9**, each inspected individually.
+- **`c8d6d69`** — the owner's decision not to backfill the 729 broken rows, recorded so it is not re-proposed.
+- **`339888f`**, **`1b095b5`** — **D-016** and its amendment: the harness *and outside tools* are a sanctioned
+  extension surface, and the boundary is **AUTHORITY, not mechanism**. Owner-directed action through a tool
+  (computer use operating an app as the owner) is legitimate and is not a bypass; Meridian's own authority is
+  unchanged; a UI-driven mutation is unknown until read back and is never auto-retried.
+
+**Live state at this base:** 820 mail items, **91 with content** (46 original + 45 backfilled receipts),
+729 missing by owner decision, 27 links of which **9 are date-verified receipt-to-charge pairs**. Evidence poll
+reports `fetched=1` from the iCloud leg, confirming the poll-summary fix is live; `outcome=degraded` is the
+honest report that the Gmail leg's tokens are dead while iCloud works.
+
+### Earmarked, not started, recorded so they stop re-emerging as improvisation
+
+`OS-068` plan-page invoice precision (the matcher is loose by design; false positives observed on Verizon,
+Xfinity and Eversource) · `OS-069` detect charges the ledger sees but Meridian does not model, starting from the
+CHARGE rather than from a sender filter — proven by finding `fruitful membership` at $48/mo that no email
+keyword had surfaced · `OS-070` trial watch, which your own ledger already justifies with `Unifyed.ai Trial`
+−39.99 having silently converted. All three are Track C capability-spine work and each carries an explicit
+"not authorised to start" limit.
+
 ## READ-ONLY — OS-060: a bill the reserve cannot cover now reads as an exposure (2026-09-20, base `5db363c`)
 
 **The owner's real problem.** The reserve is a **one-way lock** — money goes in and cannot come back out — and
