@@ -159,3 +159,54 @@ def test_direct_mutation_runs_executor_proposal_does_not(monkeypatch):
     assert prop["routing_direct"] is False
     assert prop["action"]["state"] == "proposed"
     assert calls == [], "AI-interpreted mutation must NOT reach the executor until approved"
+
+
+# ── Payday (OS-083): the owner's rule, pinned for the paycheck funding plan ──
+# The owner, 2026-09-21: "actions directly made by me in the app circumvent the need for proposal,
+# I can directly execute." Both halves are pinned below, and the second matters as much as the
+# first: a change that made every payday edit direct would delete an approval gate, which is the
+# opposite failure and the worse one.
+#
+# Why this type specifically: the paycheck funding plan IS Crew's payday mechanism, and three
+# operations for it already ship with executors and readback verifiers
+# (meridian/crew_write_actions.py:674-685), so payday is the first non-plan-level Crew write whose
+# route needed confirming. It is deliberately NOT in _PLAN_LEVEL_TYPES.
+
+
+def test_owner_direct_payday_edit_executes_without_a_proposal():
+    """A direct, fully-specified payday edit must NOT be parked for approval.
+
+    The params are the ones docs/project/write-coverage.json documents for this type rather than
+    invented ones: fundingPlanId is the identity the readback verifier uses, and the verifier
+    compares name and amount.
+    """
+    d = classify_action(
+        Provenance.OWNER_DIRECT.value,
+        "update_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan-123", "amount": 1200.0, "deterministic": True},
+    )
+    assert d.requires_proposal is False, (
+        "the owner's own unambiguous payday edit was routed to a proposal; the write model keys on "
+        "intent-confidence and determinism, not on who initiated"
+    )
+    assert "owner-direct" in d.reason
+
+
+def test_composed_or_uncertain_payday_edit_still_requires_a_proposal():
+    """The approval gate survives: an assembled or low-confidence payday change proposes."""
+    composed = classify_action(
+        Provenance.AI_COMPOSED.value,
+        "update_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan-123", "amount": 1200.0},
+    )
+    assert composed.requires_proposal is True
+
+    uncertain = classify_action(
+        Provenance.OWNER_DIRECT.value,
+        "update_crew_paycheck_funding_plan",
+        {"fundingPlanId": "plan-123", "amount": 1200.0},
+        low_confidence=True,
+    )
+    assert uncertain.requires_proposal is True, (
+        "a low-confidence payday edit executed directly, which removes the owner's approval gate"
+    )
