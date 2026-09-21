@@ -55,9 +55,13 @@ def _goto_and_open(page):
 
 def test_opening_does_not_focus_the_composer(browser):
     """The keyboard must not appear by itself. Focus must still move INTO the dialog."""
-    from tests.browser.test_transaction_inspector import _authed_page
+    from tests.browser.test_transaction_inspector import MOBILE_VIEWPORT, _authed_page
 
-    context, page = _authed_page(browser)
+    # A PHONE viewport, not the helper's desktop default. Both defects are phone defects -- the
+    # soft keyboard and the full-height sheet -- and the trigger is deliberately not rendered at
+    # desktop widths. The first two runs of this file used 1440x900 and the FAB resolved to
+    # HIDDEN, which is the viewport talking, not the product.
+    context, page = _authed_page(browser, MOBILE_VIEWPORT)
     _goto_and_open(page)
 
     active_id = page.evaluate("document.activeElement ? document.activeElement.id : null")
@@ -74,9 +78,13 @@ def test_opening_does_not_focus_the_composer(browser):
 
 def test_closing_leaves_no_dark_sheet_and_no_inert_page(browser):
     """The transition itself: open, then close, then assert there is nothing left behind."""
-    from tests.browser.test_transaction_inspector import _authed_page
+    from tests.browser.test_transaction_inspector import MOBILE_VIEWPORT, _authed_page
 
-    context, page = _authed_page(browser)
+    # A PHONE viewport, not the helper's desktop default. Both defects are phone defects -- the
+    # soft keyboard and the full-height sheet -- and the trigger is deliberately not rendered at
+    # desktop widths. The first two runs of this file used 1440x900 and the FAB resolved to
+    # HIDDEN, which is the viewport talking, not the product.
+    context, page = _authed_page(browser, MOBILE_VIEWPORT)
     _goto_and_open(page)
     assert page.locator("#advisor-panel[data-open]").count() == 1, "the panel did not open"
 
@@ -100,9 +108,13 @@ def test_closing_leaves_no_dark_sheet_and_no_inert_page(browser):
 def test_the_panel_can_be_reopened_after_closing(browser):
     """A close that leaves state behind usually breaks the SECOND open, which a single
     open-then-close assertion would never catch."""
-    from tests.browser.test_transaction_inspector import _authed_page
+    from tests.browser.test_transaction_inspector import MOBILE_VIEWPORT, _authed_page
 
-    context, page = _authed_page(browser)
+    # A PHONE viewport, not the helper's desktop default. Both defects are phone defects -- the
+    # soft keyboard and the full-height sheet -- and the trigger is deliberately not rendered at
+    # desktop widths. The first two runs of this file used 1440x900 and the FAB resolved to
+    # HIDDEN, which is the viewport talking, not the product.
+    context, page = _authed_page(browser, MOBILE_VIEWPORT)
     _goto_and_open(page)
     page.locator("#advisor-panel .m-advisor-close").click()
     page.wait_for_timeout(200)
