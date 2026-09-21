@@ -1,0 +1,49 @@
+{
+  "_contract": "Items that arose in a session and are NOT planned work. This file is the ONLY editorial input to the generated handoff. An item here is not an assignment and is not authorised: promotion to planned work is an owner decision recorded in MERIDIAN_OS_TASKS.json, and the entry then gets a `promoted_to` id. Nothing in this file may be presented as assigned work.",
+  "_schema": {
+    "summary": "one line, what it is",
+    "why": "what it would fix and what it would touch",
+    "arose": "YYYY-MM-DD",
+    "promoted_to": "ledger id if the owner promoted it, else omit"
+  },
+  "emergent": [
+    {
+      "summary": "Plan-page invoice linking is loose (OS-068)",
+      "why": "`plan.py::_bill_invoice_evidence` asks 'is this a bill email?', which cannot be checked, so it leaks — observed false positives on Verizon, Xfinity and Eversource. Tightening must not starve charge matching, which needs the card alerts the invoice gate currently rejects.",
+      "arose": "2026-09-21",
+      "promoted_to": "OS-068"
+    },
+    {
+      "summary": "Detect unmodelled recurring charges by starting from the CHARGE, not a sender filter (OS-069)",
+      "why": "An enumerated filter must know the answer in advance, which is why 28 bill-like senders had no coverage. A recurrence pass over the ledger found 'fruitful membership' at $48/mo that no email keyword had surfaced. Proposes only; never auto-creates a commitment.",
+      "arose": "2026-09-21",
+      "promoted_to": "OS-069"
+    },
+    {
+      "summary": "Trial watch — surface a converting trial before it charges (OS-070)",
+      "why": "Owner-stated intent ('we are building a free trial canceler'). The ledger already holds a converted trial: Unifyed.ai Trial -39.99. Depends on V4's suppression lifecycle or it becomes the alert storm V4 is gated on.",
+      "arose": "2026-09-21",
+      "promoted_to": "OS-070"
+    },
+    {
+      "summary": "18 legacy evidence links from the retired amount-only matcher are demonstrably wrong",
+      "why": "A $9.99 marketing email is linked to charges 55/59/84, and one charge has the same receipt linked three times. NOT removed: absence is recorded, never deleted (C01), so removal needs explicit owner approval. Harmless today, will confuse any future display that trusts links.",
+      "arose": "2026-09-21"
+    },
+    {
+      "summary": "The calendar connector remains wired to nothing (the outstanding part of OS-067)",
+      "why": "Referenced only for its OAuth scope constant while a stored token sits unused. This is the third of the three things the owner originally reported and the only one still open; it sits on the critical path in a way the earmarked ideas do not.",
+      "arose": "2026-09-21"
+    },
+    {
+      "summary": "The 729 content-less evidence rows are NOT recoverable and must not be re-proposed",
+      "why": "Owner decision 'Leave it' (commit c8d6d69). Historical metadata-only loss; the Gmail originals are unrecoverable because the tokens are dead, and the only partial recovery re-reads the personal iCloud INBOX, reopening the privacy tradeoff the Bills folder closed.",
+      "arose": "2026-09-21"
+    },
+    {
+      "summary": "A harness-mediated Gmail ingestion service is possible but NOT built",
+      "why": "D-016 keeps it available: the app cannot call Composio today, but a scheduled agent-driven sweep is architecturally legitimate. Not authorised by D-016 and would need its own decision, operational footprint, and honest liveness statement. Meridian must keep working without it.",
+      "arose": "2026-09-21"
+    }
+  ]
+}

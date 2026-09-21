@@ -14,7 +14,9 @@ Preserve unrelated tracked and untracked files. Never delete or clean up artifac
 
 ## Governing sources
 
-Before substantial work, inspect `docs/project/PROJECT_INSTRUCTIONS.md`, `docs/project/CURRENT_STATUS.md`, relevant governing handoffs, and managed project Documents. The current visual authority is the newest explicitly governing design set; currently verify `design/observatory-drafts-2026-09-08/` before use. Older captures are historical evidence unless explicitly promoted.
+**Read `docs/project/HANDOFF.md` FIRST — it is the orientation map for a new or compacted session,** and it names the governing sources with their hashes so you can tell immediately whether it is stale (`scripts/generate_handoff.py --check`). It is generated from the governing docs and must never be hand-edited; if it disagrees with a doc, the doc wins. Then inspect `docs/project/PROJECT_INSTRUCTIONS.md`, `docs/project/CURRENT_STATUS.md`, relevant governing handoffs, and managed project Documents. The current visual authority is the newest explicitly governing design set; currently verify `design/observatory-drafts-2026-09-08/` before use. Older captures are historical evidence unless explicitly promoted.
+
+**Before ending a session, or at any context checkpoint, regenerate the handoff** (`scripts/generate_handoff.py`) and record anything session-emergent in `docs/project/session-emergent.json`. The next session is usually the one that depends on it, and the owner has named handoff reliability as the deciding factor when context runs out.
 
 ## Engineering workflow
 
@@ -34,6 +36,22 @@ Every continuation, compaction resumption, or new session must reconcile **two**
 The rule: **state in writing where the candidate work sits on the roadmap before starting it.** If it is not on the current critical path or in the ledger, say so plainly, record it as an earmark if it is worth keeping, and let the owner choose. Do not silently substitute momentum for priority, and do not quote a fact about the current code as though it were a design constraint.
 
 Existing workstreams can hold priority over new ones; the roadmap's own stated next move wins unless the owner redirects.
+
+## Handoffs must reconcile the governing order with the session
+
+A handoff is the artifact the owner relies on between sessions, so it may never be a summary of the conversation. **It is a projection of the governing doc set, and it must say so.** Read the documents, not the session, and then reconcile the two.
+
+Every handoff states, explicitly:
+
+1. **BASIS** — the governing sources it was derived from, by path, and the commit it was read at. A handoff that cannot name them is a session summary and must be labelled as one.
+2. **THE ASSIGNED ORDER** — the roadmap's current critical path and its stated next move, quoted rather than paraphrased; the open gates in the task ledger; and the in-flight tasks with their declared track/phase.
+3. **SESSION-EMERGENT ITEMS, SEPARATED.** Anything that arose during the session — a new idea, a discovered defect, a proposed slice — is listed **apart** from the assigned order, marked as emergent, and given a ledger id if it is worth keeping. It must never appear in the same list as assigned work, because that is how a session idea acquires the authority of the plan.
+4. **PROMOTION, NOT ASSUMPTION.** An emergent item does not become planned work by appearing in a handoff. Promotion is an explicit owner decision, recorded in the ledger and, when it changes the sequence, in the roadmap.
+5. **WHAT WAS NOT TOUCHED** — the tracks and slices that still stand unstarted, so their absence is visible rather than assumed.
+
+**The reconciliation is a check, not a promise.** Run `scripts/roadmap_handoff_check.py` before writing a handoff; it verifies that every roadmap item exists in the ledger, that everything in flight declares a track, and that no session-emergent item is silently presented as assigned. A handoff written without running it is not a handoff.
+
+**Why this exists.** Session momentum is genuinely useful — it is where discoveries come from — but it is not the build order, and the two were previously indistinguishable in a handoff. The original sequence is the thing being protected. Keep the drift visible and the owner decides; do not let it dissolve into the summary of a good conversation.
 
 ## Financial safety
 
