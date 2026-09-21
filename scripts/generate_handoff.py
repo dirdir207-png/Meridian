@@ -89,7 +89,19 @@ def main() -> int:
     # and tmp/** paths, which are scratch by convention and would make every handoff claim a
     # dirty tree. A handoff that cries wolf is a handoff that gets ignored.
     changed = [l for l in git("status", "--porcelain").splitlines() if not l.startswith("??")]
-    recent = [l for l in git("log", "--oneline", "-12", "--no-decorate").splitlines() if l]
+    # The recent-commits list EXCLUDES commits that only touched this file. Including them made
+    # the handoff self-referential: committing a regenerated handoff adds a commit that changes
+    # the list, so `--check` could never pass immediately after following the close-out
+    # checklist. Excluding them makes the section describe the PROJECT's movement rather than
+    # this file's own bookkeeping, which is what a reader actually needs, and the list is then
+    # stable across a regenerate-and-commit cycle.
+    recent = [
+        line
+        for line in git(
+            "log", "--oneline", "-14", "--no-decorate", "--", ".", f":(exclude){OUT.relative_to(ROOT)}"
+        ).splitlines()
+        if line
+    ][:12]
 
     # The roadmap's own "Next move" paragraph, quoted rather than paraphrased.
     next_move = ""
@@ -249,17 +261,26 @@ def main() -> int:
         # which is worse than no check. Content equality is the real question: "does this file
         # still describe the documents as they are?"
         def normalise(s: str) -> list[str]:
-            out = []
+            out: list[str] = []
+            # The uncommitted-paths block is RUN STATE, not content: it lists what the working
+            # tree looked like at generation time, and regenerating the handoff itself adds
+            # HANDOFF.md to that list. Comparing it made --check fail immediately after a
+            # regenerate, which is the defect this whole normalisation exists to avoid.
+            in_dirty_block = False
             for line in s.splitlines():
+                if line.startswith("**Uncommitted tracked changes"):
+                    in_dirty_block = True
+                    continue
+                if in_dirty_block:
+                    if line.startswith(("- ", "*")) or line == "":
+                        continue
+                    in_dirty_block = False
                 if line.startswith("- Generated:"):
                     continue
                 if line.startswith("- Commit:"):
-                    # Compare the BRANCH only. Everything else on this line is volatile by
-                    # design: the commit hash is what the session recorded at generation time
-                    # (and a handoff written before its own commit can never name it), and the
-                    # dirty-tree note describes the working tree, not the content. Comparing
-                    # either makes the check permanently red the moment a session follows the
-                    # documented close-out, and a check that always fails is ignored.
+                    # Compare the BRANCH only; the hash is what the session recorded at
+                    # generation time, and a handoff written before its own commit can never
+                    # name it.
                     line = " ".join(line.split(" on ")[:2]).split(" — ")[0]
                 if line:
                     out.append(line)
