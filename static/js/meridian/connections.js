@@ -48,6 +48,28 @@ function connectionRow(connection) {
   );
   const use = element("span", "m-connection-use", connection.uses.join(", "));
   button.append(identity, state, freshness, use, element("span", "m-row-chevron", "›"));
+
+  // OS-067: a saved "connected" authorization is NOT proof the credential still works.
+  // The live failure this guards: the row read "Connected" for days while every Gmail
+  // refresh token was being rejected, so nothing told the owner to act. The checkmark
+  // alone would keep implying a working connection, so it is replaced rather than
+  // merely annotated.
+  if (connection.credential && connection.credential.available === false) {
+    const remedy = connection.credential.action
+      || "Re-authorize this connection, then check again.";
+    const warning = element("span", "m-connection-warning", remedy);
+    warning.dataset.credential = connection.credential.reason || "unavailable";
+    warning.setAttribute("role", "status");
+    state.textContent = "Needs re-authorizing";
+    state.dataset.state = "attention";
+    // Row order already places `state` before these, so appending keeps the warning
+    // next to the status it explains.
+    button.append(warning);
+    button.setAttribute(
+      "aria-label",
+      `Open ${connection.display_name} connection details. ${remedy}`
+    );
+  }
   button.addEventListener("click", () => openInspector(connection, button));
   return button;
 }

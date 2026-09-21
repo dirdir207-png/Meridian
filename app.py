@@ -1022,6 +1022,13 @@ def get_meridian_evidence_service():
         app.config["MERIDIAN_EVIDENCE_SERVICE"] = _meridian_evidence_service
     return _meridian_evidence_service
 
+
+# The Connections view reads credential health through this getter. It is read-only and
+# returns {} until a poll has actually exercised a credential, so the surface can never
+# claim a health verdict it has not observed.
+app.config["MERIDIAN_CREDENTIAL_HEALTH_GETTER"] = meridian_credential_health
+
+
 def store_crew_credential(value):
     """Persist a renewed Crew credential through the same path as manual saves."""
     conn = sqlite3.connect(DB_FILE)

@@ -953,12 +953,20 @@ def accounts():
 @_safe_read
 def settings_connections():
     graph = _repository()
+    health_getter = current_app.config.get("MERIDIAN_CREDENTIAL_HEALTH_GETTER")
+    credential_health = {}
+    if callable(health_getter):
+        try:
+            credential_health = health_getter() or {}
+        except Exception:  # noqa: BLE001 - a health lookup must never break the page
+            credential_health = {}
     return jsonify(
         build_connections(
             graph,
             _connection_repository(graph),
             selected_id=request.args.get("selected"),
             db_path=graph.db_path if hasattr(graph, "db_path") else None,
+            credential_health=credential_health,
         )
     )
 

@@ -154,6 +154,33 @@
   background: currentColor;
 }
 
+/* OS-067: a connection whose credential was actually exercised and FAILED. The row
+   keeps its honest authorization state in `state`, but the dot and label turn to
+   caution so the surface cannot keep implying a working connection — which is how a
+   dead Gmail token stayed invisible for 14 days behind a green "Connected". */
+.m-connection-state[data-state="attention"] {
+  color: var(--m-caution);
+  /* The base rule capitalizes every word, which is wrong for this phrase. */
+  text-transform: none;
+}
+
+.m-connection-warning {
+  /* The row is a grid (5 columns desktop, 3 on mobile), so the warning must span it
+     rather than claim a column of its own and push the layout out of shape. */
+  grid-column: 1 / -1;
+  display: block;
+  margin-top: var(--m-space-2);
+  padding: var(--m-space-2) var(--m-space-3);
+  border-radius: var(--m-radius-sm);
+  background: var(--m-caution-wash);
+  color: var(--m-caution);
+  font-size: var(--m-text-xs);
+  line-height: 1.5;
+  text-align: left;
+  /* The remedy is a sentence, so it must wrap rather than be clipped by the row. */
+  white-space: normal;
+}
+
 .m-settings-payday-link {
   margin: var(--m-space-7) 0 0;
   color: var(--m-ink-muted);

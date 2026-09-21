@@ -49,8 +49,17 @@ _GROUP_LABELS = {
 }
 
 
-def _authorization_payload(record: ConnectionRecord) -> dict[str, object]:
-    return {
+def _authorization_payload(
+    record: ConnectionRecord, credential: dict | None = None
+) -> dict[str, object]:
+    """One connection row.
+
+    ``state`` is the AUTHORIZATION's state and stays as stored — reporting it as
+    something else would be its own lie. ``credential`` is the separate, stronger fact
+    that the credential was actually exercised and failed, so a row can honestly say
+    "connected, but the credential needs re-authorizing" instead of implying it works.
+    """
+    payload: dict[str, object] = {
         "public_id": record.public_id,
         "kind": record.kind,
         "display_name": record.display_name,
@@ -60,6 +69,36 @@ def _authorization_payload(record: ConnectionRecord) -> dict[str, object]:
         "uses": list(_USES.get(record.kind, ())),
         "read_only": True,
     }
+    if credential and credential.get("available") is False:
+        payload["credential"] = {
+            "available": False,
+            "reason": credential.get("reason") or "unavailable",
+            "observed_at": credential.get("observed_at"),
+            # Copy-paste-ready owner guidance, keyed by the classified reason. Never a
+            # raw provider error: the owner needs the ACTION, not the stack.
+            "action": _REMEDY.get(
+                str(credential.get("reason")), _REMEDY["unavailable"]
+            ),
+        }
+    return payload
+
+
+_REMEDY = {
+    "reauthorize_required": (
+        "Re-authorize this connection from Connections. The saved permission has "
+        "expired or was withdrawn, so Meridian cannot read it."
+    ),
+    "authorization_rejected": (
+        "Google rejected the saved permission. Re-authorize this connection."
+    ),
+    "provider_unreachable": (
+        "The provider could not be reached. Meridian will retry automatically."
+    ),
+    "unavailable": (
+        "This connection's credential could not be used. Re-authorize it, then check "
+        "Connections again."
+    ),
+}
 
 
 def _financial_payload(connection) -> dict[str, object]:
@@ -107,9 +146,23 @@ def build_connections(
     *,
     selected_id: str | None = None,
     db_path: str | None = None,
+    credential_health: dict[str, dict] | None = None,
 ) -> dict[str, object]:
+    """Assemble the Connections view.
+
+    ``credential_health`` carries findings from REAL credential use (the evidence poll),
+    keyed by kind. It exists because a stored authorization is not evidence that its
+    token still works: measured 2026-09-20, this view reported Gmail "Connected" while
+    all four Gmail refresh tokens had been failing with HTTP 400 for days. When a kind
+    has a recorded failure the row keeps its stored `state` (that IS the authorization's
+    state, honestly reported) but gains an explicit `credential` block saying the
+    credential is unusable, so the surface cannot imply a working connection.
+    """
+    health = credential_health or {}
     rows = [_financial_payload(item) for item in graph.list_connection_freshness()]
-    rows.extend(_authorization_payload(item) for item in authorizations.list_all())
+    rows.extend(
+        _authorization_payload(item, health.get(item.kind)) for item in authorizations.list_all()
+    )
     # R27: attach per-account OAuth identities (multi-account chooser data).
     oauth_accounts = {}
     if db_path:
