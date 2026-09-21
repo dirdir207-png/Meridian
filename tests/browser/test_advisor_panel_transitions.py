@@ -43,12 +43,33 @@ def _open_panel(page):
     precedent: same workspace, same trigger, same ordering.
     """
     fab = page.locator("#advisor-fab")
-    fab.wait_for(state="visible", timeout=15000)
-    fab.click()
-    page.wait_for_timeout(200)
+    fab.wait_for(state="attached", timeout=15000)
+    # THE TRIGGER'S OWN HANDLER IS INVOKED DIRECTLY, and the reason is worth stating rather than
+    # hiding. The trigger's VISIBILITY is governed by rules unrelated to the transition under test
+    # -- most sharply dial.css:1038, which hides it on the Today workspace by design -- and a
+    # `display: none` element has no bounding box, so neither a normal nor a `force=True` click can
+    # reach it (both were tried). Five runs were spent on WHERE THE BUTTON IS DRAWN instead of on
+    # WHAT HAPPENS WHEN THE PANEL OPENS AND CLOSES, which is the defect the owner actually
+    # reported. `el.click()` dispatches the element's real listener, so the app's own open path
+    # runs unchanged; only the pointer's ability to reach a hidden button is skipped, and the
+    # assertions after it are untouched because focus, computed display and inertness are the
+    # things that must be true.
+    fab.evaluate("el => el.click()")
+    page.wait_for_timeout(250)
 
 
 def _goto_and_open(page):
+    """Navigate and open Virgil, with NOTHING ELSE OPEN.
+
+    The trigger is hidden on the Today workspace by design (dial.css:1038), so this goes to
+    Activity -- but it deliberately does NOT select a transaction first. Selecting one opens the
+    transaction inspector, which is ITSELF a modal sheet (templates/meridian/partials/
+    transaction-inspector.html carries `data-sheet-initial-focus`), so the shell's stack holds an
+    entry and `#main` is correctly left inert when Virgil closes. That is not residue; it is the
+    inspector still being open, and an earlier version of this file asserted against it and
+    reported a false defect. The trigger's visibility is handled in _open_panel instead, so the
+    context click is not needed to reach it.
+    """
     page.goto(f"{APP_URL}/meridian?workspace=activity", wait_until="domcontentloaded")
     _open_panel(page)
 
@@ -100,7 +121,7 @@ def test_closing_leaves_no_dark_sheet_and_no_inert_page(browser):
         "near-full-screen dark sheet -- the owner's black screen"
     )
     inert = page.evaluate(
-        "const m = document.getElementById('main'); return !!(m && m.inert);"
+        "() => { const m = document.getElementById('main'); return !!(m && m.inert); }"
     )
     assert inert is False, "the page stayed inert after closing, so nothing is clickable"
 
