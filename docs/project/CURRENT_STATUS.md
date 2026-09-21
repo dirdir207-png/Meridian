@@ -33,6 +33,55 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## Governance correction: the roadmap was describing a calendar state that no longer exists, and two of my own claims were wrong (2026-09-21, base `56e3372`)
+
+**A governing document contradicted the code.** Roadmap §6's evidence-lane entry (added
+2026-09-21) stated that the calendar's "connector is still referenced only for its OAuth scope
+constant while a stored token sits unused". `25181bd` made that false: the calendar reads
+read-only *context* through Composio, which is its **only** adapter, and the connector is
+consumed. The paragraph also cited the continuity rule while itself drifting from the
+implementation, and carried a mangled em-dash ("task  which"). Corrected in place. The **Addendum
+(§12) was already accurate** — it recorded the delivery and the open daily trigger — so §6 was the
+only place still asserting the old state.
+
+The correction also states plainly what remains: **not the connector, but the DAILY OBSERVATION.**
+Nothing fetches on a schedule because the app has no Composio client, and giving it a raw Composio
+credential is its own decision. `OS-067` therefore stays `in_progress` on the honest ground that
+**built is not observed** — the Settings row reads "Not observed yet" and can only read "Live"
+inside a 48h window a daily schedule can explain. Closing the lane needs an explicit owner choice
+between three shapes, and until one is chosen **nothing may describe the calendar as being
+polled**.
+
+**`OS-067`'s title was retitled**, because it still read "calendar is wired to nothing" — false as
+of `25181bd`, and exactly the drift a reader scanning titles would absorb. The original 2026-09-20
+report is preserved verbatim in the record's `detail`, and the revision is noted in `notes`.
+
+**Two of my own claims were wrong, and I would rather record that than quietly fix it.**
+
+1. **The I001 was MINE, not pre-existing.** I recorded "a pre-existing ruff I001 in `app.py` is
+   unfixed on purpose", and I had "proven" it by running ruff against `HEAD` — but the offending
+   line entered `app.py` in **`d60f1c9`, this session's own OS-065 work** (`git log -S` confirms
+   it). Running the check against a commit that already contains your own change proves the check
+   fails, not that you did not cause it. Fixed: the import splits into two lines, zero behaviour
+   change. The genuinely pre-existing lint was elsewhere — two `F841` dead locals in
+   `tests/browser/test_dial_fidelity.py`, left over from `63d2865` when `OS-049` replaced an
+   assertion, also now cleared. **`ruff check app.py meridian/ scripts/ tests/` is clean.**
+
+2. **My per-slice gate was too narrow to catch it.** In the previous round I ran
+   `pytest tests/meridian …` plus a hand-picked file list, and `ruff` over `meridian/ tests/` only
+   — which never covered `app.py`, and never ran `tests/test_session_close.py`. That test then
+   caught an incomplete entry I had written: the "Desktop Settings hub" emergent item named **no
+   ledger id and no checkpoint**, i.e. an orphaned intention, which the contract forbids. It now
+   names a real one — **Track D design-fidelity close-out (`OS-038`)** — and the matching row was
+   added to the roadmap's §12 Addendum so the two documents agree. Running the **whole** `tests/`
+   directory is the correct gate; a hand-picked list is how a defect hides one directory over.
+
+**Verification.** Full suite **1699 passed, 73 skipped** (the browser suite skips without a live
+app) — run against the whole `tests/` tree, not a subset. Ruff clean on all real source.
+`scripts/roadmap_handoff_check.py` reconciles. Handoff regenerated; its §1 basis hashes now match
+the live files. No authority, provider or financial change: this round touched governance
+documents, dead code and one import line.
+
 ## OS-071 DELIVERED — Virgil is real, and it is a REFRESH of a surface that already existed (2026-09-21, base `9a55413`)
 
 **The finding that changed the slice.** OS-071 was recorded as "no Virgil surface exists in the

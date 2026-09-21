@@ -319,8 +319,6 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
         assert rail_box["x"] > dial_box["x"] + dial_box["width"] * .65
         assert not page.locator(".m-observatory-advice").is_visible()
         ticket_box = page.locator(".obs-evidence-ticket").bounding_box()
-        cta_box = page.locator(".obs-explore-plan").bounding_box()
-        dock_box = page.locator(".m-nav").bounding_box()
         assert ticket_box["height"] <= 180
         # OS-049. This was `cta_box["y"] + cta_box["height"] + 8 <= dock_box["y"]`, measured
         # at scrollTop=0, and it fails at 390px in both themes. It is not a real defect and

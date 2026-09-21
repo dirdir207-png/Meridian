@@ -491,9 +491,21 @@ Track C (V1 ─► V2 ─► V3 ─► V4 ─► V5 ─► V6 ─► V7)   V8 ga
 - **Evidence ingestion is an in-flight lane and must be closed before new Track C work is opened**
   (added 2026-09-21). `OS-067` (high, `in_progress`) is the owner's own 2026-09-20 report that evidence was
   stale, the calendar was wired to nothing, and no document would open. Two of its three parts are done and
-  verified; **the outstanding part is the CALENDAR, whose connector is still referenced only for its OAuth
-  scope constant while a stored token sits unused.** Because the roadmap previously named neither `OS-067`
-  nor the calendar, the project's stated next move and its highest-priority in-flight task  which
+  verified, and **the CALENDAR half is now BUILT** (2026-09-21, `25181bd`): it reads as read-only *context*
+  through Composio, which is its **only** adapter, and the connector is consumed rather than referenced only
+  for its OAuth scope constant. The boundary is enforced by absence -- the calendar table has no
+  amount/commitment/charge/transaction column at all, so matching an event to money cannot begin without a
+  deliberate migration, and the module exposes no linking API. Nothing is matched to a transaction and no
+  event is stored as evidence.
+  **What remains is not the connector: it is the DAILY OBSERVATION.** Nothing fetches on a schedule, because
+  the app has no Composio client and giving it a raw Composio credential is its own decision rather than a
+  detail. So `OS-067` stays `in_progress` on the honest ground that **built is not observed**: the Settings
+  row reads "Not observed yet", and it reads "Live" only inside the 48h window a daily schedule can explain.
+  Closing this lane therefore needs an explicit owner decision between three shapes -- schedule the harness
+  fetch, give the app a Composio credential, or accept the honest not-observed steady state and close the
+  lane on that basis. **Until one is chosen, nothing may describe the calendar as being polled.**
+  Because the roadmap previously named neither `OS-067`
+  nor the calendar, the project's stated next move and its highest-priority in-flight task — which
   is precisely the drift `AGENTS.md`'s continuity rule now forbids. Naming it here makes the rule enforceable.
   `OS-068`/`OS-069`/`OS-070` are earmarked Track C capability work and are **not** on this path; see the
   ledger for their triggers and limits.
@@ -602,6 +614,7 @@ Operational hazards | absent from both | evidence | **Added** — migration immu
 | **OS-070** | Trial watch — surface a converting trial before it charges. | **Track C V4, and gated on V4's suppression lifecycle.** V4's stated blocker is unverified suppression (`proactive.py`), and "no alert storms" is precisely a repeated trial warning's failure mode. | Owner-stated intent, but building it before V4's suppression exists would create the alert storm V4 is gated on. |
 | **Legacy link cleanup** | 18 evidence links from the retired amount-only matcher are demonstrably wrong (a $9.99 marketing email linked to charges 55/59/84; one charge linked to the same receipt three times). | **Whenever a surface first displays transaction links.** Harmless while nothing reads them; misleading the moment something does. | **Needs an explicit owner decision** — absence is recorded, never deleted (C01), so this cannot be cleaned up unilaterally. |
 | **Calendar connector** | The outstanding part of **OS-067**: referenced only for its OAuth scope constant while a stored token sits unused. | **DELIVERED 2026-09-21** — built as read-only context through Composio, which is the calendar's **only** adapter. | **No longer parked.** See the decision row below. The in-app Google OAuth transport is deliberately NOT built for calendar. |
+| **Desktop Settings hub** | At >=901px the eight hub rows and their group banners sit in the narrow settings rail and wrap onto four or five lines, while the main column holds only an intro paragraph. | **Track D design-fidelity close-out (`OS-038`).** The desktop treatment of a concept drawn as a phone frame is a design decision, not a bug fix, and `OS-038` is where the remaining concept-vs-current visual gaps are reconciled. | Measured IDENTICAL before and after the 2026-09-21 stylesheet fix, so it dates from `OS-065` and is NOT a regression. The 09-18 concept specifies no desktop treatment for Settings, so there is nothing to compare against -- **needs the owner's visual authority**, and inventing a layout unilaterally would be a design decision recorded as a fix. |
 | **Harness ingestion service** | A scheduled, agent-driven Gmail→Composio ingestion feeding the app. | **OPENED BY OWNER DECISION 2026-09-21, for CALENDAR ONLY** and only for read-only context. Mail is explicitly NOT in scope: the owner's words are *"Two different mechanisms for email and calendar."* | **Authorised for calendar read-only context, and for nothing else.** The owner's decision also fixed the status semantics to be shown: *"For Composio (Live) will strictly mean the composio connection is still current with the harness, not that it is live and continuously polling."* The app side is built and tested (`meridian/calendar_context.py`, migration 026, `scripts/calendar_context_ingest.py`), gated OFF by default. **The DAILY TRIGGER IS NOT BUILT**, so nothing may describe calendar as being polled yet — the fetch needs a Composio call the app cannot make, and giving the app a raw Composio credential is its own decision. Honest liveness is available now: the store reports the newest observed event and reads as STALE rather than healthy when the feed stalls. |
 
 **A note on why this section is separate from §9 Non-goals.** §9 records what Meridian must *never* do. This section records what it *could* do later — the distinction between "no" and "not yet" is exactly the one that was being lost.

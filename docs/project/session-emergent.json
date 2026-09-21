@@ -74,12 +74,8 @@
       "summary": "Desktop Settings: the hub renders inside the 210px rail with heavy text wrapping",
       "why": "At >=901px the eight hub rows and their group banners sit in the narrow settings rail and wrap onto four or five lines, while the main column holds only an intro paragraph. Measured IDENTICAL before and after this session's CSS fix, so it dates from OS-065 and is not a regression. It is a desktop adaptation of the 2026-09-18 concept, which is a PHONE frame and therefore specifies no desktop treatment -- so inventing one is a design decision, not a bug fix. Needs the owner's visual authority: either promote the hub into the main column at desktop, or accept the rail and widen it.",
       "arose": "2026-09-21",
-      "decision_owed": true
-    },
-    {
-      "summary": "A pre-existing ruff I001 in app.py is unfixed on purpose",
-      "why": "`ruff check app.py` reports I001 (unsorted import block) at HEAD, verified by running it against the committed file. It was deliberately NOT fixed while editing app.py for the icloud-configured config key, because sweeping an unrelated pre-existing lint fix into a feature commit destroys the reviewer's ability to see what changed and why. One-line fix whenever something is next editing that import block for its own reasons.",
-      "arose": "2026-09-21"
+      "decision_owed": true,
+      "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (checkpoint: Track D design-fidelity close-out, OS-038, which is where the remaining concept-vs-current visual gaps are reconciled)"
     }
   ]
 }

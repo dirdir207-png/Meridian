@@ -1558,7 +1558,7 @@
     },
     {
       "id": "OS-067",
-      "title": "Evidence is stale, calendar is wired to nothing, and the blob store is empty so no document opens",
+      "title": "Evidence lane: two of three parts done — the calendar half is BUILT but never OBSERVED (the daily trigger is unchosen)",
       "status": "in_progress",
       "priority": "high",
       "owner_raised": "2026-09-20 -- 'I don't think new evidence is being pulled from Gmail or calendar, and viewing bills/evidence may be broken'",
@@ -1597,7 +1597,8 @@
           }
         ]
       },
-      "progress": "CALENDAR LEG BUILT (app side) 2026-09-21, owner-directed through Composio as the sole adapter. Two of the three original parts were already done (polling service, evidence viewer path); this delivers the third. The task stays IN PROGRESS rather than complete because the work is built and tested but NOT YET OBSERVED against a real calendar, and the daily trigger is still unchosen -- 'built' must not be recorded as 'working'."
+      "progress": "CALENDAR LEG BUILT (app side) 2026-09-21, owner-directed through Composio as the sole adapter. Two of the three original parts were already done (polling service, evidence viewer path); this delivers the third. The task stays IN PROGRESS rather than complete because the work is built and tested but NOT YET OBSERVED against a real calendar, and the daily trigger is still unchosen -- 'built' must not be recorded as 'working'.",
+      "notes": "TITLE REVISED 2026-09-21 to state the current position. The original report (“Evidence is stale, calendar is wired to nothing, and the blob store is empty so no document opens”) is preserved in `detail` above. The calendar is no longer wired to nothing: as of 25181bd it reads read-only context through Composio as its sole adapter. What is NOT done is the daily observation."
     },
     {
       "id": "OS-068",

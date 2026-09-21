@@ -78,7 +78,8 @@ from meridian.memory_actions import (
 )
 from meridian.refresh import MeridianRefreshService
 from meridian.repository import FinancialRepository
-from meridian.settings_hub import SETTINGS_HUB, SETTINGS_SECTIONS as SETTINGS_HUB_SECTIONS
+from meridian.settings_hub import SETTINGS_HUB
+from meridian.settings_hub import SETTINGS_SECTIONS as SETTINGS_HUB_SECTIONS
 from meridian.sync_gate import MeridianSyncGate
 
 app = Flask(__name__)
