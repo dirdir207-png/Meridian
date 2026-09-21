@@ -224,3 +224,188 @@ def test_ingest_icloud_links_use_icloud_provenance(tmp_path):
     links = repo.list_links(int(summary["items"][0]["id"]))
     assert links, "expected at least one linked evidence link"
     assert all(link.provenance == "icloud:amount-match" for link in links)
+
+
+# --- OS-067: forwarded-mail provenance --------------------------------------------
+#
+# MEASURED against a real forwarded Eversource bill (2026-09-20): Gmail forwarding
+# REPLACES the From header with the forwarding account, so a forwarded bill arrives
+# `from: gmail.com`. The forwarded copy carried 44 headers and NONE held the original
+#  return-path was rewritten and there is no Resent-From / X-Forwarded-For /
+# X-Original-From. The original sender survives ONLY in the forwarded body, where the
+# mail client quotes the original headers. Without recovering it, the bill matcher
+# (which keys on the sender's DOMAIN) misses every forwarded bill.
+
+_REAL_FORWARD = (
+    "\r\n---------- Forwarded message ---------\r\n"
+    "From: Eversource <notifications@notifications.eversource.com>\r\n"
+    "Date: Sat, 20 Sep 2026\r\n"
+    "Subject: Your Eversource bill is ready\r\n"
+    "To: owner@gmail.com\r\n\r\nYour amount due is $210.00\r\n"
+)
+
+
+def test_a_forwarded_body_yields_the_original_sender_domain():
+    from meridian.gmail_intake import forwarded_sender_domains
+
+    assert forwarded_sender_domains(_REAL_FORWARD) == ["notifications.eversource.com"]
+
+
+def test_a_non_forwarded_message_contributes_nothing():
+    from meridian.gmail_intake import forwarded_sender_domains
+
+    assert forwarded_sender_domains("Your Verizon bill is ready. Amount due $101.57") == []
+
+
+def test_the_scan_is_bounded_so_a_huge_body_cannot_flood_the_matcher():
+    from meridian.gmail_intake import forwarded_sender_domains
+
+    huge = "\n".join(f"From: x{i}@spam{i}.example.com" for i in range(5000))
+    found = forwarded_sender_domains(huge)
+    assert len(found) == 3, "candidate count must be capped"
+    assert found[0] == "spam0.example.com", "the first quoted From is the real sender"
+
+
+def test_missing_body_is_handled():
+    from meridian.gmail_intake import forwarded_sender_domains
+
+    assert forwarded_sender_domains("") == []
+    assert forwarded_sender_domains(None) == []
+
+
+def test_the_title_carries_recovered_provenance_and_labels_it_as_recovered():
+    from meridian.gmail_intake import evidence_title
+
+    title = evidence_title("Fwd: Your Eversource bill is ready", _REAL_FORWARD, "iCloud Mail message")
+    assert "notifications.eversource.com" in title
+    # It was RECOVERED from quoted text, not observed as an authenticated sender, so the
+    # record must not present it as if it had arrived that way.
+    assert "forwarded from" in title.lower()
+
+
+def test_a_plain_subject_is_left_alone():
+    from meridian.gmail_intake import evidence_title
+
+    assert evidence_title("Your Verizon bill is ready", "no headers here", "Gmail message") == (
+        "Your Verizon bill is ready"
+    )
+
+
+def test_a_forwarded_bill_links_to_its_bill_end_to_end(tmp_path):
+    """The property that actually matters: forwarded mail reaches the right bill."""
+    import hashlib
+
+    from meridian.evidence import EvidenceRepository
+    from meridian.gmail_intake import evidence_title
+    from meridian.services.plan import _bill_invoice_evidence
+
+    repo = EvidenceRepository(str(tmp_path / "ev.db"))
+
+    def store(source_id, text, title, sender):
+        data = text.encode()
+        return repo.add_item(
+            source_kind="mail", source_id=source_id, mime_type="text/plain",
+            content_hash=hashlib.sha256(data).hexdigest(), size_bytes=len(data),
+            title=title, sender=sender,
+        )
+
+    forwarded = store(
+        "m-forwarded", _REAL_FORWARD,
+        evidence_title("Fwd: Your Eversource bill is ready", _REAL_FORWARD, "iCloud Mail message"),
+        "Some Owner <owner@gmail.com>",
+    )
+
+    found = _bill_invoice_evidence(repo, "Eversource")
+    assert found, "the forwarded Eversource bill must resolve to its evidence item"
+    assert found[0]["id"] == forwarded.id
+    # The stored sender still reports what actually  no synthetic sender.
+    assert found[0]["sender"] == "Some Owner <owner@gmail.com>"
+
+    # And it must not start matching bills it has nothing to do with.
+    for unrelated in ("Xfinity", "Rent"):
+        assert _bill_invoice_evidence(repo, unrelated) == [], (
+            f"a forwarded Eversource bill must not surface on {unrelated}"
+        )
+
+
+def test_the_marketing_guard_still_holds(tmp_path):
+    """A promo quoting a biller domain must NOT become an invoice.
+
+    The is_bill keyword guard is deliberately strict; recovery must not weaken it.
+    """
+    import hashlib
+
+    from meridian.evidence import EvidenceRepository
+    from meridian.services.plan import _bill_invoice_evidence
+
+    repo = EvidenceRepository(str(tmp_path / "ev.db"))
+    promo = "Fwd: Big sale this week (forwarded from notifications.eversource.com)"
+    data = promo.encode()
+    repo.add_item(
+        source_kind="mail", source_id="m-promo", mime_type="text/plain",
+        content_hash=hashlib.sha256(data).hexdigest(), size_bytes=len(data),
+        title=promo, sender="Some Owner <owner@gmail.com>",
+    )
+    assert _bill_invoice_evidence(repo, "Eversource") == [], (
+        "no bill/statement wording means it is not an invoice, whatever domain it quotes"
+    )
+
+
+def test_icloud_intake_stores_the_recovered_forwarded_sender(tmp_path):
+    """The WIRING, not just the helper: a forwarded message arriving over iCloud must
+    be stored with the recovered provenance in its title.
+
+    This is the test the end-to-end matcher test cannot be: the matcher test calls
+    `evidence_title` in its own setup, so it keeps passing even if the intake stops
+    calling it. Verified by  disabling the helper left the matcher test
+    green and only this one red.
+    """
+    from meridian.connectors.icloud_mail import IcloudMailMessage
+    from meridian.evidence import EvidenceRepository
+    from meridian.gmail_intake import ingest_icloud_recent
+
+    class FakeTransport:
+        def fetch_recent(self, *, max_results=20, since=None):
+            return [
+                IcloudMailMessage(
+                    message_id="<fwd1@icloud.com>",
+                    subject="Fwd: Your Eversource bill is ready",
+                    # Gmail forwarding replaced the sender with the owner's account.
+                    sender="Some Owner <owner@gmail.com>",
+                    received_at="Sat, 20 Sep 2026 12:00:00 +0000",
+                    body_text=_REAL_FORWARD,
+                    thread_id="<fwd1@icloud.com>",
+                )
+            ]
+
+    repo = EvidenceRepository(str(tmp_path / "evidence.db"))
+    summary = ingest_icloud_recent(transport=FakeTransport(), evidence_repo=repo, max_messages=5)
+    assert summary["stored"] == 1
+
+    items = repo.list_items(source_kind="mail", limit=10)
+    assert len(items) == 1
+    assert "notifications.eversource.com" in (items[0].title or ""), (
+        "the intake must carry recovered forwarded provenance into the stored title, or "
+        "a forwarded bill can never find its bill"
+    )
+
+
+def test_icloud_intake_leaves_a_normal_subject_unchanged(tmp_path):
+    from meridian.connectors.icloud_mail import IcloudMailMessage
+    from meridian.evidence import EvidenceRepository
+    from meridian.gmail_intake import ingest_icloud_recent
+
+    class FakeTransport:
+        def fetch_recent(self, *, max_results=20, since=None):
+            return [
+                IcloudMailMessage(
+                    message_id="<plain1@icloud.com>", subject="Your Verizon bill is ready",
+                    sender="Verizon <billing@verizon.com>",
+                    received_at="Sat, 20 Sep 2026 12:00:00 +0000",
+                    body_text="Amount due $101.57", thread_id="<plain1@icloud.com>",
+                )
+            ]
+
+    repo = EvidenceRepository(str(tmp_path / "evidence.db"))
+    ingest_icloud_recent(transport=FakeTransport(), evidence_repo=repo, max_messages=5)
+    assert repo.list_items(source_kind="mail", limit=10)[0].title == "Your Verizon bill is ready"

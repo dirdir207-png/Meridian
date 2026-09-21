@@ -12,6 +12,7 @@ download, bounded count, quarantine on oversized/empty).
 
 from __future__ import annotations
 
+import re
 from datetime import date, timedelta
 
 from .connectors.gmail_read import GmailEvidence, GmailTransport
@@ -22,6 +23,68 @@ from .ingest import IntakeRecord, QuarantineError, ingest_record
 def _date_days_ago(days: int) -> str:
     """ISO date ``days`` before today (UTC), used as the email backfill cutoff."""
     return (date.today() - timedelta(days=days)).isoformat()
+
+
+# --- forwarded-mail provenance (OS-067) -------------------------------------------
+#
+# MEASURED, not assumed (2026-09-20, a real forwarded Eversource bill): Gmail
+# forwarding REPLACES the From header with the forwarding account, so a forwarded bill
+# arrives `from: gmail.com`. The forwarded copy carried 44 headers and NONE of them held
+# the original sender -- `return-path` was rewritten, and there is no Resent-From /
+# X-Forwarded-For / X-Original-From. So a header-based recovery is impossible.
+#
+# The original sender survives only in the forwarded BODY, where the mail client quotes
+# the original headers ("From: Eversource <...@notifications.eversource.com>"). Without
+# recovering it, the bill-invoice matcher (which keys on the sender's DOMAIN) fails for
+# every forwarded bill, and the subject fallback is deliberately strict, so forwarded
+# invoices simply stop appearing on their bills.
+#
+# The recovered domain is appended to the evidence TITLE rather than injected as a
+# synthetic sender, so the matcher's existing token logic uses it unchanged and the
+# stored `sender` keeps reporting what actually arrived -- the evidence record does not
+# start claiming a sender it did not observe.
+
+_FORWARDED_FROM = re.compile(r"^\s*From:\s*(.+)$", re.MULTILINE)
+_EMAIL_DOMAIN = re.compile(r"@([A-Za-z0-9.-]+\.[A-Za-z]{2,})")
+_FORWARDED_BODY_SCAN_BYTES = 20000
+_FORWARDED_CANDIDATE_LIMIT = 3
+
+
+def forwarded_sender_domains(body_text: str | None) -> list[str]:
+    """Original sender domains quoted inside a forwarded body.
+
+    Bounded on both axes on purpose: only the head of the body is scanned, and only a
+    few candidates are returned, so a large or hostile message cannot make this slow or
+    flood the matcher with domains. Order is preserved, so the first entry is the mail
+    client's own quoted ``From:`` -- the true original sender.
+    """
+    if not body_text:
+        return []
+    head = body_text[:_FORWARDED_BODY_SCAN_BYTES]
+    found: list[str] = []
+    for match in _FORWARDED_FROM.finditer(head):
+        for domain in _EMAIL_DOMAIN.findall(match.group(1)):
+            lowered = domain.lower()
+            if lowered not in found:
+                found.append(lowered)
+            if len(found) >= _FORWARDED_CANDIDATE_LIMIT:
+                return found
+    return found
+
+
+def evidence_title(subject: str | None, body_text: str | None, fallback: str) -> str:
+    """Title for a stored mail item, carrying recovered forwarded provenance.
+
+    A plain subject when the message was not forwarded; otherwise the subject plus the
+    original sender domain, which is what lets a forwarded bill still find its bill.
+    """
+    title = subject or fallback
+    domains = forwarded_sender_domains(body_text)
+    if not domains:
+        return title
+    # Deliberately labelled: this domain was RECOVERED from quoted text, not observed as
+    # an authenticated sender, and the title should not hide that distinction.
+    return f"{title} (forwarded from {', '.join(domains)})"
 
 
 def ingest_gmail_recent(
@@ -61,7 +124,7 @@ def ingest_gmail_recent(
             source_id=msg.message_id,
             blob=msg.body_text.encode("utf-8"),
             mime_type="text/plain",
-            title=f"{msg.subject or 'Gmail message'}",
+            title=evidence_title(msg.subject, msg.body_text, "Gmail message"),
             sender=msg.sender or None,
         )
         try:
@@ -256,7 +319,7 @@ def ingest_icloud_recent(
             source_id=msg.message_id,
             blob=msg.body_text.encode("utf-8"),
             mime_type="text/plain",
-            title=f"{msg.subject or 'iCloud Mail message'}",
+            title=evidence_title(msg.subject, msg.body_text, "iCloud Mail message"),
             sender=msg.sender or None,
         )
         try:
