@@ -82,6 +82,14 @@ class EvidenceRefreshService:
         self._blob_count = blob_count
         self._logger = logger or (lambda _: None)
         self._lock = threading.Lock()
+        # Health has its OWN lock, deliberately. `_lock` guards the single-flight
+        # invariant and is held for the WHOLE cycle (over 100s when several accounts must
+        # each fail a token refresh before the mail fetch runs). Reading health through
+        # that lock made a Connections page request block behind a running poll —
+        # measured 2026-09-20, the page hung long enough to render an empty connection
+        # list while a poll was in flight. Health is a small independent structure, so it
+        # gets its own lock and can always be read immediately.
+        self._health_lock = threading.Lock()
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._cycles = 0
@@ -109,7 +117,7 @@ class EvidenceRefreshService:
 
     def record_credential_failure(self, kind: str, detail: str) -> None:
         """Record that a token could not be used, so the UI stops claiming it works."""
-        with self._lock:
+        with self._health_lock:
             self._credential_health[kind] = {
                 "kind": kind,
                 "available": False,
@@ -120,15 +128,17 @@ class EvidenceRefreshService:
 
     def record_credential_success(self, kind: str) -> None:
         """A token was used successfully; clear any prior failure for that kind."""
-        with self._lock:
+        with self._health_lock:
             self._credential_health.pop(kind, None)
 
     def credential_health(self) -> dict[str, dict]:
         """Per-kind credential findings from real poll attempts.
 
-        Returns a copy so callers cannot mutate the service's state.
+        Returns a copy so callers cannot mutate the service's state. Uses its own
+        lock, so a request can read health while a poll cycle is still running
+        rather than blocking behind it.
         """
-        with self._lock:
+        with self._health_lock:
             return {kind: dict(value) for kind, value in self._credential_health.items()}
 
     @staticmethod

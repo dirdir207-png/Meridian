@@ -409,3 +409,60 @@ def test_icloud_intake_leaves_a_normal_subject_unchanged(tmp_path):
     repo = EvidenceRepository(str(tmp_path / "evidence.db"))
     ingest_icloud_recent(transport=FakeTransport(), evidence_repo=repo, max_messages=5)
     assert repo.list_items(source_kind="mail", limit=10)[0].title == "Your Verizon bill is ready"
+
+
+# --- iCloud IMAP must be time-bounded (OS-067) -------------------------------------
+#
+# Measured 2026-09-20: the evidence poll produced NO log line and wrote NO blobs for
+# 7+ minutes. imaplib.IMAP4_SSL() with no timeout leaves the socket open forever, and the
+# poll runs on a daemon thread whose hang is  so a stalled mail server became
+# a silent, permanent failure rather than a visible one.
+
+def test_the_icloud_transport_defaults_to_a_bounded_socket_timeout():
+    from meridian.connectors.icloud_mail import (
+        IMAP_TIMEOUT_SECONDS,
+        IcloudMailTransport,
+    )
+
+    assert IMAP_TIMEOUT_SECONDS > 0, "an unbounded IMAP timeout is what caused the silent hang"
+    transport = IcloudMailTransport(username="a@example.com", app_password="x")
+    assert transport._socket_timeout == IMAP_TIMEOUT_SECONDS
+
+
+def test_the_timeout_is_actually_passed_to_imaplib():
+    """The default must reach IMAP4_SSL, not just exist as an attribute."""
+    from meridian.connectors.icloud_mail import IcloudMailTransport
+
+    calls = {}
+
+    class FakeIMAP:
+        def __init__(self, host, port, timeout=None):
+            calls["host"], calls["port"], calls["timeout"] = host, port, timeout
+
+        def login(self, user, password):
+            return "OK"
+
+    transport = IcloudMailTransport(username="a@example.com", app_password="x")
+    transport._imaplib = type("M", (), {"IMAP4_SSL": FakeIMAP})
+    transport._connect()
+    assert calls.get("timeout"), "IMAP4_SSL must receive a timeout, or a stall hangs forever"
+
+
+def test_an_unreachable_mail_host_fails_instead_of_hanging():
+    """A short timeout must produce a failure, not an indefinite wait."""
+    import time
+
+    from meridian.connectors.icloud_mail import IcloudMailReadError, IcloudMailTransport
+
+    transport = IcloudMailTransport(
+        username="a@example.com", app_password="x",
+        host="10.255.255.1", port=993, socket_timeout=2,
+    )
+    start = time.monotonic()
+    try:
+        transport._connect()
+    except IcloudMailReadError:
+        pass
+    else:
+        raise AssertionError("an unreachable host must not appear to connect")
+    assert time.monotonic() - start < 20, "the attempt must be bounded by the timeout"

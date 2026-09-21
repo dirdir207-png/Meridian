@@ -23,6 +23,9 @@ from typing import Optional
 
 IMAP_HOST = "imap.mail.me.com"
 IMAP_PORT = 993
+# Every network operation on the mail socket is bounded by this. Short enough that a
+# stalled poll fails visibly within one cycle, long enough for a slow IMAP response.
+IMAP_TIMEOUT_SECONDS = 60
 
 DEFAULT_USERNAME = ""  # owner-set via env; never guessed
 DEFAULT_APP_PASSWORD = ""
@@ -87,6 +90,7 @@ class IcloudMailTransport:
         app_password: Optional[str] = None,
         host: str = IMAP_HOST,
         port: int = IMAP_PORT,
+        socket_timeout: float = IMAP_TIMEOUT_SECONDS,
     ):
         import imaplib
 
@@ -97,6 +101,7 @@ class IcloudMailTransport:
         )
         self._host = host
         self._port = port
+        self._socket_timeout = socket_timeout
         if not self._username or not self._app_password:
             raise IcloudMailReadError(
                 "iCloud Mail is not configured (set ICLOUD_MAIL_USERNAME and ICLOUD_MAIL_APP_PASSWORD)."
@@ -104,7 +109,13 @@ class IcloudMailTransport:
 
     def _connect(self):
         try:
-            connection = self._imaplib.IMAP4_SSL(self._host, self._port)
+            # The timeout is not optional: without it a stalled server leaves this socket
+            # open forever, and the evidence poll runs on a daemon thread whose hang is
+            # invisible — measured 2026-09-20, the poll produced NO log line and wrote NO
+            # blobs for 7+ minutes because the connection blocked with no deadline.
+            connection = self._imaplib.IMAP4_SSL(
+                self._host, self._port, timeout=self._socket_timeout
+            )
             connection.login(self._username, self._app_password)
             return connection
         except Exception as exc:  # noqa: BLE001 - login failures are read-blocking

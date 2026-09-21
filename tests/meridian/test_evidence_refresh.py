@@ -340,3 +340,69 @@ def test_a_reporting_callback_error_does_not_break_intake(monkeypatch):
         on_account_error=bad_callback,
     )
     assert summary["accounts_unavailable"] == 1
+
+
+# --- health must never block behind a running poll ---------------------------------
+#
+# Measured 2026-09-20: the Connections page rendered an EMPTY connection list while a
+# poll was in flight. The poll held one lock for its whole cycle (100s+ when several
+# accounts each fail a token refresh first), and credential_health() waited on that same
+#  so the page request, which reads health, blocked behind the poll.
+#
+# These pin the fix: health has its own lock.
+
+def test_health_can_be_read_while_a_cycle_is_still_running():
+    started = threading.Event()
+    release = threading.Event()
+
+    def slow_cycle():
+        started.set()
+        release.wait(5)
+        return {"outcome": "ok"}
+
+    service = EvidenceRefreshService(slow_cycle, interval_seconds=MIN_INTERVAL_SECONDS)
+    worker = threading.Thread(target=service.refresh_once)
+    worker.start()
+    assert started.wait(2), "the cycle should be running"
+
+    # The page path. It must return promptly, not wait for the cycle to finish.
+    result: list = []
+    reader = threading.Thread(target=lambda: result.append(service.credential_health()))
+    reader.start()
+    reader.join(2)
+    assert not reader.is_alive(), (
+        "credential_health() must not block behind a running poll cycle"
+    )
+    assert result == [{}]
+
+    release.set()
+    worker.join(5)
+
+
+def test_health_writes_do_not_block_behind_a_cycle_either():
+    started = threading.Event()
+    release = threading.Event()
+
+    def slow_cycle():
+        started.set()
+        release.wait(5)
+        return {"outcome": "ok"}
+
+    service = EvidenceRefreshService(slow_cycle, interval_seconds=MIN_INTERVAL_SECONDS)
+    worker = threading.Thread(target=service.refresh_once)
+    worker.start()
+    assert started.wait(2)
+
+    done = threading.Event()
+
+    def writer():
+        service.record_credential_failure("gmail", "HTTP 400")
+        done.set()
+
+    writer_thread = threading.Thread(target=writer)
+    writer_thread.start()
+    assert done.wait(2), "recording a failure must not block behind a running cycle"
+    assert service.credential_health()["gmail"]["reason"] == "reauthorize_required"
+
+    release.set()
+    worker.join(5)
