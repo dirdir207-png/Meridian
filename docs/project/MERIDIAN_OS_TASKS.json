@@ -1685,6 +1685,33 @@
         "what_is_deliberately_not_here": "I.2 (one role end to end) and everything it needs -- model clients, prompts, persistence of run records, wiring into the advisor endpoint. Building those now would be speculative infrastructure built before the contract is proven, which is the ordering I.1 exists to prevent.",
         "authority": "No authority, provider or financial change. No role can reach a write path, by test, and the module holds no credential and makes no network call by construction (asserted against its own source)."
       }
+    },
+    {
+      "id": "OS-073",
+      "title": "I.2 — one role end to end: the Investigator is built and proven, but is not yet reachable from the product",
+      "status": "in_progress",
+      "priority": "high",
+      "phase": "track-I-envelope",
+      "owner_raised": false,
+      "detail": "SECOND HALF OF THE ROADMAP'S I.1/I.2 PAIR, reconciled from MERIDIAN_ROADMAP.md section 6 the same way OS-072 was: 'Ship the Forecaster or Investigator first -- read-only, evidence-bound, immediately useful. Adversarial tests: hallucinated citation, missing evidence, contradictory sources, unavailable model. Prove the envelope before adding roles.' I.1 (OS-072) built the envelope and the permission model; this is the first role that runs on it, and the roadmap's ordering is deliberate -- the contract is proven before a role depends on it.",
+      "progress": "THE ROLE IS BUILT (meridian/ai/investigator.py + tests/meridian/test_ai_investigator.py, 15 tests). It answers a question about a charge, an event or a discrepancy from the evidence actually LINKED to that target, and returns a typed EnvelopeResult plus a RunRecord. All four adversarial cases the roadmap names are implemented and pass. READ-ONLY AND UNREACHABLE FROM THE PRODUCT SO FAR: no endpoint, no UI, no wiring, no provider called by any test. 'Immediately useful' is therefore only half true, which is why this stays in_progress rather than complete -- a role nothing can invoke is not yet shipped, and claiming otherwise would be the placeholder-completion the work order forbids.",
+      "acceptance_criteria": [
+        "Adversarial: a hallucinated citation voids the result and exposes no claims",
+        "Adversarial: missing evidence yields unavailable AND the model is never called",
+        "Adversarial: contradictory sources are both kept and flagged, never voted on",
+        "Adversarial: an unavailable model is a state, not an exception, and is never retried",
+        "Read-only: the role holds no provider write tool",
+        "The role receives a client and never builds one (no credential, no network call of its own)"
+      ],
+      "limits": "READ-ONLY. The Investigator reads evidence and returns a result; it mutates nothing, approves nothing, and holds no provider write tool -- meridian/ai/envelope.py proves that for every role at import, and a test asserts it for this one. No provider mutation, no credential, no authority change, no A1-A5 capability. The model client is INJECTED and only needs complete(system, messages) -> str, so every test runs against a fake: no provider is contacted and no key exists anywhere in the tests. Wiring the role to a real surface, and persisting run records, is the remaining work and needs its own slice, evidence and review.",
+      "handoff": "docs/project/MERIDIAN_ROADMAP.md (section 6 I.2, line ~322); meridian/ai/envelope.py (OS-072, the contract this runs on); meridian/evidence.py (EvidenceRepository -- list_links_for_target / get_item, and EvidenceItem, which records NO confidence field); crew/advisor.py (FailoverLLMClient, the real client whose protocol the role consumes, and MeridianAdvisorBridge); meridian/ai/investigator.py; tests/meridian/test_ai_investigator.py.",
+      "notes": "Four design decisions worth knowing before touching this. (1) A hallucinated citation VOIDS the whole result rather than dropping the bad claim: the envelope forbids a failed result from carrying claims, so the fabricated text cannot reach a reader even accidentally, and the role cannot see why the model invented a citation. (2) With no evidence the model is NOT CALLED AT ALL -- a model asked to explain nothing will produce something, so the call is never made, and a test asserts the client's call list is empty. (3) EvidenceRef.confidence is REQUIRED BUT NULLABLE: meridian/evidence.py::EvidenceItem records no confidence, and a default such as 0.5 would be a fabricated measurement a reader could not tell from a real one, so the binder states None. (4) The run record states provider 'unknown' when the client cannot attest to one, rather than a plausible name nothing verified. Withdrawn evidence (revoked or content-deleted) is excluded: answering from a retracted record is not evidence-bound.",
+      "evidence": {
+        "tests": "tests/meridian/test_ai_investigator.py -- 15 tests, including the four adversarial cases the roadmap names by name. Also: the happy path is evidence-bound and auditable (run record carries the evidence ids used); a genuinely empty answer lands on UNAVAILABLE rather than an empty ok (the envelope forbids an ok with no claims); an unparseable reply FAILS rather than being guessed at; withdrawn evidence is not evidence; the model receives references and never bodies; freshness is derived from the real timestamp and reports 'unknown' when it cannot be parsed; and falsifications that the role holds no write tool, cannot grow its own credential or network call (checked over the AST, so the module's own docstring naming those tokens does not trip it), and never raises for any of four client failure modes. Full non-browser suite 1748 passed. Ruff and git diff --check clean.",
+        "why_the_adversarial_tests_are_the_point": "The roadmap says to prove the envelope BEFORE adding roles, so each adversarial case is asserted as a property rather than reviewed as prose: 'both claims survive' would fail if anyone later added a majority vote, and 'client.calls == []' would fail if anyone later let the model run on empty evidence. These are the tests that make the safety claims falsifiable.",
+        "follow_on_not_built": "A user-reachable surface for the role, and persistence of RunRecord so a proposal can be audited back to the reasoning that produced it (the roadmap asks for this and it needs a migration). Deliberately deferred: building a surface before the contract and the role are proven is the ordering I.1 exists to prevent.",
+        "authority": "No authority, provider or financial change. No role reaches a write path, by test; the Investigator is read-only by construction; and no test contacts a provider."
+      }
     }
   ]
 }

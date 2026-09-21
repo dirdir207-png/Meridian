@@ -161,19 +161,28 @@ class EvidenceRef:
 
     Deliberately NOT the evidence body: the envelope passes references, so a result cannot
     smuggle content that was never fetched under the role's scope.
+
+    ``confidence`` is REQUIRED but NULLABLE, and the distinction matters. Meridian's
+    evidence store records no confidence for an item (`meridian/evidence.py::EvidenceItem`
+    has no such field), so a binder has two honest options: state a confidence it can
+    actually justify, or state ``None`` meaning "the source did not provide one". A default
+    of, say, 0.5 would be a fabricated number wearing the clothes of a measurement, and a
+    reader could not tell it from a real one. ``None`` forces that to be visible.
     """
 
     id: str
     provenance: str
     observed_at: str
     freshness: str
-    confidence: float
+    confidence: float | None
 
     def __post_init__(self) -> None:
         if not self.id or not isinstance(self.id, str):
             raise ValueError("evidence id is required")
+        if self.confidence is None:
+            return
         if not isinstance(self.confidence, (int, float)) or isinstance(self.confidence, bool):
-            raise ValueError("evidence confidence must be a number")
+            raise ValueError("evidence confidence must be a number or None")
         if not 0.0 <= float(self.confidence) <= 1.0:
             raise ValueError("evidence confidence must be between 0 and 1")
 
@@ -202,10 +211,32 @@ class EnvelopeTask:
 
 @dataclass(frozen=True)
 class Claim:
-    """One statement in a result, cited to the evidence that supports it."""
+    """One statement in a result, cited to the evidence that supports it.
+
+    ``subject`` is the FACT this claim is about, not a label for the claim. It exists so
+    that two claims about the same fact can be recognised as being about the same fact --
+    which is what lets a disagreement be recorded instead of silently resolved (see
+    ``detect_disagreements``). A claim with no subject can never participate in one, which
+    is the safe default: an unlabelled claim is not merged with anything.
+    """
 
     text: str
     evidence_ids: tuple[str, ...] = ()
+    subject: str | None = None
+
+
+@dataclass(frozen=True)
+class Disagreement:
+    """Two or more claims about the SAME fact that do not agree.
+
+    Recorded and shown, never settled here. Picking a winner -- by majority, by
+    confidence, or by preference -- is how a council quietly becomes a single voice, and
+    the roadmap forbids it: *"Disagreement is recorded and shown, never settled by majority
+    vote."* This type carries the conflicting claims so a reader can weigh them.
+    """
+
+    subject: str
+    claims: tuple[Claim, ...]
 
 
 class ResultStatus(str, Enum):
@@ -228,6 +259,7 @@ class EnvelopeResult:
     confidence: float = 0.0
     what_would_change: tuple[str, ...] = ()
     proposals: tuple[Mapping[str, Any], ...] = ()
+    disagreements: tuple[Disagreement, ...] = ()
     detail: str | None = None
 
     def __post_init__(self) -> None:
@@ -239,6 +271,29 @@ class EnvelopeResult:
             raise ValueError("an ok result must carry at least one claim")
         if self.status is not ResultStatus.OK and self.claims:
             raise ValueError("an unavailable or failed result must not carry claims")
+        # A disagreement cannot be smuggled into a failed or unavailable result: those
+        # carry no claims, so a disagreement about them would be a claim by another name.
+        if self.status is not ResultStatus.OK and self.disagreements:
+            raise ValueError("an unavailable or failed result must not carry disagreements")
+
+
+def detect_disagreements(claims: Sequence[Claim]) -> tuple[Disagreement, ...]:
+    """Group claims by subject and return the subjects where they do not all agree.
+
+    Deterministic by construction: claims are grouped by their subject, a group is a
+    disagreement only when it holds more than one DISTINCT text, and both the groups and
+    the claims inside them are ordered the way they arrived. Nothing is scored, ranked or
+    voted on -- the function's whole purpose is to hand a reader the conflict intact.
+    """
+    grouped: dict[str, list[Claim]] = {}
+    for claim in claims:
+        if claim.subject:
+            grouped.setdefault(claim.subject, []).append(claim)
+    disagreements = []
+    for subject, group in grouped.items():
+        if len({claim.text for claim in group}) > 1:
+            disagreements.append(Disagreement(subject=subject, claims=tuple(group)))
+    return tuple(disagreements)
 
 
 @dataclass(frozen=True)
@@ -278,17 +333,19 @@ class RunRecord:
 class RolePermissions:
     """What one role may do. ``tools`` is the whole authority surface: a role can do
     nothing that is not named here, so an omitted tool is an unavailable capability rather
-    than a forgotten check."""
+    than a forgotten check.
+
+    The roadmap requires *"per-role tool restrictions, evidence scope, budgets and failure
+    behaviour"* -- all four live here, so a role's limits are readable in one place and a
+    missing limit is a missing field rather than an implicit default.
+    """
 
     role: str
     purpose: str
     tools: frozenset[str]
     evidence_scope: frozenset[str]
+    budget: Budget
     failure_behaviour: str
-
-
-def _read_only(tools: Sequence[str], evidence_scope: Sequence[str]) -> frozenset[str]:
-    return frozenset(tools)
 
 
 # The council roles named by the roadmap (I.2 ships one of them; I.3 composes them). Every
@@ -300,6 +357,7 @@ ROLE_PERMISSIONS: Mapping[str, RolePermissions] = {
         purpose="Project what is coming and what it does to the funding picture.",
         tools=frozenset({"read_accounts", "read_dial", "propose_funding"}),
         evidence_scope=frozenset({"accounts", "commitments", "charges", "dial"}),
+        budget=Budget(max_tokens=2048, max_seconds=30, max_tool_calls=4),
         failure_behaviour="Report unavailable with no claims; never estimate a number.",
     ),
     "investigator": RolePermissions(
@@ -307,6 +365,7 @@ ROLE_PERMISSIONS: Mapping[str, RolePermissions] = {
         purpose="Find the evidence behind a charge, an event or a discrepancy.",
         tools=frozenset({"read_evidence", "read_accounts"}),
         evidence_scope=frozenset({"evidence", "accounts", "charges"}),
+        budget=Budget(max_tokens=2048, max_seconds=30, max_tool_calls=6),
         failure_behaviour="Report unavailable with no claims; never assert an unread record.",
     ),
     "skeptic": RolePermissions(
@@ -314,6 +373,7 @@ ROLE_PERMISSIONS: Mapping[str, RolePermissions] = {
         purpose="Supply counterexamples and attack a claim's evidence.",
         tools=frozenset({"read_evidence", "read_dial"}),
         evidence_scope=frozenset({"evidence", "dial", "commitments"}),
+        budget=Budget(max_tokens=1536, max_seconds=20, max_tool_calls=4),
         failure_behaviour="Report unavailable; a skeptic that cannot read is silent, not agreeable.",
     ),
     "guardian": RolePermissions(
@@ -321,6 +381,7 @@ ROLE_PERMISSIONS: Mapping[str, RolePermissions] = {
         purpose="Object on policy, authority and evidence grounds.",
         tools=frozenset({"read_evidence"}),
         evidence_scope=frozenset({"evidence", "policy"}),
+        budget=Budget(max_tokens=1024, max_seconds=15, max_tool_calls=2),
         failure_behaviour="Fail CLOSED: an unavailable guardian must block the proposal it guards.",
     ),
     "teacher": RolePermissions(
@@ -328,6 +389,7 @@ ROLE_PERMISSIONS: Mapping[str, RolePermissions] = {
         purpose="Explain a decision in plain language from the recorded evidence.",
         tools=frozenset({"read_evidence", "read_dial"}),
         evidence_scope=frozenset({"evidence", "dial", "accounts", "commitments"}),
+        budget=Budget(max_tokens=2048, max_seconds=25, max_tool_calls=4),
         failure_behaviour="Report unavailable; never explain from memory rather than evidence.",
     ),
 }

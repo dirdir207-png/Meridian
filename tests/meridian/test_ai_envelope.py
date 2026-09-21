@@ -49,6 +49,18 @@ def _task(role: str = "forecaster", evidence=()) -> EnvelopeTask:
     return EnvelopeTask(role=role, question="What is coming?", evidence=tuple(evidence))
 
 
+def _permissions(role: str, tools) -> envelope.RolePermissions:
+    """A deliberately minimal grant, for the falsification tests below."""
+    return envelope.RolePermissions(
+        role=role,
+        purpose="constructed by a test",
+        tools=frozenset(tools),
+        evidence_scope=frozenset({"evidence"}),
+        budget=Budget(max_tokens=64, max_seconds=5, max_tool_calls=1),
+        failure_behaviour="n/a",
+    )
+
+
 # ---------------------------------------------------------------------------------------
 # THE ANTI-DRIFT CHECK: a registry of names that resolve to nothing would keep passing
 # after the write surface was renamed or replaced.
@@ -153,13 +165,7 @@ def test_the_council_roles_named_by_the_roadmap_all_exist():
 def test_granting_a_role_a_write_tool_raises(monkeypatch):
     """The falsifier. If this passed without raising, the per-role tests above would prove
     nothing about the guard."""
-    widened = envelope.RolePermissions(
-        role="forecaster",
-        purpose="widened by a careless edit",
-        tools=frozenset({"read_dial", "crew_write"}),
-        evidence_scope=frozenset({"dial"}),
-        failure_behaviour="n/a",
-    )
+    widened = _permissions("forecaster", {"read_dial", "crew_write"})
     monkeypatch.setitem(envelope.ROLE_PERMISSIONS, "forecaster", widened)
     with pytest.raises(RoleCannotWrite, match="provider write tool"):
         assert_role_cannot_write("forecaster")
@@ -169,13 +175,7 @@ def test_granting_a_role_a_write_tool_raises(monkeypatch):
 def test_granting_an_unregistered_tool_is_also_refused(monkeypatch):
     """`tools` is a CLOSED set. An unknown name would grant nothing while reading as though
     it granted something, so it is refused rather than ignored."""
-    widened = envelope.RolePermissions(
-        role="teacher",
-        purpose="typo in the tool name",
-        tools=frozenset({"read_diall"}),
-        evidence_scope=frozenset({"dial"}),
-        failure_behaviour="n/a",
-    )
+    widened = _permissions("teacher", {"read_diall"})
     monkeypatch.setitem(envelope.ROLE_PERMISSIONS, "teacher", widened)
     with pytest.raises(RoleCannotWrite, match="unregistered tool"):
         assert_role_cannot_write("teacher")
@@ -188,13 +188,7 @@ def test_the_import_time_invariant_is_wired(monkeypatch):
     monkeypatch.setitem(
         envelope.ROLE_PERMISSIONS,
         "skeptic",
-        envelope.RolePermissions(
-            role="skeptic",
-            purpose="bad",
-            tools=frozenset({"crew_reconcile"}),
-            evidence_scope=frozenset({"evidence"}),
-            failure_behaviour="n/a",
-        ),
+        _permissions("skeptic", {"crew_reconcile"}),
     )
     with pytest.raises(RoleCannotWrite):
         envelope._assert_registry_is_safe()
@@ -301,8 +295,35 @@ def test_the_run_record_carries_what_an_audit_needs():
 
 def test_the_envelope_module_calls_no_model_and_holds_no_credential():
     """The envelope defines a contract; it must not become a second, unguarded AI path.
-    Checked against the source so a future edit that reaches for a client is caught."""
-    source = (envelope.__file__ or "")
-    text = open(source, encoding="utf-8").read()
-    for forbidden in ("requests.", "openai", "api_key", "os.environ", "subprocess"):
-        assert forbidden not in text, forbidden
+
+    Checked over the parsed AST rather than the raw text, because a substring scan matches
+    the module's own docstring -- which names these tokens precisely in order to promise it
+    avoids them -- and a check that fails on its own explanation gets deleted rather than
+    fixed. Imports and attribute access are what can actually reach a network or read a
+    credential, so those are what is checked.
+    """
+    import ast
+
+    tree = ast.parse(open(envelope.__file__, encoding="utf-8").read())
+
+    imported: set[str] = set()
+    attribute_chains: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported.update(alias.name.split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imported.add(node.module.split(".")[0])
+        elif isinstance(node, ast.Attribute):
+            chain = []
+            cursor: ast.AST = node
+            while isinstance(cursor, ast.Attribute):
+                chain.append(cursor.attr)
+                cursor = cursor.value
+            if isinstance(cursor, ast.Name):
+                chain.append(cursor.id)
+                attribute_chains.add(".".join(reversed(chain)))
+
+    forbidden_modules = {"requests", "subprocess", "openai", "urllib", "httpx", "socket", "os"}
+    assert not (imported & forbidden_modules), sorted(imported & forbidden_modules)
+    assert "os.environ" not in attribute_chains
+    assert "os.getenv" not in attribute_chains

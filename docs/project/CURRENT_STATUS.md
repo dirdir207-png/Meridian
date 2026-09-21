@@ -33,6 +33,51 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## Track I.2: the Investigator runs on the envelope, and all four adversarial cases pass (`OS-073`) (2026-09-21, base `44f02c1`)
+
+**The second half of the I.1/I.2 pair.** I.1 (`OS-072`) built the contract and the permission model;
+this is the first role that runs on it. The roadmap's ordering is deliberate — *"Prove the envelope
+before adding roles"* — so the role arrives after the thing it depends on, not before.
+
+`meridian/ai/investigator.py` answers a question about a charge, an event or a discrepancy **from the
+evidence actually linked to that target**, and returns a typed `EnvelopeResult` plus a `RunRecord`.
+All four adversarial cases the roadmap names by name are implemented and pass:
+
+- **A hallucinated citation voids the whole result.** Not "drops the bad claim" — the result is
+  `FAILED` carrying **no claims**, which the envelope enforces structurally, so the fabricated text
+  cannot reach a reader even accidentally. Repairing it would keep whatever the model produced next
+  to it, and the role cannot see why it invented a citation.
+- **Missing evidence → the model is never called.** Asserted, not assumed: the client's call list is
+  empty. A model asked to explain nothing will produce something.
+- **Contradictory sources are both kept and flagged**, never voted on. Two claims about the same
+  `subject` that disagree both survive, with the conflict recorded — the rule that stops a council
+  becoming a single voice, enforced early because I.2's acceptance list needs it.
+- **An unavailable model is a state, not an exception**, and is **never retried** — retrying a call
+  whose outcome is unknown is how a read-only role starts behaving like an executor.
+
+**Three honesty decisions worth naming.** `EvidenceRef.confidence` is **required but nullable**:
+`meridian/evidence.py::EvidenceItem` records no confidence, so the binder states `None` rather than a
+default like 0.5, which would be a fabricated measurement a reader could not tell from a real one.
+The run record states provider `unknown` when the client cannot attest to one, instead of a plausible
+name nothing verified. And **withdrawn evidence is not evidence** — items whose content was deleted or
+which were revoked are excluded, because answering from a retracted record is not evidence-bound.
+
+**It receives a client and never builds one.** The client is injected and needs only
+`complete(system, messages) -> str`, so the real `FailoverLLMClient` and a two-line test fake are
+interchangeable — **no provider is contacted and no credential exists anywhere in the tests.** A test
+checks this over the parsed AST: my first version scanned the raw text and failed on the module's own
+docstring, which *names* `api_key` and `os.environ` in order to promise it avoids them. Imports and
+attribute access are what can actually reach a network, so those are what is checked now.
+
+**Honestly not finished.** The role is **not yet reachable from the product** — no endpoint, no UI, no
+run-record persistence (which needs a migration). "Immediately useful" is therefore only half true, so
+`OS-073` stays `in_progress`. A role nothing can invoke is not shipped, and calling it done would be
+the placeholder-completion the work order forbids.
+
+**Evidence.** 15 tests in `tests/meridian/test_ai_investigator.py`, 35 in the envelope's; full
+non-browser suite **1748 passed**, 73 skipped. Ruff and `git diff --check` clean. `OS-073` and the
+I.2 roadmap entry cross-reference each other. No authority, provider or financial change.
+
 ## Track I.1 begins: the role envelope and its permissions, recorded as `OS-072` (2026-09-21, base `25af68b`)
 
 **A reconciliation gap, closed.** Roadmap §6 names the critical path's next move — *"close Track D's

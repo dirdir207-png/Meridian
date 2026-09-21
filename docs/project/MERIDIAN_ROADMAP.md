@@ -329,7 +329,10 @@ the reasoning that produced it. **Enforced in code: no role ever receives a prov
 
 **I.2 — One role, end to end.** Ship the Forecaster or Investigator first — read-only, evidence-bound,
 immediately useful. Adversarial tests: hallucinated citation, missing evidence, contradictory sources,
-unavailable model. Prove the envelope before adding roles.
+unavailable model. Prove the envelope before adding roles. **Recorded as `OS-073`** (added 2026-09-21):
+the Investigator is built and all four adversarial cases pass, but it is **not yet reachable from the
+product** — no endpoint, no UI, no run-record persistence — so it stays `in_progress`. "Immediately
+useful" is only half true until something can invoke it.
 
 **I.3 — Council mechanics.** Only then, multi-role deliberation on one bounded question: Forecaster proposes,
 Skeptic supplies counterexamples, Guardian objects on policy/evidence, Investigator brings causal evidence,
