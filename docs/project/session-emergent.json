@@ -4,46 +4,70 @@
     "summary": "one line, what it is",
     "why": "what it would fix and what it would touch",
     "arose": "YYYY-MM-DD",
-    "promoted_to": "ledger id if the owner promoted it, else omit"
+    "promoted_to": "ledger id, if the owner promoted it into planned work",
+    "parked_in": "roadmap section, if it has a landable home but is NOT scheduled",
+    "decision_owed": "true if it cannot move without an explicit owner decision"
   },
   "emergent": [
     {
       "summary": "Plan-page invoice linking is loose (OS-068)",
       "why": "`plan.py::_bill_invoice_evidence` asks 'is this a bill email?', which cannot be checked, so it leaks — observed false positives on Verizon, Xfinity and Eversource. Tightening must not starve charge matching, which needs the card alerts the invoice gate currently rejects.",
       "arose": "2026-09-21",
-      "promoted_to": "OS-068"
+      "promoted_to": "OS-068",
+      "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (checkpoint: Track C V1, after V1's evidence path is whole)",
+      "due_check": {
+        "kind": "task",
+        "value": "OS-067",
+        "note": "OS-067 is the evidence lane OS-068 tightens; do not tune invoice precision while the evidence path it judges is still moving."
+      }
     },
     {
       "summary": "Detect unmodelled recurring charges by starting from the CHARGE, not a sender filter (OS-069)",
       "why": "An enumerated filter must know the answer in advance, which is why 28 bill-like senders had no coverage. A recurrence pass over the ledger found 'fruitful membership' at $48/mo that no email keyword had surfaced. Proposes only; never auto-creates a commitment.",
       "arose": "2026-09-21",
-      "promoted_to": "OS-069"
+      "promoted_to": "OS-069",
+      "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (checkpoint: Track C V5)",
+      "due_check": {
+        "kind": "task",
+        "value": "OS-067",
+        "note": "An unmodelled-charge detector is only meaningful once evidence attachment itself is trustworthy."
+      }
     },
     {
       "summary": "Trial watch — surface a converting trial before it charges (OS-070)",
       "why": "Owner-stated intent ('we are building a free trial canceler'). The ledger already holds a converted trial: Unifyed.ai Trial -39.99. Depends on V4's suppression lifecycle or it becomes the alert storm V4 is gated on.",
       "arose": "2026-09-21",
-      "promoted_to": "OS-070"
+      "promoted_to": "OS-070",
+      "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (checkpoint: Track C V4, gated on V4 suppression)",
+      "due_check": {
+        "kind": "task",
+        "value": "OS-067",
+        "note": "Was falsely due: `track-C-V4`'s only member IS this parked item, so 'no open work' was vacuously true. The real prerequisite is V4's suppression/dedupe lifecycle (proactive.py's unverified lifecycle), which does not exist  a repeated trial warning IS the alert storm V4 is gated on. Re-point this at a real V4 suppression task once one exists; until then it is deliberately held behind the evidence lane."
+      }
     },
     {
       "summary": "18 legacy evidence links from the retired amount-only matcher are demonstrably wrong",
-      "why": "A $9.99 marketing email is linked to charges 55/59/84, and one charge has the same receipt linked three times. NOT removed: absence is recorded, never deleted (C01), so removal needs explicit owner approval. Harmless today, will confuse any future display that trusts links.",
-      "arose": "2026-09-21"
+      "why": "A $9.99 marketing email is linked to charges 55/59/84, and one charge has the same receipt linked three times. Harmless while nothing reads them; misleading the moment a surface displays transaction links.",
+      "arose": "2026-09-21",
+      "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (checkpoint: whenever a surface first displays transaction links)",
+      "decision_owed": true
     },
     {
-      "summary": "The calendar connector remains wired to nothing (the outstanding part of OS-067)",
-      "why": "Referenced only for its OAuth scope constant while a stored token sits unused. This is the third of the three things the owner originally reported and the only one still open; it sits on the critical path in a way the earmarked ideas do not.",
-      "arose": "2026-09-21"
-    },
-    {
-      "summary": "The 729 content-less evidence rows are NOT recoverable and must not be re-proposed",
-      "why": "Owner decision 'Leave it' (commit c8d6d69). Historical metadata-only loss; the Gmail originals are unrecoverable because the tokens are dead, and the only partial recovery re-reads the personal iCloud INBOX, reopening the privacy tradeoff the Bills folder closed.",
-      "arose": "2026-09-21"
+      "summary": "The calendar connector remains wired to nothing — the open half of OS-067",
+      "why": "Referenced only for its OAuth scope constant while a stored token sits unused. This is the third of the three things the owner originally reported, and the only part of OS-067 still outstanding. NOT parked: it is in-flight work on the critical path.",
+      "arose": "2026-09-21",
+      "promoted_to": "OS-067"
     },
     {
       "summary": "A harness-mediated Gmail ingestion service is possible but NOT built",
-      "why": "D-016 keeps it available: the app cannot call Composio today, but a scheduled agent-driven sweep is architecturally legitimate. Not authorised by D-016 and would need its own decision, operational footprint, and honest liveness statement. Meridian must keep working without it.",
-      "arose": "2026-09-21"
+      "why": "D-016 keeps the avenue available: the app cannot call Composio today, but a scheduled agent-driven sweep is architecturally legitimate. Not authorised by D-016 and would need its own decision, operational footprint, and honest liveness statement. Meridian must keep working without it.",
+      "arose": "2026-09-21",
+      "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (checkpoint: after the current evidence lane closes, and only via its own decision)",
+      "due_check": {
+        "kind": "task",
+        "value": "OS-067",
+        "note": "Only after the current evidence lane closes, and only via its own decision; D-016 keeps the avenue open without approving the build."
+      }
     }
   ]
 }

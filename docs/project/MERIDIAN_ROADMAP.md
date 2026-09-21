@@ -562,3 +562,29 @@ Architecture | silent (1st) vs explicit position (2nd) | evidence | **Adopt the 
 Date math placement | Phase 1 (1st) vs V2 (2nd) | evidence | **Pull into V1** — drift is proven, and V1 claims trustworthiness |
 Safety framing | per-phase boundary (1st) + precedence rules | safety | Keep per-slice boundaries; **discard** the quota and conservative-precedence rules as unsound |
 Operational hazards | absent from both | evidence | **Added** — migration immutability, runners, orphans, committed≠served, latency |
+
+---
+
+## 12. Addendum — parked work, and the checkpoint it belongs to (added 2026-09-21)
+
+**What this section is for.** The owner's own formulation of the gap: *"the trick is ending sessions and determining (if it isn't a clean pre-defined slice) — does this need to continue right now in the new session, or can it be earmarked, be added to a new addendum to the roadmap file, at a certain checkpoint to be worked on."* This is that addendum. It exists so an idea that is worth keeping has a **landable home** instead of becoming an orphaned intention or, worse, displacing assigned work simply because it was the most recent thing discussed.
+
+**The rule that keeps it honest.**
+
+1. **Nothing here is assigned.** An entry is parked, not scheduled, and carries no authorisation. Work does not begin from this section; it begins from §6's critical path, or from an explicit owner decision that moves an entry there.
+2. **Every entry names its checkpoint.** Not a date and not a priority — the point in the build where it becomes appropriate. An entry with no checkpoint is not ready to be parked and stays in `session-emergent.json` until someone can name one.
+3. **Parking is not promotion.** Moving an entry into the critical path is an owner decision recorded in the task ledger, and this section is updated in the same commit to say so. `scripts/roadmap_handoff_check.py` verifies that no entry presents itself as assigned.
+4. **An entry may be dropped.** If the owner judges a parked idea unnecessary, deleting it is the correct outcome — a parking lot that only grows becomes the sprawl it was built to prevent.
+
+### Parked entries
+
+| Entry | What it is | Checkpoint it belongs to | Why parked |
+|---|---|---|---|
+| **OS-068** | Plan-page invoice linking is loose; give bill-invoice matching its own precision bar. | **Track C V1, after V1's own evidence path is whole.** V1 claims "evidence per claim", so invoice precision belongs to the slice that makes that claim true — tightening it before the evidence pipeline is stable would be tuning a surface that is still moving. | Track C capability work, not on §6's critical path. Read-only and display-only, so the cost of waiting is contained. |
+| **OS-069** | Detect charges the ledger sees but Meridian does not model — recurring, and newly-appeared, starting from the CHARGE rather than a sender filter. | **Track C V5.** V5 is "explain, investigate and recover value (evidence, refunds, subscriptions)"; an unmodelled recurring charge is exactly what V5 exists to surface. | The signal is proven (a recurrence pass found an invisible $48/mo charge), but it PROPOSES obligations, so it should land after V1 establishes what an obligation looks like in evidence. |
+| **OS-070** | Trial watch — surface a converting trial before it charges. | **Track C V4, and gated on V4's suppression lifecycle.** V4's stated blocker is unverified suppression (`proactive.py`), and "no alert storms" is precisely a repeated trial warning's failure mode. | Owner-stated intent, but building it before V4's suppression exists would create the alert storm V4 is gated on. |
+| **Legacy link cleanup** | 18 evidence links from the retired amount-only matcher are demonstrably wrong (a $9.99 marketing email linked to charges 55/59/84; one charge linked to the same receipt three times). | **Whenever a surface first displays transaction links.** Harmless while nothing reads them; misleading the moment something does. | **Needs an explicit owner decision** — absence is recorded, never deleted (C01), so this cannot be cleaned up unilaterally. |
+| **Calendar connector** | The outstanding part of **OS-067**: referenced only for its OAuth scope constant while a stored token sits unused. | **Now — it is the open half of an in-flight high-priority task**, not parked work. Listed here only so its status is visible in one place. | Not parked. Named because OS-067's other three quarters are done and this one has no declared position. |
+| **Harness ingestion service** | A scheduled, agent-driven Gmail→Composio ingestion feeding the app. | **After the current evidence lane closes**, and only via its own decision. | **Not authorised.** D-016 keeps the avenue open; it does not approve building it, and it needs an operational footprint and honest liveness of its own. |
+
+**A note on why this section is separate from §9 Non-goals.** §9 records what Meridian must *never* do. This section records what it *could* do later — the distinction between "no" and "not yet" is exactly the one that was being lost.
