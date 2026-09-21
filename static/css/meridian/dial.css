@@ -1035,6 +1035,12 @@ html[data-theme="light"] .m-observatory-safe-horizon { color: #25644f; }
 html[data-theme="light"] .obs-shell .m-command-top .m-workspace-kicker { color: #674d86; }
 .m-observatory-moon { border-radius: 50%; background-size: 150%; }
 .obs-shell .m-observatory-note .obs-today-orbit { margin-top: 0; }
+/* The Virgil bubble is DELIBERATELY absent on Today, and this comment exists because the
+   question was asked twice before anyone answered it. Confirmed intentional by the owner on
+   2026-09-21. Today opens the advisor from its own content -- today.html:7 ("Ask Virgil"),
+   :50 ("Ask Virgil about this plan") and :130 ("Explore scenario") -- so the floating
+   trigger would be redundant, and on a phone it would sit over the dock, which the build
+   handoff forbids. Do not un-hide this to "restore" the bubble. */
 body.obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab.m-advisor-trigger { display: none !important; }
 
 /* Compact evidence receipt: each fact appears once, at a readable size. */
