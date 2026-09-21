@@ -95,13 +95,17 @@ def main() -> int:
     # checklist. Excluding them makes the section describe the PROJECT's movement rather than
     # this file's own bookkeeping, which is what a reader actually needs, and the list is then
     # stable across a regenerate-and-commit cycle.
-    recent = [
-        line
-        for line in git(
-            "log", "--oneline", "-14", "--no-decorate", "--", ".", f":(exclude){OUT.relative_to(ROOT)}"
-        ).splitlines()
-        if line
-    ][:12]
+    try:
+        # A caller (or a test) may point OUT outside the repository, so the pathspec is only
+        # applied when a repository-relative path actually exists. relative_to raises otherwise,
+        # which would crash generation rather than degrade.
+        excluded = OUT.relative_to(ROOT).as_posix()
+    except ValueError:
+        excluded = None
+    log_args = ["log", "--oneline", "-14", "--no-decorate", "--", "."]
+    if excluded:
+        log_args.append(f":(exclude){excluded}")
+    recent = [line for line in git(*log_args).splitlines() if line][:12]
 
     # The roadmap's own "Next move" paragraph, quoted rather than paraphrased.
     next_move = ""
