@@ -182,10 +182,117 @@ async function setLearningFloor(floor) {
   }
 }
 
+function renderFundingPlans(payload) {
+  /* Crew's funding plans, so a plan can be ADDRESSED by its id. Names come from a provider, so
+     every value renders through textContent -- never innerHTML. */
+  const list = root?.querySelector("[data-funding-plans]");
+  if (!list) return;
+  const plans = Array.isArray(payload?.funding_plans) ? payload.funding_plans : [];
+  list.replaceChildren();
+  if (!plans.length) {
+    const empty = document.createElement("p");
+    empty.className = "m-payday-note";
+    empty.textContent =
+      "Crew is not reporting a funding plan right now, so there is no payday cadence to set. " +
+      "Meridian will offer this as soon as Crew returns one.";
+    list.append(empty);
+    return;
+  }
+  for (const plan of plans) {
+    const row = document.createElement("div");
+    row.className = "m-funding-plan-row";
+
+    const identity = document.createElement("div");
+    identity.className = "m-funding-plan-identity";
+    const name = document.createElement("strong");
+    name.textContent = plan.name || "Unnamed plan";
+    const cadence = document.createElement("small");
+    cadence.textContent = plan.cadence
+      ? `Crew cadence: ${plan.cadence}`
+      : "Crew cadence: not reported";
+    identity.append(name, cadence);
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "decimal";
+    input.className = "m-funding-plan-amount";
+    input.dataset.fundingPlanAmount = "";
+    input.value = plan.amount === null || plan.amount === undefined ? "" : String(plan.amount);
+    input.setAttribute("aria-label", `Payday amount for ${plan.name || "this plan"}`);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "m-primary-button";
+    button.dataset.fundingPlanSet = plan.id || "";
+    button.textContent = "Set in Crew";
+
+    button.addEventListener("click", () => setFundingPlan(plan.id, input.value, button));
+
+    row.append(identity, input, button);
+    list.append(row);
+  }
+}
+
+async function setFundingPlan(planId, rawAmount, button) {
+  /* A real Crew write, so it goes through the existing action pipeline rather than a bespoke
+     route: POST /api/actions/mutate with provenance owner_direct. The ROUTER decides what happens
+     -- a direct, fully-specified owner edit executes; anything interpreted, composed or
+     low-confidence becomes a proposal -- so this reports whichever actually occurred instead of
+     assuming success. Never retried: an uncertain financial mutation must not be repeated. */
+  const status = root.querySelector("[data-funding-plan-status]");
+  const amount = Number(String(rawAmount ?? "").trim());
+  if (!planId) {
+    status.textContent = "That plan has no Crew id, so it cannot be set.";
+    return;
+  }
+  if (!Number.isFinite(amount) || amount <= 0) {
+    status.textContent = "Enter the payday amount as a number greater than zero.";
+    return;
+  }
+  button.disabled = true;
+  try {
+    const response = await fetch("/api/actions/mutate", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "update_crew_paycheck_funding_plan",
+        params: { fundingPlanId: planId, amount },
+        provenance: "owner_direct",
+        rationale: "owner set the payday amount directly in Settings",
+      }),
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload) {
+      const detail = (payload && payload.error) || {};
+      status.textContent = `${
+        detail.message || "The payday amount could not be set."
+      } ${detail.recovery_action || ""}`.trim();
+      return;
+    }
+    if (payload.routing_direct) {
+      status.textContent =
+        "Set in Crew. Meridian reads Crew back before treating it as confirmed, so this may show " +
+        "as pending until that read completes.";
+    } else {
+      status.textContent =
+        "That change needs your approval, so it is waiting in Pending Actions. Nothing has " +
+        "reached Crew yet.";
+    }
+    renderFundingPlans(await meridianFetch("/api/meridian/settings/payday"));
+  } catch (error) {
+    status.textContent = `${error.message} ${error.recoveryAction || ""}`.trim();
+  } finally {
+    button.disabled = false;
+  }
+}
+
 async function load() {
   if (!root) return;
   try {
-    render(await meridianFetch("/api/meridian/settings/payday"));
+    const payload = await meridianFetch("/api/meridian/settings/payday");
+    render(payload);
+    renderFundingPlans(payload);
   } catch (error) {
     const errorBox = root.querySelector("[data-payday-error]");
     errorBox.textContent = `${error.message} ${error.recoveryAction || ""}`.trim();
