@@ -266,12 +266,25 @@ def main() -> int:
         # still describe the documents as they are?"
         def normalise(s: str) -> list[str]:
             out: list[str] = []
-            # The uncommitted-paths block is RUN STATE, not content: it lists what the working
-            # tree looked like at generation time, and regenerating the handoff itself adds
-            # HANDOFF.md to that list. Comparing it made --check fail immediately after a
-            # regenerate, which is the defect this whole normalisation exists to avoid.
             in_dirty_block = False
+            in_recent_block = False
             for line in s.splitlines():
+                # The recent-commits section is derived from history and shifts on EVERY commit,
+                # including the commit that saves this file. It is reconnaissance for a reader,
+                # not a correctness claim, so comparing it guaranteed a red check. Two earlier
+                # attempts to stabilise it (excluding the handoff's own commits, then excluding
+                # its dirty-tree note) both failed for the same reason: any commit touching this
+                # file AND another file moves the list. It is therefore excluded from the check.
+                if line.startswith("## 6. RECENT COMMITS"):
+                    in_recent_block = True
+                    continue
+                if in_recent_block:
+                    if line.startswith("## "):
+                        in_recent_block = False
+                    else:
+                        continue
+                # The uncommitted-paths block is RUN STATE, not content: it lists the working
+                # tree at generation time, and regenerating the handoff adds HANDOFF.md to it.
                 if line.startswith("**Uncommitted tracked changes"):
                     in_dirty_block = True
                     continue
@@ -282,9 +295,8 @@ def main() -> int:
                 if line.startswith("- Generated:"):
                     continue
                 if line.startswith("- Commit:"):
-                    # Compare the BRANCH only; the hash is what the session recorded at
-                    # generation time, and a handoff written before its own commit can never
-                    # name it.
+                    # The branch only. The hash is what the session recorded at generation time,
+                    # and a handoff written before its own commit can never name it.
                     line = " ".join(line.split(" on ")[:2]).split(" — ")[0]
                 if line:
                     out.append(line)
