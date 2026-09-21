@@ -1288,9 +1288,10 @@
     },
     {
       "id": "VIRGIL-A1",
+      "blocked_reason": "THE ACTUAL GATE, and it is AGENT WORK, not an owner decision. Owner, 2026-09-21: \"The next part A1 (or whatever it is) is YOUR task, and is the actual gate.\" This is where the Virgil spine is actually held up. Earlier sessions recorded it as `blocked` with no reason, which invited the invention of an owner-gate; the owner has now stated the opposite plainly, and stated that the decision VIRGIL-A0 formalises has already been made more than once. So nothing is pending on the owner. The task is to do the work.",
       "title": "Authenticated read-only Virgil voice vertical slice",
       "phase": "virgil-reactive",
-      "status": "blocked",
+      "status": "ready",
       "priority": "high",
       "dependencies": [
         "VIRGIL-A0"
@@ -1306,6 +1307,7 @@
     },
     {
       "id": "VIRGIL-A2",
+      "blocked_reason": "DOWNSTREAM OF VIRGIL-A1, which the owner identifies as the actual gate and as agent work rather than an owner decision (2026-09-21). This blocker is a recorded dependency on a specific task, not an attribution to the owner.",
       "title": "Typed deterministic iPhone actions beginning with Apple Maps",
       "phase": "virgil-device-actions",
       "status": "blocked",
@@ -1324,6 +1326,7 @@
     },
     {
       "id": "VIRGIL-A3",
+      "blocked_reason": "DOWNSTREAM OF VIRGIL-A1, which the owner identifies as the actual gate and as agent work rather than an owner decision (2026-09-21). This blocker is a recorded dependency on a specific task, not an attribution to the owner.",
       "title": "Virgil-to-Meridian proposal bridge",
       "phase": "virgil-controlled-operations",
       "status": "blocked",
@@ -1344,6 +1347,7 @@
     },
     {
       "id": "VIRGIL-A4",
+      "blocked_reason": "DOWNSTREAM OF VIRGIL-A1, which the owner identifies as the actual gate and as agent work rather than an owner decision (2026-09-21). This blocker is a recorded dependency on a specific task, not an attribution to the owner.",
       "title": "Proactive Virgil and bounded long-running Harness tasks",
       "phase": "virgil-proactive",
       "status": "blocked",
@@ -1364,6 +1368,7 @@
     },
     {
       "id": "VIRGIL-A5",
+      "blocked_reason": "DOWNSTREAM OF VIRGIL-A1, which the owner identifies as the actual gate and as agent work rather than an owner decision (2026-09-21). This blocker is a recorded dependency on a specific task, not an attribution to the owner.",
       "title": "Rich conversational Virgil client and capability expansion",
       "phase": "virgil-expansion",
       "status": "blocked",
