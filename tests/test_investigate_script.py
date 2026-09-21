@@ -215,7 +215,29 @@ def test_a_malformed_target_exits_unavailable_without_touching_the_database(monk
 # Exit codes and disagreement rendering
 # ---------------------------------------------------------------------------------------
 
-def test_exit_codes_are_derived_from_the_result_status():
+def test_a_missing_target_is_refused_unless_history_was_asked_for(monkeypatch, capsys, tmp_path):
+    """Found by running the command: --target was required by argparse, so `--history` could
+    not be used without inventing a target. It is now validated here instead, and a run still
+    cannot start without one."""
+    client = FakeClient()
+    monkeypatch.setattr(investigate_script, "build_client", lambda: client)
+
+    code = investigate_script.main(["--db", str(tmp_path / "m.db")])
+    assert code == investigate_script.EXIT_UNAVAILABLE
+    assert "--target is required" in capsys.readouterr().err
+    assert client.calls == []
+
+
+def test_an_unconfigured_model_is_checked_before_the_target(monkeypatch, capsys, tmp_path):
+    """A malformed target is a usage error, so it must be reported even with no model
+    configured -- otherwise a typo looks like a missing key."""
+    client = FakeClient(providers=())
+    monkeypatch.setattr(investigate_script, "build_client", lambda: client)
+    code = investigate_script.main(["--target", "bad", "--db", str(tmp_path / "m.db")])
+    assert code == investigate_script.EXIT_UNAVAILABLE
+    assert "kind:id" in capsys.readouterr().err
+
+
     from meridian.ai.envelope import ResultStatus
 
     assert investigate_script._EXIT_FOR_STATUS[ResultStatus.OK] == 0

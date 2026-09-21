@@ -14,10 +14,13 @@ which surface, what it looks like, who may see it -- and MERIDIAN_ROADMAP.md's v
 authority does not cover it. A read-only command needs none of that settled, adds no
 endpoint, and can be replaced by a surface later without changing the role.
 
-**Read-only, and checked rather than promised.** This script imports no write path and opens
-the database read-only in spirit and in practice: it calls ``list_links_for_target`` and
-``get_item``, and nothing else. ``tests/test_investigate_script.py`` parses this file and
-fails if it ever imports a provider write module, so the claim cannot rot.
+**Read-only with respect to money and providers, and precise about it.** This script imports
+no provider write path and calls no mutating method: it reads evidence with
+``list_links_for_target`` and ``get_item`` and nothing else. What it DOES write is one row in
+``ai_run_records`` — the audit trail I.1 requires — and no financial state, no proposal and no
+provider state is touched. ``--no-record`` turns even that off. The distinction is stated
+rather than glossed, because a command that describes itself as "read-only" while writing to
+the database is exactly the kind of quiet inaccuracy that makes a safety claim worthless.
 
 **An unconfigured model is reported, never faked.** With no API key in the environment the
 script prints that no model is configured and exits 2. It does not fall back to a canned
@@ -144,7 +147,40 @@ def format_text(payload: dict[str, Any]) -> str:
         f"{record['prompt_version']} · {record['outcome']} · "
         f"{len(record['evidence_ids'])} evidence ref(s)"
     )
+    if payload.get("recorded_id") is not None:
+        lines.append(f"recorded: ai_run_records#{payload['recorded_id']}")
     lines.append("(read-only: nothing was proposed, approved or executed)")
+    return "\n".join(lines)
+
+
+def record_run(run: RoleRun, db_path: str) -> int:
+    """Keep the run record, per I.1: "persisted so a proposal can be audited back to the
+    reasoning that produced it". Returns the stored row id.
+
+    Only the audit row is written -- no claim text, no model output, no evidence body (see
+    ``meridian/ai/run_records.py``). A failure to record must NOT discard the answer the
+    operator is waiting for, so the caller decides how to report it rather than this raising
+    into the run.
+    """
+    from meridian.ai.run_records import RunRecordStore
+
+    return RunRecordStore(db_path).record(run.record).id
+
+
+def show_history(db_path: str, *, limit: int) -> str:
+    """Recent runs, newest first. Read-only."""
+    from meridian.ai.run_records import RunRecordStore
+
+    runs = RunRecordStore(db_path).list_recent(limit=limit)
+    if not runs:
+        return "no runs recorded yet"
+    lines = [f"{len(runs)} most recent run(s):"]
+    for stored in runs:
+        lines.append(
+            f"  #{stored.id} {stored.recorded_at} {stored.role} "
+            f"{stored.provider}/{stored.model} {stored.outcome} "
+            f"({len(stored.evidence_ids)} evidence ref(s))"
+        )
     return "\n".join(lines)
 
 
@@ -161,7 +197,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Investigate the evidence behind a target (read-only).",
     )
-    parser.add_argument("--target", required=True, help="kind:id, e.g. transaction:412")
+    parser.add_argument(
+        "--target",
+        help="kind:id, e.g. transaction:412 (required unless --history is used)",
+    )
     parser.add_argument("--question", default=DEFAULT_QUESTION)
     parser.add_argument(
         "--db",
@@ -169,11 +208,34 @@ def build_parser() -> argparse.ArgumentParser:
         help="Meridian database (read-only; default $DB_FILE or savings_data.db)",
     )
     parser.add_argument("--json", action="store_true", help="emit JSON instead of text")
+    parser.add_argument(
+        "--no-record",
+        action="store_true",
+        help="do not append an audit row (the run is still printed)",
+    )
+    parser.add_argument(
+        "--history",
+        type=int,
+        metavar="N",
+        help="list the N most recent runs and exit (read-only)",
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+
+    if args.history is not None:
+        print(show_history(args.db, limit=args.history))
+        return EXIT_OK
+
+    if not args.target:
+        print(
+            "error: --target is required (kind:id, e.g. transaction:412), "
+            "unless --history is used.",
+            file=sys.stderr,
+        )
+        return EXIT_UNAVAILABLE
 
     try:
         target_kind, target_id = parse_target(args.target)
@@ -213,6 +275,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         question=args.question,
     )
     payload = render(run)
+
+    # Recording is attempted AFTER the answer is in hand and never replaces it. A failed
+    # audit write is reported on stderr while the investigation still reaches the operator:
+    # losing the trail is bad, but swallowing the answer is worse, and neither justifies
+    # pretending the run did not happen.
+    if not args.no_record:
+        try:
+            payload["recorded_id"] = record_run(run, args.db)
+        except Exception as exc:  # noqa: BLE001 - any storage failure is the same report
+            print(
+                f"warning: the run was not recorded ({type(exc).__name__}); the audit trail "
+                "is incomplete for this run.",
+                file=sys.stderr,
+            )
+
     print(json.dumps(payload, indent=2, sort_keys=True) if args.json else format_text(payload))
     return _EXIT_FOR_STATUS[run.result.status]
 

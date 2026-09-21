@@ -33,6 +33,52 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## Track I.1 completed: the run record is now persisted, not merely carried (`OS-072`) (2026-09-21, base `40eac06`)
+
+The previous round closed I.2 and named exactly one item still open on I.1: the run record was **carried**
+(`RunRecord.as_dict()` — role, provider, model, prompt version, evidence ids, timing, outcome) but **not
+persisted**, while I.1's own text asks for it "persisted so a proposal can be audited back to the reasoning
+that produced it". This closes it.
+
+`027_ai_run_records.sql` adds the table, `meridian/ai/run_records.py` is the store, and
+`scripts/investigate.py` is its **first real writer** — which is what keeps this from being speculative
+infrastructure with no caller. Every run is recorded and the row id is reported; `--no-record` opts out, and
+`--history N` reads the trail back.
+
+**A run record is a POINTER to the reasoning, never a copy of it.** There is **no claim text, no model
+output and no evidence body** in the schema — a test asserts the column set *exactly*, so adding a `claims`
+column fails the suite. Storing generated prose would create a second, unversioned home for financial
+statements, outside the evidence store and outside the surfaces that know how to label provenance and
+freshness.
+
+**Three schema decisions worth naming.** `evidence_ids` is a JSON array and deliberately **not a foreign
+key**: evidence can be revoked or have its content deleted, and the audit row must survive that and still
+say what was consulted — a cascade would erase the very row that explains why an answer was given.
+The store offers **no update and no delete** (asserted), because an audit trail that can be rewritten is not
+one. And `outcome` is free text, so a new failure mode needs no migration to be recordable.
+
+**Zero authoring authority.** The migration's own tests assert it contains no `amount`, `balance`,
+`approve` or `execute`. Rows describe what a read-only role did.
+
+## A wrong note of mine, corrected: FOUR tests enumerate migrations, not three (`OS-072`)
+
+Adding `027` broke `tests/meridian/test_bill_reserve_observations.py`, which hardcodes the applied-migration
+tail after `023`. My standing note said three tests enumerate migrations (all in `test_migrations.py`);
+**the fourth is in a different file entirely.** It was found by running the full suite, which is the only
+reason it was found at all — a targeted run of `test_migrations.py` passed cleanly while this was broken.
+
+The check is now **"grep every test file for the previous newest migration name"** rather than trusting a
+count, and all four places are updated. This is the second time in this session that a hand-picked test
+subset hid a real breakage; the whole-tree run is the gate, and the count in a note is not evidence.
+
+**Also fixed by running the command rather than reading it:** `--target` was declared required by argparse,
+so `--history` could not be used without inventing a target. Target validation now happens in `main`, with a
+regression test, and a run still refuses to start without one.
+
+**Evidence.** 13 tests for the store plus 2 new for the command; full non-browser suite **1779 passed**,
+73 skipped. Ruff and `git diff --check` clean; roadmap reconciles. No authority, provider or financial
+change.
+
 ## Track I.2 delivered: the Investigator is now reachable, as a command rather than a surface (`OS-073`) (2026-09-21, base `40c3e11`)
 
 The previous round left the role **built and proven but uninvocable**, and recorded that honestly as

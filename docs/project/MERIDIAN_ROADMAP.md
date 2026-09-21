@@ -335,8 +335,13 @@ unavailable model. Prove the envelope before adding roles. **Recorded as `OS-073
 reports an unconfigured model rather than fabricating an answer. A **command rather than a surface** was
 the deliberate choice — the role returns model-generated commentary about the owner's financial evidence,
 and putting that behind a new web surface is a product and visual-authority decision this roadmap does not
-settle, so it is left to the owner rather than taken as a side effect of a build. Still open and tracked on
-`OS-072`: the run record is **carried** but not yet **persisted**, which I.1's own text requires.
+settle, so it is left to the owner rather than taken as a side effect of a build. The run record is now
+**persisted** as well as carried — `027_ai_run_records.sql` plus `meridian/ai/run_records.py`, written by
+`scripts/investigate.py` and readable with `--history N` — so I.1's last open item is closed and `OS-072`
+is complete. Still not built, and still an owner decision: a **user-facing surface** for the role, and a
+reference from a run record to a proposal (the roadmap's stated purpose for the record — no role proposes
+yet, so there is nothing to link to; `evidence_ids` is already a bare reference array so adding one later
+will not rewrite existing rows).
 
 **I.3 — Council mechanics.** Only then, multi-role deliberation on one bounded question: Forecaster proposes,
 Skeptic supplies counterexamples, Guardian objects on policy/evidence, Investigator brings causal evidence,
