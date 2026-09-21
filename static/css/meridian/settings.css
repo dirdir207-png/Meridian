@@ -327,6 +327,19 @@ a.m-settings-row:focus-visible {
   mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/piggy-bank.svg") center / contain no-repeat;
 }
 
+/* The two rows added beyond the concept (OS-081). Both glyphs are shipped kit art, chosen for
+   the meaning rather than for the shape: arrow-repeat is the renewing charge itself, and
+   cash-stack is money arriving on a rhythm. */
+.m-settings-icon--arrow-repeat {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/arrow-repeat.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/arrow-repeat.svg") center / contain no-repeat;
+}
+
+.m-settings-icon--cash-stack {
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/cash-stack.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/cash-stack.svg") center / contain no-repeat;
+}
+
 .m-settings-icon--envelope {
   -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/envelope.svg") center / contain no-repeat;
   mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/envelope.svg") center / contain no-repeat;
@@ -421,6 +434,19 @@ a.m-settings-row:focus-visible {
   max-width: 52ch;
   margin: var(--m-space-4) 0 0;
   color: var(--m-ink-muted);
+}
+
+/* On a phone the hub IS the page, so this column is not a second pane and its copy is simply
+   wrong there: it says "Choose a group on the left", and a phone has no left. The intro belongs
+   to the desktop two-column arrangement, where its only job is to stop the main column being an
+   empty pane -- and it duplicated "How Meridian works for you." as well, which the hub's own
+   head already states.
+   This rule is scaffolding for that arrangement, which the next step of OS-081 replaces by
+   moving the hub itself into the main column; it goes with it. */
+@media (max-width: 900px) {
+  .m-settings-hub-intro {
+    display: none;
+  }
 }
 
 

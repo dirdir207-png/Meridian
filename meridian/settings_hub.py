@@ -1,9 +1,17 @@
 """Settings hub structure — the 09-18 concept's grouped directory.
 
 Governing authority: `design/observatory-extension-2026-09-18/concepts/settings.png`.
-The concept shows three parchment group banners and nine rows, each an icon medallion,
-a title, a subtitle and a chevron. This module is the single place that structure is
-declared, so the route, the template and the tests cannot drift apart.
+The concept shows three parchment group banners, each row an icon medallion, a title, a
+subtitle and a chevron. This module is the single place that structure is declared, so the
+route, the template and the tests cannot drift apart.
+
+COUNTS ARE NOT RESTATED IN PROSE, HERE OR ANYWHERE ELSE. A restated number is a second copy
+that nothing reconciles, and this docstring carried one for two sessions: it said "nine rows"
+long after the concept had been recounted at eight, and a ledger note repeated the same wrong
+nine. The row count IS `len(SETTINGS_HUB)`. The concept's own rows are enumerated in
+tests/meridian/test_settings_hub.py, which also declares the rows added BEYOND the concept with
+the authority for each, so a reader can always tell fidelity from addition. Anything needing a
+count should read the declaration rather than a sentence about it.
 
 WHY THIS IS STATIC AND NOT READ FROM THE DATABASE. Every `href` here points at a route
 that ALREADY EXISTS; this slice adds none. The hub therefore holds structure only, and
@@ -45,6 +53,28 @@ SETTINGS_HUB = (
                 "detail": "Separate accounts and permissions",
                 "href": "/meridian/settings?section=connections",
                 "section": "connections",
+            },
+            {
+                # NOT IN THE CONCEPT. Added on the owner's authority, 2026-09-21: "If we are
+                # missing payday and funding, its added in the same visual style."
+                #
+                # The concept's eight rows do not represent this section, and until this row
+                # existed NOTHING IN THE PRODUCT LINKED TO IT: the partial, the route, the JS
+                # module and a live endpoint (/api/meridian/trials/deadlines) all shipped, and
+                # it rendered only for someone who already knew to type ?section=trials.
+                # tests/test_surface_reachability.py is what found that, and it fails on the
+                # orphan without this row.
+                #
+                # It sits in CONNECTIONS because trials and renewals are what Meridian FINDS in
+                # the sources this group already lists; the concept offers no group for an
+                # obligation, so the nearest honest one is where its evidence comes from.
+                "key": "trials-renewals",
+                "icon": "arrow-repeat",
+                "tint": "mint",
+                "label": "Trials & renewals",
+                "detail": "Kept visible before they convert",
+                "href": "/meridian/settings?section=trials",
+                "section": "trials",
             },
         ),
     },
@@ -126,6 +156,25 @@ SETTINGS_HUB = (
                 "detail": "Sessions, devices and data",
                 "href": "/meridian/settings?section=security",
                 "section": "security",
+            },
+            {
+                # NOT IN THE CONCEPT. Added on the owner's authority, 2026-09-21, the same
+                # direction that added Trials & renewals above.
+                #
+                # The comment on Funding schedules records that payday was left out on purpose,
+                # because the concept draws funding as a pointer to Plan. That reasoning held
+                # for the CONCEPT and failed for the PRODUCT: it left a shipped surface
+                # reachable only through a link buried inside Connections
+                # (templates/meridian/partials/connections.html:16). A row here does not
+                # duplicate the Plan journey -- Funding schedules still points there -- it
+                # names the payday surface that already exists and had no way in.
+                "key": "payday-funding",
+                "icon": "cash-stack",
+                "tint": "apricot",
+                "label": "Payday & funding",
+                "detail": "Your payday rhythm and what Meridian funds",
+                "href": "/meridian/settings?section=payday",
+                "section": "payday",
             },
         ),
     },

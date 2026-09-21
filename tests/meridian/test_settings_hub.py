@@ -28,10 +28,11 @@ CONCEPT = "design/observatory-extension-2026-09-18/concepts/settings.png"
 #: The concept's three group labels, in the order the concept draws them.
 CONCEPT_GROUPS = ("CONNECTIONS", "VIRGIL & AUTHORITY", "PREFERENCES")
 
-#: The concept's eight rows, in the order the concept draws them. The count is EIGHT, not
-#: nine: an earlier ledger note said nine and that number was carried into this slice's
-#: first draft, where it produced a red test. Recounted directly from the concept twice --
-#: CONNECTIONS 2, VIRGIL & AUTHORITY 3, PREFERENCES 3.
+#: The rows the 09-18 concept draws, in the order it draws them, transcribed from
+#: design/observatory-extension-2026-09-18/concepts/settings.png. The concept's own counts are
+#: len(CONCEPT_ROWS) and the shapes this tuple encodes -- NOT restated in prose here, because a
+#: restated number is a second copy that nothing reconciles: a ledger note and the module
+#: docstring both said "nine" long after the concept had been recounted at eight.
 CONCEPT_ROWS = (
     "Money sources",
     "Email & calendars",
@@ -42,6 +43,22 @@ CONCEPT_ROWS = (
     "Funding schedules",
     "Security & devices",
 )
+
+#: Rows ADDED beyond the concept, and the group each belongs to.
+#:
+#: Declared as data so a reader can always tell CONCEPT FIDELITY from OWNER-AUTHORISED
+#: ADDITION, which is the distinction a visual review needs and a bare row count destroys.
+#:
+#: Authority, 2026-09-21: the owner, looking at the hub beside the concept, directed that
+#: whatever is missing be added "in the same visual style". Trials had NO inbound link anywhere
+#: in the product -- its partial, route, JS and live endpoint all shipped and it rendered only
+#: for someone who typed ?section=trials (tests/test_surface_reachability.py fails on exactly
+#: that) -- and payday was reachable only from a link buried inside Connections. The concept
+#: draws neither row.
+ADDED_ROWS = {
+    "Trials & renewals": "connections",
+    "Payday & funding": "preferences",
+}
 
 
 def _read(relative):
@@ -58,10 +75,17 @@ def test_the_governing_concept_exists():
 def test_hub_matches_the_concepts_groups_and_rows():
     assert tuple(group["label"] for group in SETTINGS_HUB) == CONCEPT_GROUPS
     labels = [row["label"] for row in settings_hub_rows()]
-    # The concept draws EIGHT rows across its three groups (2 + 3 + 3). An earlier note
-    # claimed nine; that number is wrong and this assertion is the record of it.
-    assert len(labels) == 8, labels
-    assert tuple(labels) == CONCEPT_ROWS, labels
+    # The concept's own rows must all be present, in the concept's order, as a SUBSEQUENCE. The
+    # authorised additions interleave with them, so treating the whole list as "the concept's
+    # rows" would claim fidelity for rows the concept does not draw -- and would let a future
+    # addition quietly pass as concept match.
+    assert tuple(label for label in labels if label in CONCEPT_ROWS) == CONCEPT_ROWS, labels
+    added = [label for label in labels if label not in CONCEPT_ROWS]
+    assert set(added) == set(ADDED_ROWS), f"undeclared row(s) beyond the concept: {added}"
+    for label, group_key in ADDED_ROWS.items():
+        group = next(g for g in SETTINGS_HUB if g["key"] == group_key)
+        assert label in [r["label"] for r in group["rows"]], f"{label} is not in {group_key}"
+    assert len(labels) == len(CONCEPT_ROWS) + len(ADDED_ROWS), labels
     assert len(set(labels)) == len(labels), f"duplicate row: {labels}"
 
 
