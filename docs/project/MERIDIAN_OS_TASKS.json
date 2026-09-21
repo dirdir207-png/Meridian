@@ -1743,6 +1743,33 @@
         "why_the_no_verdict_rule_is_tested_this_way": "'Never settled by majority vote' is not a behaviour that can be tested by running it -- it is the ABSENCE of behaviour. So it is asserted structurally, against the dataclass fields and the method names, which is the only form of the test that fails when someone later adds the tie-break.",
         "authority": "No authority, provider or financial change. No test contacts a provider; every client is a fake. No role can reach a provider write path, by test."
       }
+    },
+    {
+      "id": "OS-075",
+      "title": "A WRONG CHECK BROKE THE LIVE SYNC: migration 024 refused a negative bill reserve, which is a legitimate state (owner-confirmed)",
+      "status": "complete",
+      "priority": "critical",
+      "phase": "correctness",
+      "owner_raised": true,
+      "delivered": "2026-09-21",
+      "detail": "PRODUCTION DEFECT, OWNER-CONFIRMED, FIXED AND VERIFIED AGAINST LIVE DATA. Migration 024 declared CHECK (total_reserved_amount IS NULL OR total_reserved_amount >= 0) on crew_bill_reserves, assuming a reserve total cannot be below zero. On 2026-09-21 the owner's live read began raising 'sqlite3.IntegrityError: CHECK constraint failed: total_reserved_amount IS NULL OR total_reserved_amount >= 0' from meridian/repository.py's reserve upsert, so EVERY live sync failed: no reserve row, no funding plan, no bills refreshed. The owner confirmed the value is correct -- 'Negative reserve is correct' -- because they deliberately left too much in Crew's 'free to spend', so rent clearing left the reserve negative. A reserve total is a RUNNING BALANCE, not a quantity of money set aside. Recorded as binding decision D-017.",
+      "progress": "FIXED by meridian/migrations/028_allow_negative_bill_reserve.sql: a table rebuild (SQLite cannot alter a CHECK in place) that recreates crew_bill_reserves with an IDENTICAL definition minus the '>= 0' clause, copies every row verbatim (ids included, nothing clamped, rounded or repaired), drops the old table, renames, and recreates idx_crew_bill_reserves_current. The runner wraps each migration in BEGIN IMMEDIATE, so the drop and rename cannot be observed half-applied. NULL still means 'the read did not report a total' (C01) and the UNIQUE(provider, external_id) key still applies.",
+      "acceptance_criteria": [
+        "A negative reserve can be stored",
+        "The negative value is recorded AS REPORTED -- never clamped to zero or made absolute",
+        "NULL still means unreported and stays distinguishable from a real 0.0",
+        "The rebuild loses no row and alters no value",
+        "The live sync succeeds against the owner's real, negative reserve"
+      ],
+      "limits": "SCHEMA-ONLY. No application logic changed, no new capability, no provider mutation, no credential, no authority change. The ONE amount column that carried a non-negativity check on a PROVIDER-REPORTED BALANCE was removed; every other '>= 0' constraint in the schema stays, because those are on values Meridian or the owner STATES (commitments.funded_amount, funding rules, provider reimbursements) where non-negativity is a real invariant of the concept. Do not add another check to a value Meridian only observes.",
+      "handoff": "docs/project/MERIDIAN_DECISIONS.md D-017 (the binding decision); meridian/migrations/024_crew_bill_reserve_observations.sql (the wrong check, now frozen -- it must NOT be edited); meridian/migrations/028_allow_negative_bill_reserve.sql (the fix); meridian/providers/crewwork.py (_cents_to_dollars_or_none -- where the sign comes from Crew); meridian/repository.py upsert_bill_reserve (the site that raised); tests/meridian/test_bill_reserve_negative.py.",
+      "notes": "HOW IT WAS FOUND, because that matters more than the fix. The full suite went red on tests/meridian/test_live.py::test_build_sync_once_is_a_callable. This lane's own changes could not plausibly have caused it, which is exactly the reasoning that had already been wrong twice this session -- so it was PROVEN pre-existing by running that test in a CLEAN WORKTREE of HEAD with none of this lane's work present, and it failed there too. The failure was then followed to its source rather than reported as 'flaky', and the owner confirmed the semantics. A targeting run of test_migrations.py would never have surfaced it.",
+      "evidence": {
+        "tests": "tests/meridian/test_bill_reserve_negative.py -- 7 tests. FALSIFICATION FIRST: at migration 027 a negative insert raises IntegrityError (so the migration is provably what fixed it); after 028 the same insert stores -42.0, asserted to still be negative rather than clamped; NULL stays NULL; the rebuild preserves every row's id, value, currency and absent_since byte-for-byte; the schema shape (12 columns, in order, with the same NOT NULL set) and both indexes survive with no leftover temporary table; UNIQUE(provider, external_id) still rejects a duplicate while allowing the same external id from another provider; and the 025 columns still carry their values including a negative estimated_next_funding_amount.",
+        "the_decisive_evidence": "tests/meridian/test_live.py -- 2 passed. This is a LIVE test that performs a real read against the owner's Crew account, and it is the test that was failing before the fix and passes after it. That is end-to-end proof against the real negative reserve, not a simulation of it. No financial figure is printed, logged or committed.",
+        "suite": "Full non-browser suite 1807 passed / 73 skipped after the fix, with the only failure being the expected mid-slice handoff staleness that clears on commit. Ruff and git diff --check clean.",
+        "authority": "No authority change. The fix makes Meridian able to RECORD a state the provider reports; it grants no ability to change anything."
+      }
     }
   ]
 }

@@ -33,6 +33,47 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## A wrong CHECK was breaking the live sync: a negative bill reserve is correct (`OS-075`, `D-017`) (2026-09-21, base `331c28f`)
+
+**A real production defect, found because the full suite went red and I followed it instead of explaining it away.**
+
+`tests/meridian/test_live.py::test_build_sync_once_is_a_callable` failed with
+`sqlite3.IntegrityError: CHECK constraint failed: total_reserved_amount IS NULL OR total_reserved_amount >= 0`
+from `meridian/repository.py`'s reserve upsert. Migration 024 had declared that CHECK on the assumption
+that a reserve total is money set aside and so cannot be below zero.
+
+**That assumption is wrong, and you confirmed it:** *"Negative reserve is correct"* — *"I left out
+intentionally too much in free to spend, so when rent cleared today it left the reserve negative."*
+A reserve total is **a running balance**, not a quantity. The consequence was not a corner case: **every
+live read failed** — no reserve row, no funding plan, no bills refreshed — and Meridian's data went stale
+precisely while a real financial state existed.
+
+**How it was found matters more than the fix.** My own changes couldn't plausibly have caused it, and that
+is exactly the reasoning that had **already been wrong twice** this session. So I proved it pre-existing by
+running the test in a **clean worktree of HEAD** with none of my work present — it failed there too — and
+then followed it to its source rather than filing it as "flaky". A targeting run of `test_migrations.py`
+would never have surfaced it; the whole-tree run is what did.
+
+**The fix.** `028_allow_negative_bill_reserve.sql` rebuilds `crew_bill_reserves` without the clause (SQLite
+cannot alter a CHECK in place): identical definition, rows copied **verbatim** — ids included, nothing
+clamped, rounded or repaired — index recreated, and the runner's `BEGIN IMMEDIATE` means the drop and rename
+can't be observed half-applied. `NULL` still means "the read did not report a total" (C01) and stays
+distinguishable from a real `0.0`. The value is recorded **as reported**: clamping to zero would present a
+fabricated figure as a measured one.
+
+**The decisive evidence is live, not simulated:** `tests/meridian/test_live.py` — **2 passed**. That test
+performs a real read against your Crew account; it failed before the fix and passes after it. No financial
+figure is printed, logged or committed.
+
+**Recorded as binding decision `D-017`**, including the rule that prevents a repeat: *do not add a CHECK to
+a value Meridian only **observes***. Every other `>= 0` in the schema stays, because those are on values
+Meridian or the owner **states** (`commitments.funded_amount`, funding rules, reimbursements) where
+non-negativity is a real invariant of the concept.
+
+**Evidence.** 7 new tests, falsification first (at migration 027 a negative insert still raises, so the
+migration is provably the fix). Full suite **1807 passed**, 73 skipped. Ruff and `git diff --check` clean.
+No authority, provider or financial change; schema only.
+
 ## Track I.3: council mechanics — the Skeptic, and a council that never produces a verdict (`OS-074`) (2026-09-21, base `1b2bfea`)
 
 I.2 shipped one role; a council of one role is not a council. This slice ships the **second role** and

@@ -746,6 +746,26 @@
       "base_sha": "1b2bfea82f5fa4fd5097f2ed66ded494e020ad20",
       "since": "2026-09-21T00:00:00+00:00",
       "note": "DIVISION OF LABOUR (owner, 2026-09-21): Astra produces the ASSETS/DESIGN for OS-038's medallion glyphs and for the Investigator's CUSTOMER-FACING surface; THIS LANE IMPLEMENTS from them. So this lane will not fabricate the medallion artwork or invent a surface design -- both would be substituting a guess for a governing design record -- but the implementation of the customer-facing surface IS this lane's work and will be claimed when Astra's design lands. The envelope, the role contract, the council and the persisted run record are the interface that surface builds on; scripts/investigate.py is the reference call path."
+    },
+    {
+      "agent": "constitutional-builder",
+      "claim_id": "bill-reserve-negative-20260921",
+      "description": "OS-075 / D-017: remove migration 024's wrong CHECK on crew_bill_reserves.total_reserved_amount, which rejected a legitimate negative reserve and failed every live sync. Schema-only: a table rebuild that copies rows verbatim, plus tests. No application logic, capability, provider or authority change.",
+      "generation": 1,
+      "files": [
+        "meridian/migrations/028_allow_negative_bill_reserve.sql",
+        "tests/meridian/test_bill_reserve_negative.py",
+        "tests/meridian/test_migrations.py",
+        "tests/meridian/test_bill_reserve_observations.py",
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "331c28f7bfe1fbcbcaafbe4217dcc48c019f2b49",
+      "since": "2026-09-21T00:00:00+00:00",
+      "note": "Deliberately does NOT touch meridian/repository.py. The upsert line that RAISED is correct code: it faithfully tried to store a real value. The defect was the schema's assumption, so the schema is where it is fixed -- changing the application to clamp or skip would have hidden the state instead of recording it."
     }
   ]
 }

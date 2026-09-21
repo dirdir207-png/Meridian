@@ -275,3 +275,25 @@ That distinction matters because guardrail 1 as first written ("may READ and may
 - **These paths carry their own risk and so their own controls**, which is a reason to be deliberate rather than a reason to forbid: the actor is a UI, so it can be ambiguous in ways an API is not, it can click the wrong control, and its actions are hard to make idempotent (D-016 guardrail 3's "no side-channel writes" is the principle here — an unverified UI click is a side-channel write in spirit). Any such path therefore requires explicit owner approval per action or per bounded batch, an audit record of what was attempted and with what result, a stated scope, and the readback above. **Never auto-retry a financial mutation** applies with full force, because a UI retry is the easiest way to double an action.
 
 **What this does not change.** Authority is not extended by any of it: if an outside capability makes some mutation newly *possible*, that is a reason for a proposal and an owner decision, never for a silent new permission. The lane boundary stands unchanged — no raw credentials, full transcripts, or unnecessary financial data cross it. And Meridian must still work fully without any of these paths.
+
+## D-017 — A bill reserve total is a running balance, and it may be negative (owner, 2026-09-21)
+
+Owner direction, verbatim: *"Negative reserve is correct"*, explained in the same exchange by *"I left out intentionally too much in free to spend, so when rent cleared today it left the reserve negative."*
+
+**This is written down because the opposite was assumed, and the assumption broke the product.** Migration 024 declared
+
+```sql
+total_reserved_amount REAL CHECK (total_reserved_amount IS NULL OR total_reserved_amount >= 0)
+```
+
+on the reasoning that a reserve total is money set aside and therefore cannot be below zero. On 2026-09-21 that rejected a *correct* value: the owner's live sync raised `sqlite3.IntegrityError: CHECK constraint failed` from `meridian/repository.py`'s reserve upsert on **every** read, so no reserve row, no funding plan and no bills refreshed. Migration 028 rebuilds the table without that clause.
+
+**The decision.** A reserve total is **not a quantity of money set aside; it is a running balance** between what was set aside and what has cleared against it, and a balance can go negative — most easily by the owner deliberately leaving too much in Crew's "free to spend", so a large obligation clears beyond what the reserve holds. Meridian must be able to **record and show** a negative reserve.
+
+**Three consequences that follow directly.**
+
+- **A schema that refuses a real state does not prevent the state; it only prevents Meridian from knowing about it.** The refusal did not make the reserve non-negative, it made Meridian blind to it and left its data stale. Refusing to store reality is never the safe option.
+- **The value is recorded as reported: never clamped to zero, never made absolute.** Substituting a plausible positive would present a fabricated figure as a measured one — the same rule already binding elsewhere: never present simulations as real balances.
+- **`NULL` keeps its meaning, unchanged.** `NULL` still means "the read did not report a total", which is not evidence that the bucket is empty (C01). Only the `>= 0` clause was removed; the distinction between an unreported total and a real `0.0` survives, and a test asserts it survives the rebuild.
+
+**Do not add a CHECK to a value Meridian only *observes*.** The remaining `>= 0` constraints in the schema are on values Meridian or the owner *states* — `commitments.funded_amount`, funding rules, provider reimbursements — where non-negativity is a real invariant of the concept. `total_reserved_amount` was the one place a *provider-reported balance* carried a constraint that only makes sense for an amount. That distinction is the test to apply before adding the next one.

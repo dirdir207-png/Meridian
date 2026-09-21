@@ -139,6 +139,7 @@ def test_migration_024_backfills_only_amounts_that_could_have_been_stated(tmp_pa
         "025_crew_reported_funding_schedule.sql",
         "026_calendar_context.sql",
         "027_ai_run_records.sql",
+        "028_allow_negative_bill_reserve.sql",
     ]
 
     with sqlite3.connect(db) as connection:
