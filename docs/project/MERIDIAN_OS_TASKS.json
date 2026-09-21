@@ -1982,6 +1982,21 @@
         "An interpreted, composed or low-confidence edit on the same surface still PROPOSES",
         "Tests cover both halves per surface, and the whole tests/ tree stays green"
       ]
+    },
+    {
+      "id": "OS-085",
+      "title": "Retool the Connections section to match the rest of the app's visual language",
+      "status": "open",
+      "priority": "high",
+      "phase": "track-D-surfaces",
+      "detail": "Owner request 2026-09-21: 'I want connections retooled to match the broader app appearance as well.' RECONNAISSANCE DONE, and its first hypothesis was WRONG in a way worth keeping. The surface is an 18-line shell (templates/meridian/partials/connections.html) whose body the renderer fills: static/js/meridian/connections.js is 308 lines and emits only EIGHT classes -- m-button, m-button--quiet, m-connection-chooser-card, m-connection-chooser-list, m-editor-actions, m-editor-note, m-editor-preview, m-editor-title -- mounted as a Settings section from settings.html:65. I first assumed the surface looked wrong because its CSS targeted classes the renderer never emits (dead rules). CHECKED, AND FALSE: m-connection-row appears in 2 stylesheets and is emitted, m-editor-title 1/1, m-editor-preview 1/1, m-connection-chooser-card 1/1. Only m-connection-card is genuinely unused (0 rules, 0 emissions), which is harmless. So the divergence is NOT missing CSS; something in how the existing rules LOOK has to differ from the app's language, and that still has to be identified before anything is repainted -- the owner's complaint is the symptom, not the cause. NO VISUAL CONCEPT RECORD EXISTS for this surface: docs/project/CONCEPT_COVERAGE.md:54 covers connector self-diagnosis (a capability), not the screen, and no design/ directory carries a Connections frame. The owner's instruction to match the app's own language is therefore the authority for this slice, and inventing a new look would violate D-004. NEXT: read the emitted markup's rules against the app's house language (the Settings hub rows and their hairline separation), identify the specific divergence, then retool.",
+      "limits": "PRESENTATION ONLY: no route, no endpoint, no data-shape change, no new financial authority. Parchment is a MATERIAL, separated by hairline and engraving and never by a tinted fill (owner rule, 2026-09-18). Match the app's existing language; do not invent a Connections design.",
+      "acceptance_criteria": [
+        "The specific visual divergence from the app's house language is identified from the CSS and stated, not assumed",
+        "The retool is verified with a governed capture of the surface in BOTH themes",
+        "Separation uses hairline and engraving rather than tinted fills",
+        "No route, data or authority change; the whole tests/ tree stays green"
+      ]
     }
   ]
 }
