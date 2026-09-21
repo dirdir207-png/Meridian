@@ -2,7 +2,7 @@
 
 ## Design handoff — OS-038 artwork and OS-076 Investigator (2026-09-21)
 
-Delivered `design/investigator-medallions-2026-09-21/`: two newly generated concept-inspired transparent medallion masters, prompts/hash manifest, interactive synthetic Investigator specimen, and implementation contract. Owner scope excludes desktop Settings and the full icon pack; related-evidence cross-references remain in scope. See the package README and VERIFICATION.md. Browser-checked question/context changes, scope narrowing and four result states; inspected 420px dark and 1440px light layouts. JS syntax and diff checks pass. No runtime integration, model/provider call, live-data access or deployment. OS-038 remains open; OS-076 is open for design review and implementation. No preview restart is needed for this documentation/artifact delivery.
+Design delivery commit `e62f555`. Delivered `design/investigator-medallions-2026-09-21/`: two newly generated concept-inspired transparent medallion masters, prompts/hash manifest, interactive synthetic Investigator specimen, and implementation contract. Owner scope excludes desktop Settings and the full icon pack; related-evidence cross-references remain in scope. See the package README and VERIFICATION.md. Browser-checked question/context changes, scope narrowing and four result states; inspected 420px dark and 1440px light layouts. JS syntax and diff checks pass. No runtime integration, model/provider call, live-data access or deployment. OS-038 remains open; OS-076 is open for design review and implementation. No preview restart is needed for this documentation/artifact delivery.
 
 ## RUNNING THE PREVIEW — launcher, when a restart is needed, and phone access (2026-09-20)
 
