@@ -81,7 +81,25 @@ def _imap_date(value: str) -> str:
 
 
 class IcloudMailTransport:
-    """Minimal read-only iCloud Mail transport (IMAP, app-specific password)."""
+    """Minimal read-only iCloud Mail transport (IMAP, app-specific password).
+
+    READ-ONLY BY CONSTRUCTION, not by convention. The connector only ever selects a
+    mailbox with ``readonly=True`` and closes rather than expunges — but on 2026-09-20 an
+    ad-hoc probe script bypassed this class, used raw imaplib with write access, and
+    appended a sieve rule INTO the owner's INBOX as a real message (later found and
+    deleted). The class is not the weak point; the weak point was that nothing stopped a
+    caller from reaching the account beyond the class. ``IMAP_READ_ONLY_COMMANDS`` names
+    the command family this connector must never issue, and
+    ``assert_read_only_command`` exists so a future caller can check itself rather than
+    rely on remembering.
+    """
+
+    #: IMAP commands that would mutate the mailbox. Reads are EXIMINE/SELECT(readonly),
+    #: SEARCH, FETCH, LIST, NOOP, CLOSE, LOGOUT — none of these appear here.
+    IMAP_READ_ONLY_COMMANDS = frozenset(
+        {"append", "copy", "create", "delete", "expunge", "move", "rename", "store",
+         "subscribe", "unsubscribe"}
+    )
 
     def __init__(
         self,
@@ -120,6 +138,19 @@ class IcloudMailTransport:
             return connection
         except Exception as exc:  # noqa: BLE001 - login failures are read-blocking
             raise IcloudMailReadError(f"iCloud Mail login failed: {type(exc).__name__}") from exc
+
+    @classmethod
+    def assert_read_only_command(cls, command: str) -> None:
+        """Refuse a mutating IMAP command before it is issued.
+
+        A guard for CALLERS (probes, scripts) that reach the account directly. It cannot
+        police raw imaplib, but it makes the expectation explicit and testable, so the
+        "read-only" promise is enforced somewhere rather than assumed everywhere.
+        """
+        if command.strip().lower() in cls.IMAP_READ_ONLY_COMMANDS:
+            raise IcloudMailReadError(
+                f"refusing mutating IMAP command {command!r}: this connector is read-only"
+            )
 
     def fetch_recent(
         self,

@@ -560,3 +560,105 @@ def test_the_intake_threads_the_mailbox_to_the_transport(tmp_path):
         transport=FakeTransport(), evidence_repo=repo, max_messages=5, mailbox="Bills"
     )
     assert seen.get("mailbox") == "Bills", "the intake must pass the mailbox through"
+
+
+# --- read-only enforcement (OS-067) -------------------------------------------------
+#
+# The connector always selected with readonly=True, but on 2026-09-20 an ad-hoc probe
+# bypassed the class, used raw imaplib with write access, and appended a sieve rule INTO
+# the owner's INBOX as a real message. The class was never the weak point; the weak point
+# was that nothing made the read-only expectation explicit and checkable.
+
+def test_mutating_imap_commands_are_refused():
+    from meridian.connectors.icloud_mail import IcloudMailReadError, IcloudMailTransport
+
+    for command in ("APPEND", "store", "create", "expunge", "copy", "move", "rename"):
+        try:
+            IcloudMailTransport.assert_read_only_command(command)
+        except IcloudMailReadError:
+            continue
+        raise AssertionError(f"{command!r} must be refused: this transport is read-only")
+
+
+def test_read_commands_are_allowed():
+    from meridian.connectors.icloud_mail import IcloudMailTransport
+
+    for command in ("SELECT", "SEARCH", "FETCH", "LIST", "NOOP", "CLOSE", "LOGOUT"):
+        IcloudMailTransport.assert_read_only_command(command)
+
+
+def test_the_read_only_command_list_covers_every_mutating_verb():
+    from meridian.connectors.icloud_mail import IcloudMailTransport
+
+    # APPEND is the one that actually caused the damage, so it is pinned explicitly.
+    assert "append" in IcloudMailTransport.IMAP_READ_ONLY_COMMANDS
+    assert "store" in IcloudMailTransport.IMAP_READ_ONLY_COMMANDS
+    assert "expunge" in IcloudMailTransport.IMAP_READ_ONLY_COMMANDS
+
+
+def test_a_real_fetch_issues_only_read_only_imap_operations():
+    """Behavioral, not textual: run a full fetch against a recording fake and assert no
+    mutating IMAP verb was ever issued.
+
+    An earlier version of this test grepped the module source for ".append(" and failed on
+    the module's own docstring and on ordinary list appends — a brittle check that proved
+    nothing about what happens on the wire. This drives the code instead.
+    """
+    from meridian.connectors.icloud_mail import IcloudMailTransport
+
+    issued: list[str] = []
+
+    raw = (
+        b"Message-ID: <ro@example.com>\r\n"
+        b"Subject: Your Xfinity bill is ready\r\n"
+        b"From: Xfinity <billing@xfinity.com>\r\n"
+        b"Date: Sat, 20 Sep 2026 12:00:00 +0000\r\n"
+        b"Content-Type: text/plain\r\n\r\nAmount due $93.00\r\n"
+    )
+
+    class FakeConn:
+        def select(self, mailbox, readonly=False):
+            issued.append("select")
+            assert readonly is True, "select must be read-only"
+            return "OK", [b"1"]
+
+        def search(self, charset, criteria):
+            issued.append("search")
+            return "OK", [b"1"]
+
+        def fetch(self, num, spec):
+            issued.append("fetch")
+            return "OK", [(b"1 (RFC822 {1})", raw)]
+
+        def close(self):
+            issued.append("close")
+            return "OK", []
+
+        def logout(self):
+            issued.append("logout")
+            return "OK", []
+
+        # Any mutating verb is recorded and fails loudly.
+        def append(self, *a, **k):
+            issued.append("append")
+            raise AssertionError("the transport must never APPEND")
+
+        def store(self, *a, **k):
+            issued.append("store")
+            raise AssertionError("the transport must never STORE flags")
+
+        def expunge(self, *a, **k):
+            issued.append("expunge")
+            raise AssertionError("the transport must never EXPUNGE")
+
+        def create(self, *a, **k):
+            issued.append("create")
+            raise AssertionError("the transport must never CREATE mailboxes")
+
+    transport = IcloudMailTransport(username="a@example.com", app_password="x")
+    transport._connect = lambda: FakeConn()
+    messages = transport.fetch_recent(max_results=5, mailbox="Bills")
+
+    assert len(messages) == 1, "the read path should still work"
+    mutating = set(issued) & IcloudMailTransport.IMAP_READ_ONLY_COMMANDS
+    assert not mutating, f"mutating IMAP commands were issued: {sorted(mutating)}"
