@@ -21,6 +21,13 @@
     {% include 'meridian/partials/navigation.html' %}
 
     <header class="m-topbar" data-topbar>
+      {% if not active_settings_section %}
+      {# The concept's own "‹ Back" on the directory. A section keeps its existing "‹ Settings"
+         control instead, so no screen carries two backs. #}
+      <a class="m-settings-back" data-settings-hub-back href="/meridian?workspace=today">
+        <span class="m-settings-back-chevron" aria-hidden="true"></span>Back
+      </a>
+      {% endif %}
       <a class="m-brand m-brand--compact" data-meridian-wordmark href="/meridian?workspace=today" aria-label="Meridian home">
         {% include 'meridian/partials/wordmark.html' %}
       </a>

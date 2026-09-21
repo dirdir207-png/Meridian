@@ -142,16 +142,28 @@ def test_hub_states_availability_and_carries_the_concept_furniture():
     assert "m-title-rule" in template
     assert "title-rule.svg" in _read("static/css/meridian/workspaces.css")
     css = _read("static/css/meridian/settings.css")
-    # The group banners carry a brass star at each end, from the shipped kit.
+    # The group banners carry a star at each end, from the shipped kit.
     banner_star = css.split(".m-settings-group-banner::before", 1)[1].split("}", 1)[0]
     assert "star.svg" in banner_star
-    # The banner must stay a MUTED wash. The concept's banner averages rgb(142,128,111) while
-    # its canvas beside it is rgb(25,34,49); a near-solid parchment fill (this slice's first
-    # attempt) rendered a bright bar far too light. Pin the construction, not the exact alpha,
-    # so that regression cannot return unnoticed.
+    # The banner is the kit's PARCHMENT TICKET -- the same art Today already uses for evidence.
+    #
+    # THIS ASSERTION WAS PREVIOUSLY ITS OPPOSITE. It pinned a MUTED low-opacity wash, on the
+    # grounds that the concept's banner averages rgb(142,128,111) (a mid-tone) while its canvas
+    # beside it is rgb(25,34,49), so a nine-slice parchment fill "reads as a brass bar". The
+    # owner looked at the result and rejected it, 2026-09-21: the banners "looked drained and
+    # inactive versus the tickets in the concept and in the rest of the app". The measurement
+    # was arithmetically right and answered the wrong question -- an average cannot describe art
+    # whose identity is its shaped edge, its cut corners and its rivets -- and a muted mid-tone
+    # that the eye reads as a disabled control is not fidelity to a ribbon the eye reads as
+    # engraved stationery.
+    #
+    # The authority and the date are recorded HERE, in the guard, because a guard derived from
+    # a judgement is the most dangerous kind: it silently enforces a mistake and makes the
+    # correct change look like a regression. Reversing one must be a deliberate, cited act.
     banner_rule = css.split(".m-settings-group-banner {", 1)[1].split("}", 1)[0]
-    assert "linear-gradient" in banner_rule
-    assert "parchment-ticket.png" not in banner_rule, "a nine-slice fill reads as a brass bar"
+    assert "border-image" in banner_rule
+    assert "parchment-ticket.png" in banner_rule, "the banner is the kit's parchment ticket"
+    assert "border-radius: 0" in banner_rule, "the shaped silhouette supplies the corners"
 
 
 def test_the_hub_is_the_no_section_landing_and_adds_no_route():
@@ -200,14 +212,15 @@ def test_row_icon_names_are_unique_per_meaning():
 
 
 def test_hub_ink_is_defined_per_theme():
-    """The banner label and the Planned tag share one ink, and it MUST be stated for both
-    themes.
+    """The banner label and the Planned tag each get their ink stated, and the rules differ.
 
-    The banner is a parchment wash over the page in either theme, so a single theme-flipping
-    token cannot serve it. The first build used `--obs-ink` (cream): correct over the dark
-    wash, but nearly invisible in the light theme, where the same wash sits on a light
-    surface. Only reading the light capture caught it. This pins the per-theme definition and
-    the fact that the banner does not reach for a flip-flopping token.
+    The banner is the kit's parchment TICKET, which is light in BOTH themes, so its label ink
+    is the paper ink in both and must NOT reach for a theme-flipping token. This test asserted
+    the opposite while the banner was the muted wash the ticket replaced; see the note in
+    test_hub_states_availability_and_carries_the_concept_furniture for why the wash went.
+
+    The Planned tag is a small marker sitting on the page itself, which DOES flip with the
+    theme, so it keeps the per-theme token -- and that token must be defined for both themes.
     """
     css = _read("static/css/meridian/settings.css")
     assert "--m-settings-planned-ink:" in css, "the hub's attention ink must be a token"
@@ -216,8 +229,8 @@ def test_hub_ink_is_defined_per_theme():
     assert "--m-settings-planned-ink:" in light[1].split("}", 1)[0]
 
     banner_rule = css.split(".m-settings-group-banner {", 1)[1].split("}", 1)[0]
-    assert "var(--m-settings-planned-ink)" in banner_rule
-    assert "var(--obs-ink" not in banner_rule, "cream is unreadable in the light theme"
+    assert "var(--obs-paper-ink" in banner_rule, "the light ticket needs dark ink in both themes"
+    assert "var(--m-settings-planned-ink)" not in banner_rule, "the ticket does not flip"
 
     tag_rule = css.split(".m-settings-row-tag {", 1)[1].split("}", 1)[0]
     assert "var(--m-settings-planned-ink)" in tag_rule

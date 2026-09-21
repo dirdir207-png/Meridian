@@ -79,12 +79,28 @@ html[data-theme="light"] .m-settings-nav {
   margin-bottom: var(--m-space-5);
 }
 
+/* The hub's own title. The concept sets "Settings" large, LIGHT-stroked and bright cream --
+   engraved stationery, not a bold label -- and the shipped hub rendered it at weight 500 in a
+   muted ink. That is the same drained-versus-vibrant defect the owner named on the group
+   banners, so weight, size and ink are settled here together rather than one at a time.
+   The ink is theme-scoped because the concept is a dark frame: cream is the vibrant ink on
+   the dark canvas and would be invisible on the light one. */
+.m-settings-hub-head h1 {
+  margin: 0 0 var(--m-space-5);
+  font: 300 clamp(2.25rem, 11vw, 2.875rem) / 1.05 var(--m-font-serif);
+  color: var(--obs-ink, #eee4cf);
+}
+
+html[data-theme="light"] .m-settings-hub-head h1 {
+  color: var(--obs-paper-ink, #20263b);
+}
+
 /* The hub nav is a full-width surface on phone (the concept is a phone frame): its rows
    are the page's content, not a 210px sidebar. The desktop grid keeps it in its column. */
 @media (min-width: 901px) {
   .m-settings-hub-head h1 {
     margin: 0 0 var(--m-space-5);
-    font: 500 var(--m-text-xl)/1.1 var(--m-font-serif);
+    font: 300 2rem/1.1 var(--m-font-serif);
   }
 
   .m-settings-hub-sub {
@@ -100,6 +116,49 @@ html[data-theme="light"] .m-settings-nav {
   margin: var(--m-space-3) 0 0;
   color: var(--m-ink-muted);
   font-size: var(--m-text-sm);
+}
+
+/* The hub is a directory, and the shipped one had no way back to the workspace at all: the
+   only back control lived INSIDE a section, so Settings was a one-way door. The concept puts
+   "‹ Back" at the top left with the wordmark beside it. It renders on the hub only -- a
+   section already has its own "‹ Settings" control, and two backs on one screen is a puzzle,
+   not a path.
+
+   PHONE ONLY, and that scoping is load-bearing rather than tidy. `.m-topbar` is
+   `display: none` at desktop by design (shell.css:201) because the rail carries the wordmark
+   and the workspace links; a `display: grid` here would out-specify that and re-expose it.
+   It did exactly that on the first attempt -- the desktop capture showed the header torn out
+   of the rail and stranded at the lower right, which is what a direct child of the shell grid
+   becomes when it is not in a named area. The desktop frame was read BEFORE this was committed,
+   which is the only reason it was caught. */
+@media (max-width: 900px) {
+  .m-settings-shell .m-topbar[data-topbar] {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+  }
+
+  .m-settings-shell .m-topbar[data-topbar] .m-brand {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .m-settings-shell .m-topbar[data-topbar] .m-settings-mobile-title {
+    grid-column: 3;
+    justify-self: end;
+  }
+
+  .m-settings-shell .m-topbar[data-topbar] .m-settings-back {
+    grid-column: 1;
+    justify-self: start;
+    margin-bottom: 0;
+    min-height: 0;
+    color: var(--obs-ink, #eee4cf);
+  }
+
+  html[data-theme="light"] .m-settings-shell .m-topbar[data-topbar] .m-settings-back {
+    color: var(--m-ink-muted);
+  }
 }
 
 /* "‹ Back" on a detail surface. */
@@ -131,32 +190,39 @@ html[data-theme="light"] .m-settings-nav {
   margin-top: var(--m-space-5);
 }
 
-/* The group banner is a muted parchment bar with a brass hairline and a star at each end.
-   Measured off the governing concept rather than guessed: the CONNECTIONS banner averages
+/* The group banner is the kit's PARCHMENT TICKET -- the same art Today already uses for
+   evidence (.obs-evidence-ticket in dial.css): scalloped side rails, cut corners, corner
+   rivets and fibrous paper, carried as a nine-slice so the shaped silhouette survives while
+   the label reflows and every word stays code-owned.
+
+   OS-065 REJECTED THIS AND WAS WRONG, on the owner's authority. It used a low-opacity
+   parchment wash instead, reasoning that the concept's CONNECTIONS banner "averages
    rgb(142,128,111) -- a MUTED mid-tone, NOT the bright parchment the kit's ticket art
-   carries. A first attempt used `border-image ... fill` with that art and rendered a
-   near-solid brass bar, far too light against the canvas (the concept's own canvas beside
-   the banner measures rgb(25,34,49)). So this is a low-opacity parchment wash over the dark
-   surface -- which lands in the measured range -- under a brass border and stars. */
+   carries", and that `border-image ... fill` rendered a bar "far too light". The owner saw
+   the result and named the defect on sight, 2026-09-21: the banners "looked drained and
+   inactive versus the tickets in the concept and in the rest of the app". An AVERAGE is the
+   wrong instrument for art whose identity is its shaped edge and its rivets -- flattening a
+   ticket to a mean colour is precisely what drained it, so the measurement was arithmetically
+   right and answered the wrong question. A muted mid-tone that the eye reads as a disabled
+   control is not fidelity to a ribbon that the eye reads as engraved stationery.
+
+   The label ink is therefore DARK in BOTH themes, because the ticket art is light in both.
+   This is the one place where a theme-flipping token is wrong; OS-065's per-theme ink rule
+   was solving a problem its own wash had created. */
 .m-settings-group-banner {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 34px;
+  min-height: 40px;
   margin: 0 0 var(--m-space-2);
-  padding: 0 var(--m-space-5);
-  border: 1px solid color-mix(in srgb, var(--obs-brass, #c6aa71) 62%, transparent);
-  border-radius: var(--m-radius-sm);
-  background: linear-gradient(rgb(231 205 158 / 0.5), rgb(231 205 158 / 0.42));
-  /* The banner is a parchment wash in BOTH themes, so its label ink cannot be a
-     theme-flipping token. `--obs-ink` (cream) is right over the dark-theme wash but rendered
-     the label nearly INVISIBLE in the light theme, where the same wash sits on a light
-     surface -- caught by reading the light capture instead of assuming it inverted cleanly.
-     Cream on dark, paper ink on light. */
-  color: var(--m-settings-planned-ink);
+  padding: 0 var(--m-space-6);
+  border: 12px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 64 fill / 12px round;
+  border-radius: 0;
+  color: var(--obs-paper-ink, #20263b);
   font-family: var(--m-font-sans);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.16em;
   text-align: center;
 }
@@ -170,7 +236,10 @@ html[data-theme="light"] .m-settings-nav {
   width: 9px;
   height: 9px;
   transform: translateY(-50%);
-  background: var(--obs-brass, #c6aa71);
+  /* The concept's ribbon carries a star at each end. Brass was right over the old dark wash
+     and disappears now that the banner is light parchment, so the ornaments take the concept's
+     own measured banner tone instead -- engraved ink on paper. */
+  background: #8c7f6f;
   -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
   mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
 }
