@@ -1678,27 +1678,32 @@ def create_crew_autopilot_rule_proposal():
     return _management_payload("create_crew_autopilot_rule", payload)
 
 
-# Payday: the paycheck funding plan IS Crew's payday mechanism, and three operations for it are
-# ALREADY registered with executors and readback verifiers (meridian/crew_write_actions.py:674-685),
-# so this is WIRING, not new capability: the owner's "we have all the data for bidirectional, it
-# just isnt written" is exactly right. Nothing here reaches Crew -- it creates an approval-gated
-# proposal, and the executor runs only after the owner approves.
+# ── Payday writes deliberately have NO endpoint here ────────────────────────
+# The paycheck funding plan IS Crew's payday mechanism, and three operations for it are already
+# registered with executors and readback verifiers (meridian/crew_write_actions.py:674-685). But
+# the payday control must NOT be wired the way the bills/rules routes above are wired, and this
+# note exists so nobody re-adds one.
 #
-# The params are the ones the manifest already documents rather than ones invented here:
-# docs/project/write-coverage.json says the update is "Identified by the approved proposal's
-# fundingPlanId, so it does not depend on the write result; compared on name and amount." So the
-# plan id is the identity the READBACK needs, and a name or an amount is the change it can compare.
-@meridian_api.patch("/crew/paycheck-funding-plans/<plan_id>")
-@login_required
-@_safe_read
-def update_crew_paycheck_funding_plan_proposal(plan_id: str):
-    """Propose a live Crew paycheck funding plan edit (approval-gated write-back)."""
-    payload = request.get_json(silent=True) or {}
-    payload["fundingPlanId"] = payload.pop("fundingPlanId", None) or plan_id
-    if payload.get("name") is None and payload.get("amount") is None:
-        return _error("invalid_request", "Provide a name or amount to update.",
-                      "Provide at least one change and try again.", 400)
-    return _management_payload("update_crew_paycheck_funding_plan", payload)
+# A route built on _management_payload returns a 202 PROPOSAL unconditionally: app.py's sink
+# (_meridian_memory_proposal_sink, app.py:1299-1317) always calls action_store.propose(...) and
+# never consults the router. That contradicts the write model the owner restated on 2026-09-21 --
+# "actions directly made by me in the app circumvent the need for proposal, I can directly
+# execute" -- and meridian/write_routing.py's own docstring, which routes on intent-confidence and
+# determinism rather than on who initiated: OWNER_DIRECT executes immediately and skips the
+# awaiting-approval gate, and every AI-interpreted / composed / low-confidence / plan-level /
+# scheduled mutation becomes a proposal.
+#
+# That path already exists and is general: POST /api/actions/mutate (app.py:4194,
+# api_actions_mutate) accepts {type, params, provenance, low_confidence, multi_op, rationale} and
+# calls route_mutation(action_store, action_executors, ...), with provenance defaulting to
+# owner_direct. update_crew_paycheck_funding_plan is NOT in _PLAN_LEVEL_TYPES, so a direct,
+# fully-specified owner edit is expected to execute immediately through it.
+#
+# So the Settings payday control posts to /api/actions/mutate with
+# provenance "owner_direct" -- reusing the existing pipeline rather than growing a second,
+# proposal-only route beside it. The params it must send are documented in
+# docs/project/write-coverage.json: fundingPlanId is the readback identity, and the verifier
+# compares name and amount.
 
 
 @meridian_api.post("/transactions/<transaction_id>/classification")
