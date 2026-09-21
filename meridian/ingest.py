@@ -77,13 +77,13 @@ def ingest_record(
 
     existing = evidence_repo.get_by_content_hash(record.content_hash) if hasattr(evidence_repo, "get_by_content_hash") else None
     if existing is not None:
-        # Still persist the blob on a duplicate (a prior run may have created the
-        # metadata row before blob storage was wired, leaving the content missing).
+        # Still persist the blob on a duplicate: a prior run may have created the metadata
+        # row before blob storage was wired, leaving the content missing. This is the
+        # backfill path for exactly the rows described above. The write is NOT swallowed —
+        # a duplicate that still cannot store its content must say so, or it repeats the
+        # original failure silently.
         if blob_store is not None:
-            try:
-                blob_store.put(record.blob, mime_type=record.mime_type)
-            except Exception:  # noqa: BLE001 - best-effort
-                pass
+            blob_store.put(record.blob, mime_type=record.mime_type)
         return IntakeResult(
             item_id=existing.id, content_hash=record.content_hash,
             document_type="duplicate", extracted={}, duplicate=True,
@@ -93,6 +93,22 @@ def ingest_record(
         doc = extract_document(record.blob, mime_type=record.mime_type)
     except Exception as exc:  # noqa: BLE001 - quarantine any parse failure
         raise QuarantineError(f"parse failure: {type(exc).__name__}") from exc
+
+    # WRITE THE CONTENT FIRST, then the metadata row.
+    #
+    # This order is load-bearing. It used to be the reverse, with the blob write wrapped in
+    # `except Exception: pass` — so a failed write left a metadata row whose content did not
+    # exist, and said nothing. That is how 729 of 775 mail items came to point at documents
+    # that were never stored (measured 2026-09-21): the rows looked complete, the invoice
+    # links rendered, and only opening one revealed the content was missing.
+    #
+    # A caller with no blob store cannot keep content at all, so it is refused rather than
+    # silently producing another row that promises content it does not have.
+    if blob_store is None:
+        raise QuarantineError(
+            "no blob store configured; refusing to record evidence whose content cannot be kept"
+        )
+    blob_store.put(record.blob, mime_type=record.mime_type)
 
     item = evidence_repo.add_item(
         source_kind=record.source_kind,
@@ -104,12 +120,6 @@ def ingest_record(
         title=record.title or doc.document_type,
         sender=record.sender,
     )
-    # Persist the encrypted blob so the evidence content is retrievable.
-    if blob_store is not None:
-        try:
-            blob_store.put(record.blob, mime_type=record.mime_type)
-        except Exception:  # noqa: BLE001 - blob persistence is best-effort
-            pass
     facts = [
         {
             "field": f.field,

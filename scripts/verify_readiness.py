@@ -261,8 +261,28 @@ def contract_probes() -> dict:
             def put(self, *_args, **_kwargs):
                 raise OSError("synthetic disk failure")
 
-        intake = ingest_record(IntakeRecord("upload", "synthetic-text", b"Synthetic bill: $20.00", "text/plain"), evidence_repo=evidence, blob_store=FailedBlobStore())
-        results["blob_write_failure"] = {"returned_quarantined": intake.quarantined, "metadata_persisted": evidence.get_item(intake.item_id) is not None}
+        # A blob write that fails must NOT leave a metadata row pointing at content that
+        # does not exist. ingest_record used to swallow this failure and record the row
+        # anyway, which is exactly how 729 of 775 mail items came to reference documents
+        # that were never stored (measured 2026-09-21). The invariant is now: content is
+        # written first, a failure aborts the ingest, and nothing is recorded.
+        before = len(evidence.list_items(source_kind="upload", limit=1000))
+        try:
+            ingest_record(
+                IntakeRecord("upload", "synthetic-text", b"Synthetic bill: $20.00", "text/plain"),
+                evidence_repo=evidence,
+                blob_store=FailedBlobStore(),
+            )
+        except OSError as exc:
+            outcome = {"raised": type(exc).__name__, "content_kept": False}
+        else:
+            outcome = {"raised": None, "content_kept": True}
+        after = len(evidence.list_items(source_kind="upload", limit=1000))
+        outcome["metadata_persisted"] = after != before
+        results["blob_write_failure"] = outcome
+        assert outcome["metadata_persisted"] is False, (
+            "a failed blob write must not persist a metadata row whose content is missing"
+        )
         verifier = _verify_crew_bill_reserve_readback()
         results["reserve_settings_no_local_id"] = verifier({"name": "Synthetic"}, {"success": True})
         commitments = CommitmentRepository(db)

@@ -33,9 +33,20 @@ def _msg(mid, subject, body, sender="bill@merchant.com", received="2026-09-05T12
     )
 
 
-def test_ingest_gmail_stores_messages_as_mail_evidence(evidence_repo):
+def _ingest_store(tmp_path, name="evidence-blobs"):
+    """The intake now refuses to run without a blob store (a row whose content cannot be
+    kept is the bug that left 729 items unopenable), so tests must supply one."""
+    from meridian.storage import DerivedKeyProvider, EncryptedBlobStore
+
+    return EncryptedBlobStore(
+        str(tmp_path / name),
+        DerivedKeyProvider(b"test-secret-key-00000000000000000000000000"),
+    )
+
+
+def test_ingest_gmail_stores_messages_as_mail_evidence(evidence_repo, tmp_path):
     transport = FakeTransport([_msg("m1", "Your Eversource bill", "Amount due: $210.00 by Sep 20")])
-    summary = ingest_gmail_recent(transport=transport, evidence_repo=evidence_repo, max_messages=5)
+    summary = ingest_gmail_recent(transport=transport, evidence_repo=evidence_repo, max_messages=5, blob_store=_ingest_store(tmp_path))
 
     assert summary["fetched"] == 1
     assert summary["stored"] == 1
@@ -47,23 +58,23 @@ def test_ingest_gmail_stores_messages_as_mail_evidence(evidence_repo):
     assert summary["items"][0]["subject"] == "Your Eversource bill"
 
 
-def test_ingest_gmail_dedups_on_duplicate(evidence_repo):
+def test_ingest_gmail_dedups_on_duplicate(evidence_repo, tmp_path):
     transport = FakeTransport([_msg("m1", "Duplicate", "same body text content")])
-    first = ingest_gmail_recent(transport=transport, evidence_repo=evidence_repo)
-    second = ingest_gmail_recent(transport=transport, evidence_repo=evidence_repo)
+    first = ingest_gmail_recent(transport=transport, evidence_repo=evidence_repo, blob_store=_ingest_store(tmp_path))
+    second = ingest_gmail_recent(transport=transport, evidence_repo=evidence_repo, blob_store=_ingest_store(tmp_path))
 
     assert first["stored"] == 1
     assert second["duplicate"] == 1 and second["stored"] == 0
 
 
-def test_ingest_gmail_quarantines_empty_body(evidence_repo):
+def test_ingest_gmail_quarantines_empty_body(evidence_repo, tmp_path):
     transport = FakeTransport([_msg("m1", "Empty", "   ")])
-    summary = ingest_gmail_recent(transport=transport, evidence_repo=evidence_repo)
+    summary = ingest_gmail_recent(transport=transport, evidence_repo=evidence_repo, blob_store=_ingest_store(tmp_path))
     assert summary["quarantined"] == 1
     assert summary["stored"] == 0
 
 
-def test_ingest_gmail_handles_mixed_batch_and_never_leaks_body(evidence_repo):
+def test_ingest_gmail_handles_mixed_batch_and_never_leaks_body(evidence_repo, tmp_path):
     transport = FakeTransport(
         [
             _msg("m1", "Bill A", "Amount due $50"),
@@ -71,7 +82,7 @@ def test_ingest_gmail_handles_mixed_batch_and_never_leaks_body(evidence_repo):
             _msg("m3", "Bill B", "Statement attached"),
         ]
     )
-    summary = ingest_gmail_recent(transport=transport, evidence_repo=evidence_repo)
+    summary = ingest_gmail_recent(transport=transport, evidence_repo=evidence_repo, blob_store=_ingest_store(tmp_path))
 
     assert summary["stored"] == 2
     assert summary["quarantined"] == 1
@@ -110,7 +121,7 @@ def test_ingest_all_gmail_accounts_iterates_each_token(tmp_path, monkeypatch):
     monkeypatch.setattr(gi.GmailTransport, "fetch_recent", fake_fetch)
 
     repo = EvidenceRepository(str(tmp_path / "evidence.db"))
-    summary = ingest_all_gmail_accounts(db_path=db, evidence_repo=repo, token_client=FakeClient(), max_messages_per_account=5)
+    summary = ingest_all_gmail_accounts(db_path=db, evidence_repo=repo, token_client=FakeClient(), max_messages_per_account=5, blob_store=_ingest_store(tmp_path))
 
     assert summary["total_stored"] == 2
     assert len(summary["accounts"]) == 2
@@ -186,7 +197,7 @@ def test_ingest_icloud_recent_stores_mail_evidence(tmp_path):
             ]
 
     repo = EvidenceRepository(str(tmp_path / "evidence.db"))
-    summary = ingest_icloud_recent(transport=FakeTransport(), evidence_repo=repo, max_messages=5)
+    summary = ingest_icloud_recent(transport=FakeTransport(), evidence_repo=repo, max_messages=5, blob_store=_ingest_store(tmp_path))
 
     assert summary["stored"] == 1
     assert summary["items"][0]["subject"] == "Your iCloud bill"
@@ -217,7 +228,7 @@ def test_ingest_icloud_links_use_icloud_provenance(tmp_path):
     repo = EvidenceRepository(str(tmp_path / "evidence.db"))
     summary = ingest_icloud_recent(
         transport=FakeTransport(), evidence_repo=repo, max_messages=5,
-        transactions=[Tx(40, -92.75)],
+        transactions=[Tx(40, -92.75)], blob_store=_ingest_store(tmp_path),
     )
 
     assert summary["linked"] == 1
@@ -379,7 +390,7 @@ def test_icloud_intake_stores_the_recovered_forwarded_sender(tmp_path):
             ]
 
     repo = EvidenceRepository(str(tmp_path / "evidence.db"))
-    summary = ingest_icloud_recent(transport=FakeTransport(), evidence_repo=repo, max_messages=5)
+    summary = ingest_icloud_recent(transport=FakeTransport(), evidence_repo=repo, max_messages=5, blob_store=_ingest_store(tmp_path))
     assert summary["stored"] == 1
 
     items = repo.list_items(source_kind="mail", limit=10)
@@ -407,7 +418,7 @@ def test_icloud_intake_leaves_a_normal_subject_unchanged(tmp_path):
             ]
 
     repo = EvidenceRepository(str(tmp_path / "evidence.db"))
-    ingest_icloud_recent(transport=FakeTransport(), evidence_repo=repo, max_messages=5)
+    ingest_icloud_recent(transport=FakeTransport(), evidence_repo=repo, max_messages=5, blob_store=_ingest_store(tmp_path))
     assert repo.list_items(source_kind="mail", limit=10)[0].title == "Your Verizon bill is ready"
 
 
