@@ -53,21 +53,33 @@
       "decision_owed": true
     },
     {
-      "summary": "The calendar connector remains wired to nothing — the open half of OS-067",
-      "why": "Referenced only for its OAuth scope constant while a stored token sits unused. This is the third of the three things the owner originally reported, and the only part of OS-067 still outstanding. NOT parked: it is in-flight work on the critical path.",
+      "summary": "The daily calendar TRIGGER is chosen but not wired — the last open piece of OS-067",
+      "why": "The app side is BUILT and tested (migration 026, meridian/calendar_context.py, scripts/calendar_context_ingest.py) and the connector is no longer orphaned: calendar now goes through Composio as its only adapter, by owner decision. What does NOT exist is the once-a-day trigger. The fetch needs a Composio call, which only the harness can make today; the app has no Composio client, and giving it a raw Composio credential is its own decision rather than a detail. Nothing may describe calendar as being polled until that is decided. Honest liveness already exists: the store reports the newest observed event and reads STALE rather than healthy when the feed stalls.",
       "arose": "2026-09-21",
-      "promoted_to": "OS-067"
+      "promoted_to": "OS-067",
+      "decision_owed": true
     },
     {
-      "summary": "A harness-mediated Gmail ingestion service is possible but NOT built",
-      "why": "D-016 keeps the avenue available: the app cannot call Composio today, but a scheduled agent-driven sweep is architecturally legitimate. Not authorised by D-016 and would need its own decision, operational footprint, and honest liveness statement. Meridian must keep working without it.",
+      "summary": "A harness-mediated GMAIL ingestion service is still possible but NOT built",
+      "why": "D-016 keeps the avenue available and the owner OPENED it on 2026-09-21 for CALENDAR read-only context only (Composio is the calendar's sole adapter) -- and explicitly NOT for mail: 'Two different mechanisms for email and calendar.' So the calendar half is now authorised and built; the mail half described here remains unbuilt and needs its own decision, operational footprint, and honest liveness statement. Meridian must keep working without either.",
       "arose": "2026-09-21",
-      "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (checkpoint: after the current evidence lane closes, and only via its own decision)",
+      "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (calendar half opened 2026-09-21; mail half still parked)",
       "due_check": {
         "kind": "task",
         "value": "OS-067",
         "note": "Only after the current evidence lane closes, and only via its own decision; D-016 keeps the avenue open without approving the build."
       }
+    },
+    {
+      "summary": "Desktop Settings: the hub renders inside the 210px rail with heavy text wrapping",
+      "why": "At >=901px the eight hub rows and their group banners sit in the narrow settings rail and wrap onto four or five lines, while the main column holds only an intro paragraph. Measured IDENTICAL before and after this session's CSS fix, so it dates from OS-065 and is not a regression. It is a desktop adaptation of the 2026-09-18 concept, which is a PHONE frame and therefore specifies no desktop treatment -- so inventing one is a design decision, not a bug fix. Needs the owner's visual authority: either promote the hub into the main column at desktop, or accept the rail and widen it.",
+      "arose": "2026-09-21",
+      "decision_owed": true
+    },
+    {
+      "summary": "A pre-existing ruff I001 in app.py is unfixed on purpose",
+      "why": "`ruff check app.py` reports I001 (unsorted import block) at HEAD, verified by running it against the committed file. It was deliberately NOT fixed while editing app.py for the icloud-configured config key, because sweeping an unrelated pre-existing lint fix into a feature commit destroys the reviewer's ability to see what changed and why. One-line fix whenever something is next editing that import block for its own reasons.",
+      "arose": "2026-09-21"
     }
   ]
 }
