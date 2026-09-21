@@ -1,5 +1,53 @@
 # Enhanced SimpleCrew — Current Status
 
+## Safe to Spend ignored a NEGATIVE reserve — owner-reported, fixed, and now explained (`OS-078`, `D-019`) (2026-09-21, base `874b79c`)
+
+**Your finding, confirmed against Crew's own screen.** You reported Free to Spend **424.90** where the figure should be
+**100.00**, with the reserve at **-324.90**. Crew's own Pockets screen shows exactly that: *SAFE TO SPEND $100.00* beside
+*Free to Spend $424.90* and *Autopilot reserve -$324.90*. So Crew already subtracts the negative reserve — **Meridian
+was the one misreporting**, by reading the raw pocket balance and calling it safe to spend.
+
+**The wrong assumption, written verbatim in `meridian/services/today.py` and inherited by the dial:**
+
+> *"Crew has already separated bill/obligation money into other pockets, so no further subtraction."*
+
+That holds at or above zero. **It fails when the reserve is negative**, because a negative reserve is an **overdraft**:
+the reserve has consumed more than it held, and that deficit has not yet been moved out of the spendable pocket. The
+pocket therefore overstates what is genuinely free by exactly the deficit — and the error is in the **dangerous
+direction**, since a spending figure claiming more money than exists is one you act on.
+
+**Your workaround is not the fix, and that is the point.** Topping the reserve up by hand moves the money in Crew, the
+pocket then reads 100, and the display "would likely display correctly" — the symptom vanishes while the calculation
+stays wrong. So the tests fix the **calculation** and leave the pocket balance alone.
+
+**The fix, in one shared place.** `meridian/services/reserves.py` holds the rule and **both** surfaces call it — they
+had already drifted into two copies of `_spend_source_account`, so a shared rule is what stops them disagreeing about
+your money. Only **negative** reserves count (a positive one is already reflected in the pocket split; subtracting it
+would *understate* you — the opposite error). **Nothing is clamped**: an overdraft bigger than the pocket reports
+negative rather than hiding behind a plausible zero. A reserve reported as `None` contributes nothing, and a **retired**
+reserve stops reducing the figure.
+
+**And it now explains itself**, which is the half you asked for: the server assembles
+`safe_to_spend.breakdown` — the pocket line, the subtraction, the result and a plain-language reason — rather than
+leaving the client to re-derive it, because a client that re-derives the number can drift from the server that computed
+it. That is how this went wrong in the first place. The rendered affordance (hover/click on the figure) is `OS-079`,
+scoped and ready; the data it needs is already shipped.
+
+**One deliberate divergence from Crew, stated so it is not later mistaken for a bug.** Crew totals the pockets you have
+**selected**, so a *positive* reserve would *increase* its Safe to Spend. Meridian does not add a positive reserve,
+because money earmarked for bills is not free to spend — so the two agree in the overdraft case and Meridian's is the
+conservative one otherwise. Recorded in `D-019`.
+
+**A real bug I introduced, caught by the full suite.** My first version named the new local `breakdown`, which
+**clobbered** the commitments breakdown of the same name in `build_today`: the top-level `breakdown` key came back
+holding safe-to-spend lines and `test_breakdown_reports_bills_and_goals` failed with `KeyError: 'bills_total'`. A run of
+only my new tests would have passed. Renamed `spend_breakdown`, reason in a comment.
+
+**Evidence.** 17 tests in `tests/meridian/services/test_reserve_deficit.py`, with your arithmetic as the named
+acceptance case; the Today tests run against a **real** `FinancialRepository` so the real `list_bill_reserves()` filter
+is exercised. Full suite **1845 passed**, 73 skipped. Ruff and `git diff --check` clean. **Display only** — no schema,
+capability, provider or authority change.
+
 ## The Investigator was evidence-bound but not evidence-informed (`OS-077`) (2026-09-21, base `3aff21c`)
 
 **A gap in my own work, found by review and confirmed against the code.** `EvidenceBoundRole._prompt_payload`

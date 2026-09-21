@@ -1833,6 +1833,53 @@
         "suite": "Full non-browser suite 1829 passed / 73 skipped. Ruff and git diff --check clean.",
         "authority": "No authority, provider or financial change. No test contacts a provider; every client is a fake."
       }
+    },
+    {
+      "id": "OS-078",
+      "title": "Safe to spend ignored a NEGATIVE bill reserve, overstating the owner's spendable money by the overdraft",
+      "status": "complete",
+      "priority": "critical",
+      "phase": "correctness",
+      "owner_raised": true,
+      "delivered": "2026-09-21",
+      "detail": "OWNER-REPORTED, CONFIRMED AGAINST CREW'S OWN UI, FIXED. Today and the dial both read Crew's 'Free to Spend' pocket balance directly, on the assumption written into today.py that 'Crew has already separated bill/obligation money into other pockets, so no further subtraction'. That holds at or above zero and FAILS when the reserve is negative, because a negative reserve is an OVERDRAFT whose deficit has not yet been moved out of the spendable pocket. The owner saw 424.90 where the true figure was 100.00 (reserve -324.90), and Crew's own Pockets screen shows SAFE TO SPEND 100.00 -- so Crew already subtracts it and MERIDIAN was the one misreporting. The error overstates available money, which is the dangerous direction. Recorded as D-019.",
+      "progress": "DELIVERED: meridian/services/reserves.py holds the rule, and BOTH surfaces call it -- they had already drifted into two copies of _spend_source_account, so a shared rule is what stops them disagreeing about the owner's money. Only NEGATIVE reserves count (a positive one is already reflected in the pocket split; subtracting it would understate); nothing is clamped (an overdraft larger than the pocket reports negative); None is not a deficit; and the deficit is reported in `inputs` with a reason string. The server also assembles a `breakdown` (lines, result, plain-language explanation) for the explanation affordance the owner then asked for.",
+      "acceptance_criteria": [
+        "424.90 less a -324.90 reserve reports 100.00, matching Crew's own Safe to Spend",
+        "A positive or zero reserve leaves the figure unchanged",
+        "A reserve reported as None contributes nothing",
+        "A retired reserve (absent_since set) no longer reduces the figure",
+        "An overdraft larger than the pocket reports a negative figure rather than a plausible zero",
+        "The figure states how it was calculated, and the stated lines sum to the stated result"
+      ],
+      "limits": "DISPLAY/READ MODEL ONLY. No schema change (028 already allows a negative reserve), no new capability, no provider mutation, no credential, no authority change. Deliberately does NOT add a positive reserve to the total: Crew totals the pockets the owner SELECTED, so a positive reserve would increase its Safe to Spend, but money earmarked for bills is not free to spend, so Meridian stays conservative. That divergence is recorded in D-019 so it is not later mistaken for a bug.",
+      "handoff": "docs/project/MERIDIAN_DECISIONS.md D-019; meridian/services/reserves.py (the rule); meridian/services/today.py build_today (the headline + breakdown); meridian/services/dial.py _available_to_spend (the dial, in minor units); meridian/repository.py list_bill_reserves (current reserves only, absent_since IS NULL); tests/meridian/services/test_reserve_deficit.py.",
+      "notes": "THE OWNER'S OWN WORKAROUND IS NOT THE FIX and is worth stating: topping the reserve up by hand moves the money in Crew, the pocket then reads 100, and the display 'would likely display correctly'. That makes the symptom vanish while the calculation stays wrong -- which is why the tests fix the CALCULATION and leave the pocket balance alone.\n\nA REAL BUG I INTRODUCED AND THE FULL SUITE CAUGHT: the first version named the new local `breakdown`, which CLOBBERED the commitments breakdown of the same name in build_today, so the top-level `breakdown` key came back holding safe-to-spend lines and test_breakdown_reports_bills_and_goals failed with KeyError 'bills_total'. A run of only the new tests would have passed. Renamed `spend_breakdown` with the reason in a comment.",
+      "evidence": {
+        "tests": "tests/meridian/services/test_reserve_deficit.py -- 17 tests. The owner's arithmetic is the named acceptance case (424.90 - 324.90 = 100.00); a positive reserve changes nothing; None is not a deficit; several negatives sum; an overdraft beyond the pocket reports negative rather than being clamped; currencies are never added; the deficit is reported; and the today tests run against a REAL FinancialRepository so the real list_bill_reserves() filter is exercised, including that a RETIRED reserve stops reducing the figure. The breakdown is asserted to ADD UP (its lines sum to its stated result) -- otherwise the explanation is decoration.",
+        "grounding": "Crew's own Pockets screen, which the owner supplied: SAFE TO SPEND $100.00, Free to Spend $424.90, Autopilot reserve -$324.90. The fix reproduces Crew's figure exactly. No financial figure from that screen is committed to the repository; the numbers appear only in this file's description of the arithmetic, which the owner stated himself.",
+        "suite": "Full non-browser suite 1845 passed / 73 skipped, only the expected mid-slice handoff staleness failing. Ruff and git diff --check clean.",
+        "authority": "None changed. This changes what Meridian DISPLAYS, not what it may do."
+      }
+    },
+    {
+      "id": "OS-079",
+      "title": "Show how Safe to Spend was calculated — hover/click affordance on the Today figure",
+      "status": "open",
+      "priority": "high",
+      "phase": "track-D-surfaces",
+      "owner_raised": true,
+      "detail": "OWNER REQUEST, verbatim: 'I want to add a mouse over or clickable on safe to spend that shows how its calculated in the app- should be a cheap add'. Requested immediately after the owner found the reserve-overdraft bug, which is exactly the case an explanation would have made obvious: 424.90 - 324.90 = 100.00.",
+      "progress": "NOT STARTED. The DATA is already delivered and is the cheap half: build_today now returns safe_to_spend.breakdown with `lines` (label + amount), `result_label`, `result`, `currency` and a plain-language `explanation`, and the deficit is also in safe_to_spend.inputs. Nothing remains to compute; the work is the affordance.",
+      "acceptance_criteria": [
+        "Safe to Spend is focusable and openable by BOTH hover and keyboard (not hover-only)",
+        "It states the pocket figure, the reserve subtraction and the result, from the server payload",
+        "It does not re-derive the arithmetic in the client",
+        "It is honest when nothing was subtracted, rather than showing an empty adjustment",
+        "Works at the governed capture viewports and in both themes"
+      ],
+      "limits": "Presentation only: no new route, no data change, no financial authority. Must NOT introduce a tinted surface -- the owner's 2026-09-18 ruling permits parchment as a MATERIAL and requires separation by hairline and engraving, never a fill.",
+      "handoff": "meridian/services/today.py build_today (the payload to render); templates/meridian/ (today surface) and static/css/meridian/ + static/js/meridian/ for the affordance; the Virgil surface (OS-071) is the precedent for an inert read-only panel; docs/project/MERIDIAN_VISUAL_CAPTURE_SPEC.md for the capture requirements."
     }
   ]
 }

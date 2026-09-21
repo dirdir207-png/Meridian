@@ -8,6 +8,10 @@ from meridian.beacon import forecast
 from meridian.cadence import next_occurrence
 from meridian.commitments import CommitmentType
 from meridian.repository import FinancialRepository, ProviderConnectionFreshness
+from meridian.services.reserves import (
+    reserve_deficit,
+    spendable_after_reserve_deficit,
+)
 
 _STALE_AFTER = timedelta(hours=24)
 _CASH_ACCOUNT_TYPES = frozenset({"cash", "checking", "savings"})
@@ -444,6 +448,13 @@ def build_today(
     # balance directly so safe-to-spend matches Free to Spend. (Crew has
     # already separated bill/obligation money into other pockets, so no further
     # subtraction.) Otherwise fall back to cash-type available balances.
+    #
+    # CORRECTED 2026-09-21 (owner-reported): the "no further subtraction" rule above holds only
+    # while the reserve is at or above zero. A NEGATIVE reserve is an overdraft whose deficit has
+    # not yet been moved out of the spendable pocket, so the pocket overstates what is genuinely
+    # free by exactly that deficit -- the owner saw 424.90 where the true figure was 100.00
+    # (reserve -324.90). The deficit is subtracted and reported as an input. See D-019 and
+    # meridian/services/reserves.py.
     spend_source = _spend_source_account(accounts)
     # "Committed" (known obligations) is independent of which account is the
     # spend source: it is the unfunded bill/commitment total Meridian is tracking
@@ -451,14 +462,55 @@ def build_today(
     known_obligations = (
         _unfunded_bill_total(commitment_repository) if commitment_repository else None
     )
+    deficit = reserve_deficit(repository.list_bill_reserves())
     if spend_source is not None and spend_source.available_balance is not None:
-        safe_amount = _currency_total(
-            [(spend_source.currency, spend_source.available_balance)]
-        )["by_currency"].get(spend_source.currency, 0.0)
+        source_label = getattr(spend_source, "name", None) or "Free to Spend"
+        source_currency = spend_source.currency or "USD"
+        source_available = _currency_total(
+            [(source_currency, spend_source.available_balance)]
+        )["by_currency"].get(source_currency, 0.0)
+        safe_amount = spendable_after_reserve_deficit(source_available, deficit)
         safe_status = "available"
     else:
-        safe_amount = available_cash["by_currency"].get("USD", 0.0)
-        safe_status = "available" if available_cash["by_currency"].get("USD") else "unavailable"
+        source_label = "Cash accounts"
+        source_currency = "USD"
+        source_available = available_cash["by_currency"].get("USD", 0.0)
+        safe_amount = spendable_after_reserve_deficit(source_available, deficit)
+        safe_status = "available" if source_available else "unavailable"
+
+    # The breakdown is built HERE, by the server, rather than left for the client to derive. The
+    # surface must be able to say how the number was reached -- that is the whole point of the
+    # owner's request for an explanation on the figure -- and a client that re-derived it could
+    # drift from the server that computed it, which is exactly how the figure went wrong before.
+    #
+    # The name is `spend_breakdown` and NOT `breakdown`: `breakdown` above is the COMMITMENTS
+    # breakdown and is returned as the top-level key. Naming this one `breakdown` silently
+    # clobbered it, so the top-level key came back holding the safe-to-spend lines and
+    # test_breakdown_reports_bills_and_goals failed with a KeyError on 'bills_total'. Caught by
+    # the full suite; a run of only the new tests would have passed.
+    spend_breakdown = {
+        "currency": source_currency,
+        "lines": [{"label": source_label, "amount": round(source_available, 2)}],
+        "result_label": "Safe to spend",
+        "result": round(safe_amount, 2),
+    }
+    if deficit.is_present:
+        spend_breakdown["lines"].append(
+            {
+                "label": "Less Autopilot reserve overdraft",
+                "amount": round(-deficit.amount, 2),
+            }
+        )
+        spend_breakdown["explanation"] = (
+            f"{source_label} holds {source_available:,.2f}, but the bill reserve is negative by "
+            f"{deficit.amount:,.2f}. That deficit has not been moved out of the spendable pocket "
+            "yet, so it is subtracted: what is genuinely free is the difference."
+        )
+    else:
+        spend_breakdown["explanation"] = (
+            f"{source_label} is the discretionary balance Meridian reads directly. No reserve "
+            "overdraft was observed, so nothing is subtracted."
+        )
 
     return {
         "total_cash": total_cash,
@@ -466,10 +518,12 @@ def build_today(
         "safe_to_spend": {
             "amount": safe_amount,
             "status": safe_status,
+            "breakdown": spend_breakdown,
             "inputs": {
                 "available_cash": available_cash,
                 "known_obligations": known_obligations,
                 "reason": None,
+                **deficit.as_payload(),
             },
         },
         "upcoming_events": [],

@@ -787,6 +787,27 @@
       "base_sha": "3aff21c14301a615ac6326917eacabf296719221",
       "since": "2026-09-21T00:00:00+00:00",
       "note": "Does NOT touch the design package (`design/investigator-medallions-2026-09-21/**`), which is Astra's and now committed by them at e62f555. Does not start OS-076's route, template, JS or CSS: this is the backend prerequisite only, delivered under its own ledger id so OS-076's acceptance is not redefined."
+    },
+    {
+      "agent": "constitutional-builder",
+      "claim_id": "safe-to-spend-reserve-overdraft-20260921",
+      "description": "OS-078 / D-019: owner-reported bug. Today and the dial read the Free to Spend pocket directly and so overstated spendable money by a negative reserve's overdraft (424.90 vs the true 100.00, confirmed against Crew's own screen). Adds meridian/services/reserves.py as the shared rule, wires both surfaces to it, and makes the server assemble a breakdown for the explanation affordance (OS-079) the owner asked for. Display only.",
+      "generation": 1,
+      "files": [
+        "meridian/services/reserves.py",
+        "meridian/services/today.py",
+        "meridian/services/dial.py",
+        "tests/meridian/services/test_reserve_deficit.py",
+        "tests/meridian/services/test_today.py",
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "874b79c7428d002b49ca75098990dbf1d20ec1b0",
+      "since": "2026-09-21T00:00:00+00:00",
+      "note": "The OS-076 first slice is NOT in this claim and NOT committed: meridian/ai/investigation_service.py is written but unwired and untested, so it is left UNCOMMITTED as WIP rather than committed as a placeholder. See the log entry."
     }
   ]
 }

@@ -75,9 +75,23 @@ def test_today_reports_cash_inputs_and_stale_graph_without_a_forecast(repository
         "currency": "USD",
         "by_currency": {"USD": 400.0},
     }
+    # Asserted as an EXACT dict on purpose: the key set is part of the contract, so a new key
+    # cannot appear on this payload without this test being updated deliberately. Updated
+    # 2026-09-21 for the reserve-overdraft adjustment (`breakdown` plus the `reserve_deficit*`
+    # inputs) -- a documented addition, not drift. See D-019.
     assert result["safe_to_spend"] == {
         "amount": 380.0,
         "status": "available",
+        "breakdown": {
+            "currency": "USD",
+            "lines": [{"label": "Cash accounts", "amount": 380.0}],
+            "result_label": "Safe to spend",
+            "result": 380.0,
+            "explanation": (
+                "Cash accounts is the discretionary balance Meridian reads directly. No reserve "
+                "overdraft was observed, so nothing is subtracted."
+            ),
+        },
         "inputs": {
             "available_cash": {
                 "amount": 380.0,
@@ -86,6 +100,10 @@ def test_today_reports_cash_inputs_and_stale_graph_without_a_forecast(repository
             },
             "known_obligations": None,
             "reason": None,
+            "reserve_deficit": 0.0,
+            "reserve_deficit_count": 0,
+            "reserve_deficit_currency": "USD",
+            "reserve_deficit_reason": None,
         },
     }
     assert result["upcoming_events"] == []

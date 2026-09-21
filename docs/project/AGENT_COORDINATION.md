@@ -23,6 +23,7 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Agent | Files claimed | Since | Status |
 |---|---|---|---|
+| Constitutional Builder (OS-078: negative reserve vs Safe to Spend) | `meridian/services/reserves.py` (new), `meridian/services/today.py`, `meridian/services/dial.py`, `tests/meridian/services/test_reserve_deficit.py` (new), `tests/meridian/services/test_today.py`, `docs/project/{MERIDIAN_DECISIONS.md,MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **active**. Owner-reported correctness fix to a headline figure; display only, no route or schema change. |
 | Constitutional Builder (OS-077: evidence fact bundle) | `meridian/ai/facts.py` (new), `meridian/ai/investigator.py`, `scripts/investigate.py`, `tests/meridian/test_ai_facts.py` (new), `tests/meridian/test_ai_investigator.py`, `tests/test_investigate_script.py`, `docs/project/{MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **active**. Backend PREREQUISITE for OS-076, delivered under its own id so OS-076's acceptance is not redefined. Read-only: no route, template, JS or CSS in this claim, and `meridian/ai/**` stays this lane's. |
 | Constitutional Builder (OS-075 defect fix: negative bill reserve) | `meridian/migrations/028_allow_negative_bill_reserve.sql` (new), `tests/meridian/test_bill_reserve_negative.py` (new), `tests/meridian/test_migrations.py`, `tests/meridian/test_bill_reserve_observations.py`, `docs/project/{MERIDIAN_DECISIONS.md,MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **released 2026-09-21** at `1fb530f`. See the log entry below. |
 | Codex design handoff 2026-09-21 | `design/investigator-medallions-2026-09-21/**`, `docs/project/AGENT_COORDINATION.md` (own row/log only), `docs/project/{CURRENT_STATUS,MERIDIAN_DECISIONS,HANDOFF}.md`, `docs/project/{MERIDIAN_OS_TASKS,session-emergent}.json` (own additive records only) | 2026-09-21 | **released at `e62f555`**. Owner-requested medallion artwork and Investigator surface specification for DeepSeek Harness. Full icon pack and desktop Settings excluded. No runtime or Track I backend edits; preserve the active builder claim. |
@@ -115,6 +116,39 @@ would have reverted three commits had it been applied. This file is the channel.
 | Builder (OS-060: read-only reserve-versus-amount exposure) | `meridian/services/today.py`, `templates/meridian/partials/today.html`, `static/js/meridian/today.js`, `static/css/meridian/observatory.css`, `tests/meridian/services/test_reserve_exposure.py` (new), `tests/meridian/test_today_exposure_js.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-20 | **released at this commit**. OS-060 shipped as a **read-only** display, per the owner's 2026-09-20 scope decision: a gap is shown ONLY where a bill's amount exceeds its **observed** reserved figure AND a reserved report exists. Only Rent qualifies today (1442.00 − 1097.10 = **344.90**); the four `0.00`-with-reported bills are normal funded-not-covered (D-015) and correctly show nothing. **Key finding:** Rent sits OUTSIDE the dial's event window (next occurrence 2026-10-16 vs horizon end 2026-10-04), so the exposure is window-independent — an event-loop field would have rendered nothing. Wording factual with no verb of action; "has to come from spendable cash" was rejected as bordering on implying a transfer. No other number moves (the gap was already inside known obligations). 21 new tests; suite 1460 passed / 1 skipped; falsified before trusted, which caught a defect in the author's own test (it passed for the wrong reason). **No provider mutation, no transfer, no reserve withdrawal, no authority change, no migration, no forecast, no lateness modelling, no re-targeting.** `meridian/**.py` change → preview restart needed. |
 
 ## Log (append only — newest first)
+
+### 2026-09-21 — Safe to Spend ignored a negative reserve (`OS-078`, `D-019`, base `874b79c`)
+
+**Owner-reported.** Free to Spend 424.90 displayed where the figure should be 100.00, reserve -324.90. Crew's own
+Pockets screen shows SAFE TO SPEND 100.00 — so Crew subtracts the negative reserve and **Meridian** was the one
+misreporting, by reading the raw pocket balance.
+
+**The wrong assumption** (verbatim in `today.py`, inherited by `dial.py`): *"Crew has already separated bill/obligation
+money into other pockets, so no further subtraction."* True at or above zero; false when negative, because a negative
+reserve is an **overdraft** whose deficit has not been moved out of the spendable pocket yet. The error overstates
+available money — the dangerous direction.
+
+**Fix:** `meridian/services/reserves.py` holds one shared rule, and BOTH surfaces call it (they had already drifted into
+two copies of `_spend_source_account`). Only negative reserves count; nothing is clamped; `None` is not a deficit; a
+retired reserve no longer reduces the figure. The server also assembles `safe_to_spend.breakdown` so the figure can
+explain itself — the affordance to display it is `OS-079`, with the data already shipped.
+
+**Deliberate divergence:** Crew totals the pockets the owner SELECTED, so a positive reserve would INCREASE its Safe to
+Spend; Meridian does not add a positive reserve, because earmarked bill money is not free to spend. Recorded so it is
+not later mistaken for a bug.
+
+**Bug I introduced, caught by the full suite:** the new local was first named `breakdown`, clobbering the commitments
+breakdown of the same name in `build_today`; the top-level key returned safe-to-spend lines and
+`test_breakdown_reports_bills_and_goals` failed with `KeyError: 'bills_total'`. Renamed `spend_breakdown`. A run of only
+the new tests would have passed.
+
+**UNCOMMITTED WIP LEFT IN THE TREE — `meridian/ai/investigation_service.py`.** The first bounded piece of `OS-076`
+(validation for the Investigator's web route: question/context ceilings, strict boolean, 400 before any model call,
+server-derived sources, owner-context-is-not-evidence). It is **written but UNWIRED and UNTESTED**, so it was NOT
+committed — committing a service no route calls would be committing a placeholder. It is left as an untracked file for
+the next session to finish or discard, and nothing in the app references it. `OS-076` remains **open**; Astra's
+contract is at `design/investigator-medallions-2026-09-21/`.
+
 
 ### 2026-09-21 — A wrong CHECK was failing every live sync; the negative reserve is correct (`OS-075`, `D-017`, `1fb530f`)
 

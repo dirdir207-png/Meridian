@@ -16,6 +16,10 @@ from typing import Optional, Sequence
 from meridian.cadence import advance, next_occurrence, next_occurrence_with_index
 from meridian.commitments import Commitment, CommitmentType
 from meridian.funding import cadence_interval_days, crew_proration_cents
+from meridian.services.reserves import (
+    reserve_deficit,
+    spendable_after_reserve_deficit,
+)
 from meridian.services.today import data_freshness
 
 # Currency exponents used to convert the dollar-valued normalized model to
@@ -83,13 +87,27 @@ def _spend_source_account(accounts):
 
 
 def _available_to_spend(graph):
+    """Crew's discretionary 'Free to Spend' pocket, adjusted for a negative reserve.
+
+    CORRECTED 2026-09-21 (owner-reported): this previously returned the pocket balance directly,
+    matching Today's now-corrected "no further subtraction" assumption. A negative bill reserve is
+    an overdraft whose deficit has not yet been moved out of the spendable pocket, so the pocket
+    balance alone OVERSTATES what is free to spend. Today and the dial must agree on this, so both
+    call the same rule in ``meridian/services/reserves.py`` rather than each doing its own
+    arithmetic -- they had already drifted into two copies of ``_spend_source_account``.
+    """
     accounts = graph.list_accounts()
     spend = _spend_source_account(accounts)
+    try:
+        deficit = reserve_deficit(graph.list_bill_reserves())
+    except Exception:  # noqa: BLE001 - an unreadable reserve must not blank the dial
+        deficit = None
     if spend is not None and getattr(spend, "available_balance", None) is not None:
-        return {
-            "minor": _minor(spend.available_balance, spend.currency or "USD"),
-            "currency": spend.currency or "USD",
-        }
+        currency = spend.currency or "USD"
+        available = spend.available_balance
+        if deficit is not None:
+            available = spendable_after_reserve_deficit(available, deficit)
+        return {"minor": _minor(available, currency), "currency": currency}
     # Fall back only when there is a single cash currency; never add currencies.
     cash = [
         account
@@ -104,10 +122,10 @@ def _available_to_spend(graph):
     if len(currencies) != 1:
         return None
     currency = next(iter(currencies))
-    return {
-        "minor": _minor(sum(account.available_balance for account in cash), currency),
-        "currency": currency,
-    }
+    available = sum(account.available_balance for account in cash)
+    if deficit is not None:
+        available = spendable_after_reserve_deficit(available, deficit)
+    return {"minor": _minor(available, currency), "currency": currency}
 
 
 def _horizon(graph, paycheck, as_of: date) -> date:

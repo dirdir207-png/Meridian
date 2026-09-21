@@ -303,3 +303,26 @@ on the reasoning that a reserve total is money set aside and therefore cannot be
 The owner selected OS-038 medallion artwork and a customer-facing Investigator design for DeepSeek Harness, explicitly excluding desktop Settings. The owner authorized newly created finished artwork and permitted omission of the full icon pack. The five-hour limit refers to Codex subscription usage, not an implementation deadline. The Investigator should remain open to relevant cross-references from the existing evidence work; do not freeze it into a single-document explanation or rebuild ingestion on assumption.
 
 Deliverables and proposed design: `design/investigator-medallions-2026-09-21/README.md`; follow-on implementation is OS-076. Newly generated artwork must be labeled as such, not as original extracted glyphs. User-facing design review and integration remain open; no financial authority or production deployment is granted.
+
+## D-019 — A negative reserve reduces "safe to spend" (owner-reported, 2026-09-21)
+
+**Owner report, verbatim:** *"Important finding, free to spend is wrong. It should be 100. 424.90 Free to spend less 324.90 negative autopilot reserve. I can manually top up the reserve so that free to spend pocket has 100 in it and then it would likely display correctly, but it's a hole."*
+
+The owner's arithmetic is confirmed by Crew's own UI, which shows **SAFE TO SPEND 100.00** beside Free to Spend 424.90 and Autopilot reserve -324.90. Crew already subtracts the negative reserve; **Meridian** was the one misreporting the figure, by reading the raw pocket balance and calling it safe to spend.
+
+**The wrong assumption, stated verbatim in `meridian/services/today.py` and inherited by the dial:**
+
+> *"Crew has already separated bill/obligation money into other pockets, so no further subtraction."*
+
+That holds while the reserve is at or above zero. **It fails when the reserve is negative.** A negative reserve is an **overdraft**: the reserve has consumed more than it held, and the deficit has not yet been moved out of the spendable pocket. So the pocket balance overstates what is genuinely free to spend by exactly the deficit — and the error is in the **dangerous direction**, because a spending figure that claims more money than exists is one the owner acts on.
+
+**The decision.** `safe_to_spend` (Today) and the dial's available-to-spend both subtract the **reserve overdraft**: the sum of ``-total_reserved_amount`` across currently-observed reserves whose total is negative.
+
+**Four consequences, each load-bearing.**
+
+- **Only NEGATIVE reserves count.** A reserve at or above zero is already reflected in how Crew split the pockets; subtracting it would double-count and *understate* the owner's money — the opposite error, and equally wrong.
+- **Nothing is clamped.** If the deficit exceeds the pocket, safe-to-spend is genuinely negative and is reported that way (D-017's rule: never substitute a fabricated figure for an observed state).
+- **`None` is not a deficit.** An unreported reserve total is silence, not evidence of an overdraft (C01).
+- **The figure must explain itself.** The server assembles the breakdown — the pocket, the subtraction, the result and a plain-language reason — rather than leaving the client to re-derive it, because a client that re-derives the number can drift from the server that computed it, which is how this went wrong in the first place. The owner asked for exactly this: *"I want to add a mouse over or clickable on safe to spend that shows how its calculated."*
+
+**Deliberate divergence from Crew, stated so it is not mistaken for a bug.** Crew's Pockets screen totals the pockets the owner has **selected**, so a POSITIVE reserve would *increase* its Safe to Spend. Meridian does not add a positive reserve, because money earmarked for bills is not free to spend. The two figures therefore agree in the overdraft case and Meridian's is the conservative one otherwise. If that ever needs to change it is a decision, not a bug fix.
