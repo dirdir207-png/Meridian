@@ -210,3 +210,69 @@ def test_composed_or_uncertain_payday_edit_still_requires_a_proposal():
     assert uncertain.requires_proposal is True, (
         "a low-confidence payday edit executed directly, which removes the owner's approval gate"
     )
+
+
+def test_payday_mutation_reaches_its_executor_only_on_the_direct_path():
+    """END-TO-END for the paycheck funding plan, which the classifier tests above do not cover.
+
+    Those two prove the DECISION; this proves the CONSEQUENCE: that a direct, fully-specified
+    owner edit actually reaches the executor that talks to Crew, and that an interpreted or
+    low-confidence edit does not reach it at all. Without this, "the owner's direct edit executes"
+    would rest on the router's reasoning rather than on anything observed.
+
+    The executor here is a local fake so the call is observable; the REAL registration for this type
+    (and its readback verifier) is guarded separately by tests/meridian/test_write_coverage.py,
+    which fails if a registered type loses its executor.
+    """
+    import tempfile
+
+    from crew.actions import ActionStore
+    from crew.executors import ExecutorSpec
+    from meridian.write_routing import route_mutation
+
+    db = tempfile.mktemp(suffix=".db")
+    store = ActionStore(db, allowed_types=("update_crew_paycheck_funding_plan",))
+    calls = []
+
+    def fake_update(params):
+        calls.append(params)
+        return {"success": True, "crew": {"ok": True}}
+
+    executors = {
+        "update_crew_paycheck_funding_plan": ExecutorSpec(execute=fake_update, verifier=None)
+    }
+
+    # The owner sets the amount on one plan, directly and unambiguously.
+    direct = route_mutation(
+        store, executors, action_type="update_crew_paycheck_funding_plan",
+        params={"fundingPlanId": "plan-123", "amount": 1200.0, "deterministic": True},
+        rationale="set the payday amount", requested_by="owner", provenance="owner_direct",
+    )
+    assert direct["routing_direct"] is True, (
+        "the owner's direct payday edit was routed to a proposal instead of executing"
+    )
+    assert calls, "the owner's direct payday edit never reached the executor, so nothing was written"
+
+    # An AI-assembled change must wait for approval and must not touch Crew.
+    calls.clear()
+    interpreted = route_mutation(
+        store, executors, action_type="update_crew_paycheck_funding_plan",
+        params={"fundingPlanId": "plan-123", "amount": 1200.0},
+        rationale="ai assembled a payday change", requested_by="owner",
+        provenance="ai_interpreted",
+    )
+    assert interpreted["routing_direct"] is False
+    assert interpreted["action"]["state"] == "proposed"
+    assert calls == [], "an interpreted payday edit reached the executor before the owner approved"
+
+    # Low confidence is the subtler case: the owner asked, but the value is not solid, so the
+    # approval gate must still stand.
+    calls.clear()
+    uncertain = route_mutation(
+        store, executors, action_type="update_crew_paycheck_funding_plan",
+        params={"fundingPlanId": "plan-123", "amount": 1200.0},
+        rationale="guessed from a partial request", requested_by="owner",
+        provenance="owner_direct", low_confidence=True,
+    )
+    assert uncertain["routing_direct"] is False
+    assert calls == [], "a low-confidence payday edit reached the executor without approval"

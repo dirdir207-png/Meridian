@@ -326,3 +326,35 @@ That holds while the reserve is at or above zero. **It fails when the reserve is
 - **The figure must explain itself.** The server assembles the breakdown — the pocket, the subtraction, the result and a plain-language reason — rather than leaving the client to re-derive it, because a client that re-derives the number can drift from the server that computed it, which is how this went wrong in the first place. The owner asked for exactly this: *"I want to add a mouse over or clickable on safe to spend that shows how its calculated."*
 
 **Deliberate divergence from Crew, stated so it is not mistaken for a bug.** Crew's Pockets screen totals the pockets the owner has **selected**, so a POSITIVE reserve would *increase* its Safe to Spend. Meridian does not add a positive reserve, because money earmarked for bills is not free to spend. The two figures therefore agree in the overdraft case and Meridian's is the conservative one otherwise. If that ever needs to change it is a decision, not a bug fix.
+
+## D- Owner-direct in-app edits are excluded from the proposal requirement (owner, 2026-09-21)
+
+The owner, restating a rule he had already recorded: *"actions directly made by me in the app
+circumvent the need for proposal, I can directly execute."* This is the third time it has had to be
+said, so it is written down here as a decision rather than left in the write model's description.
+
+**The rule.** The gate is intent-confidence and determinism, never *who* initiated. An edit the
+owner makes directly in the app, stating an exact value on a single target, **executes** and does
+not enter a proposal queue. A proposal is required for what is genuinely uncertain: AI-interpreted
+or composed changes, low-confidence values, plan-level changes that move policy money, and anything
+scheduled with no human in the loop. **The exclusion is therefore  it covers the owner's
+direct, fully-specified edits and nothing else, and a change that widened it to everything would
+delete an approval gate, which is the worse failure.
+
+**Where it is already implemented.** `meridian/write_routing.py` classifies on provenance plus
+determinism (`OWNER_DIRECT` executes immediately; `_PLAN_LEVEL_TYPES` always propose regardless of
+provenance), and `POST /api/actions/mutate` (`app.py:4194`) is the general entry point that calls
+`route_mutation(...)` with `provenance` defaulting to `owner_direct`.
+
+**Where it is NOT, and this is a defect rather than a design choice.** Every route built on
+`_management_payload` returns a proposal unconditionally, because the sink behind it
+(`_meridian_memory_proposal_sink`, `app.py:1299-1317`) calls `action_store.propose(...)` and never
+consults the router. That covers **bills, rules, assets and contracts**, so on those surfaces the
+owner's own unambiguous in-app edits have been parking for approval. The direct path exists; the
+management routes bypass it.
+
+**Consequences.** (1) The payday work (OS-083) reuses `POST /api/actions/mutate` and deliberately
+adds **no** parallel proposal-only route; a second path would park the owner's edits again while
+looking like progress. (2) Bringing the management routes onto the router is its own slice
+(OS-084), not a side effect of a feature. (3) Nothing may widen the exclusion beyond direct,
+fully-specified owner intent.
