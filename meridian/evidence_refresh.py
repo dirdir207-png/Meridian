@@ -213,6 +213,11 @@ class EvidenceRefreshService:
             parts.append(f"blobs_written={report['blobs_written']}")
         if report.get("blobs_after") is not None:
             parts.append(f"blobs_total={report['blobs_after']}")
+        # Name the folder that was read. The inbox is the default, so without this an
+        # operator cannot tell a correctly-targeted cycle from one silently reading the
+        # wrong mailbox — the failure this selector exists to prevent.
+        if report.get("icloud_mailbox"):
+            parts.append(f"mailbox={report['icloud_mailbox']}")
         if report.get("outcome"):
             parts.append(f"outcome={report['outcome']}")
         return " ".join(parts)
@@ -291,4 +296,17 @@ def run_evidence_cycle(
             report["icloud"] = {"outcome": "error", "error": type(exc).__name__}
             if on_credential_error is not None:
                 on_credential_error("icloud", str(exc))
+    # Fold the iCloud leg into the top-level totals. Without this the operator line read
+    # "stored=0 fetched=0" on 2026-09-20 while iCloud had in fact ingested the bill that
+    # was already sitting in the database — the numbers described only the Gmail leg, so a
+    # WORKING cycle logged failure-shaped zeros. A summary that can say "nothing happened"
+    # while something happened is worse than no summary at all.
+    icloud_result = report.get("icloud")
+    if isinstance(icloud_result, dict):
+        for source_key, target_key in (("fetched", "total_fetched"), ("stored", "total_stored")):
+            value = icloud_result.get(source_key)
+            if isinstance(value, int):
+                report[target_key] = int(report.get(target_key, 0)) + value
+        if icloud_result.get("mailbox"):
+            report["icloud_mailbox"] = icloud_result["mailbox"]
     return report

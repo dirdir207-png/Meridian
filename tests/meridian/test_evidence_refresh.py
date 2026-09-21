@@ -406,3 +406,86 @@ def test_health_writes_do_not_block_behind_a_cycle_either():
 
     release.set()
     worker.join(5)
+
+
+# --- the cycle summary must account for the iCloud leg (OS-067) ---------------------
+#
+# Measured 2026-09-20: the operator line read "stored=0 fetched=0 blobs_written=0
+# outcome=degraded" while iCloud had in fact ingested a bill that was already sitting in
+# the database. The counters described only the Gmail leg, so a WORKING cycle logged
+# failure-shaped zeros. That is worse than a missing summary, because it actively
+# misdirects diagnosis — it sent me looking for a broken poll that was working.
+
+def test_the_summary_counts_what_icloud_stored():
+    from meridian.evidence_refresh import run_evidence_cycle
+
+    report = run_evidence_cycle(
+        db_path=":memory:",
+        evidence_repo=object(),
+        token_client=lambda: None,
+        blob_store=None,
+        icloud=lambda: {"outcome": "ok", "fetched": 1, "stored": 1, "mailbox": "Bills"},
+    )
+    assert report["icloud"]["stored"] == 1
+    assert report["total_stored"] == 1, "an iCloud-only cycle must not report stored=0"
+    assert report["total_fetched"] == 1
+
+
+def test_the_summary_adds_icloud_on_top_of_gmail(monkeypatch):
+    """Both legs must contribute; neither may mask the other."""
+    import meridian.gmail_intake as intake
+    from meridian.evidence_refresh import run_evidence_cycle
+
+    monkeypatch.setattr(
+        intake, "ingest_all_gmail_accounts",
+        lambda **kwargs: {"total_fetched": 2, "total_stored": 2, "accounts_unavailable": 0,
+                          "accounts": ["a@example.com"]},
+    )
+    report = run_evidence_cycle(
+        db_path=":memory:", evidence_repo=object(), token_client=lambda: None,
+        blob_store=None,
+        icloud=lambda: {"outcome": "ok", "fetched": 3, "stored": 4, "mailbox": "Bills"},
+    )
+    assert report["total_fetched"] == 5, "gmail 2 + icloud 3"
+    assert report["total_stored"] == 6, "gmail 2 + icloud 4"
+
+
+def test_a_broken_icloud_leg_does_not_corrupt_the_gmail_totals(monkeypatch):
+    import meridian.gmail_intake as intake
+    from meridian.evidence_refresh import run_evidence_cycle
+
+    monkeypatch.setattr(
+        intake, "ingest_all_gmail_accounts",
+        lambda **kwargs: {"total_fetched": 2, "total_stored": 2, "accounts_unavailable": 0,
+                          "accounts": ["a@example.com"]},
+    )
+
+    def boom():
+        raise RuntimeError("imap exploded")
+
+    report = run_evidence_cycle(
+        db_path=":memory:", evidence_repo=object(), token_client=lambda: None,
+        blob_store=None, icloud=boom,
+    )
+    assert report["icloud"]["outcome"] == "error"
+    assert report["total_stored"] == 2, "a failed iCloud leg must not erase Gmail's count"
+    assert report["total_fetched"] == 2
+
+
+def test_the_operator_line_names_the_mailbox_that_was_read():
+    """The inbox is the default, so an unlabelled line cannot distinguish a correctly
+    targeted cycle from one silently reading the wrong folder."""
+    from meridian.evidence_refresh import EvidenceRefreshService
+
+    line = EvidenceRefreshService._describe(
+        {"total_stored": 1, "total_fetched": 1, "icloud_mailbox": "Bills", "outcome": "ok"}
+    )
+    assert "mailbox=Bills" in line
+    assert "stored=1" in line
+
+
+def test_the_operator_line_omits_the_mailbox_when_no_icloud_leg_ran():
+    from meridian.evidence_refresh import EvidenceRefreshService
+
+    line = EvidenceRefreshService._describe({"total_stored": 0, "outcome": "degraded"})
+    assert "mailbox=" not in line

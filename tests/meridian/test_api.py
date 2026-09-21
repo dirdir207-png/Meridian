@@ -1248,3 +1248,88 @@ def test_an_invalid_learning_floor_is_rejected(api_client):
     assert response.status_code == 400
     assert response.get_json()["error"]["code"] == "invalid_request"
     assert client.get("/api/meridian/settings/payday").get_json()["learning"]["active"] is False
+
+
+# --- a browser opening missing evidence must get a page, not JSON (OS-067) ----------
+#
+# Reported 2026-09-21: clicking an invoice link landed on a screen of raw JSON —
+# {"error":{"code":"evidence_content_missing",...}}. The route behaved correctly (it
+# explained the missing blob and how to recover), but the invoice link opens in a NEW TAB,
+# so a browser NAVIGATION was being served an API payload. A JSON client must keep
+# receiving JSON, so the two are distinguished by Sec-Fetch-Mode: a navigation says
+# "navigate"; a fetch/XHR does not.
+
+def _content_client(monkeypatch, tmp_path, *, title="Your Xfinity payment is due today"):
+    repository = FinancialRepository(str(tmp_path / "financial.db"))
+
+    class FakeItem:
+        content_hash = "0" * 64
+
+    item = FakeItem()
+    item.title = title
+
+    class FakeRepo:
+        def get_item(self, _id):
+            return item
+
+    class ExplodingStore:
+        def read(self, _hash):
+            raise FileNotFoundError("blob never written")
+
+    monkeypatch.setitem(simplecrew.app.config, "MERIDIAN_REPOSITORY_FACTORY", lambda: repository)
+    monkeypatch.setitem(
+        simplecrew.app.config, "MERIDIAN_EVIDENCE_REPOSITORY_FACTORY", lambda: FakeRepo()
+    )
+    monkeypatch.setitem(
+        simplecrew.app.config, "MERIDIAN_EVIDENCE_BLOB_STORE_FACTORY", lambda: ExplodingStore()
+    )
+    # Flask-Login must resolve the session user, or the route redirects to /login (302)
+    # and the evidence path is never exercised.
+    monkeypatch.setattr(
+        simplecrew.login_manager,
+        "_user_callback",
+        lambda value: simplecrew.User(value, "meridian-api-user", "meridian-api@example.com"),
+    )
+    client = simplecrew.app.test_client()
+    with client.session_transaction() as session:
+        session["_user_id"] = "meridian-api-user"
+        session["_fresh"] = True
+    return client
+
+
+def test_a_browser_navigation_gets_html_when_evidence_content_is_missing(monkeypatch, tmp_path):
+    client = _content_client(monkeypatch, tmp_path)
+    response = client.get(
+        "/api/meridian/evidence/1/content",
+        headers={"Sec-Fetch-Mode": "navigate", "Accept": "text/html"},
+    )
+    assert response.status_code == 404
+    assert response.mimetype == "text/html", (
+        "a navigation that opened a new tab must not receive a JSON payload"
+    )
+    body = response.get_data(as_text=True)
+    assert "not stored" in body.lower()
+    assert "Xfinity" in body, "the page must still name the document"
+    assert "<script" not in body.lower(), "the error page must carry no scripts"
+
+
+def test_a_json_client_still_gets_the_structured_error(monkeypatch, tmp_path):
+    """The API contract must not change for programmatic callers."""
+    client = _content_client(monkeypatch, tmp_path)
+    response = client.get(
+        "/api/meridian/evidence/1/content",
+        headers={"Sec-Fetch-Mode": "cors", "Accept": "application/json"},
+    )
+    assert response.mimetype == "application/json"
+    payload = response.get_json()
+    assert payload["error"]["code"] == "evidence_content_missing"
+    assert payload["error"]["recovery_action"], "the recovery action must survive"
+
+
+def test_the_error_page_escapes_the_title():
+    """Evidence titles come from mail subjects, so they are untrusted input."""
+    from meridian.api import _evidence_unavailable_html
+
+    page = _evidence_unavailable_html('<img src=x onerror="alert(1)">')
+    assert "<img" not in page, "an evidence title must never inject markup"
+    assert "&lt;img" in page

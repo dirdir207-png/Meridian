@@ -1413,6 +1413,18 @@ def evidence_content(evidence_id: str):
         content = factory().read(item.content_hash)
     except Exception:  # noqa: BLE001 - a missing/undecryptable blob must not
         # surface as a raw provider error; degrade to the evidence's cached facts.
+        #
+        # A browser NAVIGATION gets a readable page, not JSON. The invoice link opens
+        # this URL in a new tab, so the owner was landing on a screen of raw JSON —
+        # correct behaviour, unreadable result (reported 2026-09-21). A JSON client
+        # still gets the structured error, so no contract changes: browsers advertise
+        # their navigation with Sec-Fetch-Mode: navigate, and a fetch/XHR does not.
+        if request.headers.get("Sec-Fetch-Mode") == "navigate":
+            return Response(
+                _evidence_unavailable_html(item.title),
+                status=404,
+                mimetype="text/html",
+            )
         return _error(
             "evidence_content_missing",
             "This document's content is not stored yet.",
@@ -1424,6 +1436,40 @@ def evidence_content(evidence_id: str):
     # shown escaped in a readable block.
     text = content.decode("utf-8", errors="replace")
     return Response(_evidence_viewer_html(text, item.title), mimetype="text/html")
+
+
+def _evidence_unavailable_html(title: str | None) -> str:
+    """A readable page for a browser that opened evidence whose content is not stored.
+
+    The invoice link opens in a new tab, so this is a real navigation and deserves a
+    human-readable explanation with the same facts the JSON carries: what happened and
+    what to do about it. No scripts, no external resources.
+    """
+    import html as _html
+
+    heading = _html.escape(title or "This document")
+    return f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Document not stored</title>
+<style>
+  :root {{ color-scheme: dark light; }}
+  body {{ margin: 0; padding: 2rem 1.25rem; font: 16px/1.6 -apple-system, system-ui, sans-serif;
+         background: #0f1117; color: #e7e9ee; }}
+  main {{ max-width: 34rem; margin: 0 auto; }}
+  h1 {{ font-size: 1.25rem; line-height: 1.35; margin: 0 0 .75rem; }}
+  p {{ margin: 0 0 .85rem; color: #b9bec9; }}
+  .what {{ color: #e7e9ee; }}
+  a {{ color: #e9a75a; }}
+</style></head>
+<body><main>
+  <h1>This document isn&rsquo;t stored</h1>
+  <p class="what">{heading} was recorded in Meridian, but the file itself was never saved.</p>
+  <p>It arrived before Meridian began keeping document contents, so only the details it
+     knew at the time remain &mdash; the subject, the sender, and the date.</p>
+  <p>New mail is stored in full, so this affects older items only. Returning to
+     <a href="/meridian">Meridian</a> and refreshing the mail intake can backfill it.</p>
+</main></body></html>"""
 
 
 def _evidence_viewer_html(content: str, title: str | None) -> str:
