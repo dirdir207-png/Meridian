@@ -33,6 +33,35 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## Track I.3: council mechanics — the Skeptic, and a council that never produces a verdict (`OS-074`) (2026-09-21, base `1b2bfea`)
+
+I.2 shipped one role; a council of one role is not a council. This slice ships the **second role** and
+the mechanic that joins them.
+
+**What shipped.** `meridian/ai/role.py` (the shared machinery, extracted when the second role arrived —
+the Investigator and Skeptic differ only in prompt, permissions and how they read the reply, so evidence
+binding, the citation check, the fail-soft states and the run record are written once).
+`meridian/ai/skeptic.py` (the Skeptic). `meridian/ai/council.py` (`convene`, attributed claims,
+attributed disagreements). And `--council` on `scripts/investigate.py`, so the mechanic has a real
+consumer rather than being machinery nobody invokes.
+
+**The refusal is the feature.** `CouncilResult` has **no** `conclusion`, `answer`, `verdict` or `winner`
+field, and no `resolve`/`vote`/`winner` method — asserted against the dataclass fields and method names
+exactly. This is not a behaviour that can be tested by running it, because it is the *absence* of
+behaviour; asserting it structurally is the only form of the test that fails when someone later adds the
+tie-break. Claims stay attributed, so nobody can hide behind a collective.
+
+**Four decisions worth naming.** The Skeptic carries the **same subject key** as the claim it addresses —
+without it the two cannot be compared and the conflict becomes invisible. Only a claim's **text and
+citations** cross between roles, never another role's reasoning or model output, so a role can disagree
+with *what* was said, not *how*. An unavailable role is carried in `failures()` and makes `is_unanimous()`
+**False**, so under-participation cannot read as agreement. And the Skeptic refuses to run with nothing to
+review — without calling the model — because an attack on nothing is not skepticism.
+
+**A bug my own tests caught:** an **empty council originally reported unanimity**. No participation is not
+agreement — the same error class as reading "the skeptic could not run" as "the skeptic found nothing".
+Fixed, with the reasoning recorded in the code.
+
 ## Track I.1 completed: the run record is now persisted, not merely carried (`OS-072`) (2026-09-21, base `40eac06`)
 
 The previous round closed I.2 and named exactly one item still open on I.1: the run record was **carried**

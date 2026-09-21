@@ -347,7 +347,15 @@ will not rewrite existing rows).
 Skeptic supplies counterexamples, Guardian objects on policy/evidence, Investigator brings causal evidence,
 Teacher explains. **Disagreement is recorded and shown, never settled by majority vote.** Evidence disputes
 escalate to source or calculation checks; value disputes return to the owner. Output is **one validated plan**
-for the executor — never a debate transcript.
+for the executor — never a debate transcript. **Recorded as `OS-074`, in progress (2026-09-21).** The
+**mechanic and the second role are built**: `meridian/ai/council.py` convenes roles and keeps every claim
+attributed, `meridian/ai/skeptic.py` supplies counterexamples, and `scripts/investigate.py --council`
+exercises it end to end. `CouncilResult` deliberately has **no** conclusion/answer/verdict/winner field —
+asserted structurally, because "never settled by majority vote" is the *absence* of behaviour and cannot be
+tested by running it. **Still open: three of the five named roles** (Forecaster, Guardian, Teacher), and the
+Guardian's fail-closed obligation has no subject yet. Note the last sentence above — "one validated plan for
+the executor" — is the part that touches authority, and it is deliberately **not** built: nothing in this
+slice proposes, approves or executes.
 
 **I.4 - Evaluation.** Measured usefulness on a real journey, refusal correctness when evidence is missing,
 citation accuracy, cost per useful proposal. Only after that, consider multi-model routing - recording

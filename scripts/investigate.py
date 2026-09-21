@@ -193,6 +193,125 @@ def build_client():
     return build_llm_chain()
 
 
+def convene_council(
+    *,
+    repository,
+    client,
+    target_kind: str,
+    target_id: str,
+    question: str,
+):
+    """Run the Investigator and the Skeptic on one question.
+
+    The two are wired together so the Skeptic is handed the Investigator's claims -- the
+    council's whole reason for existing. A single shared client is used because a fake or a
+    real chain treats both roles identically; a test asserts each role was called once.
+    """
+    from meridian.ai.council import CouncilMember, convene
+    from meridian.ai.skeptic import Skeptic
+
+    investigator = Investigator(repository)
+    skeptic = Skeptic(repository)
+    return convene(
+        question,
+        [
+            CouncilMember(
+                "investigator",
+                lambda q, claims: investigator.run(
+                    q, client=client, target_kind=target_kind, target_id=target_id
+                ),
+            ),
+            CouncilMember(
+                "skeptic",
+                lambda q, claims: skeptic.run(
+                    q, client=client, target_kind=target_kind, target_id=target_id, review=claims
+                ),
+            ),
+        ],
+    )
+
+
+def render_council(result) -> dict[str, Any]:
+    """The deliberation as data. Carries each role's own run record, and no verdict."""
+    return {
+        "question": result.question,
+        "roles": list(result.roles()),
+        "unanimous": result.is_unanimous(),
+        "roles_detail": [
+            {
+                "role": role,
+                "status": run.result.status.value,
+                "detail": run.result.detail,
+                "claims": [
+                    {
+                        "text": claim.text,
+                        "evidence_ids": list(claim.evidence_ids),
+                        "subject": claim.subject,
+                    }
+                    for claim in run.result.claims
+                ],
+                "record": run.record.as_dict(),
+            }
+            for role, run in result.runs
+        ],
+        "claims": [
+            {
+                "role": item.role,
+                "text": item.claim.text,
+                "evidence_ids": list(item.claim.evidence_ids),
+                "subject": item.claim.subject,
+            }
+            for item in result.claims
+        ],
+        "disagreements": [
+            {
+                "subject": disagreement.subject,
+                "roles": list(disagreement.roles),
+                "positions": [
+                    {"role": role, "text": claim.text}
+                    for role, claim in disagreement.positions
+                ],
+            }
+            for disagreement in result.disagreements
+        ],
+        "failures": [
+            {"role": role, "outcome": outcome} for role, outcome in result.failures()
+        ],
+    }
+
+
+def format_council_text(payload: dict[str, Any]) -> str:
+    """A terminal rendering that does not look like a decision."""
+    lines = [
+        f"council: {len(payload['roles'])} role(s) on one question",
+        f"question: {payload['question']}",
+    ]
+    for detail in payload["roles_detail"]:
+        lines.append(f"  {detail['role']}: {detail['status']} ({len(detail['claims'])} claim(s))")
+        if detail["detail"]:
+            lines.append(f"      {detail['detail']}")
+    if payload["claims"]:
+        lines.append("claims, each attributed to the role that made it:")
+        for claim in payload["claims"]:
+            cited = ", ".join(claim["evidence_ids"]) or "NO CITATION"
+            lines.append(f"  [{claim['role']}] {claim['text']}  [{cited}]")
+    for disagreement in payload["disagreements"]:
+        lines.append(
+            f"  ! unresolved disagreement on {disagreement['subject']!r} "
+            f"between {', '.join(disagreement['roles'])}:"
+        )
+        for position in disagreement["positions"]:
+            lines.append(f"      [{position['role']}] {position['text']}")
+    for failure in payload["failures"]:
+        lines.append(f"  ! {failure['role']} did not run: {failure['outcome']}")
+    lines.append(f"unanimous: {'yes' if payload['unanimous'] else 'no'}")
+    lines.append(
+        "no verdict is produced: disagreement is shown, never settled by majority vote"
+    )
+    lines.append("(read-only: nothing was proposed, approved or executed)")
+    return "\n".join(lines)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Investigate the evidence behind a target (read-only).",
@@ -208,6 +327,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Meridian database (read-only; default $DB_FILE or savings_data.db)",
     )
     parser.add_argument("--json", action="store_true", help="emit JSON instead of text")
+    parser.add_argument(
+        "--council",
+        action="store_true",
+        help="also run the Skeptic and show the deliberation (still no verdict)",
+    )
     parser.add_argument(
         "--no-record",
         action="store_true",
@@ -266,6 +390,40 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     graph = FinancialRepository(args.db)
     repository = EvidenceRepository(graph.db_path)
+
+    if args.council:
+        council_result = convene_council(
+            repository=repository,
+            client=client,
+            target_kind=target_kind,
+            target_id=target_id,
+            question=args.question,
+        )
+        council_payload = render_council(council_result)
+        # Every role's run is recorded: a council of two roles is two runs, and collapsing
+        # them into one row would lose which role said what.
+        if not args.no_record:
+            recorded = []
+            for _role, run in council_result.runs:
+                try:
+                    recorded.append(record_run(run, args.db))
+                except Exception as exc:  # noqa: BLE001 - same policy as a single run
+                    print(
+                        f"warning: a run was not recorded ({type(exc).__name__}); the audit "
+                        "trail is incomplete for this council.",
+                        file=sys.stderr,
+                    )
+            council_payload["recorded_ids"] = recorded
+        print(
+            json.dumps(council_payload, indent=2, sort_keys=True)
+            if args.json
+            else format_council_text(council_payload)
+        )
+        # A council where any role failed is not a clean run, and says so through the exit
+        # code rather than only in the text.
+        if council_result.failures():
+            return EXIT_UNAVAILABLE
+        return EXIT_OK
 
     run = investigate(
         repository=repository,

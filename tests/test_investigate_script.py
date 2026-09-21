@@ -286,7 +286,103 @@ def test_disagreements_are_rendered_rather_than_averaged():
     assert "12.00" in text and "21.00" in text
 
 
-def test_the_json_output_carries_the_run_record_for_audit():
+class ScriptedClient:
+    """Replies differently on each call, so one client can stand in for two roles."""
+
+    def __init__(self, *replies):
+        self._replies = list(replies)
+        self.last_provider = "fake"
+        self.model = "fake-model"
+        self.calls = []
+
+    def providers(self):
+        return ["fake"]
+
+    def complete(self, system, messages):
+        self.calls.append((system, messages))
+        index = min(len(self.calls) - 1, len(self._replies) - 1)
+        return self._replies[index]
+
+
+def test_convening_the_council_hands_the_skeptic_the_investigators_claims():
+    """The council's whole purpose: a later role deliberates on an earlier role's work."""
+    client = ScriptedClient(
+        _reply({"text": "The charge is 12.00.", "evidence_ids": ["evidence:1"], "subject": "amount"}),
+        _reply({"text": "The charge is 21.00.", "evidence_ids": ["evidence:2"], "subject": "amount"}),
+    )
+    result = investigate_script.convene_council(
+        repository=FakeRepo(ids=(1, 2)),
+        client=client,
+        target_kind="transaction",
+        target_id="412",
+        question="What is this charge?",
+    )
+    assert result.roles() == ("investigator", "skeptic")
+    assert len(client.calls) == 2, "each role should have been called once"
+    skeptic_payload = json.loads(client.calls[1][1][0]["content"])
+    assert skeptic_payload["claims_under_review"][0]["text"] == "The charge is 12.00."
+    # A single run record per role, not one merged record for the council.
+    assert len({run.record.role for _role, run in result.runs}) == 2
+
+
+def test_the_council_rendering_shows_disagreement_and_no_verdict():
+    client = ScriptedClient(
+        _reply({"text": "The charge is 12.00.", "evidence_ids": ["evidence:1"], "subject": "amount"}),
+        _reply({"text": "The charge is 21.00.", "evidence_ids": ["evidence:2"], "subject": "amount"}),
+    )
+    result = investigate_script.convene_council(
+        repository=FakeRepo(ids=(1, 2)),
+        client=client,
+        target_kind="transaction",
+        target_id="412",
+        question="What is this charge?",
+    )
+    payload = investigate_script.render_council(result)
+    assert payload["unanimous"] is False
+    assert payload["disagreements"][0]["roles"] == ["investigator", "skeptic"]
+    # No key on the payload offers a single answer.
+    for forbidden in ("conclusion", "answer", "verdict", "winner"):
+        assert forbidden not in payload
+
+    text = investigate_script.format_council_text(payload)
+    assert "never settled by majority vote" in text
+    assert "[investigator]" in text and "[skeptic]" in text
+    assert "12.00" in text and "21.00" in text
+    assert "read-only" in text
+
+
+def test_the_council_rendering_surfaces_a_role_that_did_not_run():
+    """An unavailable role must be visible in the output, not silently absent."""
+    class FailingSecond(ScriptedClient):
+        def complete(self, system, messages):
+            self.calls.append((system, messages))
+            if len(self.calls) == 1:
+                return self._replies[0]
+            raise TimeoutError("down")
+
+    client = FailingSecond(
+        _reply({"text": "The charge is 12.00.", "evidence_ids": ["evidence:1"], "subject": "amount"})
+    )
+    result = investigate_script.convene_council(
+        repository=FakeRepo(ids=(1, 2)),
+        client=client,
+        target_kind="transaction",
+        target_id="412",
+        question="What is this charge?",
+    )
+    payload = investigate_script.render_council(result)
+    assert payload["failures"] == [{"role": "skeptic", "outcome": "unavailable:model"}]
+    assert payload["unanimous"] is False
+    assert "did not run" in investigate_script.format_council_text(payload)
+
+
+def test_the_parser_accepts_council_without_changing_the_default():
+    args = investigate_script.build_parser().parse_args(["--target", "transaction:412"])
+    assert args.council is False
+    args = investigate_script.build_parser().parse_args(["--target", "transaction:412", "--council"])
+    assert args.council is True
+
+
     client = FakeClient(_reply({"text": "A subscription.", "evidence_ids": ["evidence:1"]}))
     run = investigate_script.investigate(
         repository=FakeRepo(),

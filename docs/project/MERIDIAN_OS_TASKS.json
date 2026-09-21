@@ -1719,6 +1719,30 @@
       },
       "delivered": "2026-09-21",
       "resolution": "I.2's text -- 'Ship the Forecaster or Investigator first -- read-only, evidence-bound, immediately useful. Adversarial tests: hallucinated citation, missing evidence, contradictory sources, unavailable model.' -- is now met in full, because the role is REACHABLE. scripts/investigate.py runs the Investigator against the real evidence store from the command line: it is read-only (a test parses the file and fails if it ever imports a provider write module), it reports an unconfigured model instead of fabricating an answer, and it renders disagreements as unresolved rather than averaging them. The previous round recorded this as in_progress precisely because nothing could invoke the role; that is no longer true."
+    },
+    {
+      "id": "OS-074",
+      "title": "I.3 — council mechanics: the Skeptic, the council runner, and the rule that disagreement is never settled",
+      "status": "in_progress",
+      "priority": "high",
+      "phase": "track-I-envelope",
+      "owner_raised": false,
+      "detail": "THIRD OF THE ROADMAP'S I-TRACK SLICES, reconciled from MERIDIAN_ROADMAP.md section 6 I.3: 'Council mechanics. Only then, multi-role deliberation on one bounded question: Forecaster proposes, Skeptic supplies counterexamples, Guardian objects on policy/evidence, Investigator brings causal evidence, Teacher explains. Disagreement is recorded and shown, never settled by majority vote. Every conclusion states its evidence and its uncertainty.' I.1 (OS-072) built the envelope, I.2 (OS-073) shipped one role; a council of one role is not a council, so this slice ships the second role and the mechanic that joins them.",
+      "progress": "DELIVERED IN THIS SLICE: meridian/ai/role.py (the shared machinery, extracted when the second role arrived -- the Investigator and Skeptic differ only in prompt, permissions and how they read the reply), meridian/ai/skeptic.py (the Skeptic), meridian/ai/council.py (convene + attributed claims + attributed disagreements), and a --council mode in scripts/investigate.py so the mechanic has a real consumer rather than being machinery nobody invokes. STILL OPEN: three of the five roles the roadmap names (Forecaster, Guardian, Teacher) are not implemented, and the Guardian's fail-closed obligation has no subject yet. Those are the next slices and are NOT claimed here.",
+      "acceptance_criteria": [
+        "Two or more roles deliberate on one bounded question",
+        "Disagreement is recorded and shown, never settled by majority vote",
+        "Every conclusion states its evidence and its uncertainty",
+        "An unavailable role is visible rather than silently absent"
+      ],
+      "limits": "RESTRICTION-ONLY and read-only. The Skeptic holds no provider write tool (the envelope proves this for every role at import) and the council can only read, join and report. No provider mutation, no credential, no endpoint, no authority change. The council produces NO verdict: CouncilResult has no conclusion, answer, verdict or winner field, and a test asserts the field set exactly and that no resolve/vote/winner method exists, so adding a tie-break breaks the suite rather than shipping quietly.",
+      "handoff": "docs/project/MERIDIAN_ROADMAP.md (section 6 I.3); meridian/ai/envelope.py (OS-072 -- claims, subjects, disagreements, per-role permissions and budgets); meridian/ai/role.py (the shared base both roles use); meridian/ai/investigator.py (OS-073); meridian/ai/skeptic.py; meridian/ai/council.py; scripts/investigate.py --council; tests/meridian/test_ai_council.py.",
+      "notes": "Four design decisions. (1) The Skeptic carries the SAME SUBJECT KEY as the claim it addresses: without it the two claims cannot be compared and the conflict becomes invisible. (2) Only a claim's TEXT and CITATIONS cross between roles -- never another role's reasoning, prompt or model output -- so a role can disagree with what was said, not with how it was said. (3) The Skeptic returns UNAVAILABLE with no claims when it finds nothing to attack; that is deliberately not an 'ok', because silence from the skeptic must not read as agreement. It also drops 'empty attacks' (doubt that states nothing) which cite valid evidence and would otherwise pass the citation check. (4) An unavailable role is recorded in CouncilResult.failures() and makes is_unanimous() False, so under-participation cannot read as agreement -- a bug the tests caught here: an EMPTY council originally reported unanimity.",
+      "evidence": {
+        "tests": "tests/meridian/test_ai_council.py -- 18 tests, plus 4 new in tests/test_investigate_script.py for the --council path. The core assertions: CouncilResult has no conclusion/answer/verdict/winner field and no resolve/vote/winner method; a conflict between two roles keeps BOTH claims and reports the roles on each side; identical text on the same subject is not a disagreement; agreement is never collapsed into one claim; attribution survives; an unavailable role is carried into failures() rather than dropped; later roles receive earlier claims and only text+citations cross over; the Skeptic refuses to run with nothing to review without calling the model; a hallucinated citation voids the Skeptic too (proving the safety property is inherited, not reimplemented per role); fail-closed is read from the permissions table rather than duplicated; and an AST check over every role module for credentials and network imports.",
+        "why_the_no_verdict_rule_is_tested_this_way": "'Never settled by majority vote' is not a behaviour that can be tested by running it -- it is the ABSENCE of behaviour. So it is asserted structurally, against the dataclass fields and the method names, which is the only form of the test that fails when someone later adds the tie-break.",
+        "authority": "No authority, provider or financial change. No test contacts a provider; every client is a fake. No role can reach a provider write path, by test."
+      }
     }
   ]
 }
