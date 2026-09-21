@@ -766,6 +766,27 @@
       "base_sha": "331c28f7bfe1fbcbcaafbe4217dcc48c019f2b49",
       "since": "2026-09-21T00:00:00+00:00",
       "note": "Deliberately does NOT touch meridian/repository.py. The upsert line that RAISED is correct code: it faithfully tried to store a real value. The defect was the schema's assumption, so the schema is where it is fixed -- changing the application to clamp or skip would have hidden the state instead of recording it."
+    },
+    {
+      "agent": "constitutional-builder",
+      "claim_id": "evidence-fact-bundle-20260921",
+      "description": "OS-077: the evidence fact bundle that makes the Investigator evidence-INFORMED. Found by Astra's 2026-09-21 review; the role previously received evidence ids and no content, so it could not explain anything. Adds meridian/ai/facts.py, an injected read_content on the Investigator, CLI wiring through the app's own blob-store factory, and the restoration of three tests my own edits had silently deleted. Read-only; no authority, provider or financial change.",
+      "generation": 1,
+      "files": [
+        "meridian/ai/facts.py",
+        "meridian/ai/investigator.py",
+        "scripts/investigate.py",
+        "tests/meridian/test_ai_facts.py",
+        "tests/meridian/test_ai_investigator.py",
+        "tests/test_investigate_script.py",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "3aff21c14301a615ac6326917eacabf296719221",
+      "since": "2026-09-21T00:00:00+00:00",
+      "note": "Does NOT touch the design package (`design/investigator-medallions-2026-09-21/**`), which is Astra's and now committed by them at e62f555. Does not start OS-076's route, template, JS or CSS: this is the backend prerequisite only, delivered under its own ledger id so OS-076's acceptance is not redefined."
     }
   ]
 }

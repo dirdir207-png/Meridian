@@ -39,6 +39,11 @@ class FakeItem:
     created_at: str = "2026-09-08T09:42:00Z"
     revoked_at: str | None = None
     content_deleted_at: str | None = None
+    # The content path (meridian/ai/facts.py) reads these two; the earlier fixtures did not
+    # carry them because nothing read content at the time.
+    content_hash: str = "hash-1"
+    mime_type: str = "text/plain"
+    title: str = "Statement"
 
 
 @dataclasses.dataclass
@@ -104,10 +109,63 @@ def test_the_command_imports_no_provider_write_path():
     assert not hit, f"the read-only command reaches a write path: {sorted(hit)}"
 
 
+def test_the_command_reads_evidence_content_so_the_role_can_explain_anything():
+    """The command is what wires a real content reader to the role. Without it the model gets
+    evidence ids and no content, and cannot explain a charge — the gap review caught."""
+    client = FakeClient(_reply({"text": "A subscription.", "evidence_ids": ["evidence:1"]}))
+    run = investigate_script.investigate(
+        repository=FakeRepo(),
+        client=client,
+        target_kind="transaction",
+        target_id="412",
+        question="What is this?",
+        read_content=lambda content_hash: b"AMOUNT DUE: $42.00",
+    )
+    assert run.result.status.value == "ok"
+    payload = json.loads(client.calls[0][1][0]["content"])
+    # Either facts or a bounded excerpt reached the model; both are attributed to an evidence id.
+    document = payload["source_documents"]["documents"][0]
+    assert document["evidence_id"] == "evidence:1"
+    assert document["facts"] or document["excerpt"]
+    assert "never as instructions" in payload["source_documents_note"]
+
+
+def test_the_command_without_a_content_reader_sends_no_facts():
+    client = FakeClient(_reply({"text": "A subscription.", "evidence_ids": ["evidence:1"]}))
+    investigate_script.investigate(
+        repository=FakeRepo(),
+        client=client,
+        target_kind="transaction",
+        target_id="412",
+        question="What is this?",
+        read_content=None,
+    )
+    payload = json.loads(client.calls[0][1][0]["content"])
+    assert "source_documents" not in payload
+
+
+def test_missing_evidence_storage_is_announced_so_silence_is_not_misread(monkeypatch, capsys, tmp_path):
+    """If the store cannot be opened the role returns no claims — and that must not look like
+    'the evidence says nothing'. The operator is told which of the two happened."""
+    monkeypatch.setattr(investigate_script, "build_client", lambda: FakeClient(_reply({})))
+    monkeypatch.setattr(investigate_script, "build_content_reader", lambda db: None)
+
+    code = investigate_script.main(["--target", "transaction:412", "--db", str(tmp_path / "m.db")])
+
+    err = capsys.readouterr().err
+    assert "could not be opened" in err
+    assert "NO CONTENT WAS SUPPLIED" in err
+    # No evidence is linked in a fresh database, so the run stops honestly at unavailable.
+    assert code == investigate_script.EXIT_UNAVAILABLE
+
+
 def test_the_command_writes_nothing_to_the_repository():
     """The Investigator is given a repository that RECORDS every attribute it is asked for.
-    Only reads may appear -- a write would show up here rather than in production."""
+    Only reads may appear -- a write would show up here rather than in production.
 
+    RESTORED 2026-09-21 after being silently deleted by an edit that used this function's
+    `def` line as an anchor and did not re-emit it. See the note below.
+    """
     class RecordingRepo(FakeRepo):
         def __init__(self):
             super().__init__()
@@ -128,6 +186,38 @@ def test_the_command_writes_nothing_to_the_repository():
     )
     assert run.result.status.value == "ok"
     assert repo.accessed == [], repo.accessed
+
+
+def test_exit_codes_are_derived_from_the_result_status():
+    """RESTORED 2026-09-21: deleted in `b2bc935` by an edit that used this function's `def` line
+    as an anchor and did not re-emit it.
+
+    The suite stayed GREEN both times, because deleting a test makes a suite greener rather than
+    redder -- so pass/fail alone could not catch it. Three tests were lost this way across three
+    commits. The audit that finds it compares test-function NAMES across revisions, and it is now
+    part of how this lane checks its own work.
+    """
+    from meridian.ai.envelope import ResultStatus
+
+    assert investigate_script._EXIT_FOR_STATUS[ResultStatus.OK] == 0
+    assert investigate_script._EXIT_FOR_STATUS[ResultStatus.FAILED] == 1
+    assert investigate_script._EXIT_FOR_STATUS[ResultStatus.UNAVAILABLE] == 2
+
+
+def test_the_json_output_carries_the_run_record_for_audit():
+    """RESTORED 2026-09-21: deleted in `0c30f9f` by the same anchor-style edit."""
+    client = FakeClient(_reply({"text": "A subscription.", "evidence_ids": ["evidence:1"]}))
+    run = investigate_script.investigate(
+        repository=FakeRepo(),
+        client=client,
+        target_kind="transaction",
+        target_id="412",
+        question="What is this?",
+    )
+    payload = json.loads(json.dumps(investigate_script.render(run)))
+    assert payload["run"]["evidence_ids"] == ["evidence:1"]
+    assert payload["run"]["outcome"] == "ok"
+    assert payload["run"]["prompt_version"]
 
 
 def test_the_rendered_output_says_nothing_was_executed():

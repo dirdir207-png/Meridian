@@ -23,6 +23,7 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Agent | Files claimed | Since | Status |
 |---|---|---|---|
+| Constitutional Builder (OS-077: evidence fact bundle) | `meridian/ai/facts.py` (new), `meridian/ai/investigator.py`, `scripts/investigate.py`, `tests/meridian/test_ai_facts.py` (new), `tests/meridian/test_ai_investigator.py`, `tests/test_investigate_script.py`, `docs/project/{MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **active**. Backend PREREQUISITE for OS-076, delivered under its own id so OS-076's acceptance is not redefined. Read-only: no route, template, JS or CSS in this claim, and `meridian/ai/**` stays this lane's. |
 | Constitutional Builder (OS-075 defect fix: negative bill reserve) | `meridian/migrations/028_allow_negative_bill_reserve.sql` (new), `tests/meridian/test_bill_reserve_negative.py` (new), `tests/meridian/test_migrations.py`, `tests/meridian/test_bill_reserve_observations.py`, `docs/project/{MERIDIAN_DECISIONS.md,MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **released 2026-09-21** at `1fb530f`. See the log entry below. |
 | Codex design handoff 2026-09-21 | `design/investigator-medallions-2026-09-21/**`, `docs/project/AGENT_COORDINATION.md` (own row/log only), `docs/project/{CURRENT_STATUS,MERIDIAN_DECISIONS,HANDOFF}.md`, `docs/project/{MERIDIAN_OS_TASKS,session-emergent}.json` (own additive records only) | 2026-09-21 | **released at `e62f555`**. Owner-requested medallion artwork and Investigator surface specification for DeepSeek Harness. Full icon pack and desktop Settings excluded. No runtime or Track I backend edits; preserve the active builder claim. |
 | Constitutional Builder (Track I: OS-072 envelope, OS-073 Investigator, I.3 council) | `meridian/ai/**` (envelope, role, investigator, skeptic, council, run_records), `meridian/migrations/027_ai_run_records.sql`, `scripts/investigate.py`, `tests/meridian/test_ai_{envelope,investigator,council,run_records}.py`, `tests/test_investigate_script.py`, `tests/meridian/test_migrations.py`, `tests/meridian/test_bill_reserve_observations.py`, `docs/project/{MERIDIAN_OS_TASKS.json,MERIDIAN_ROADMAP.md,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **released 2026-09-21** at `b2bc935` (OS-072 persisted run records), `0c30f9f` (OS-074 council + Skeptic), `331c28f` (handoff). Track I lane complete as scoped: the envelope, the permissions, the Investigator, the Skeptic, the council and the persisted run record all shipped, all tested, no role able to reach a provider write path. **Still open and Astra's design work per the owner 2026-09-21: OS-038's medallion glyphs and the Investigator's customer-facing surface -- which THIS LANE IMPLEMENTS when the assets/design land.** |
@@ -1130,6 +1131,16 @@ Claimed `meridian/crew_write_actions.py`, `crew/executors.py`, their focused tes
 
 ## Known traps (read before concluding something is broken)
 
+- **Deleting a test makes a suite GREENER, not redder.** Three test functions were silently deleted
+  across three commits by edits that used a function's `def` line as an edit anchor and did not re-emit it,
+  so the `def` vanished and its body merged into the neighbouring test — where it still ran and still
+  passed. Pass/fail cannot detect this, and a rising test total hides it. **Never anchor an edit on a `def`
+  line without re-emitting it, and verify by NAME COUNT after editing a test file.** The audit that finds it
+  compares test-function names across every revision in the session against the working tree.
+- **Tools/agents in this lane can leave the tree dirty without being the cause.** Untracked deliveries
+  (e.g. `design/investigator-medallions-2026-09-21/**`) are filtered out of the handoff's tree-state line by
+  design, so they never make it cry wolf; a `HANDOFF.md` left uncommitted by a previous generation DOES,
+  because the generator reads `git status` before it writes.
 - **Two runners.** `uv run --with-requirements requirements.txt` cannot import playwright (dev-only) or reach the
   system `crew-readonly`; `.venv311/bin/python` can. Browser/capture tests must run under `.venv311`.
 - **Orphan browsers.** Interrupted browser runs leave Chromium processes that make later runs hang. Clear with

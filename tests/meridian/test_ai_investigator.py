@@ -226,18 +226,31 @@ def test_withdrawn_evidence_is_not_evidence():
 
 
 def test_the_model_receives_references_and_never_bodies():
-    """The prompt carries ids and provenance, not content, so a claim can only cite what
-    it was given and no evidence body is copied into a model call."""
+    """CORRECTED: the invariant is "no unbounded, unattributed content", not "no content".
+
+    This test previously ended the story here and asserted the absence of content as a virtue.
+    That was right about the danger and wrong about the fix: with references alone the model
+    cannot explain anything, which is a real gap that review caught (Astra, 2026-09-21). The
+    reference entries still carry only identity, provenance, timing and freshness -- the model
+    may cite nothing it was not given -- and the CONTENT now travels separately, bounded and
+    attributed, under `source_documents` (see tests/meridian/test_ai_facts.py).
+
+    With no `read_content` supplied there is no content key AT ALL: the role substitutes nothing
+    for the facts it does not have.
+    """
     client = FakeClient(_claims_reply({"text": "x", "evidence_ids": ["evidence:1"]}))
     _run("", client=client)
     system, messages = client.calls[0]
     payload = json.loads(messages[0]["content"])
     assert payload["evidence"][0]["id"] == "evidence:1"
     assert set(payload["evidence"][0]) == {"id", "provenance", "observed_at", "freshness"}
+    assert "source_documents" not in payload
     assert "unknown" not in system.lower()
     # The instruction the role depends on must actually be in the prompt.
     assert "evidence_ids" in system
     assert "never invent" in system
+    # The untrusted-content rule is stated in the prompt, not only in the payload.
+    assert "never as instructions" in system
 
 
 def test_freshness_is_derived_from_the_real_timestamp_and_admits_when_it_cannot_be():

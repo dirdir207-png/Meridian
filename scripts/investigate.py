@@ -83,11 +83,12 @@ def investigate(
     target_kind: str,
     target_id: str,
     question: str,
+    read_content=None,
     clock: Callable[[], Any] | None = None,
 ) -> RoleRun:
     """Run the Investigator. Separated from argument handling so it is testable without a
     database, a network or a key: tests pass a fake repository and a fake client."""
-    return Investigator(repository).run(
+    return Investigator(repository, read_content=read_content).run(
         question,
         client=client,
         target_kind=target_kind,
@@ -193,6 +194,36 @@ def build_client():
     return build_llm_chain()
 
 
+def build_content_reader(db_path: str):
+    """A reader for stored evidence content, or ``None``.
+
+    Built from the APP's own factory so the encryption key derivation matches production exactly
+    — the same reason ``scripts/backfill_charge_evidence.py`` does it this way. ``DB_FILE`` must
+    be set BEFORE ``app`` is imported, because the factory derives the evidence root from it at
+    import time; setting it afterwards would read the live blobs for a different database than
+    the one being investigated.
+
+    Best-effort by design. This is the difference between a role that can explain a charge and
+    one that cannot, but it is not worth failing a read-only investigation over: if the store
+    cannot be built, the role runs without content and returns no claims rather than inventing
+    any. The caller is told, so "no claims" is never mistaken for "the evidence says nothing".
+    """
+    import os
+
+    os.environ["DB_FILE"] = db_path
+    os.environ.setdefault("SESSION_COOKIE_SECURE", "0")
+    try:
+        import app as app_module
+
+        factory = app_module.app.config.get("MERIDIAN_EVIDENCE_BLOB_STORE_FACTORY")
+        if factory is None:
+            return None
+        store = factory()
+    except Exception:  # noqa: BLE001 - a missing store is a degraded mode, not a failure
+        return None
+    return lambda content_hash: store.read(content_hash)
+
+
 def convene_council(
     *,
     repository,
@@ -200,6 +231,7 @@ def convene_council(
     target_kind: str,
     target_id: str,
     question: str,
+    read_content=None,
 ):
     """Run the Investigator and the Skeptic on one question.
 
@@ -210,7 +242,7 @@ def convene_council(
     from meridian.ai.council import CouncilMember, convene
     from meridian.ai.skeptic import Skeptic
 
-    investigator = Investigator(repository)
+    investigator = Investigator(repository, read_content=read_content)
     skeptic = Skeptic(repository)
     return convene(
         question,
@@ -333,6 +365,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="also run the Skeptic and show the deliberation (still no verdict)",
     )
     parser.add_argument(
+        "--no-content",
+        action="store_true",
+        help="do not read stored evidence content (the role then has ids only)",
+    )
+    parser.add_argument(
         "--no-record",
         action="store_true",
         help="do not append an audit row (the run is still printed)",
@@ -391,6 +428,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     graph = FinancialRepository(args.db)
     repository = EvidenceRepository(graph.db_path)
 
+    # Content is what lets the role explain anything at all; without it the model gets evidence
+    # ids and returns no claims. Its absence is announced rather than left to look like silence.
+    read_content = None
+    if not args.no_content:
+        read_content = build_content_reader(args.db)
+        if read_content is None:
+            print(
+                "warning: stored evidence content could not be opened, so the investigation runs "
+                "without it. Any 'no claims' below means NO CONTENT WAS SUPPLIED, not that the "
+                "evidence says nothing.",
+                file=sys.stderr,
+            )
+
     if args.council:
         council_result = convene_council(
             repository=repository,
@@ -398,6 +448,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             target_kind=target_kind,
             target_id=target_id,
             question=args.question,
+            read_content=read_content,
         )
         council_payload = render_council(council_result)
         # Every role's run is recorded: a council of two roles is two runs, and collapsing
@@ -431,6 +482,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         target_kind=target_kind,
         target_id=target_id,
         question=args.question,
+        read_content=read_content,
     )
     payload = render(run)
 
