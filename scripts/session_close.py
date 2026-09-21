@@ -26,6 +26,7 @@ Exit code is 0 when the session is in a safe state to end, 1 when it is not.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -101,10 +102,29 @@ def main() -> int:
 
     dirty = [l for l in git("status", "--porcelain").splitlines() if not l.startswith("??")]
     unpushed = git("log", "--oneline", "@{u}..HEAD")
-    handoff_current = subprocess.run(
-        [str(ROOT / ".venv311/bin/python"), "scripts/generate_handoff.py", "--check"],
-        cwd=ROOT, capture_output=True, text=True,
-    ).returncode == 0
+    # `generate_handoff.py --check` is DISABLED (known broken) and must not be called: it is
+    # currently guaranteed to fail, which would make this procedure report a false failure and
+    # train the reader to ignore it. Staleness is instead detected from the handoff's own BASIS
+    # table, which records a sha256 per governing source — compare those against the files.
+    handoff_problems: list[str] = []
+    if not HANDOFF.exists():
+        handoff_problems.append("HANDOFF.md is missing — run scripts/generate_handoff.py")
+    else:
+        text = HANDOFF.read_text(encoding="utf-8")
+        for rel in ("AGENTS.md", "docs/project/MERIDIAN_ROADMAP.md",
+                    "docs/project/MERIDIAN_DECISIONS.md", "docs/project/MERIDIAN_OS_TASKS.json"):
+            target = ROOT / rel
+            if not target.exists():
+                continue
+            lines = [ln for ln in text.splitlines() if f"`{rel}`" in ln and "|" in ln]
+            if not lines:
+                handoff_problems.append(f"{rel} has no hash row in HANDOFF.md")
+                continue
+            recorded = lines[0].split("|")[2].strip().strip("`") if len(lines[0].split("|")) > 2 else ""
+            actual = hashlib.sha256(target.read_bytes()).hexdigest()[: len(recorded)]
+            if recorded and actual != recorded:
+                handoff_problems.append(f"{rel} changed since the handoff was generated")
+    handoff_current = not handoff_problems
 
     tasks = json.loads(LEDGER.read_text(encoding="utf-8"))["tasks"]
     in_progress = [t for t in tasks if t.get("status") == "in_progress"]
