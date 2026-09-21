@@ -1036,6 +1036,12 @@ def get_meridian_evidence_service():
 # claim a health verdict it has not observed.
 app.config["MERIDIAN_CREDENTIAL_HEALTH_GETTER"] = meridian_credential_health
 
+# Whether an iCloud mailbox is configured at all. Handed to the Connections read model as a
+# callable so the answer reflects the environment at request time rather than at import, and
+# is never cached into a stored row. Note this reports CONFIGURATION only: the route row's
+# status comes from whether a read actually succeeded, never from this being true.
+app.config["MERIDIAN_ICLOUD_CONFIGURED"] = _icloud_configured
+
 
 def store_crew_credential(value):
     """Persist a renewed Crew credential through the same path as manual saves."""

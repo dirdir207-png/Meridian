@@ -166,14 +166,47 @@ ACTIVITY = {
 
 
 # Connections-only Settings fixture. No credentials, account data or write handler.
+#
+# The two route rows mirror what `meridian/services/ingestion_routes.py` serves for real, so
+# the synthetic preview can show the rows this slice added. They are SYNTHETIC in the sense
+# that matters: the fixture is written here, not observed from any account. In particular the
+# Composio row shows the NOT-observed-yet state, because that is the honest state of a
+# capability whose daily trigger is not wired -- a fixture that showed "Live" would let a
+# capture claim a working schedule that does not exist.
 SETTINGS_CONNECTIONS = {"groups": [
-    {"kind": "bank", "label": "Banking", "connections": [{
+    {"kind": "money", "label": "Money", "connections": [{
         "public_id": "synthetic-crew", "display_name": "Example Crew connection",
         "uses": ["Balances", "Transactions", "Bills"], "state": "connected",
         "freshness": "2026-09-18T18:00:00Z",
     }]},
-    {"kind": "email", "label": "Email", "connections": []},
-    {"kind": "calendar", "label": "Calendar", "connections": []},
+    {"kind": "evidence", "label": "Evidence", "connections": [{
+        "public_id": "route-icloud-imap", "kind": "icloud",
+        "display_name": "iCloud Mail (IMAP)",
+        "uses": ["Bills", "Statements", "Receipts"], "state": "connected",
+        "state_label": "Configured", "freshness": "2026-09-06T00:00:00Z",
+        "freshness_label": "Mail lane last observed", "read_only": True, "route": True,
+        "status_note": (
+            "An iCloud mailbox is configured. Master mail reads are shared across the mail lane."
+        ),
+        "meaning": (
+            "iCloud Mail is read over IMAP. This row reports whether a read has actually "
+            "succeeded, not merely that the mailbox is configured."
+        ),
+    }]},
+    {"kind": "time", "label": "Time", "connections": [{
+        "public_id": "route-composio-calendar", "kind": "composio",
+        "display_name": "Calendar via Composio",
+        "uses": ["Calendar events", "Travel", "Appointments"], "state": "available",
+        "state_label": "Not observed yet", "freshness": None,
+        "freshness_label": "Last calendar read", "read_only": True, "route": True,
+        "status_note": (
+            "No calendar read has been recorded yet, so there is nothing to call current."
+        ),
+        "live_meaning": (
+            "Live means the Composio connection is still current with the harness. "
+            "The calendar is read on a daily schedule, not continuously."
+        ),
+    }]},
 ]}
 
 # The four sections that had no fixture at all, so the isolated preview could not serve

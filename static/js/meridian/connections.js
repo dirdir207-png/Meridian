@@ -39,7 +39,10 @@ function connectionRow(connection) {
     element("strong", "", connection.display_name),
     element("small", "", connection.uses.join(", "))
   );
-  const state = element("span", "m-connection-state", connection.state);
+  // `state_label` lets an INGESTION ROUTE say what its own state means in its own words
+  // (calendar via Composio reports "(Live)" = still current with the harness). A stored
+  // authorization has no label and keeps reporting its stored state verbatim.
+  const state = element("span", "m-connection-state", connection.state_label || connection.state);
   state.dataset.state = connection.state;
   const freshness = element(
     "span",
@@ -70,6 +73,16 @@ function connectionRow(connection) {
       `Open ${connection.display_name} connection details. ${remedy}`
     );
   }
+  // An ingestion route states what its own state means. For Composio "(Live)" is defined as
+  // "still current with the harness", NOT continuous polling, and that definition travels
+  // WITH the row so a later edit cannot keep the label and drop the definition.
+  if (connection.route && (connection.status_note || connection.live_meaning)) {
+    const note = element("span", "m-connection-route-note", connection.status_note || "");
+    note.dataset.route = "true";
+    const meaning = connection.live_meaning || connection.meaning;
+    if (meaning) note.append(document.createElement("br"), element("small", "", meaning));
+    button.append(note);
+  }
   button.addEventListener("click", () => openInspector(connection, button));
   return button;
 }
@@ -98,8 +111,22 @@ function openInspector(connection, opener) {
   });
   inspector.querySelector("[data-detail-name]").textContent = connection.display_name;
   inspector.querySelector("[data-detail-state]").textContent =
-    `${connection.state} · ${connection.freshness ? formatTimestamp(connection.freshness) : "freshness unavailable"}`;
+    `${connection.state_label || connection.state} · ${connection.freshness ? formatTimestamp(connection.freshness) : "freshness unavailable"}`;
   inspector.querySelector("[data-detail-uses]").textContent = connection.uses.join(", ");
+  // A route has no Meridian-held grant to revoke, so the generic "Individually revocable"
+  // safeguard would be a false claim about it. Say what is actually true of a route instead
+  // of listing a control that does not exist for this row.
+  const safeguards = inspector.querySelector("[data-detail-safeguards]");
+  if (safeguards) {
+    const items = connection.route
+      ? [
+          "Read-only by design",
+          "No credential for this route is held by Meridian",
+          "Financial changes require approval",
+        ]
+      : ["Read-only by design", "Individually revocable", "Financial changes require approval"];
+    safeguards.replaceChildren(...items.map((text) => element("li", "", text)));
+  }
   if (window.matchMedia("(max-width: 900px)").matches) {
     inspector.setAttribute("role", "dialog");
     inspector.setAttribute("aria-modal", "true");

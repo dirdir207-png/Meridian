@@ -33,6 +33,71 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## Settings now shows its two ingestion routes — and a CSS regression was found by measuring, not by reading (2026-09-21, base `25181bd`)
+
+**The owner's framing, which is the whole point.** Email and calendar are *two different
+mechanisms*: mail keeps its in-app connectors, filters and OAuth; calendar goes through
+**Composio as its only adapter**, so no Google credential is held for it. Settings has to show
+both routes, and the owner fixed the exact wording that makes the label honest:
+
+> *"For Composio (Live) will strictly mean the composio connection is still current with the
+> harness, not that it is live and continuously polling."*
+
+That sentence is carried **in the payload** (`live_meaning`), not left in UI copy, and a test
+fails if a route can render its label without its definition. A label that outlives its
+definition is how "(Live)" quietly becomes a claim about continuous polling.
+
+**Neither route is an authorization, and dressing them as one would repeat a fixed lie.** There
+is no `connection_authorizations` row for either: calendar has no Meridian-held credential at
+all, and iCloud is configured by environment rather than by an OAuth grant. So both are stated
+from **observation** — what a read actually produced — never from the mere existence of
+configuration. This is the same principle that already fixed this view once, when it reported
+Gmail "Connected" while all four refresh tokens had been failing for days. `route: true` marks
+them so nothing mistakes them for a grant, and the inspector stops claiming "Individually
+revocable" for a route, because there is no Meridian-held grant to revoke.
+
+**The window is derived, not chosen for looks.** Composio reads "(Live)" only when an
+observation exists inside **48h**. A daily read can legitimately be ~24h apart, so 48h tolerates
+one late run while failing as soon as a whole day is missed. With the daily trigger still
+unbuilt, the row honestly reads **"Not observed yet"** — and the preview fixture was deliberately
+written to show that state, because a fixture showing "Live" would let a capture claim a working
+schedule that does not exist.
+
+**A REAL CSS REGRESSION, FOUND BY MEASURING A BROWSER RATHER THAN READING THE FILE.** The
+OS-065 stylesheet surgery left an **orphaned duplicate** of the phone block at top level plus one
+stray closing brace. Three measured consequences: phone-only rules applied at **every** width; the
+stray brace corrupted the parse of the following `@media (max-width: 600px)` block, so at 420px
+the connections row kept the **desktop five-column template**, resolved to **660px inside a 420px
+viewport**, and clipped its own text; and at 1024px the document was **32px wider than the
+viewport**, previously *masked* because the orphaned `overflow-y: auto` had turned the content
+column into a scroll container. Fixed by deleting the orphan and by capping the row's three
+fixed-width tracks with `minmax(0, …)` — the space available depends on the shell's own columns,
+so floors of 110/130/150px plus gaps demanded 644px where only ~616px existed. Verified at 1024,
+1440 and 420: **overflow 0 at all three**, desktop tracks unchanged.
+
+**Why the existing guard missed it, which is the durable lesson.** The mobile-scroll guard split
+the stylesheet on the *string* `"@media (max-width: 900px) {"` and asserted on the text that
+followed. It passed while the CSS was semantically broken, because the text still *looked* nested.
+**Text nesting is not CSS nesting.** `tests/meridian/test_css_integrity.py` now parses structure —
+which at-rule actually *encloses* which declaration — and checks brace balance outside comments for
+every stylesheet. Falsified against the pre-fix file: the balance guard, the
+scroll-fix-at-top-level guard and the verbatim-duplicate guard all fail on it and pass on the fixed
+file. The connections-row guard is documented as **not** the falsifier, so it does not overclaim.
+
+**Evidence.** `tests/meridian/test_ingestion_routes.py` (11 tests) includes an **integration** test
+that calls the real `/api/meridian/settings/connections` endpoint, because a perfect read model
+that is never wired up still passes unit tests. Full non-browser suite **1327 passed**; ruff clean;
+`git diff --check` clean. Captures `observatory-settings-routes-2026-09-21` and a re-shot
+`observatory-settings-hub-2026-09-21`: 10 frames each, zero overflow, zero console errors.
+
+**Known, pre-existing, and NOT fixed here.** At desktop the hub renders inside the 210px settings
+rail with heavy text wrapping, leaving the main column mostly empty. I verified this is unchanged
+by my work — measured **identical** before and after the CSS fix (`nav=210`, `main=1080`,
+`group=177` in both), so it dates from OS-065. It is a desktop adaptation of a phone-frame concept,
+which the governing concept does not specify, so inventing a desktop treatment unilaterally would be
+a design decision rather than a bug fix. Flagged for the owner; the 09-18 concept remains a phone
+frame.
+
 ## OS-065 COMPLETE — Settings is the concept's grouped hub, and all five sections are now capturable (2026-09-21, base `57ad2d5`)
 
 **Track D's last surface.** The owner's 2026-09-20 correction was that Settings "was NEVER worked

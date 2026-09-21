@@ -960,13 +960,30 @@ def settings_connections():
             credential_health = health_getter() or {}
         except Exception:  # noqa: BLE001 - a health lookup must never break the page
             credential_health = {}
+    db_path = graph.db_path if hasattr(graph, "db_path") else None
+    # The two ingestion routes that are NOT stored authorizations: calendar via Composio, and
+    # iCloud over IMAP. Built here because they read stores of their own; the whole block fails
+    # soft, because a route that cannot be described must never take the Settings page down.
+    routes = []
+    try:
+        from meridian.services.ingestion_routes import build_ingestion_routes
+
+        configured = current_app.config.get("MERIDIAN_ICLOUD_CONFIGURED")
+        routes = build_ingestion_routes(
+            db_path=db_path,
+            icloud_configured=bool(configured() if callable(configured) else configured),
+            credential_health=credential_health,
+        )
+    except Exception:  # noqa: BLE001
+        routes = []
     return jsonify(
         build_connections(
             graph,
             _connection_repository(graph),
             selected_id=request.args.get("selected"),
-            db_path=graph.db_path if hasattr(graph, "db_path") else None,
+            db_path=db_path,
             credential_health=credential_health,
+            routes=routes,
         )
     )
 

@@ -397,7 +397,14 @@ a.m-settings-row:focus-visible {
   width: 100%;
   min-height: 76px;
   display: grid;
-  grid-template-columns: minmax(170px, 1.2fr) 110px 130px minmax(150px, 1fr) 20px;
+  /* Every track is shrinkable, including the three that read as fixed widths. At 1024px the
+     shell already spends 360px on the rail and the settings nav, leaving the row ~616px of
+     usable width, while the old `110px 130px 150px` minimums plus gaps demanded 644px. The
+     row then pushed the document 32px wider than the viewport. Fixed minimums cannot be
+     trusted here because the space available depends on the shell's own columns, so the
+     tracks are capped rather than floored and the row now yields instead of overflowing.
+     Measured at 1024x768 and at 1440x900 to confirm the desktop layout is unchanged. */
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 110px) minmax(0, 130px) minmax(0, 1fr) 20px;
   align-items: center;
   gap: var(--m-space-4);
   padding: var(--m-space-3) var(--m-space-2);
@@ -477,6 +484,34 @@ a.m-settings-row:focus-visible {
   text-align: left;
   /* The remedy is a sentence, so it must wrap rather than be clipped by the row. */
   white-space: normal;
+}
+
+/* An INGESTION ROUTE's own explanation (calendar via Composio, iCloud over IMAP). It spans
+   the row's grid for the same reason the warning does, and its `small` carries the pinned
+   definition of the route's label — for Composio, that "(Live)" means still current with the
+   harness and NOT continuous polling. The definition is styled as part of the row rather than
+   as a footnote so it cannot be dropped without the label changing meaning. */
+.m-connection-route-note {
+  grid-column: 1 / -1;
+  display: block;
+  margin-top: var(--m-space-2);
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+  line-height: 1.5;
+  text-align: left;
+  white-space: normal;
+}
+
+.m-connection-route-note small {
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+  opacity: 0.9;
+}
+
+/* "Not observed yet" / "Not current" / "Needs attention" are sentences, not single words,
+   so they must not inherit the base rule's capitalisation. */
+.m-connection-state[data-state="available"] {
+  text-transform: none;
 }
 
 .m-settings-payday-link {
@@ -563,40 +598,6 @@ a.m-settings-row:focus-visible {
   .m-settings-nav:has(+ .m-settings-main:not(.m-settings-main--hub)) .m-settings-hub-foot {
     display: none;
   }
-
-  .m-settings-main {
-    padding: var(--m-space-5) var(--m-space-4) calc(var(--m-space-7) + env(safe-area-inset-bottom));
-    /* Owner report: "I am unable to scroll on the settings page". The middle column had
-       825px of content in a 784px box with overflow visible inside a clipping shell, so
-       the bottom of the page -- including the funding cadence controls -- was unreachable
-       and neither the page nor the column would scroll. */
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-
-  .m-settings-link {
-    display: none;
-  }
-
-  .m-settings-command {
-    display: grid;
-    margin-bottom: var(--m-space-6);
-  }
-
-  .m-settings-command h1 {
-    font-size: 2.3rem;
-  }
-
-  .m-settings-inspector {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    width: 100%;
-    min-height: 100dvh;
-    overflow: auto;
-  }
-}
 
   .m-settings-main {
     padding: var(--m-space-5) var(--m-space-4) calc(var(--m-space-7) + env(safe-area-inset-bottom));

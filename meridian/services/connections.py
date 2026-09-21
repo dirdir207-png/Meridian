@@ -24,6 +24,10 @@ _GROUP = {
     "gmail": "evidence",
     "icloud": "evidence",
     "calendar": "time",
+    # The calendar's ONLY adapter (owner decision, 2026-09-21). It carries no Meridian-held
+    # Google credential, so it is reported as an ingestion route rather than as an
+    # authorization -- see meridian/services/ingestion_routes.py.
+    "composio": "time",
 }
 
 _USES = {
@@ -34,12 +38,14 @@ _USES = {
     "gmail": ("Bills", "Statements", "Receipts"),
     "icloud": ("Bills", "Statements", "Receipts"),
     "calendar": ("Paydays", "Due dates", "Events"),
+    "composio": ("Calendar events", "Travel", "Appointments"),
 }
 
 _PERMISSIONS = {
     "gmail": ("Read bills, statements, and receipts",),
     "icloud": ("Read bills, statements, and receipts",),
     "calendar": ("Read payday, due-date, travel, and event timing",),
+    "composio": ("Read calendar events as context, never matched to a transaction",),
 }
 
 _GROUP_LABELS = {
@@ -147,6 +153,7 @@ def build_connections(
     selected_id: str | None = None,
     db_path: str | None = None,
     credential_health: dict[str, dict] | None = None,
+    routes: list[dict] | None = None,
 ) -> dict[str, object]:
     """Assemble the Connections view.
 
@@ -157,12 +164,24 @@ def build_connections(
     has a recorded failure the row keeps its stored `state` (that IS the authorization's
     state, honestly reported) but gains an explicit `credential` block saying the
     credential is unusable, so the surface cannot imply a working connection.
+
+    ``routes`` carries the INGESTION ROUTES that are not stored authorizations at all --
+    calendar via Composio, and iCloud over IMAP. They are supplied by the caller rather than
+    derived here, for the same reason ``credential_health`` is: this module must stay a pure
+    presentation read model, and it must not start reading stores of its own. A route joins
+    its group alongside the authorizations so the owner sees every source that feeds Meridian
+    in one list, which is the only way the list can be trusted to be complete.
+
+    A route row is deliberately NOT dressed as an authorization: it carries ``route: True``
+    and, where the label needs pinning down, its own ``live_meaning``. See
+    ``meridian/services/ingestion_routes.py``.
     """
     health = credential_health or {}
     rows = [_financial_payload(item) for item in graph.list_connection_freshness()]
     rows.extend(
         _authorization_payload(item, health.get(item.kind)) for item in authorizations.list_all()
     )
+    rows.extend(routes or [])
     # R27: attach per-account OAuth identities (multi-account chooser data).
     oauth_accounts = {}
     if db_path:
