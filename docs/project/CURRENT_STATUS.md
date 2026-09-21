@@ -33,6 +33,78 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## OWNER CORRECTIONS — Settings and Virgil were never built; both records fixed (2026-09-21, base `f7bd962`)
+
+**Two corrections, both accurate, both verified against the artifacts rather than accepted on faith — and together they
+change what Track D actually is.**
+
+### Settings (`OS-065`) — the record was wrong
+
+The task claimed Settings *"is not un-built and not unstyled… four carry real Observatory treatment"* and reduced the
+work to a capture-fixture gap. The owner: *"the settings page was NEVER worked on or made to look like the concept. This
+is real work that hasn't even begun."* Verified, and he is right:
+
+- The Sept-18 concept has **three parchment groups and nine rows** — CONNECTIONS (Money sources, Email & calendars),
+  VIRGIL & AUTHORITY (Approval boundaries, Memory & privacy, Briefings & quiet hours), PREFERENCES (Appearance,
+  Funding schedules, Security & devices) — each row an icon medallion with title, subtitle and chevron.
+- `templates/meridian/partials/settings-navigation.html` is a **flat five-link text nav** with no groups, no icons, no
+  chevrons, no subtitles and no wavy rule. A grep for every concept group and row name returns **zero** matches in
+  `settings.html` and `settings-navigation.html`.
+- The concept's **information architecture does not exist**: "Approval boundaries", "Memory & privacy", "Briefings &
+  quiet hours" and "Appearance" have no route, no partial and no section. They are *missing*, not restyled.
+- `BUILD_HANDOFF.md` lists it as build-order **step 3** and states its layouts are *"not implemented or deployed"*.
+
+**The earlier entry's error was mistaking the existence of section shells for concept fidelity.** Priority raised to
+high; six acceptance criteria replace the fixture-only framing.
+
+### Virgil (`OS-071`, newly created) — there was no task at all
+
+Owner: *"The virgil visual redesign was also never started or worked on."* Verified: `find templates -iname '*virgil*'`
+returns **nothing**, and no concept marker exists anywhere in `templates/` or `static/`.
+
+### The systemic finding — this is the owner's own repeated concern, realised
+
+The Sept-18 extended set contains **four** concepts, but only **two** were ever tracked. **Review** and **Timeline**
+were covered (`OS-044`/`045`/`047`, complete). **Settings had a record that was wrong; Virgil had none at all** — and
+both were in that same day's build order.
+
+**So Track D is not two small gaps from finished.** It is two unbuilt surfaces plus the `OS-038` remainder. Recorded in
+the roadmap's Track D section with the rule it exposed: **presence of a file is not fidelity, and an inherited task
+record is not evidence.**
+
+### Authority — stated because it is the whole risk on Virgil
+
+`OS-071` is **visual and read-only only**. It implements, enables and implies **no** A1–A5 capability: no voice
+endpoint, no device action, no task runner, no proposal approval from that surface. Unavailable capabilities must state
+*unavailable/planned* — the pattern the concept itself models and what `BUILD_HANDOFF.md` requires. **The A1 gate does
+not move.** The visual surface is legitimate *because it is inert*: building it wires nothing.
+
+### `VIRGIL-A0` — the answer the owner was owed three times
+
+He has asked repeatedly what A0 requires of him with no clear answer, and no wonder: **the task had acceptance criteria
+but no `detail` and no `handoff`, so it never said.** Its own evidence field resolves it:
+
+| Criterion | State |
+|---|---|
+| 1. Owner accepts/amends the three documents | **SATISFIED** — `owner_acceptance`: *"APPROVED 2026-09-20 by the owner ('I approve AO')"* |
+| 2. Versioned contracts + adversarial tests | **NOT SATISFIED** — eight contract families still to author. **Mine, not his.** |
+| 3. Compatible toolchain verified | **SATISFIED** — `toolchain_verified_at: 2026-09-15`, Xcode 26.6, iOS 26.5 runtime, simulator smoke test captured |
+| 4. No endpoint/credential/authority activation | A constraint, not a step |
+
+**Nothing is required of the owner.** His premise was right: A0's owner-side work is done and the environment exists.
+The open item is authoring, not approval. Signing (0 identities) stays owner-gated but **A0 does not require it**, and
+neither does the visual work, because no on-device build is involved.
+
+**And the gate that actually blocks progress is not A0.** It is Track I.1: `VIRGIL_ROADMAP_ADDENDUM.md` gates **A1** on
+**C-V1 trustworthy evidence AND Track I.1's envelope/permissions being adequate**, and **Track I has no started task**.
+`OS-067` (the calendar leg of C-V1) is the piece that is both in-flight and mine.
+
+### Also stashed, deliberately
+
+Preview fixtures for the four uncapturable Settings sections were built on the **wrong premise** — treating the fixture
+gap as the deliverable. They are a valid **prerequisite** for verifying `OS-065`, so they are preserved as
+`stash@{0}` rather than discarded or committed.
+
 ## CONTINUITY RULE ADDED + OS-067 session record (2026-09-21, base `1b095b5`)
 
 ### The rule the owner asked for, now in `AGENTS.md`
