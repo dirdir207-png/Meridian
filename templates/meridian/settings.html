@@ -21,9 +21,25 @@
     {% include 'meridian/partials/navigation.html' %}
 
     <header class="m-topbar" data-topbar>
-      {% if not active_settings_section %}
-      {# The concept's own "‹ Back" on the directory. A section keeps its existing "‹ Settings"
-         control instead, so no screen carries two backs. #}
+      {# The way back, in the TOP BAR, and always rendered.
+
+         A section used to rely on the nav column's own "‹ Settings" link, and on a phone that
+         link is present in the DOM but NOT VISIBLE: measured at 420x912 against the served page,
+         `.m-settings-back` reports visible=False and box=None while the collapsed nav column is
+         37px tall -- shorter than the control's own 44px minimum, so it is clipped out of its own
+         container. The owner's report is exact: the hub "directs there selecting financial, but
+         there is no way to return to the hub". Same defect class as the hub being unreachable in
+         the first place, and worth stating as the rule it is:
+
+           A CONTROL THAT IS IN THE DOM IS NOT A CONTROL THE USER HAS.
+
+         The top bar is the one region measured visible at every governed viewport, so the control
+         lives here. The hub goes back to the workspace; a section goes back to the hub. #}
+      {% if active_settings_section %}
+      <a class="m-settings-back" data-settings-back-to-hub href="/meridian/settings">
+        <span class="m-settings-back-chevron" aria-hidden="true"></span>Settings
+      </a>
+      {% else %}
       <a class="m-settings-back" data-settings-hub-back href="/meridian?workspace=today">
         <span class="m-settings-back-chevron" aria-hidden="true"></span>Back
       </a>
