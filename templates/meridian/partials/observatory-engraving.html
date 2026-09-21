@@ -1,0 +1,60 @@
+{# Observatory engraving for the Settings top bar.
+
+   The governing concept draws a corner engraving here -- a quadrant instrument on a post beside
+   an observatory dome, with stars around them -- and NO SUCH ASSET EXISTS in any kit: the 09-18
+   kit carries only activity-telescope.png, medallion-frame.png and parchment-ticket.png, and the
+   09-16 kit's activity-telescope.png is a different, single-instrument drawing. That gap is why
+   the hub shipped with an empty corner.
+
+   The owner asked for an approximation rather than another session of waiting, 2026-09-21:
+   "generate yourself an approximation of the missing image in the upper right hand corner." So
+   this is a HAND-AUTHORED approximation, and it says so rather than passing as the concept's
+   artwork. When Astra delivers the real engraving, replace this file: the only thing anything
+   else depends on is the class name.
+
+   Drawn in `currentColor` with hairline strokes and no fills, so it takes the brass ink from CSS
+   and follows the theme like every other engraved line in the shell. `aria-hidden` is on the
+   wrapper in the template: it is decoration and must never be announced as content.
+
+   THE STARS ARE FOUR-POINT SPARKLES, NOT PLUS SIGNS, and that is deliberate. The first version
+   drew each star as two crossed strokes; read at 96px they looked like stray arithmetic rather
+   than like the concept's sparkles, which have concave sides. Each is now a single closed path
+   through four points with curved waists. #}
+<svg class="m-engraving-svg" viewBox="0 0 140 84" role="presentation" focusable="false">
+  <g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+    {# ground #}
+    <path d="M4 79 H136" stroke-width="0.9" />
+
+    {# quadrant instrument: post, foot, pivot, graduated arc, sighting arm and tube #}
+    <path d="M34 79 V25" />
+    <path d="M25 79 H43" />
+    <circle cx="34" cy="25" r="2.6" />
+    <path d="M34 25 Q70 30 76 66" />
+    <path d="M34 25 L60 14" />
+    <path d="M60 14 L82 20" />
+    <path d="M60 17.6 L82 23.6" />
+    <path d="M82 20 V23.6" />
+    {# graduations along the arc #}
+    <path d="M42 30 L38.4 27.2" />
+    <path d="M52 38 L47.8 35.4" />
+    <path d="M61 47 L56.6 45" />
+    <path d="M69 57 L64.4 55.4" />
+
+    {# observatory dome with an open shutter #}
+    <path d="M84 79 A23 23 0 0 1 130 79" />
+    <path d="M99 60.5 L108 79" />
+    <path d="M115 60.5 L106 79" />
+    <path d="M107 57 V50.5" />
+    <circle cx="107" cy="48.6" r="1.8" />
+    <path d="M85 79 V73.5" />
+    <path d="M129 79 V73.5" />
+
+    {# stars: four-point sparkles, concave sides #}
+    <path d="M17 10 Q17 19 26 19 Q17 19 17 28 Q17 19 8 19 Q17 19 17 10 Z" stroke-width="0.95" />
+    <path d="M57 3 Q57 9.5 63.5 9.5 Q57 9.5 57 16 Q57 9.5 50.5 9.5 Q57 9.5 57 3 Z" stroke-width="0.95" />
+    <path d="M92 18 Q92 25 99 25 Q92 25 92 32 Q92 25 85 25 Q92 25 92 18 Z" stroke-width="0.95" />
+    <path d="M127 30 Q127 36 133 36 Q127 36 127 42 Q127 36 121 36 Q127 36 127 30 Z" stroke-width="0.95" />
+    <path d="M74 40 Q74 44.5 78.5 44.5 Q74 44.5 74 49 Q74 44.5 69.5 44.5 Q74 44.5 74 40 Z" stroke-width="0.85" />
+    <path d="M46 6 Q46 10 50 10 Q46 10 46 14 Q46 10 42 10 Q46 10 46 6 Z" stroke-width="0.85" />
+  </g>
+</svg>

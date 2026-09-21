@@ -156,6 +156,25 @@ html[data-theme="light"] .m-settings-hub-head h1 {
     color: var(--obs-ink, #eee4cf);
   }
 
+  /* The concept's corner engraving, replacing the redundant top-bar word "Settings" on the
+     directory. Brass ink so it reads as engraved line work rather than as an icon, and kept in
+     the same slot the title occupied so the centred wordmark does not move. */
+  .m-settings-shell .m-topbar[data-topbar] .m-settings-engraving {
+    grid-column: 3;
+    justify-self: end;
+    display: block;
+    color: color-mix(in srgb, var(--obs-brass, #c6aa71) 80%, transparent);
+  }
+
+  .m-settings-shell .m-topbar[data-topbar] .m-settings-engraving svg {
+    display: block;
+    /* Sized against the concept rather than by taste: the concept's engraving is a delicate
+       corner vignette, not a piece of chrome. At 96px the hand-drawn instrument read as a large
+       compass and dominated the bar, which the concept/target comparison showed immediately. */
+    width: 74px;
+    height: auto;
+  }
+
   html[data-theme="light"] .m-settings-shell .m-topbar[data-topbar] .m-settings-back {
     color: var(--m-ink-muted);
   }

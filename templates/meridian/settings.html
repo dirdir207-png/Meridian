@@ -31,7 +31,16 @@
       <a class="m-brand m-brand--compact" data-meridian-wordmark href="/meridian?workspace=today" aria-label="Meridian home">
         {% include 'meridian/partials/wordmark.html' %}
       </a>
+      {% if active_settings_section %}
       <strong class="m-settings-mobile-title">Settings</strong>
+      {% else %}
+      {# The concept puts its engraving in this corner on the directory, and no title: the page's
+         own <h1> is "Settings" and sits directly below. A section gets the title instead, because
+         a section's heading is its own subject rather than the word "Settings". #}
+      <span class="m-settings-engraving" aria-hidden="true">
+        {% include 'meridian/partials/observatory-engraving.html' %}
+      </span>
+      {% endif %}
     </header>
 
     {% include 'meridian/partials/settings-navigation.html' %}
