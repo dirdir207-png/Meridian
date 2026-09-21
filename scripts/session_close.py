@@ -256,9 +256,16 @@ def main() -> int:
     L.append("2. Run the gates on your scope: `pytest`, `ruff`, `git diff --check`.")
     L.append("3. Record anything session-emergent in `docs/project/session-emergent.json`.")
     L.append("4. Regenerate the handoff: `scripts/generate_handoff.py`.")
-    L.append("5. Commit the handoff **as the final commit of the session**, so it describes the "
-             "state it was committed in and `--check` returns current.")
-    L.append("6. Re-run `scripts/session_close.py` — it must report a safe state.")
+    L.append("5. Commit the handoff **as the final commit of the session**.")
+    L.append("   - **`--check` will now report STALE, and this is expected, not a bug.** The")
+    L.append("     handoff lists recent commits including its own, so committing it necessarily")
+    L.append("     changes it. Do not chase this in a loop. The point of regenerating is that the")
+    L.append("     NEXT session finds a handoff describing the state it is resuming from; the")
+    L.append("     check is a session-START signal ('has anything moved since?'), not a")
+    L.append("     session-END assertion.")
+    L.append("6. If `--check` reports STALE at the START of your next session, the previous session")
+    L.append("   did not regenerate. Read `session-emergent.json` for anything never recorded,")
+    L.append("   then regenerate.")
     L.append("")
 
     text = "\n".join(L) + "\n"
