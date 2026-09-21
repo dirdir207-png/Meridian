@@ -484,7 +484,11 @@ Track C (V1 ─► V2 ─► V3 ─► V4 ─► V5 ─► V6 ─► V7)   V8 ga
 - **Next move (revised 2026-09-20):** this line used to ask for the shared dated-event model first. That was
   delivered, so the sequence starts one step later: close Track D's remainder (`OS-038` design gaps, `OS-049`
   browser baseline), then build **Track I.1** — the envelope *and its permissions*, with a test per role proving
-  it cannot reach a provider write path — then one useful, evidence-backed role (I.2). In parallel, the Crew
+  it cannot reach a provider write path — then one useful, evidence-backed role (I.2). **I.1 is recorded as
+  `OS-072`** (added 2026-09-21): the track table in this section named I.1 while the ledger carried no task for
+  it, and `scripts/roadmap_handoff_check.py` still reconciled, because its scope covers the tasks it knows about
+  rather than every row of that table. Naming the id here makes the drift checkable, the same way the
+  evidence-lane entry below was made enforceable. In parallel, the Crew
   funding-math arc has reached its measurement phase (`OS-058`, the 2026-10-02 event) and the reserve-versus-amount
   gap display (`OS-060`) is the next product slice. The council stays high priority, with each added role proving
   its value on a real user task.

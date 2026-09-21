@@ -33,6 +33,53 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## Track I.1 begins: the role envelope and its permissions, recorded as `OS-072` (2026-09-21, base `25af68b`)
+
+**A reconciliation gap, closed.** Roadmap §6 names the critical path's next move — *"close Track D's
+remainder (`OS-038`, `OS-049`), then build **Track I.1** — the envelope and its permissions, with a test
+per role proving it cannot reach a provider write path"* — and §6's track table lists I.1 at
+`Astra / xhigh`. OS-049 is done and OS-038's only remainder is Astra artwork, so I.1 is the next
+buildable move. **The ledger carried no task for it**, and `scripts/roadmap_handoff_check.py` still
+reconciled, because its scope covers the tasks it knows about rather than every row of that table. It is
+now `OS-072`, and §6 names the id so the drift is checkable — the same treatment the evidence-lane entry
+got when its calendar claim was corrected.
+
+**What shipped (foundation slice):** `meridian/ai/envelope.py` + `tests/meridian/test_ai_envelope.py`
+(35 tests). The typed contract the roadmap specifies — `EvidenceRef` with provenance/freshness/
+confidence, `Budget` (every field required and positive, so an *unbounded* run cannot be expressed),
+`EnvelopeTask`, `Claim`, `EnvelopeResult` with `ResultStatus` OK/UNAVAILABLE/FAILED as part of the
+**shape** rather than an exception a caller may forget, and `RunRecord.as_dict()` for audit. Permissions
+ship **with** it: `ROLE_PERMISSIONS` covers the five council roles the roadmap names (forecaster,
+investigator, skeptic, guardian, teacher — I.2 ships one, I.3 composes them).
+
+**Nothing is wired into the app.** No role is implemented, no model is called, no endpoint added, no
+credential held: **this module's only power is to refuse.** I.2 is what makes a role real.
+
+**Why the central claim is worth believing.** "No role can reach a provider write path" is checked, not
+asserted. The registry names **real callables** (`ToolSpec.target` is a dotted path) and a test resolves
+every one of them. That check earned its place immediately: **I invented two of the targets** while
+writing the slice — `meridian.evidence.build_evidence_bundle` and `meridian.evidence.read_evidence_items`,
+neither of which exists (`meridian/evidence.py` exposes `EvidenceRepository`, and accounts come from
+`repository.FinancialRepository.list_accounts`). The resolver caught both. It was then **falsified**
+against four bogus paths — including the near-miss typo `execute_crew_writes` — refusing all four while
+resolving all six real ones. Without it the guard would keep claiming "no role can write" while pointing
+at a function that no longer exists.
+
+The invariant is enforced **at import**: `_assert_registry_is_safe()` raises if any role holds a write
+tool, so a careless widening breaks the import rather than shipping a permission that only reads as safe.
+It too is falsified — monkeypatching a write tool into a role makes the guard raise, and an *unregistered*
+tool name is refused as well (`tools` is a closed set, so a typo cannot silently grant nothing while
+appearing to grant something).
+
+**Evidence.** Full non-browser suite **1734 passed** (up from 1699), 73 skipped. Ruff and
+`git diff --check` clean; roadmap reconciles; session-close contract passes. Attribution: the write
+classification is anchored to the real entry point — `crew_write` targets
+`meridian.crew_write.execute_crew_write`, the function that actually reaches the provider.
+
+**Deliberately not built:** I.2 and everything it needs — model clients, prompts, run-record persistence,
+wiring into the advisor endpoint. Building those before the contract is proven is the ordering I.1 exists
+to prevent. No authority, provider or financial change.
+
 ## Governance correction: the roadmap was describing a calendar state that no longer exists, and two of my own claims were wrong (2026-09-21, base `56e3372`)
 
 **A governing document contradicted the code.** Roadmap §6's evidence-lane entry (added
