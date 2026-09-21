@@ -23,7 +23,7 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Agent | Files claimed | Since | Status |
 |---|---|---|---|
-| Constitutional Builder (OS-075 defect fix: negative bill reserve) | `meridian/migrations/028_allow_negative_bill_reserve.sql` (new), `tests/meridian/test_bill_reserve_negative.py` (new), `tests/meridian/test_migrations.py`, `tests/meridian/test_bill_reserve_observations.py`, `docs/project/{MERIDIAN_DECISIONS.md,MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **active**. Fixes a PRODUCTION defect the owner confirmed: migration 024's `CHECK (total_reserved_amount >= 0)` rejected a legitimate negative reserve, failing every live sync. **Does NOT touch `meridian/repository.py`** -- the upsert is correct; the schema's assumption was wrong. **Migration 024 is frozen and must not be edited** (applied-checksum lock). |
+| Constitutional Builder (OS-075 defect fix: negative bill reserve) | `meridian/migrations/028_allow_negative_bill_reserve.sql` (new), `tests/meridian/test_bill_reserve_negative.py` (new), `tests/meridian/test_migrations.py`, `tests/meridian/test_bill_reserve_observations.py`, `docs/project/{MERIDIAN_DECISIONS.md,MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **released 2026-09-21** at `1fb530f`. See the log entry below. |
 | Codex design handoff 2026-09-21 | `design/investigator-medallions-2026-09-21/**`, `docs/project/AGENT_COORDINATION.md` (own row/log only) | 2026-09-21 | **active**. Owner-requested medallion artwork and Investigator surface specification for DeepSeek Harness. Full icon pack and desktop Settings excluded. No runtime or Track I backend edits; preserve the active builder claim. |
 | Constitutional Builder (Track I: OS-072 envelope, OS-073 Investigator, I.3 council) | `meridian/ai/**` (envelope, role, investigator, skeptic, council, run_records), `meridian/migrations/027_ai_run_records.sql`, `scripts/investigate.py`, `tests/meridian/test_ai_{envelope,investigator,council,run_records}.py`, `tests/test_investigate_script.py`, `tests/meridian/test_migrations.py`, `tests/meridian/test_bill_reserve_observations.py`, `docs/project/{MERIDIAN_OS_TASKS.json,MERIDIAN_ROADMAP.md,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **released 2026-09-21** at `b2bc935` (OS-072 persisted run records), `0c30f9f` (OS-074 council + Skeptic), `331c28f` (handoff). Track I lane complete as scoped: the envelope, the permissions, the Investigator, the Skeptic, the council and the persisted run record all shipped, all tested, no role able to reach a provider write path. **Still open and Astra's design work per the owner 2026-09-21: OS-038's medallion glyphs and the Investigator's customer-facing surface -- which THIS LANE IMPLEMENTS when the assets/design land.** |
 | Constitutional Builder (Track D closure: OS-038 remainder, OS-065, OS-071) | `static/css/meridian/accounts.css`, `static/js/meridian/accounts.js` (only if an SVG layer proves necessary), `tests/meridian/test_accounts_rail.py`, `tests/meridian/test_accounts_connectors.py` (new), `templates/meridian/settings.html`, `templates/meridian/partials/settings-navigation.html`, `static/css/meridian/settings.css`, `templates/meridian/partials/virgil.html` (new), `static/css/meridian/virgil.css` (new), `scripts/preview_observatory_dial.py`, `tests/meridian/test_settings_visual_preview.py`, `tests/meridian/test_settings_hub.py` (new), `tests/meridian/test_virgil_surface.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-21 | **released 2026-09-21** at `d60f1c9`, `25181bd`, `38328df`, `9a55413`, `56e3372` (owner-directed Track D closure: OS-065 Settings hub, the calendar read-only leg, the Settings ingestion routes, OS-071 Virgil). Visual authority is `design/observatory-extension-2026-09-18/`; the 09-08 drafts are superseded only where 09-18 does NOT cover a surface, verified this session. Presentation and read-only only: no route, data, financial, provider or authority change. Virgil ships INERT. **OS-038's medallion glyph artwork remains OPEN and is now Astra's work, not this lane's.** |
@@ -114,6 +114,40 @@ would have reverted three commits had it been applied. This file is the channel.
 | Builder (OS-060: read-only reserve-versus-amount exposure) | `meridian/services/today.py`, `templates/meridian/partials/today.html`, `static/js/meridian/today.js`, `static/css/meridian/observatory.css`, `tests/meridian/services/test_reserve_exposure.py` (new), `tests/meridian/test_today_exposure_js.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-20 | **released at this commit**. OS-060 shipped as a **read-only** display, per the owner's 2026-09-20 scope decision: a gap is shown ONLY where a bill's amount exceeds its **observed** reserved figure AND a reserved report exists. Only Rent qualifies today (1442.00 − 1097.10 = **344.90**); the four `0.00`-with-reported bills are normal funded-not-covered (D-015) and correctly show nothing. **Key finding:** Rent sits OUTSIDE the dial's event window (next occurrence 2026-10-16 vs horizon end 2026-10-04), so the exposure is window-independent — an event-loop field would have rendered nothing. Wording factual with no verb of action; "has to come from spendable cash" was rejected as bordering on implying a transfer. No other number moves (the gap was already inside known obligations). 21 new tests; suite 1460 passed / 1 skipped; falsified before trusted, which caught a defect in the author's own test (it passed for the wrong reason). **No provider mutation, no transfer, no reserve withdrawal, no authority change, no migration, no forecast, no lateness modelling, no re-targeting.** `meridian/**.py` change → preview restart needed. |
 
 ## Log (append only — newest first)
+
+### 2026-09-21 — A wrong CHECK was failing every live sync; the negative reserve is correct (`OS-075`, `D-017`, `1fb530f`)
+
+**Defect.** `crew_bill_reserves.total_reserved_amount` carried
+`CHECK (total_reserved_amount IS NULL OR total_reserved_amount >= 0)` from migration 024, on the
+assumption that a reserve total is money set aside and cannot go below zero. On 2026-09-21 the owner's
+live read raised `sqlite3.IntegrityError: CHECK constraint failed` on **every** sync, so no reserve row,
+no funding plan and no bills were refreshed. The owner confirmed the value is correct — *"Negative reserve
+is correct"*, because they deliberately left too much in Crew's "free to spend" and rent clearing took
+the reserve below zero. **A reserve total is a running balance, not a quantity.**
+
+**How it surfaced, because the route matters.** `tests/meridian/test_live.py::test_build_sync_once_is_a_callable`
+went red. This lane's changes could not plausibly have caused it — and that was exactly the reasoning that
+had **already been wrong twice this session**. So it was proven pre-existing by running that test in a
+**clean worktree of HEAD** with none of this lane's work present (it failed there too), and then followed to
+its source rather than filed as flaky. **A targeting run of `test_migrations.py` would never have found
+it; only the whole-tree run did.**
+
+**Fix.** `028_allow_negative_bill_reserve.sql` — a table rebuild, since SQLite cannot alter a CHECK in
+place. Identical definition minus the clause, every row copied **verbatim** (ids included; nothing clamped,
+rounded or repaired), index recreated. `NULL` keeps meaning "not reported" (C01) and stays distinguishable
+from a real `0.0`. The value is stored **as reported** — clamping would present a fabricated figure as a
+measured one.
+
+**Decisive evidence is live:** `tests/meridian/test_live.py` **2 passed** — a real read against the owner's
+Crew account, failing before and passing after. No financial figure is printed, logged or committed.
+
+**Scope, deliberately narrow:** this removes the *only* non-negativity check sitting on a
+**provider-reported balance**. Every other `>= 0` in the schema stays, because those are on values Meridian
+or the owner **states**. `D-017` records the rule: **do not add a CHECK to a value Meridian only observes.**
+
+**Not touched, on purpose:** `meridian/repository.py`. The upsert that raised is correct — it faithfully
+tried to store a real value. The defect was the schema's assumption, so the schema is where it is fixed.
+Migration 024 stays frozen.
 
 ### 2026-09-20 — OS-060 shipped read-only; the window trap that would have made it render nothing; and the vision captured
 
