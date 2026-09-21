@@ -34,8 +34,23 @@ pytestmark = pytest.mark.skipif(not APP_URL, reason="APP_URL is required for bro
 
 
 def _open_panel(page):
-    page.locator("#advisor-fab").click()
-    page.wait_for_timeout(150)
+    """Click the trigger and wait for the sheet.
+
+    The trigger is only DISPLAYED under `body:has([data-meridian-shell])` (advisor.css:74-89), so a
+    click issued before the shell initialises fails with "element is not visible" -- which is what
+    the first run of this file did, at the desktop viewport, against the owner's instance. The
+    navigation and the wait mirror tests/browser/test_contextual_advisor.py, which is the working
+    precedent: same workspace, same trigger, same ordering.
+    """
+    fab = page.locator("#advisor-fab")
+    fab.wait_for(state="visible", timeout=15000)
+    fab.click()
+    page.wait_for_timeout(200)
+
+
+def _goto_and_open(page):
+    page.goto(f"{APP_URL}/meridian?workspace=activity", wait_until="domcontentloaded")
+    _open_panel(page)
 
 
 def test_opening_does_not_focus_the_composer(browser):
@@ -43,8 +58,7 @@ def test_opening_does_not_focus_the_composer(browser):
     from tests.browser.test_transaction_inspector import _authed_page
 
     context, page = _authed_page(browser)
-    page.goto(f"{APP_URL}/meridian?workspace=today", wait_until="domcontentloaded")
-    _open_panel(page)
+    _goto_and_open(page)
 
     active_id = page.evaluate("document.activeElement ? document.activeElement.id : null")
     assert active_id != "advisor-fab-input", (
@@ -63,8 +77,7 @@ def test_closing_leaves_no_dark_sheet_and_no_inert_page(browser):
     from tests.browser.test_transaction_inspector import _authed_page
 
     context, page = _authed_page(browser)
-    page.goto(f"{APP_URL}/meridian?workspace=today", wait_until="domcontentloaded")
-    _open_panel(page)
+    _goto_and_open(page)
     assert page.locator("#advisor-panel[data-open]").count() == 1, "the panel did not open"
 
     page.locator("#advisor-panel .m-advisor-close").click()
@@ -90,8 +103,7 @@ def test_the_panel_can_be_reopened_after_closing(browser):
     from tests.browser.test_transaction_inspector import _authed_page
 
     context, page = _authed_page(browser)
-    page.goto(f"{APP_URL}/meridian?workspace=today", wait_until="domcontentloaded")
-    _open_panel(page)
+    _goto_and_open(page)
     page.locator("#advisor-panel .m-advisor-close").click()
     page.wait_for_timeout(200)
     _open_panel(page)
