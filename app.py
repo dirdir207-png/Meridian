@@ -915,6 +915,10 @@ meridian_evidence_since_days = int(os.environ.get("MERIDIAN_EVIDENCE_SINCE_DAYS"
 meridian_evidence_max_messages = int(
     os.environ.get("MERIDIAN_EVIDENCE_MAX_MESSAGES", "50")
 )
+# Which iCloud folder the evidence poll reads. Defaults to INBOX, but pointing it at a
+# dedicated folder (filled by a mail rule that moves forwarded bills) keeps personal mail
+# out of the evidence store — the store accepts every message with a body.
+meridian_icloud_mailbox = os.environ.get("MERIDIAN_ICLOUD_MAILBOX", "INBOX").strip() or "INBOX"
 _meridian_evidence_service = None
 
 
@@ -956,6 +960,9 @@ def _meridian_icloud_cycle() -> dict:
         transactions=transactions,
         max_messages=meridian_evidence_max_messages,
         since_days=meridian_evidence_since_days,
+        # Read a dedicated folder when configured, so forwarded bills land in evidence
+        # without dragging the personal inbox in with them.
+        mailbox=meridian_icloud_mailbox,
         blob_store=_evidence_store_factory(),
     )
     return {"outcome": "ok", **summary}

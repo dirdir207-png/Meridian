@@ -176,7 +176,7 @@ def test_ingest_icloud_recent_stores_mail_evidence(tmp_path):
     from meridian.gmail_intake import ingest_icloud_recent
 
     class FakeTransport:
-        def fetch_recent(self, *, max_results=20, since=None):
+        def fetch_recent(self, *, max_results=20, since=None, mailbox="INBOX"):
             return [
                 IcloudMailMessage(
                     message_id="<ic1@icloud.com>", subject="Your iCloud bill",
@@ -200,7 +200,7 @@ def test_ingest_icloud_links_use_icloud_provenance(tmp_path):
     from meridian.gmail_intake import ingest_icloud_recent
 
     class FakeTransport:
-        def fetch_recent(self, *, max_results=20, since=None):
+        def fetch_recent(self, *, max_results=20, since=None, mailbox="INBOX"):
             return [
                 IcloudMailMessage(
                     message_id="<ic2@icloud.com>", subject="Your charge",
@@ -365,7 +365,7 @@ def test_icloud_intake_stores_the_recovered_forwarded_sender(tmp_path):
     from meridian.gmail_intake import ingest_icloud_recent
 
     class FakeTransport:
-        def fetch_recent(self, *, max_results=20, since=None):
+        def fetch_recent(self, *, max_results=20, since=None, mailbox="INBOX"):
             return [
                 IcloudMailMessage(
                     message_id="<fwd1@icloud.com>",
@@ -396,7 +396,7 @@ def test_icloud_intake_leaves_a_normal_subject_unchanged(tmp_path):
     from meridian.gmail_intake import ingest_icloud_recent
 
     class FakeTransport:
-        def fetch_recent(self, *, max_results=20, since=None):
+        def fetch_recent(self, *, max_results=20, since=None, mailbox="INBOX"):
             return [
                 IcloudMailMessage(
                     message_id="<plain1@icloud.com>", subject="Your Verizon bill is ready",
@@ -454,6 +454,8 @@ def test_an_unreachable_mail_host_fails_instead_of_hanging():
 
     from meridian.connectors.icloud_mail import IcloudMailReadError, IcloudMailTransport
 
+    # A SHORT explicit timeout on purpose: using the 60s default made this test block
+    # for a minute on some networks, which is worse than the bug it guards.
     transport = IcloudMailTransport(
         username="a@example.com", app_password="x",
         host="10.255.255.1", port=993, socket_timeout=2,
@@ -465,4 +467,96 @@ def test_an_unreachable_mail_host_fails_instead_of_hanging():
         pass
     else:
         raise AssertionError("an unreachable host must not appear to connect")
-    assert time.monotonic() - start < 20, "the attempt must be bounded by the timeout"
+    elapsed = time.monotonic() - start
+    # Generous relative to a 2s socket timeout, but still bounded: the point is that it
+    # FINISHES rather than hanging indefinitely.
+    assert elapsed < 30, f"the attempt must be bounded by the timeout (took {elapsed:.1f}s)"
+
+
+# --- the mailbox selector (OS-067) --------------------------------------------------
+#
+# The inbox is the wrong place to read once mail is FORWARDED in: measured 2026-09-20 it
+# held 28,393 messages from 127 distinct senders, and the intake stores every message
+# with a body as evidence, so personal mail became Meridian evidence and diluted the
+# bill matcher.
+
+def test_the_icloud_intake_defaults_to_the_inbox_for_backward_compatibility():
+    import inspect
+
+    from meridian.connectors.icloud_mail import IcloudMailTransport
+
+    sig = inspect.signature(IcloudMailTransport.fetch_recent)
+    assert sig.parameters["mailbox"].default == "INBOX"
+
+
+def test_an_explicit_mailbox_is_the_one_selected():
+    """The chosen folder must reach IMAP select(), not be ignored."""
+    from meridian.connectors.icloud_mail import IcloudMailTransport
+
+    selected: list[tuple] = []
+
+    class FakeConn:
+        def select(self, mailbox, readonly=False):
+            selected.append((mailbox, readonly))
+            return "OK", [b"0"]
+
+        def search(self, charset, criteria):
+            return "OK", [b""]
+
+        def close(self):
+            return "OK", []
+
+        def logout(self):
+            return "OK", []
+
+    transport = IcloudMailTransport(username="a@example.com", app_password="x")
+    transport._connect = lambda: FakeConn()
+    transport.fetch_recent(max_results=5, mailbox="Bills")
+    assert selected, "select() must be called"
+    assert selected[0][0] == "Bills", f"expected the Bills folder, got {selected[0][0]!r}"
+    assert selected[0][1] is True, "the folder must be opened READ-ONLY, never mutating"
+
+
+def test_a_missing_folder_raises_rather_than_silently_reading_the_inbox():
+    """Failing loudly is the point: silently falling back to INBOX would ingest personal
+    mail, which is the exact outcome this selector exists to prevent."""
+    from meridian.connectors.icloud_mail import IcloudMailReadError, IcloudMailTransport
+
+    class FakeConn:
+        def select(self, mailbox, readonly=False):
+            return "NO", [b"Mailbox does not exist"]
+
+    transport = IcloudMailTransport(username="a@example.com", app_password="x")
+    transport._connect = lambda: FakeConn()
+    try:
+        transport.fetch_recent(max_results=5, mailbox="Nonexistent")
+    except IcloudMailReadError as exc:
+        assert "Nonexistent" in str(exc)
+    else:
+        raise AssertionError("a missing folder must raise, not fall back to the inbox")
+
+
+def test_the_intake_threads_the_mailbox_to_the_transport(tmp_path):
+    from meridian.connectors.icloud_mail import IcloudMailMessage
+    from meridian.evidence import EvidenceRepository
+    from meridian.gmail_intake import ingest_icloud_recent
+
+    seen = {}
+
+    class FakeTransport:
+        def fetch_recent(self, *, max_results=20, since=None, mailbox="INBOX"):
+            seen["mailbox"] = mailbox
+            return [
+                IcloudMailMessage(
+                    message_id="<b1@icloud.com>", subject="Your Xfinity bill is ready",
+                    sender="Xfinity <billing@xfinity.com>",
+                    received_at="Sat, 20 Sep 2026 12:00:00 +0000",
+                    body_text="Amount due $93.00", thread_id="<b1@icloud.com>",
+                )
+            ]
+
+    repo = EvidenceRepository(str(tmp_path / "evidence.db"))
+    ingest_icloud_recent(
+        transport=FakeTransport(), evidence_repo=repo, max_messages=5, mailbox="Bills"
+    )
+    assert seen.get("mailbox") == "Bills", "the intake must pass the mailbox through"

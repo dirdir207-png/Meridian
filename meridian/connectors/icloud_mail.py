@@ -121,27 +121,44 @@ class IcloudMailTransport:
         except Exception as exc:  # noqa: BLE001 - login failures are read-blocking
             raise IcloudMailReadError(f"iCloud Mail login failed: {type(exc).__name__}") from exc
 
-    def fetch_recent(self, *, max_results: int = 20, since: str | None = None) -> list[IcloudMailMessage]:
-        """Fetch a bounded number of recent inbox messages (read-only).
+    def fetch_recent(
+        self,
+        *,
+        max_results: int = 20,
+        since: str | None = None,
+        mailbox: str = "INBOX",
+    ) -> list[IcloudMailMessage]:
+        """Fetch a bounded number of recent messages from ``mailbox`` (read-only).
 
         When ``since`` (an ISO ``YYYY-MM-DD`` date) is given, restrict the IMAP
         search to messages received on/after that date (``SINCE``), so a backfill
         can pull ~30 days without scanning the whole mailbox. Uses the
-        app-specific password; always selects the INBOX read-only and closes
-        without any mutation.
+        app-specific password; selects the mailbox read-only and closes without any
+        mutation.
+
+        ``mailbox`` exists because reading the INBOX was the wrong default once mail
+        starts being FORWARDED in. Measured 2026-09-20: the INBOX held 28,393 messages
+        from 127 distinct senders — MoneyLion, Spotify, GitHub, marketing — and the
+        intake stores each message with a body as evidence, so personal mail became
+        Meridian evidence and diluted the bill matcher. Pointing this at a dedicated
+        folder (populated by a mail rule) keeps the evidence store to bills.
         """
         connection = self._connect()
         results: list[IcloudMailMessage] = []
         try:
-            # SELECT the inbox in read-only (EXAMINE) to guarantee no mutation.
-            status, _data = connection.select("INBOX", readonly=True)
+            # SELECT the mailbox in read-only (EXAMINE) to guarantee no mutation.
+            status, _data = connection.select(mailbox, readonly=True)
             if status != "OK":
-                raise IcloudMailReadError("iCloud Mail could not open the inbox")
+                raise IcloudMailReadError(
+                    f"iCloud Mail could not open the mailbox {mailbox!r}"
+                )
 
             search_criteria = f"ALL SINCE {_imap_date(since)}" if since else "ALL"
             status, data = connection.search(None, search_criteria)
             if status != "OK":
-                raise IcloudMailReadError("iCloud Mail could not search the inbox")
+                raise IcloudMailReadError(
+                    f"iCloud Mail could not search the mailbox {mailbox!r}"
+                )
             message_nums = data[0].split() if data and data[0] else []
             # Keep only the most recent max_results (the oldest are dropped).
             recent_nums = message_nums[-max_results:]

@@ -292,6 +292,7 @@ def ingest_icloud_recent(
     since_days: int = 30,
     transactions=None,
     blob_store=None,
+    mailbox: str = "INBOX",
 ) -> dict[str, object]:
     """Ingest recent iCloud Mail messages as evidence (reuses the intake).
 
@@ -300,6 +301,13 @@ def ingest_icloud_recent(
     are source_kind='mail' (the same evidence surface as Gmail). When
     ``transactions`` is supplied, stored evidence is linked to matching
     transactions by amount.
+
+    ``mailbox`` selects which folder is read. It defaults to INBOX for backward
+    compatibility, but the inbox is the wrong choice once mail is FORWARDED in:
+    measured 2026-09-20 the inbox held 28,393 messages from 127 distinct senders —
+    MoneyLion, Spotify, GitHub, marketing — and the intake stores every message with a
+    body as evidence, so personal mail became Meridian evidence and diluted the bill
+    matcher. Point this at a dedicated folder to keep the store to bills.
     """
     stored: list[dict[str, str]] = []
     duplicate = 0
@@ -308,7 +316,7 @@ def ingest_icloud_recent(
     linked = 0
 
     messages = transport.fetch_recent(
-        max_results=max_messages, since=_date_days_ago(since_days)
+        max_results=max_messages, since=_date_days_ago(since_days), mailbox=mailbox
     )
     for msg in messages:
         if not msg.body_text.strip():
