@@ -33,6 +33,48 @@ bind is `0.0.0.0` the preview is also reachable from the local network, not only
 stays behind the app's login, but if Tailscale-only exposure is wanted, binding to the tailnet address or
 enabling the firewall is the change to make.
 
+## Track I.2 delivered: the Investigator is now reachable, as a command rather than a surface (`OS-073`) (2026-09-21, base `40c3e11`)
+
+The previous round left the role **built and proven but uninvocable**, and recorded that honestly as
+`in_progress`. A role nothing can call is not shipped. This round closes that with the smallest honest
+entry point: `scripts/investigate.py --target transaction:412`.
+
+**Why a command and not a web surface, deliberately.** The role returns model-generated commentary about
+the owner's financial evidence. Putting that behind a new surface is a product *and* visual-authority
+decision — which surface, what it looks like, who may see it — and MERIDIAN_ROADMAP.md's visual authority
+does not settle it. A read-only command settles none of that, adds no endpoint and no UI, and can be
+replaced by a surface later without changing the role. Taking the surface decision as a side effect of
+building the role is exactly the kind of authority creep the work order forbids, so it is left to you.
+
+**Read-only, checked rather than promised.** A test parses the script and fails if it ever imports a
+provider write module; a second wraps the repository in a recorder that raises on *any* attribute other
+than the two read methods, so a write would surface in tests rather than in production. The rendered
+output states plainly that nothing was proposed, approved or executed.
+
+**An unconfigured model is reported, never faked.** With no key the command exits 2, names the variable
+to set, and calls nothing — asserted (`client.calls == []`) and then verified by running the real command
+with the provider variables explicitly cleared. It never falls back to a canned answer: a fabricated
+investigation of your own transactions is worse than no investigation. Exit codes are 0 ok / 1 failed /
+2 unavailable, derived from the result status rather than invented at the call site.
+
+**What reaches you when something is wrong.** A hallucinated citation arrives as `status=failed` with
+**zero claims** — asserted through the renderer, so the failure mode is the one the operator actually
+sees, not just the one the library guarantees. Contradictions render as an explicit **unresolved
+disagreement** listing both sides, never averaged.
+
+**One item on I.1 is still open, and it is named rather than glossed.** `OS-073` is now `complete`;
+`OS-072` stays `in_progress` for a specific reason: the run record is **carried** (`RunRecord.as_dict()`
+— role, provider, model, prompt version, evidence ids, timing, outcome) but **not persisted**, and I.1's
+own text asks for it "persisted so a proposal can be audited back to the reasoning that produced it".
+The reason it is not built yet is concrete, not laziness: persistence needs a migration, and the
+Investigator produces **no proposals**, so a stored run could not yet be linked to the thing the
+requirement exists to audit.
+
+**Evidence.** 17 tests in `tests/test_investigate_script.py`, plus the 15 for the role and 35 for the
+envelope; full non-browser suite **1766 passed**, 73 skipped. Ruff and `git diff --check` clean; roadmap
+reconciles. No authority, provider or financial change; no provider was contacted, and no test holds a
+credential.
+
 ## Track I.2: the Investigator runs on the envelope, and all four adversarial cases pass (`OS-073`) (2026-09-21, base `44f02c1`)
 
 **The second half of the I.1/I.2 pair.** I.1 (`OS-072`) built the contract and the permission model;
