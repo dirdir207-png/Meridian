@@ -245,43 +245,54 @@ def link_mail_evidence_to_transactions(
     body: str | None = None,
     provenance: str = "gmail:amount-match",
 ) -> int:
-    """Link a mail evidence item to a matching transaction by amount.
+    """Link a mail evidence item to the CHARGE it documents.
 
-    Best-effort: searches the subject (and optional body) for a dollar amount
-    and links the evidence to any transaction with the same amount. Returns the
-    number of links created. Read-only — never mutates a transaction, only adds
-    an evidence link so the store/receipt can be traced to the charge.
+    Best-effort and read-only: never mutates a transaction, only adds an evidence link so a
+    receipt can be traced to the charge.
+
+    THIS USED TO MATCH ON AMOUNT ALONE, and that was actively harmful. A bare amount has no
+    discriminating power on a real ledger: one run over 45 receipts created 270 links,
+    because a $50.00 receipt matched every $50.00 charge, and common amounts like $8.00 recur
+    (12 OpenAI charges of exactly $8.00). Those links are not evidence — they are noise
+    wearing the shape of evidence.
+
+    Now only a DATE-CORROBORATED match is linked, which means:
+
+      * one receipt produces AT MOST ONE link;
+      * a receipt whose date contradicts every candidate produces NONE, because "the amount
+        matched but no charge happened near it" is not evidence for any of them;
+      * an unresolvable tie produces none either, since linking one of several identical
+        charges asserts a fact the data does not support.
+
+    Adding a link is the only mutation, and it never touches a transaction.
     """
-    import re
+    from .charge_match import (
+        CONFIDENCE_HIGH,
+        attach_charge_matches,
+        find_charge_matches,
+    )
 
-    text = f"{subject or ''} {body or ''}"
-    # Match $92.75 / $1,234.56 — capture the numeric part (no $, no sign).
-    amounts = [float(x.replace(",", "")) for x in re.findall(r"\$([\d,]+\.\d{2})", text)]
-    if not amounts:
+    class _Signal:
+        __slots__ = ("id", "title", "body", "sender")
+
+        def __init__(self):
+            self.id = evidence_id
+            self.title = subject or ""
+            self.body = body or ""
+            self.sender = ""
+
+    matches = find_charge_matches(
+        evidence_items=[_Signal()], transactions=transactions
+    )
+    usable = [m for m in matches if m.matched and m.confidence == CONFIDENCE_HIGH]
+    if not usable:
         return 0
-    # Compare on absolute amount: a charge is stored negative, a bill email
-    # states the positive amount.
-    targets = {abs(float(getattr(t, "amount", 0))) for t in transactions if getattr(t, "amount", None) is not None}
-    created = 0
-    seen = set()
-    for amount in amounts:
-        if amount in targets and amount not in seen:
-            seen.add(amount)
-            for tx in transactions:
-                if abs(float(getattr(tx, "amount", 0))) != amount:
-                    continue
-                try:
-                    evidence_repo.add_link(
-                        evidence_id=evidence_id,
-                        target_kind="transaction",
-                        target_id=str(getattr(tx, "id", "")),
-                        relation="documents",
-                        provenance=provenance,
-                    )
-                    created += 1
-                except Exception:  # noqa: BLE001 - a bad link must not stop intake
-                    continue
-    return created
+    result = attach_charge_matches(
+        evidence_repo=evidence_repo,
+        matches=usable,
+        provenance_prefix=provenance.split(":", 1)[0],
+    )
+    return result["created"]
 
 
 def ingest_icloud_recent(

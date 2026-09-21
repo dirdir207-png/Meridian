@@ -150,14 +150,19 @@ def test_link_mail_evidence_matches_transaction_by_amount(tmp_path):
     conn.commit(); conn.close()
 
     class Tx:
-        def __init__(self, id, amount): self.id = id; self.amount = amount
+        def __init__(self, id, amount, occurred_at=None):
+            self.id = id; self.amount = amount; self.occurred_at = occurred_at
 
     repo = EvidenceRepository(str(tmp_path / "ev.db"))
     repo.add_item(source_kind="mail", source_id="m1", content_hash="a"*64, mime_type="text/plain", size_bytes=10, title="Urgent: $92.75 charged")
 
+    # The date is now REQUIRED: amount alone cannot discriminate on a real ledger, so the
+    # subject must state when the charge happened.
     created = link_mail_evidence_to_transactions(
-        evidence_repo=repo, transactions=[Tx(40, -92.75)], evidence_id=1,
-        subject="Urgent: $92.75 charged but no order confirmation",
+        evidence_repo=repo,
+        transactions=[Tx(40, -92.75, "2026-09-18T09:00:00Z")],
+        evidence_id=1,
+        subject="Urgent: $92.75 charged on 2026-09-18 but no order confirmation",
     )
 
     assert created == 1
@@ -205,7 +210,12 @@ def test_ingest_icloud_recent_stores_mail_evidence(tmp_path):
 
 
 def test_ingest_icloud_links_use_icloud_provenance(tmp_path):
-    """iCloud amount-links must be labeled icloud:amount-match (not gmail)."""
+    """iCloud links must be labeled icloud (not gmail), and must carry their BASIS.
+
+    The provenance used to be a bare "icloud:amount-match". Amount alone cannot discriminate
+    on a real ledger — one run over 45 receipts produced 270 links because common amounts
+    recur (12 OpenAI charges of exactly $8.00) — so the basis and its confidence are recorded.
+    """
     from meridian.connectors.icloud_mail import IcloudMailMessage
     from meridian.evidence import EvidenceRepository
     from meridian.gmail_intake import ingest_icloud_recent
@@ -216,25 +226,106 @@ def test_ingest_icloud_links_use_icloud_provenance(tmp_path):
                 IcloudMailMessage(
                     message_id="<ic2@icloud.com>", subject="Your charge",
                     sender="billing@x.com", received_at="Fri, 05 Sep 2026 12:00:00 +0000",
-                    body_text="Amount $92.75", thread_id="<ic2@icloud.com>",
+                    body_text="Amount $92.75 charged on 2026-09-05", thread_id="<ic2@icloud.com>",
                 )
             ]
 
     class Tx:
-        def __init__(self, txid, amount):
+        def __init__(self, txid, amount, occurred_at=None):
             self.id = txid
             self.amount = amount
+            self.occurred_at = occurred_at
 
     repo = EvidenceRepository(str(tmp_path / "evidence.db"))
     summary = ingest_icloud_recent(
         transport=FakeTransport(), evidence_repo=repo, max_messages=5,
-        transactions=[Tx(40, -92.75)], blob_store=_ingest_store(tmp_path),
+        transactions=[Tx(40, -92.75, "2026-09-05T10:00:00Z")],
+        blob_store=_ingest_store(tmp_path),
     )
 
     assert summary["linked"] == 1
     links = repo.list_links(int(summary["items"][0]["id"]))
     assert links, "expected at least one linked evidence link"
-    assert all(link.provenance == "icloud:amount-match" for link in links)
+    assert all(link.provenance.startswith("icloud:") for link in links), (
+        "the iCloud leg must stay distinguishable from the Gmail leg"
+    )
+    assert all(link.provenance == "icloud:amount+date:high" for link in links), (
+        "the BASIS must be recorded, and this receipt's date corroborates the charge"
+    )
+
+
+def test_a_common_amount_does_not_link_to_every_matching_charge(tmp_path):
+    """The regression that mattered: 45 receipts once produced 270 links.
+
+    One receipt must produce at most ONE link, and a tie must be recorded as doubt.
+    """
+    from meridian.connectors.icloud_mail import IcloudMailMessage
+    from meridian.evidence import EvidenceRepository
+    from meridian.gmail_intake import ingest_icloud_recent
+
+    class FakeTransport:
+        def fetch_recent(self, *, max_results=20, since=None, mailbox="INBOX"):
+            return [
+                IcloudMailMessage(
+                    message_id="<one@icloud.com>", subject="Receipt",
+                    sender="billing@x.com", received_at="Mon, 15 Sep 2026 12:00:00 +0000",
+                    body_text="Charged $8.00 on 2026-09-15", thread_id="<one@icloud.com>",
+                )
+            ]
+
+    class Tx:
+        def __init__(self, txid, amount, occurred_at):
+            self.id = txid
+            self.amount = amount
+            self.occurred_at = occurred_at
+
+    # Seven charges of $8.00 on the receipt's own day — genuinely indistinguishable — plus
+    # one far in the past that must never be chosen.
+    transactions = [Tx(i, -8.0, "2026-09-15T09:00:00Z") for i in range(7)]
+    transactions.append(Tx(99, -8.0, "2026-06-01T09:00:00Z"))
+
+    repo = EvidenceRepository(str(tmp_path / "evidence.db"))
+    summary = ingest_icloud_recent(
+        transport=FakeTransport(), evidence_repo=repo, max_messages=5,
+        transactions=transactions, blob_store=_ingest_store(tmp_path),
+    )
+
+    links = repo.list_links(int(summary["items"][0]["id"]))
+    assert links == [], (
+        "seven indistinguishable $8.00 charges must produce NO link: linking one would assert "
+        "a fact the data does not support, and linking all seven is what produced 270 links "
+        "from 45 receipts"
+    )
+
+
+def test_a_receipt_whose_date_contradicts_every_charge_creates_no_link(tmp_path):
+    from meridian.connectors.icloud_mail import IcloudMailMessage
+    from meridian.evidence import EvidenceRepository
+    from meridian.gmail_intake import ingest_icloud_recent
+
+    class FakeTransport:
+        def fetch_recent(self, *, max_results=20, since=None, mailbox="INBOX"):
+            return [
+                IcloudMailMessage(
+                    message_id="<far@icloud.com>", subject="Receipt",
+                    sender="billing@x.com", received_at="Wed, 16 Sep 2026 12:00:00 +0000",
+                    body_text="Charged $50.00 on 2026-09-16", thread_id="<far@icloud.com>",
+                )
+            ]
+
+    class Tx:
+        def __init__(self):
+            self.id = "old"
+            self.amount = -50.0
+            self.occurred_at = "2026-01-05T09:00:00Z"
+
+    repo = EvidenceRepository(str(tmp_path / "evidence.db"))
+    summary = ingest_icloud_recent(
+        transport=FakeTransport(), evidence_repo=repo, max_messages=5,
+        transactions=[Tx()], blob_store=_ingest_store(tmp_path),
+    )
+    links = repo.list_links(int(summary["items"][0]["id"])) if summary["items"] else []
+    assert not links, "a charge eight months away is not evidence for this receipt"
 
 
 # --- OS-067: forwarded-mail provenance --------------------------------------------
