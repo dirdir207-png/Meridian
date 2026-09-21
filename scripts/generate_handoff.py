@@ -236,19 +236,42 @@ def main() -> int:
     if args.check:
         current = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
 
-        # Compare normalised LINES, not raw bytes. Two things legitimately vary run to run:
-        # the timestamp, and the commit line's dirty-tree note. A raw-string compare is also
-        # sensitive to a trailing newline, which produced a false "STALE" during development —
-        # and a check that cries stale wrongly is worse than no check, because it trains the
-        # reader to ignore the one time it is right.
+        # Compare normalised LINES rather than raw bytes: the timestamp legitimately changes,
+        # and a raw compare is also sensitive to a trailing newline, which produced a false
+        # "STALE" during development. A check that cries stale wrongly is worse than no check,
+        # because it trains the reader to ignore the one time it is right.
         def normalise(s: str) -> list[str]:
             return [
                 line for line in s.splitlines()
                 if line and not line.startswith(("- Generated:", "- Commit:"))
             ]
 
+        # The commit line is compared, but against the commit that last touched HANDOFF.md —
+        # NOT against HEAD. Resolving this the other way is impossible: the handoff records the
+        # state it was generated from, so it necessarily names the commit BEFORE its own commit
+        # exists. That would mean the file could never be current once committed, which is a
+        # check that always fails and therefore gets ignored.
+        #
+        # Anchoring on its own commit makes the invariant self-consistent and still catches
+        # what matters: if HANDOFF.md was last committed some commits ago while the governing
+        # docs have moved on, this reports stale. Only the hash is read from the line, because
+        # the rest of it carries a dirty-tree note that legitimately changes between runs.
+        def committed(s: str) -> str:
+            for line in s.splitlines():
+                if line.startswith("- Commit: `"):
+                    return line.split("`")[1]
+            return ""
+
+        own_commit = git("log", "-1", "--format=%H", "--", str(OUT.relative_to(ROOT)))
+        recorded = committed(current)
         if normalise(current) != normalise(text):
             print("HANDOFF.md is STALE — regenerate with scripts/generate_handoff.py")
+            return 1
+        if recorded and own_commit and recorded != own_commit:
+            print(
+                f"HANDOFF.md is STALE — it records commit {recorded[:8]} but was last "
+                f"committed at {own_commit[:8]}. Regenerate with scripts/generate_handoff.py"
+            )
             return 1
         print("HANDOFF.md is current.")
         return 0
