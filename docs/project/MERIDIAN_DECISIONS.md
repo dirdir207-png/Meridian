@@ -297,3 +297,9 @@ on the reasoning that a reserve total is money set aside and therefore cannot be
 - **`NULL` keeps its meaning, unchanged.** `NULL` still means "the read did not report a total", which is not evidence that the bucket is empty (C01). Only the `>= 0` clause was removed; the distinction between an unreported total and a real `0.0` survives, and a test asserts it survives the rebuild.
 
 **Do not add a CHECK to a value Meridian only *observes*.** The remaining `>= 0` constraints in the schema are on values Meridian or the owner *states* — `commitments.funded_amount`, funding rules, provider reimbursements — where non-negativity is a real invariant of the concept. `total_reserved_amount` was the one place a *provider-reported balance* carried a constraint that only makes sense for an amount. That distinction is the test to apply before adding the next one.
+
+## D-018 — Medallions and Investigator design handoff scope (owner, 2026-09-21)
+
+The owner selected OS-038 medallion artwork and a customer-facing Investigator design for DeepSeek Harness, explicitly excluding desktop Settings. The owner authorized newly created finished artwork and permitted omission of the full icon pack. The five-hour limit refers to Codex subscription usage, not an implementation deadline. The Investigator should remain open to relevant cross-references from the existing evidence work; do not freeze it into a single-document explanation or rebuild ingestion on assumption.
+
+Deliverables and proposed design: `design/investigator-medallions-2026-09-21/README.md`; follow-on implementation is OS-076. Newly generated artwork must be labeled as such, not as original extracted glyphs. User-facing design review and integration remain open; no financial authority or production deployment is granted.

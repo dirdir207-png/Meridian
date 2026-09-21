@@ -1,0 +1,22 @@
+{
+  "assets": [
+    {
+      "file": "compass-medallion.png",
+      "sha256": "2223e081be03b855a97c4a50f359fb2a2e6e35b50c216ff83293bae863930e1b",
+      "width": 1254,
+      "height": 1254,
+      "png_color_type": 6,
+      "bytes": 2026463,
+      "provenance": "Owner-authorized newly generated concept-inspired medallion, built-in ImageGen, 2026-09-21; not original extracted artwork."
+    },
+    {
+      "file": "wifi-medallion.png",
+      "sha256": "76c7b1d8d232761479c88d51080dd7449ad36e231621d7404d1a107d2f1a15c5",
+      "width": 1254,
+      "height": 1254,
+      "png_color_type": 6,
+      "bytes": 2068417,
+      "provenance": "Owner-authorized newly generated concept-inspired medallion, built-in ImageGen, 2026-09-21; not original extracted artwork."
+    }
+  ]
+}

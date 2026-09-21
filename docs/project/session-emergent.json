@@ -76,6 +76,14 @@
       "arose": "2026-09-21",
       "decision_owed": true,
       "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (checkpoint: Track D design-fidelity close-out, OS-038, which is where the remaining concept-vs-current visual gaps are reconciled)"
+    },
+    {
+      "summary": "Investigator metadata-only model payload needs meaningful source facts for the user-facing surface",
+      "why": "Inspected EvidenceBoundRole._prompt_payload sends IDs/provenance/time, not document facts. Reuse the existing evidence extraction/links and coordinate backend changes rather than treating a new input box as a useful investigation. Owner asked to preserve cross-references.",
+      "arose": "2026-09-21",
+      "promoted_to": "OS-076",
+      "parked_in": "design/investigator-medallions-2026-09-21/IMPLEMENTATION.md",
+      "decision_owed": true
     }
   ]
 }

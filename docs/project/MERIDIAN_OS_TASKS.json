@@ -953,7 +953,12 @@
             "limits": "Presentation only. No route, data, financial, provider or authority change. The layer is decorative and re-measured on resize, never re-fetched."
           }
         ],
-        "also_measured": "OS-035 is not a defect: the instrument is already centred in its own grid row at every governed mobile width (420px 29.2 above / 29.1 below; 390px 30.0/30.0). The 233px the owner measured is the SECOND panel row (controls + evidence ticket), which align-self cannot touch. The dial's real gap to the concept is size: 63.6% of viewport width against the concept's 82.5%, because the callout column is a hard 130px floor."
+        "also_measured": "OS-035 is not a defect: the instrument is already centred in its own grid row at every governed mobile width (420px 29.2 above / 29.1 below; 390px 30.0/30.0). The 233px the owner measured is the SECOND panel row (controls + evidence ticket), which align-self cannot touch. The dial's real gap to the concept is size: 63.6% of viewport width against the concept's 82.5%, because the callout column is a hard 130px floor.",
+        "artwork_design_2026_09_21": {
+          "path": "design/investigator-medallions-2026-09-21/README.md",
+          "assets": "design/investigator-medallions-2026-09-21/assets.json",
+          "status": "Two newly generated concept-inspired RGBA medallions delivered; not exact extractions. Full icon pack excluded by owner scope. Not installed, not deployed; OS-038 remains open pending integration and visual acceptance."
+        }
       }
     },
     {
@@ -1770,6 +1775,35 @@
         "suite": "Full non-browser suite 1807 passed / 73 skipped after the fix, with the only failure being the expected mid-slice handoff staleness that clears on commit. Ruff and git diff --check clean.",
         "authority": "No authority change. The fix makes Meridian able to RECORD a state the provider reports; it grants no ability to change anything."
       }
+    },
+    {
+      "id": "OS-076",
+      "title": "Investigator customer-facing surface with editable question, owner context and related evidence",
+      "phase": "track-I-surface",
+      "status": "open",
+      "priority": "high",
+      "owner_raised": true,
+      "dependencies": [
+        "OS-072",
+        "OS-073"
+      ],
+      "authority_impact": "Read-only investigation; metadata audit write only; no financial authority change",
+      "owner_decision_required": true,
+      "detail": "Owner requested design deliverables for DeepSeek Harness on 2026-09-21, excluded desktop Settings and allowed the full icon pack to be omitted. Owner specifically requested room for cross-references to the existing evidence work. The concrete design is delivered for review; product implementation is not claimed.",
+      "handoff": "design/investigator-medallions-2026-09-21/README.md; design/investigator-medallions-2026-09-21/IMPLEMENTATION.md",
+      "acceptance_criteria": [
+        "Entered question and separately labeled owner context reach the actual Investigator; changing input is not cosmetic.",
+        "Reuse existing evidence work; show attributable direct and relevant cross-referenced facts and honest missing-content states.",
+        "Provide meaningful source facts to the model: the inspected metadata-only prompt is insufficient for a charge explanation.",
+        "Preserve read-only role permissions, citation validation, unavailable/failed states and metadata-only run records.",
+        "Verify end-to-end synthetic browser journey and governed visual captures; distinguish live-provider acceptance."
+      ],
+      "evidence": {
+        "design": "design/investigator-medallions-2026-09-21/investigator.html",
+        "verification": "design/investigator-medallions-2026-09-21/VERIFICATION.md",
+        "status": "Design specimen only; integration, API tests and live model acceptance not performed."
+      },
+      "notes": "Final visual/product design review remains open. Implementation must reconcile the active backend lane and freshest evidence sources. No production deployment or authority change is authorized by this design package."
     }
   ]
 }
