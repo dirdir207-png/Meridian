@@ -291,6 +291,21 @@ a.m-settings-row:focus-visible {
   color: var(--m-ink-muted);
 }
 
+/* THE MEDALLION, per the concept: a DARK disc, a thin BRASS RING, and the colour in the GLYPH.
+   The shipped version was the inverse -- a SOLID pastel disc with the glyph punched dark through
+   a mask (`background: #c1a9e2` here, `background: var(--obs-paper-ink)` on the icon) -- and that
+   inversion was recorded nowhere, which is why ten governed frames in both themes were reviewed
+   without it being noticed. It survived review because it is not duller than the concept, it is
+   brighter: it reads as deliberate and high-contrast rather than as damage, and nothing looks
+   broken. Only putting the concept beside it makes the difference visible.
+
+   Owner's verdict, 2026-09-21, having done exactly that: "The concept glyphs are MUCH better,
+   across the whole app." The Settings hub proves the treatment first because the concept governs
+   it directly; the same correction across Plan, Activity, Accounts and the dock is OS-082.
+
+   The ring is CSS, not an asset: the shipped kit carries no ring, and fabricating one would be an
+   Astra artwork decision rather than a styling one. The tints keep their meanings unchanged, so a
+   row's colour still says what it always said -- only its place in the medallion moves. */
 .m-settings-row-icon {
   position: relative;
   width: 34px;
@@ -298,28 +313,47 @@ a.m-settings-row:focus-visible {
   display: grid;
   place-items: center;
   border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--obs-brass, #c6aa71) 62%, transparent);
 }
 
 .m-settings-row-icon--lilac {
-  background: #c1a9e2;
+  background: color-mix(in srgb, #c1a9e2 15%, transparent);
 }
 
 .m-settings-row-icon--mint {
-  background: #a5d4bf;
+  background: color-mix(in srgb, #a5d4bf 15%, transparent);
 }
 
 .m-settings-row-icon--apricot {
-  background: #f3b272;
+  background: color-mix(in srgb, #f3b272 15%, transparent);
 }
 
 .m-settings-row-icon--slate {
-  background: #b9c2d2;
+  background: color-mix(in srgb, #b9c2d2 15%, transparent);
 }
 
 .m-settings-icon {
   width: 18px;
   height: 18px;
   background: var(--obs-paper-ink, #20263b);
+}
+
+/* The colour belongs to the GLYPH. These two-class selectors out-specify the ink default above,
+   which stays as the fallback for a glyph added without a tint. */
+.m-settings-row-icon--lilac .m-settings-icon {
+  background: #c1a9e2;
+}
+
+.m-settings-row-icon--mint .m-settings-icon {
+  background: #a5d4bf;
+}
+
+.m-settings-row-icon--apricot .m-settings-icon {
+  background: #f3b272;
+}
+
+.m-settings-row-icon--slate .m-settings-icon {
+  background: #b9c2d2;
 }
 
 .m-settings-icon--piggy-bank {
