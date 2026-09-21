@@ -235,11 +235,19 @@ def main() -> int:
 
     if args.check:
         current = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
-        # Timestamp and commit lines legitimately change, so compare the body without them.
-        def strip(s: str) -> str:
-            return "\n".join(l for l in s.splitlines()
-                             if not l.startswith(("- Generated:", "- Commit:")))
-        if strip(current) != strip(text):
+
+        # Compare normalised LINES, not raw bytes. Two things legitimately vary run to run:
+        # the timestamp, and the commit line's dirty-tree note. A raw-string compare is also
+        # sensitive to a trailing newline, which produced a false "STALE" during development —
+        # and a check that cries stale wrongly is worse than no check, because it trains the
+        # reader to ignore the one time it is right.
+        def normalise(s: str) -> list[str]:
+            return [
+                line for line in s.splitlines()
+                if line and not line.startswith(("- Generated:", "- Commit:"))
+            ]
+
+        if normalise(current) != normalise(text):
             print("HANDOFF.md is STALE — regenerate with scripts/generate_handoff.py")
             return 1
         print("HANDOFF.md is current.")
