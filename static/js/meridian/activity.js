@@ -39,43 +39,6 @@ function signedAmount(amount, currency) {
   return `${sign}${formatCurrency(Math.abs(amount), currency)}`;
 }
 
-/* Category medallions (BUILD_HANDOFF.md). The rule is ORDERED, not a lookup: an assigned
-   category wins over merchant words; an owner-authored category takes the tag; explicit
-   Uncategorized takes question-circle; a utility may specialize to Wi-Fi only from a clear
-   descriptor and only when not owner-authored. One stable glyph per meaning.
-   classification_method is CONVENTION, not schema-enforced (migration 007 adds a plain TEXT
-   column with no CHECK), so an unrecognised or missing method MUST fail towards the assigned
-   category glyph and never towards the owner's tag: Meridian must never be rendered as having
-   decided something the owner decided. */
-const MEDALLION_GLYPHS = {
-  groceries: "basket",
-  dining: "fork-knife",
-  transfer: "arrow-left-right",
-  refund: "arrow-counterclockwise",
-};
-const MEDALLION_UTILITY = /electric|gas|water|internet|utilit|broadband/i;
-
-function resolveMedallionGlyph(transaction) {
-  const category = String(transaction.classification?.category || "").trim();
-  const method = String(transaction.classification?.method || "").trim().toLowerCase();
-  if (method === "user_rule") return "tag";
-  if (!category || /^uncategorized$/i.test(category)) return "question-circle";
-  const key = category.toLowerCase();
-  for (const [needle, glyph] of Object.entries(MEDALLION_GLYPHS)) {
-    if (key.includes(needle)) return glyph;
-  }
-  if (MEDALLION_UTILITY.test(category)) return "wifi";
-  return "receipt";
-}
-
-function buildMedallion(transaction) {
-  const medallion = document.createElement("span");
-  medallion.className = "m-activity-medallion";
-  medallion.dataset.categoryGlyph = resolveMedallionGlyph(transaction);
-  medallion.setAttribute("aria-hidden", "true");
-  return medallion;
-}
-
 function buildRow(transaction) {
   const row = document.createElement("div");
   row.className = "m-transaction-row";
@@ -132,7 +95,7 @@ function buildRow(transaction) {
   }`;
   amount.textContent = signedAmount(transaction.amount, transaction.currency);
 
-  row.append(buildMedallion(transaction), left, category, amount);
+  row.append(left, category, amount);
 
   // Concept 03 closes every timeline row with a trailing chevron. It is a typographic
   // affordance -- the kit ships no chevron glyph, and a decorative mark is not artwork
