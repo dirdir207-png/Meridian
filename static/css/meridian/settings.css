@@ -96,8 +96,17 @@ html[data-theme="light"] .m-settings-hub-head h1 {
 }
 
 /* The hub nav is a full-width surface on phone (the concept is a phone frame): its rows
-   are the page's content, not a 210px sidebar. The desktop grid keeps it in its column. */
+   are the page's content, not a 210px sidebar. CORRECTED 2026-09-21: that column WAS 210px,
+   which wrapped every grouped row's label and subtitle onto four or five lines while the
+   details column sat almost empty. The desktop treatment is specified, not invented --
+   BUILD_HANDOFF.md:24 says "Settings uses grouped navigation left and selected details
+   right" -- so the navigation column is sized to hold what it actually contains. */
 @media (min-width: 901px) {
+  .m-settings-shell {
+    /* rail | grouped navigation | selected details | inspector */
+    grid-template-columns: 150px minmax(300px, 340px) minmax(0, 1fr) auto;
+  }
+
   .m-settings-hub-head h1 {
     margin: 0 0 var(--m-space-5);
     font: 300 2rem/1.1 var(--m-font-serif);
