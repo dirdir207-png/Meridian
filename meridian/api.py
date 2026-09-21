@@ -1678,6 +1678,29 @@ def create_crew_autopilot_rule_proposal():
     return _management_payload("create_crew_autopilot_rule", payload)
 
 
+# Payday: the paycheck funding plan IS Crew's payday mechanism, and three operations for it are
+# ALREADY registered with executors and readback verifiers (meridian/crew_write_actions.py:674-685),
+# so this is WIRING, not new capability: the owner's "we have all the data for bidirectional, it
+# just isnt written" is exactly right. Nothing here reaches Crew -- it creates an approval-gated
+# proposal, and the executor runs only after the owner approves.
+#
+# The params are the ones the manifest already documents rather than ones invented here:
+# docs/project/write-coverage.json says the update is "Identified by the approved proposal's
+# fundingPlanId, so it does not depend on the write result; compared on name and amount." So the
+# plan id is the identity the READBACK needs, and a name or an amount is the change it can compare.
+@meridian_api.patch("/crew/paycheck-funding-plans/<plan_id>")
+@login_required
+@_safe_read
+def update_crew_paycheck_funding_plan_proposal(plan_id: str):
+    """Propose a live Crew paycheck funding plan edit (approval-gated write-back)."""
+    payload = request.get_json(silent=True) or {}
+    payload["fundingPlanId"] = payload.pop("fundingPlanId", None) or plan_id
+    if payload.get("name") is None and payload.get("amount") is None:
+        return _error("invalid_request", "Provide a name or amount to update.",
+                      "Provide at least one change and try again.", 400)
+    return _management_payload("update_crew_paycheck_funding_plan", payload)
+
+
 @meridian_api.post("/transactions/<transaction_id>/classification")
 @login_required
 @_safe_read
