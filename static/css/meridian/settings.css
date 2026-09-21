@@ -564,10 +564,24 @@ a.m-settings-row:focus-visible {
   cursor: pointer;
 }
 
+/* Hover, focus and selection are stated in the app's own row language, which is a HAIRLINE and
+   not a fill. `a.m-settings-row:hover/:focus-visible` in this same file does exactly one thing --
+   it clarifies the border to `--m-border-strong` -- and this row previously did the opposite: it
+   painted `--m-healthy-wash` over the hairline it already had (`border-bottom: 1px solid
+   --m-border`, above). Parchment is a MATERIAL: it is separated by hairline and engraving, never
+   by a tinted fill (owner rule, 2026-09-18). So hover and focus now clarify the existing rule
+   instead of covering it. */
 .m-connection-row-settings:hover,
-.m-connection-row-settings:focus-visible,
+.m-connection-row-settings:focus-visible {
+  border-bottom-color: var(--m-border-strong);
+}
+
+/* Selection still has to be legible, so it adds a marginal rule rather than a wash: an inset
+   hairline down the leading edge. It is drawn with box-shadow precisely so the 2px does not join
+   the grid and shift the row's columns by two pixels when the owner selects a connection. */
 .m-connection-row-settings[aria-pressed="true"] {
-  background: var(--m-healthy-wash);
+  border-bottom-color: var(--m-border-strong);
+  box-shadow: inset 2px 0 0 var(--m-border-strong);
 }
 
 .m-connection-identity,
