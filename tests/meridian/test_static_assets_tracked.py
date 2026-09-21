@@ -141,34 +141,47 @@ def test_a_third_party_asset_kit_ships_its_licence():
     )
 
 
-#: The trees that are SHIPPED wholesale: anything here is served to a browser or rendered into a
-#: page, whether or not today's code happens to mention it.
-SHIPPED_TREES = ("static", "templates")
+#: The trees that must be in the index WHOLESALE. `static` and `templates` are shipped -- anything
+#: here is served to a browser or rendered into a page. `design` and `docs` are the RECORD the work
+#: is steered by, and a record that is not committed is not a record.
+TRACKED_TREES = ("static", "templates", "design", "docs")
+
+#: Files that must NEVER be tracked, so their absence from the index is not drift. macOS writes
+#: .DS_Store into any directory a Finder window touches, and the correct state for it is untracked.
+#: Excluded BY NAME with a reason rather than by loosening the assertion: a guard taught to tolerate
+#: a failure list it cannot explain is a guard people learn to ignore. The FIRST version of this
+#: check failed on exactly these two files, which is why the exclusion is explicit and documented.
+NEVER_TRACKED = frozenset({".DS_Store", "Thumbs.db", "desktop.ini"})
 
 
-def test_every_file_in_the_shipped_trees_is_tracked():
+def test_every_file_in_the_tracked_trees_is_in_the_index():
     """The sweep, not only the references -- and it closes a CLASS, not an instance.
 
     Every other check in this file is REFERENCE-DERIVED: it can only adjudicate an asset that
     today's shipped source happens to mention. The 2026-09-21 incident was invisible in one
-    direction (icons referenced by CSS but absent from the index), and the mirror direction is
-    just as invisible and has no guard at all -- a stylesheet, a font, a template partial or a new
-    icon added locally and never committed, referenced by nothing yet. Disk says it is there; the
-    index says it is not shipped; and every capture, every browser test and every source-presence
-    test reads disk.
+    direction (icons referenced by CSS but absent from the index), and the mirror direction is just
+    as invisible -- a stylesheet, a font, a template partial, an icon or a RECORD added locally and
+    never committed, referenced by nothing yet. Disk says it is there; the index says it is not
+    shipped; and every capture, every browser test and every source-presence test reads disk.
 
-    Measured before this was added, so the assertion is not theoretical: static/ held 206 files
-    and templates/ 41, all 247 tracked and none untracked. The check passes because the tree is
-    genuinely clean, which is the only condition under which it is worth having.
+    Measured before this was added, and it found REAL DRIFT rather than a theoretical gap: design/
+    held the 2026-09-08 selected-direction image AND its BUILD_SPEC untracked, while their sibling
+    drafts (01-today.png, 02-plan.png, 03-activity.png, 04-accounts.png) were tracked -- the record's
+    specification and its chosen direction were the two files missing from git. docs/project held a
+    consolidated handoff and a substrate inventory untracked as well. All four are cited by the task
+    ledger or by other docs, and all four lived only on one machine. They are now tracked, and this
+    is the check that would have caught them.
     """
     tracked = _tracked_paths()
     untracked = []
-    for tree in SHIPPED_TREES:
+    for tree in TRACKED_TREES:
         base = ROOT / tree
         if not base.is_dir():
             continue
         for path in sorted(base.rglob("*")):
             if not path.is_file() or "__pycache__" in path.parts:
+                continue
+            if path.name in NEVER_TRACKED:
                 continue
             relative = path.relative_to(ROOT).as_posix()
             if relative not in tracked:
