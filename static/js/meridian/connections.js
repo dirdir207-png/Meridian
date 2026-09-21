@@ -214,13 +214,13 @@ function openAddConnection() {
   sheet.hidden = true;
   sheet.innerHTML = `
     <div class="m-connection-chooser-card">
-      <h3 class="m-editor-title">Add a connection</h3>
-      <p class="m-editor-preview">Choose a source to keep Meridian's picture current. Meridian only reads it.</p>
+      <h3 class="m-connection-editor-title">Add a connection</h3>
+      <p class="m-connection-editor-preview">Choose a source to keep Meridian's picture current. Meridian only reads it.</p>
       <div class="m-connection-chooser-list"></div>
-      <div class="m-editor-actions">
+      <div class="m-connection-editor-actions">
         <button type="button" class="m-button m-button--quiet" data-add-connection-cancel>Cancel</button>
       </div>
-      <p class="m-editor-note" data-add-connection-note hidden></p>
+      <p class="m-connection-editor-note" data-add-connection-note hidden></p>
     </div>
   `;
 

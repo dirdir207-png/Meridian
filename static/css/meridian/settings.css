@@ -117,6 +117,40 @@ html[data-theme="light"] .m-settings-hub-head h1 {
   }
 }
 
+/* Connections' own editor vocabulary (OS-085). Connections.js used to emit the Plan-owned
+   .m-editor-* classes, which are defined ONLY in plan.css -- so the Connections editor was
+   styled by Plan's stylesheet, and editing those rules to retool Connections would have moved
+   PLAN silently. These four rules carry the SAME declarations Connections already inherited,
+   so nothing looks different: the coupling is what changed, not the appearance. Plan keeps its
+   own classes untouched, so Plan's appearance is provably unchanged. The semantic colours are
+   deliberate and match what Connections had -- preview read as information, note as connected. */
+.m-connection-editor-title {
+  margin: 0;
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--m-ink-muted);
+}
+
+.m-connection-editor-preview {
+  margin: 0;
+  font-size: var(--m-text-sm);
+  color: var(--m-information);
+}
+
+.m-connection-editor-actions {
+  display: flex;
+  gap: var(--m-space-3);
+  flex-wrap: wrap;
+}
+
+.m-connection-editor-note {
+  margin: 0;
+  font-size: var(--m-text-sm);
+  color: var(--m-healthy);
+}
+
 .m-settings-title-rule {
   margin-bottom: var(--m-space-4);
 }
