@@ -1,0 +1,11 @@
+{
+  "asset": "settings-calibration-instrument.png",
+  "created": "2026-09-22",
+  "kind": "newly-authored-concept-inspired-raster",
+  "source_reference": "design/observatory-extension-2026-09-18/concepts/settings.png",
+  "dimensions": "1536x1024",
+  "mode": "RGBA",
+  "alpha_extrema": [0, 254],
+  "visible_bounds": [105, 21, 1450, 1024],
+  "sha256": "5eccc94d08fc54a6ec2b69a333c1882e6883066a6f775b2a801337fcf50e4beb"
+}
