@@ -65,6 +65,24 @@ def _read(relative):
     return (ROOT / relative).read_text(encoding="utf-8")
 
 
+def _banner_rule(css):
+    """Return the declaration body of the hub's parchment banner block.
+
+    Located by the DECLARATION the block must contain, not by its selector text. The selector
+    is a SHARED list -- `.m-settings-group-banner, .m-connection-group > .m-section-label` --
+    because OS-085 makes the Connections group headings use the same treatment rather than a
+    copy of it. Splitting on the literal selector therefore failed as soon as a second surface
+    shared the block, which is a fault in how this guard FOUND the rule, not in what it asserts.
+
+    Every assertion is unchanged: the banner must still be the kit's parchment ticket, keep its
+    square corners, and take the paper ink in both themes.
+    """
+    needle = "parchment-ticket.png"
+    assert css.count(needle) == 1, "exactly one block may carry the parchment banner treatment"
+    inside = css.index(needle)
+    return css[css.rindex("{", 0, inside) + 1 : css.index("}", inside)]
+
+
 def test_the_governing_concept_exists():
     """Two records previously disagreed about whether this target existed, and one of them
     wrongly concluded the reference was unavailable. Pin the file so a future session cannot
@@ -184,7 +202,7 @@ def test_hub_states_availability_and_carries_the_concept_furniture():
     # The authority and the date are recorded HERE, in the guard, because a guard derived from
     # a judgement is the most dangerous kind: it silently enforces a mistake and makes the
     # correct change look like a regression. Reversing one must be a deliberate, cited act.
-    banner_rule = css.split(".m-settings-group-banner {", 1)[1].split("}", 1)[0]
+    banner_rule = _banner_rule(css)
     assert "border-image" in banner_rule
     assert "parchment-ticket.png" in banner_rule, "the banner is the kit's parchment ticket"
     assert "border-radius: 0" in banner_rule, "the shaped silhouette supplies the corners"
@@ -252,7 +270,7 @@ def test_hub_ink_is_defined_per_theme():
     assert len(light) == 2, "the ink must be redefined for the light theme"
     assert "--m-settings-planned-ink:" in light[1].split("}", 1)[0]
 
-    banner_rule = css.split(".m-settings-group-banner {", 1)[1].split("}", 1)[0]
+    banner_rule = _banner_rule(css)
     assert "var(--obs-paper-ink" in banner_rule, "the light ticket needs dark ink in both themes"
     assert "var(--m-settings-planned-ink)" not in banner_rule, "the ticket does not flip"
 

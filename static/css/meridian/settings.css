@@ -271,7 +271,15 @@ html[data-theme="light"] .m-settings-hub-head h1 {
    The label ink is therefore DARK in BOTH themes, because the ticket art is light in both.
    This is the one place where a theme-flipping token is wrong; OS-065's per-theme ink rule
    was solving a problem its own wash had created. */
-.m-settings-group-banner {
+/* OS-085: the Connections section heads its groups (Money / Evidence / Time) with the same
+   parchment banner the hub uses, because they are both GROUP HEADINGS INSIDE SETTINGS -- the
+   hub's groups are a directory of rows and Connections' are groups of records, but a reader
+   moving between them should not cross into a different visual language to do it. Before this
+   the Connections headings were bare lilac text while the hub used parchment ribbons, which is
+   the divergence the owner was pointing at. The treatment is SHARED rather than copied so the
+   two cannot drift apart; scope stays in Connections via the .m-connection-group descendant. */
+.m-settings-group-banner,
+.m-connection-group > .m-section-label {
   position: relative;
   display: grid;
   place-items: center;
@@ -291,7 +299,9 @@ html[data-theme="light"] .m-settings-hub-head h1 {
 
 
 .m-settings-group-banner::before,
-.m-settings-group-banner::after {
+.m-settings-group-banner::after,
+.m-connection-group > .m-section-label::before,
+.m-connection-group > .m-section-label::after {
   content: "";
   position: absolute;
   top: 50%;
