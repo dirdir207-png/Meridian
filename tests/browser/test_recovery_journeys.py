@@ -86,12 +86,21 @@ def test_layout_and_a11y_spot_check(browser, name, width, height):
           buttons: document.querySelectorAll('button, a').length,
           focusable: [...document.querySelectorAll('button, a, [tabindex]')].filter(e => e.tabIndex >= 0).length,
           ariaLabels: document.querySelectorAll('[aria-label], [aria-labelledby]').length,
-          imgsNoAlt: [...document.querySelectorAll('img')].filter(i => !i.alt).length,
+          imgsMissingAlt: [...document.querySelectorAll('img')].filter(i => i.getAttribute('alt') === null).length,
+          imgsDecorative: [...document.querySelectorAll('img')].filter(i => i.getAttribute('alt') === '').length,
         })"""
     )
     assert state["main"], "main landmark must exist"
     assert state["focusable"] >= 3, "focusable controls expected"
-    assert state["imgsNoAlt"] == 0, "images must have alt text"
+    # This asserted `!i.alt`, which is TRUE for alt="" -- so it counted correctly-decorated
+    # imagery as a defect and could never pass without making the markup worse. The rule it
+    # means to enforce is that no image may OMIT an alt declaration: alt="" is the right
+    # answer for decorative art (it tells assistive tech to skip it), while no attribute at
+    # all leaves the decision to the browser and its filename. Today's seven imgs are kit
+    # SVG icons inside .obs-event-kind and already declare alt=""; they were being failed for
+    # being right. The decorative count is kept so the number stays visible rather than
+    # silently absorbed.
+    assert state["imgsMissingAlt"] == 0, "every image must declare alt (empty when decorative)"
     # Keyboard: tab moves focus.
     page.keyboard.press("Tab")
     focused = page.evaluate("() => document.activeElement ? document.activeElement.tagName : 'none'")
