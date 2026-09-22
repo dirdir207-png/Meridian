@@ -327,7 +327,7 @@ That holds while the reserve is at or above zero. **It fails when the reserve is
 
 **Deliberate divergence from Crew, stated so it is not mistaken for a bug.** Crew's Pockets screen totals the pockets the owner has **selected**, so a POSITIVE reserve would *increase* its Safe to Spend. Meridian does not add a positive reserve, because money earmarked for bills is not free to spend. The two figures therefore agree in the overdraft case and Meridian's is the conservative one otherwise. If that ever needs to change it is a decision, not a bug fix.
 
-## D- Owner-direct in-app edits are excluded from the proposal requirement (owner, 2026-09-21)
+## D-020 — Owner-direct in-app edits are excluded from the proposal requirement (owner, 2026-09-21)
 
 The owner, restating a rule he had already recorded: *"actions directly made by me in the app
 circumvent the need for proposal, I can directly execute."* This is the third time it has had to be
@@ -358,3 +358,23 @@ adds **no** parallel proposal-only route; a second path would park the owner's e
 looking like progress. (2) Bringing the management routes onto the router is its own slice
 (OS-084), not a side effect of a feature. (3) Nothing may widen the exclusion beyond direct,
 fully-specified owner intent.
+
+## D-021 — Image generation runs through Runway via Composio; no bespoke image adapter (owner, 2026-09-22)
+
+Owner decision after weighing the two routes: "We'll stick with runway."
+
+The rejected alternative was a purpose-built Harness plugin calling the OpenAI Image API directly. It is a sound design and was declined on NECESSITY, not on quality, because the fact that decides it is that the existing connection already brokers the same models: `gpt_image_2`, `gpt_image_2_5_sunburst` and `gpt_image_2_5_flare` are authorised on the account tier, alongside `gemini_image3_pro`, `gemini_image3.1_flash`, `gen4_image`, `gen4_image_turbo`, `seedream5_pro` and `seedream5_lite`. Writing and maintaining an adapter to reach a model that is already reachable would add a second credential surface and a second failure mode for no capability gain. The adapter's own headline recommendation — GPT Image — was therefore already satisfied by the connection made minutes earlier.
+
+Standing consequences:
+
+1. The route is Runway through the existing Composio connection. It is a THIRD-PARTY service: prompts leave this machine, which the decision authorises. It also spends Runway credits (500 at decision time), so a generation is a SPEND and needs owner authorisation the same way any other spend does. Nothing generates credits unattended.
+
+2. This is established by inspection, not assumption: DSH has NO image-generation capability of its own. A grep for `generate_image` and `images/generations` across `packages` and `apps` returns nothing, and there is no image or vision package in the catalog. The claim that the Harness needs an image adapter is right about the GAP and wrong about the REMEDY, and the distinction is the whole decision.
+
+3. Generated assets follow the delivery convention the repository already enforces through its own guards: one design record per delivery (a README plus an `assets.json` carrying kind, source_reference, dimensions, mode and a sha256 that must be VERIFIED to recompute), a row in `design/README.md`'s chronological index, and the files TRACKED in git. An asset that is generated but untracked works locally and vanishes in any clone; a record that is unindexed makes D-004 answer WRONGLY rather than decline to answer.
+
+4. Being generated is not being INTEGRATED. Delivery and integration are separate decisions, and an asset arriving in `design/` changes no shipped surface.
+
+5. A bespoke image adapter may be revisited for a SPECIFIC need — a model Runway does not broker, or a requirement that generation never pass through a third party. It must NOT be re-proposed as a general quality upgrade: quality was the argument tested, and it did not hold.
+
+6. Mechanics worth not rediscovering: the tool accepts up to three reference images (taggable), which is how the 2026-09-22 calibration ornament was made from the Settings concept, and it returns a task id with an ESTIMATED credit cost, so spend is visible before it is spent. The tool schema confirms `gen4_image` and `gen4_image_turbo` as accepted model constants; the exact string for the brokered `gpt_image_2` family is confirmed on first real use rather than assumed from the tier list.
