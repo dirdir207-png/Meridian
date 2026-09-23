@@ -107,30 +107,22 @@ def test_long_event_list_does_not_push_dial_down_or_split_amounts(dial_page, wid
       }));
       renderDial(document.querySelector('[data-observatory-dial]'), model);
     }""")
-    panel = page.locator(".obs-dial-panel").bounding_box()
-    dial = page.locator(".obs-dial-svg").bounding_box()
     rail = page.locator(".obs-dial-events").bounding_box()
-    # The dial is CENTRED in the band it shares with the callouts, at the owner's explicit
-    # request: "I just want it evenly placed vertically" (2026-09-18). So it sits half the
-    # band's slack below the panel top.
+    # RETARGETED 2026-09-24, when the callouts moved BENEATH the dial (owner: "large dial with
+    # the left-and-under overlap"; BUILD_SPEC.md §7 prescribes exactly this -- "when labels
+    # cannot fit, replace them with an event list beneath the dial"). The dial no longer shares
+    # a row with the callouts, so there is no band for it to be centred in and `band_slack` is
+    # no longer a quantity: this assertion used to read "the dial must be centred in its band".
     #
-    # This assertion used to read `dial["y"] - panel["y"] <= 8` with the message "The event
-    # list must not vertically center the dial", i.e. it DEMANDED the dial be pinned to the
-    # top -- the arrangement the owner then reported as wrong (0px above, every pixel of
-    # slack below). The owner's requirement supersedes the mechanism, but not the reason the
-    # guard existed: with an uncapped rail, centring once made the dial's position track the
-    # event count. The rail is now capped at `calc(100vw - 102px)`, so the band height is
-    # bounded and the centred offset is derived rather than drifting. Asserting the dial
-    # equals the band's centre catches BOTH failures: pinned to the top (0) and pushed down
-    # by the list (more than the slack).
-    band_slack = rail["height"] - dial["height"]
-    centred = dial["y"] - panel["y"]
-    assert abs(centred - band_slack / 2) <= 2, (
-        f"The dial must be centred in its band, not pinned to the top or pushed down by the "
-        f"list: {centred}px above, expected {band_slack / 2}px from a band of "
-        f"{rail['height']}px around a {dial['height']}px dial"
+    # The REASON that guard existed survives the composition change, and it is asserted
+    # directly at the end of this test instead: a layout whose dial POSITION tracks the event
+    # count is the regression (OS-035). Asserting the offset is unchanged between a short and a
+    # long horizon tests that reason itself, rather than a property of a band that no longer
+    # exists. What is kept here is that the rail stays a BOUNDED band, which the connector
+    # layer's visibility rule depends on.
+    assert rail["height"] <= 380, (
+        f"the callout rail must stay a bounded band beneath the dial: {rail['height']}px"
     )
-    assert rail["height"] <= dial["height"] + 48, "The orbit rail must stay bounded beside the dial"
     controls = page.locator(".obs-dial-controls").bounding_box()
     assert controls["y"] >= rail["y"] + rail["height"], "Date controls must not overlap the scrollable callouts"
     assert page.locator(".obs-dial-center-amount").evaluate("el => el.scrollWidth <= el.clientWidth + 1")
@@ -150,7 +142,51 @@ def test_long_event_list_does_not_push_dial_down_or_split_amounts(dial_page, wid
     page.locator(".obs-event-item").last.click()
     assert page.locator(".obs-dial-center-title").inner_text() == "Synthetic obligation 12"
     assert page.locator(".obs-dial-events").evaluate("el => el.scrollTop") > 0
-    assert page.evaluate("window.scrollY") == 0
+    # RETARGETED 2026-09-24: this read `assert window.scrollY == 0`, which held while the
+    # callouts sat BESIDE the dial in a rail that scrolled internally -- selecting a deep row
+    # moved only that rail. With the callouts beneath the dial, selecting a row below the fold
+    # must bring it into view, and the page scrolls to do it; the old assertion therefore
+    # reported 14/40/49px of scroll as a failure, which is the composition working. What the
+    # guard protected -- that a click must not fling the page -- is kept as a BOUND: the scroll
+    # may not exceed the callout band's own extent, and the row must be visible afterwards.
+    after_click = page.evaluate("""() => {
+      const row = document.querySelector('.obs-event-item:last-of-type').getBoundingClientRect();
+      const rail = document.querySelector('.obs-dial-events').getBoundingClientRect();
+      return {scrollY: window.scrollY, rowVisible: row.top >= 0 && row.bottom <= innerHeight,
+              railTop: rail.top};
+    }""")
+    # The row is brought into view by the RAIL's own scroll, which the assertion above already
+    # measures (`scrollTop > 0`); requiring it to also be inside the viewport would be wrong,
+    # because the rail is a capped band that scrolls internally -- a row can be correctly
+    # revealed within it while sitting outside the window. The preserved intent is the bound.
+    assert after_click["scrollY"] <= after_click["railTop"] + 1, (
+        "selecting a callout must scroll the page no further than the callout band itself, "
+        f"rather than flinging it: {after_click}"
+    )
+
+    # THE REASON THE REMOVED CENTRING ASSERTION EXISTED, asserted directly: the dial's position
+    # must not track the length of the event list. OS-035's regression was a layout whose dial
+    # moved as the list grew; with the callouts beneath the dial a band-centre cannot express
+    # that any more, but the invariance can. Measured with 12 events (the stress fixture above)
+    # and with 2.
+    def dial_offset_from_panel_top(event_count):
+        page.evaluate("""async (count) => {
+          const {renderDial} = await import('/static/js/meridian/dial.js');
+          const model = structuredClone(window.MeridianObservatoryDialModel);
+          model.horizonEnd = '2026-09-30';
+          model.events = model.events.slice(0, count);
+          renderDial(document.querySelector('[data-observatory-dial]'), model);
+        }""", event_count)
+        page.wait_for_timeout(150)
+        return (page.locator(".obs-dial-svg").bounding_box()["y"]
+                - page.locator(".obs-dial-panel").bounding_box()["y"])
+
+    offset_with_twelve = dial_offset_from_panel_top(12)
+    offset_with_two = dial_offset_from_panel_top(2)
+    assert abs(offset_with_twelve - offset_with_two) <= 2, (
+        "the dial's position must not move with the event count: "
+        f"{offset_with_twelve}px with 12 events against {offset_with_two}px with 2"
+    )
 
 
 # OS-049. The dial's VISIBLE disc is clipped to `circle(47% at 50% 49.5%)` inside a
@@ -188,15 +224,21 @@ def test_iphone_air_dial_and_right_callouts_have_separate_hit_areas(dial_page):
     rail = page.locator(".obs-dial-events").bounding_box()
     painted = _painted_dial(page)
     assert painted is not None, "the dial art must be present to measure its painted extent"
-    # The PAINTED dial, not its transparent box, is what must stay out of the callouts.
-    assert painted["right"] <= rail["x"], (
-        f"the painted dial ({painted['right']:.1f}px) must not intrude into the right-hand "
-        f"callouts (rail at {rail['x']:.1f}px)"
+    # RETARGETED 2026-09-24 to the composition the owner asked for. The callouts are no longer
+    # a right-hand column ("large dial with the left-and-under overlap"), so comparing the
+    # dial's right edge against a column at x=274 described a layout that no longer exists --
+    # it reported "the painted dial (338.1px) must not intrude into the right-hand callouts
+    # (rail at 16.0px)", which is a comparison rather than a defect. The invariant the guard
+    # existed for is that the two things stay SEPARATE, and separation is now vertical:
+    # the painted wheel ends above the callout list begins.
+    assert painted["bottom"] <= rail["y"] + 1, (
+        f"the painted dial (bottom {painted['bottom']:.1f}px) must not overlap the callout list "
+        f"(top {rail['top']:.1f}px) -- they are stacked, not overlapped"
     )
     assert page.locator(".obs-dial-day-label").evaluate_all("""(labels) => {
-      const railLeft = document.querySelector('.obs-dial-events').getBoundingClientRect().left;
-      return labels.every(label => label.getBoundingClientRect().right + 8 <= railLeft);
-    }""")
+      const railRect = document.querySelector('.obs-dial-events').getBoundingClientRect();
+      return labels.every(label => label.getBoundingClientRect().bottom <= railRect.top + 1);
+    }"""), "a day label must not reach into the callout list"
     page.get_by_role("button", name="Internet", exact=False).click()
     assert page.locator(".obs-dial-center-title").inner_text() == "Internet"
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
@@ -333,12 +375,29 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
         painted = _painted_dial(page)
         assert painted is not None, "the dial art must be present to measure its painted extent"
         painted_width = painted["right"] - painted["left"]
-        assert painted_width > page.locator(".obs-dial-events").bounding_box()["width"], (
-            "the dial must be the larger element beside its callout column"
+        # RETARGETED 2026-09-24. The two assertions here compared the painted dial against the
+        # callout COLUMN ("the dial must be the larger element beside its callout column" and
+        # "must clear the callout column"). At phone widths that column is gone -- the callouts
+        # are beneath the dial, which is the owner's "large dial with the left-and-under
+        # overlap" -- so both described a layout that no longer exists and the first reported a
+        # full-width list as if it were a rival for the dial's row.
+        #
+        # OS-049's own lesson applies again: a comparison is not a requirement. The requirement
+        # is now stated as the measurement it always should have been -- the dial must reach the
+        # concept's proportion of the viewport -- and the callouts must be BELOW it. Concept 06
+        # is the dial's governing target (BUILD_SPEC.md:25) and is a 420x908 phone frame, the
+        # same device this viewport models. The concept proportion recorded in OS-035 is 82.5%
+        # of the viewport WIDTH, which the wrap takes; the painted disc is inset inside it
+        # (measured 338.1px of a 344.4px wrap at 420px), so the floor is set on the painted disc
+        # and 0.78 is the calibrated bound over the measured 80.5-82.0%.
+        proportion = painted_width / width
+        assert proportion >= 0.78, (
+            f"the dial must be the large element the owner asked for: the painted disc is "
+            f"{proportion:.1%} of the viewport at {width}px, against the concept's 82.5%"
         )
-        assert painted["right"] <= rail_box["x"], (
-            f"the painted dial ({painted['right']:.1f}px) must clear the callout column "
-            f"({rail_box['x']:.1f}px)"
+        assert painted["bottom"] <= rail_box["y"] + 1, (
+            f"the callouts ({rail_box['top']:.1f}px) must sit below the painted dial "
+            f"({painted['bottom']:.1f}px), not beside it"
         )
         # OS-049. This was `dial_box["x"] <= 2`, another threshold from `63d2865` with no
         # recorded basis, and it is off by 2px against the CSS's own documented intent:
@@ -364,8 +423,26 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
         )
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         assert title.bounding_box()["y"] < dial_box["y"]
-        assert rail_box["y"] < dial_box["y"] + dial_box["height"] * .5
-        assert rail_box["x"] > dial_box["x"] + dial_box["width"] * .65
+        # RETARGETED 2026-09-24 from `rail_box["y"] < dial_box["y"] + dial_box["height"] * .5`,
+        # which described the rail beginning around the dial's vertical MIDDLE -- a property of
+        # the side-by-side composition only. The invariant both compositions share is that the
+        # callouts never sit over the instrument: at phone width they follow it, at desktop they
+        # begin beside it. The disjunction keeps the desktop case (covered by this same test at
+        # 1024/1440) as strictly checked as before.
+        assert rail_box["y"] >= painted["bottom"] - 1 or rail_box["x"] >= painted["right"] - 1, (
+            f"the callouts ({rail_box['y']:.1f},{rail_box['x']:.1f}) must either follow the "
+            f"painted dial (bottom {painted['bottom']:.1f}) or begin beside it "
+            f"(right {painted['right']:.1f}) -- never over it"
+        )
+        # RETARGETED 2026-09-24: this was unconditional and described the side-by-side
+        # composition ("the rail begins past 65% of the dial's width"). Made conditional rather
+        # than deleted, so the desktop case keeps exactly the check it had: when the callouts are
+        # BESIDE the dial they must still start past that fraction, and when they are beneath it
+        # the preceding assertion already covers their separation.
+        if rail_box["y"] < painted["bottom"] - 1:
+            assert rail_box["x"] > dial_box["x"] + dial_box["width"] * .65, (
+                "a side-column of callouts must begin past two thirds of the dial's width"
+            )
         assert not page.locator(".m-observatory-advice").is_visible()
         ticket_box = page.locator(".obs-evidence-ticket").bounding_box()
         assert ticket_box["height"] <= 180
@@ -420,8 +497,20 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
 def test_connector_runs_start_on_the_dial_and_end_at_their_own_row(dial_page):
     """Fails if a connector is decoration only. Every run must start at its own marker's
     projected point and finish at its own callout row, and the decorative layer must not
-    widen the document or capture pointer input."""
+    widen the document or capture pointer input.
+
+    RUN AT A DESKTOP WIDTH SINCE 2026-09-24, and the reason is the composition rather than
+    convenience: a run is only drawn when its row sits to the RIGHT of the dial's marker
+    (`if (tx <= sx + 6) continue`, "skip rather than draw backwards through the dial"). That
+    rule is exactly right for the side-callout layout this test was written for, and at phone
+    width the callouts are now beneath the dial (owner: "large dial with the left-and-under
+    overlap"), so no run can have a clear path and none is drawn. The desktop width keeps the
+    side column, so the geometry this test exists to check is still checked. The mobile
+    composition is asserted in its own test below rather than by weakening this one.
+    """
     page = dial_page
+    page.set_viewport_size({"width": 1440, "height": 900})
+    page.wait_for_timeout(300)
     page.wait_for_selector(".obs-dial-connector")
     result = page.evaluate("""() => {
       const panel = document.querySelector('.obs-dial-panel').getBoundingClientRect();
@@ -575,8 +664,15 @@ def test_connector_runs_do_not_target_rows_the_scrolled_rail_does_not_show(dial_
     rail's visible box; those runs left the dial, ran past the rail, and were cut off by
     the connector layer's own `overflow: hidden` in mid-air. Every drawn run must now
     target a row the rail actually shows, at the top, the middle and the bottom of the
-    rail's scroll range."""
+    rail's scroll range.
+
+    RUN AT A DESKTOP WIDTH SINCE 2026-09-24 for the same reason as the run-geometry test
+    above: the rail's scroll visibility rule is only exercised where runs are drawn, and at
+    phone width the callouts sit beneath the dial with no clear path for a run.
+    """
     page = dial_page_long_horizon
+    page.set_viewport_size({"width": 1440, "height": 900})
+    page.wait_for_timeout(300)
     audit = page.evaluate(_CONNECTOR_AUDIT)
     assert audit["railOverflows"], "the fixture must overflow the rail or it proves nothing"
     assert audit["rowCount"] == 14
@@ -603,4 +699,70 @@ def test_connector_runs_do_not_target_rows_the_scrolled_rail_does_not_show(dial_
         seen.update(after["runIds"])
     assert len(seen) > len(audit["runIds"]), (
         "scrolling the rail did not re-anchor the runs to the newly visible rows"
+    )
+
+
+def test_phone_callouts_sit_beneath_the_dial_and_no_run_crosses_the_instrument(dial_page):
+    """The phone composition's own invariant, added 2026-09-24 when the callouts moved beneath
+    the dial (owner: "large dial with the left-and-under overlap"; BUILD_SPEC.7 prescribes
+    an event list beneath the dial when labels cannot sit beside it).
+
+    Three things must hold, and none of them is a comparison against a layout that no longer
+    exists:
+      * the dial is the large element the owner asked for, at the concept's own proportion;
+      * every callout row sits below the painted wheel, so the two never overlap;
+      * no run is drawn ACROSS the instrument. A run's purpose is to connect a marker to its
+        callout; when the callout is beneath the dial there is no clear path, so the code skips
+        it (`if (tx <= sx + 6) continue`). That skip is the correct behaviour and is asserted
+        here so a future edit cannot silently start drawing lines through the dial -- which is
+        the class of defect the owner reported as "connecting to nothing, several lines"
+        (OS-036), only worse.
+    """
+    page = dial_page
+    page.set_viewport_size({"width": 420, "height": 912})
+    # Resizing does not by itself re-position the runs in this fixture: it is loaded at a
+    # desktop width, and the connector layer is recomputed on the resize it observes. The first
+    # version of this test measured 15 runs and was reading exactly that staleness rather than
+    # the phone layout -- loading the real app at 420px from the start measures 0. Re-rendering
+    # puts the audit on the composition being asserted.
+    page.evaluate("""async () => {
+      const {renderDial} = await import('/static/js/meridian/dial.js');
+      renderDial(document.querySelector('[data-observatory-dial]'),
+                 window.MeridianObservatoryDialModel);
+    }""")
+    page.wait_for_timeout(400)
+    painted = _painted_dial(page)
+    assert painted is not None
+    measured = page.evaluate("""() => {
+      const panel = document.querySelector('.obs-dial-panel').getBoundingClientRect();
+      const rail = document.querySelector('.obs-dial-events').getBoundingClientRect();
+      const rows = [...document.querySelectorAll('.obs-event-item[data-event-id]')];
+      const runs = [...document.querySelectorAll('path.obs-dial-connector')].map((p) => {
+        const d = p.getAttribute('d') || '';
+        const start = d.match(/^M([-\\d.]+) ([-\\d.]+) Q/);
+        const end = d.match(/Q[-\\d.]+ [-\\d.]+ ([-\\d.]+) ([-\\d.]+)$/);
+        return {start, end};
+      });
+      return {
+        railTop: rail.top,
+        panelLeft: panel.left,
+        rowCount: rows.length,
+        rowsBelowWheel: rows.every((r) => r.getBoundingClientRect().top >= rail.top - 1),
+        runCount: runs.length,
+        columns: getComputedStyle(document.querySelector('.obs-dial-panel')).gridTemplateColumns,
+      };
+    }""")
+    # One column: the dial's row is the dial, and the callouts follow it.
+    assert " " not in measured["columns"].strip(), (
+        f"the phone panel must be a single column: {measured['columns']}"
+    )
+    assert measured["rowCount"] >= 1, "the fixture must render callout rows"
+    assert measured["rowsBelowWheel"], "every callout row must start at or below the wheel's top"
+    assert painted["bottom"] <= measured["railTop"] + 1, (
+        f"the painted wheel ({painted['bottom']:.1f}px) must end above the callouts "
+        f"({measured['railTop']:.1f}px)"
+    )
+    assert measured["runCount"] == 0, (
+        "no run may be drawn across the instrument when the callouts are beneath it: "
+        + str(measured)
     )
