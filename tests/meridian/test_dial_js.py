@@ -415,7 +415,19 @@ def test_dial_connector_runs_use_real_dial_and_row_geometry():
     css = _read("static/css/meridian/dial.css")
     assert "function renderConnectors" in js
     # Start is the marker's own projection; end is the callout row's box.
-    assert "positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 84, angle)" in js
+    #
+    # RETARGETED 2026-09-24: this pinned the literal radius `VIEWBOX.r - 84`, which was the same
+    # number written in two places -- the badge's placement and the run that leaves it. The owner
+    # reported the badge sitting ON the day number, so the radius moved inward, and a literal in a
+    # test cannot express the property that actually matters: the badge and its run must agree. The
+    # radius is now one named constant, and this asserts the COUPLING rather than the value -- the
+    # connector starts from MARKER_RADIUS_UNITS, and that constant is what places the marker, so the
+    # two cannot drift apart again without failing here.
+    assert "positionOnArc(VIEWBOX.cx, VIEWBOX.cy, MARKER_RADIUS_UNITS, angle)" in js
+    assert "const MARKER_RADIUS_UNITS" in js
+    assert js.count("MARKER_RADIUS_UNITS") >= 3, (
+        "the constant must be defined once and used by both the marker and its run"
+    )
     assert "data-connector-for" in js
     assert "row.getBoundingClientRect()" in js
     # Redrawn whenever the rows are replaced and whenever either side resizes.

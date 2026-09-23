@@ -149,7 +149,21 @@ def test_long_event_list_does_not_push_dial_down_or_split_amounts(dial_page, wid
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
     page.locator(".obs-event-item").last.click()
     assert page.locator(".obs-dial-center-title").inner_text() == "Synthetic obligation 12"
-    assert page.locator(".obs-dial-events").evaluate("el => el.scrollTop") > 0
+    # RETARGETED 2026-09-24. This read `rail.scrollTop > 0`, which held while the rows were STACKED
+    # in a scrolling column: selecting a deep row scrolled the rail to reach it. In the concept's
+    # seating the rows are absolutely placed along the dial's arc, so there is no stack left to
+    # scroll and the rail never moves -- the guard reported a bare `0 > 0` against a design that was
+    # working. What it protected is that selecting a row actually REVEALS it rather than only
+    # marking it, which is asserted directly: the selected row's box must be inside the rail's
+    # scrollport.
+    assert page.evaluate("""() => {
+      const rail = document.querySelector('.obs-dial-events');
+      const items = [...rail.querySelectorAll('.obs-event-item')];
+      const selected = rail.querySelector('.obs-event-item[data-selected="true"]') || items[items.length - 1];
+      const r = rail.getBoundingClientRect();
+      const b = selected.getBoundingClientRect();
+      return b.top >= r.top - 1 && b.bottom <= r.bottom + 1;
+    }"""), "the selected row must sit inside the rail's scrollport"
     assert page.evaluate("window.scrollY") == 0
 
 
@@ -185,18 +199,54 @@ def _painted_dial(page):
 def test_iphone_air_dial_and_right_callouts_have_separate_hit_areas(dial_page):
     page = dial_page
     page.set_viewport_size({"width": 420, "height": 912})
-    rail = page.locator(".obs-dial-events").bounding_box()
     painted = _painted_dial(page)
     assert painted is not None, "the dial art must be present to measure its painted extent"
-    # The PAINTED dial, not its transparent box, is what must stay out of the callouts.
-    assert painted["right"] <= rail["x"], (
-        f"the painted dial ({painted['right']:.1f}px) must not intrude into the right-hand "
-        f"callouts (rail at {rail['x']:.1f}px)"
-    )
-    assert page.locator(".obs-dial-day-label").evaluate_all("""(labels) => {
-      const railLeft = document.querySelector('.obs-dial-events').getBoundingClientRect().left;
-      return labels.every(label => label.getBoundingClientRect().right + 8 <= railLeft);
+    # RETARGETED AGAIN 2026-09-24, for the concept's own seating. This asserted
+    # `painted["right"] <= rail["x"]` -- the instrument must not touch the callouts -- which the
+    # owner's concept deliberately breaks: its callouts run x 321..402 against a ring ending at
+    # 390, and he asked for exactly that ("seat it how it is in the concept, overlap on the left
+    # and on the bottom with the ticket"). A guard forbidding the requested overlap would fail on
+    # the requested design, so it cannot stand as written.
+    #
+    # The invariant that survives is the one a reader depends on: the overlap must never cover the
+    # dial's CENTRE READOUT, which states the selected event. Only the scrim's OPAQUE part counts,
+    # because the row fades in over its left 24% by design so the instrument still shows through.
+    covered = page.evaluate("""() => {
+      const centre = document.querySelector('.obs-dial-center');
+      const texts = [...centre.children]
+        .map((el) => el.getBoundingClientRect())
+        .filter((r) => r.width > 0 && r.height > 0);
+      const rows = [...document.querySelectorAll('.obs-dial-events .obs-event-item')]
+        .map((el) => el.getBoundingClientRect());
+      const hits = [];
+      for (const t of texts) {
+        for (const r of rows) {
+          const opaqueLeft = r.left + r.width * 0.24;
+          if (t.right > opaqueLeft && t.left < r.right && t.bottom > r.top && t.top < r.bottom) {
+            hits.push({text: [Math.round(t.left), Math.round(t.right)],
+                       row: [Math.round(opaqueLeft), Math.round(r.right)]});
+          }
+        }
+      }
+      return hits;
     }""")
+    assert not covered, f"a callout covers the dial's centre readout: {covered}"
+    # The day labels may sit under the callouts' transparent tail, but their TEXT must stay clear
+    # of the opaque part for the same reason. VISIBLE labels only: a day number a callout would
+    # cover is deliberately hidden by `placeDayLabels`, and `visibility: hidden` still reports a
+    # bounding box -- so this has to ask what the reader can actually SEE. Nothing is lost by that
+    # yield, because the callout states the date itself.
+    assert page.locator(".obs-dial-day-label").evaluate_all("""(labels) => {
+      const rows = [...document.querySelectorAll('.obs-dial-events .obs-event-item')]
+        .map((el) => el.getBoundingClientRect());
+      return labels
+        .filter((label) => getComputedStyle(label).visibility !== 'hidden')
+        .every((label) => {
+          const b = label.getBoundingClientRect();
+          return rows.every((r) => !(b.right > r.left + r.width * 0.24 && b.left < r.right
+                                   && b.bottom > r.top && b.top < r.bottom));
+      });
+    }"""), "a callout's opaque part covers a day label"
     page.get_by_role("button", name="Internet", exact=False).click()
     assert page.locator(".obs-dial-center-title").inner_text() == "Internet"
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
@@ -352,10 +402,14 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
         assert painted_width > page.locator(".obs-dial-events").bounding_box()["width"], (
             "the dial must be the larger element beside its callout column"
         )
-        assert painted["right"] <= rail_box["x"], (
-            f"the painted dial ({painted['right']:.1f}px) must clear the callout column "
-            f"({rail_box['x']:.1f}px)"
-        )
+        # RETARGETED 2026-09-24 for the concept's seating: this read
+        #  -- the instrument must clear the callouts entirely --
+        # and the owner's concept deliberately overlaps them (its callouts run x 321..402 against a
+        # ring ending at 390: "seat it how it is in the concept, overlap on the left and on the
+        # bottom with the ticket"). The surviving invariant is that the overlap may not cover the
+        # dial's CENTRE readout, which is where the selected event is stated; the same check is
+        # made in test_iphone_air_dial_and_right_callouts_have_separate_hit_areas with the scrim's
+        # transparent tail accounted for.
         # OS-049. This was `dial_box["x"] <= 2`, another threshold from `63d2865` with no
         # recorded basis, and it is off by 2px against the CSS's own documented intent:
         # `.m-main` content starts at x=16 with `padding: clamp(4, 3.2vw, 7)` -> 4px at
@@ -371,8 +425,13 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
             "() => { const m = document.querySelector('.m-main');"
             " return m.getBoundingClientRect().x + parseFloat(getComputedStyle(m).paddingLeft); }"
         )
-        assert content_left - dial_box["x"] == 12, (
-            f"the dial must bleed the documented 12px into the left gutter "
+        # RETARGETED 2026-09-24 from 12 to 15. The bleed used to come from a -12px margin on the
+        # wrap; the concept's seating sets it explicitly on the instrument
+        # (`width: calc(100% + 15px); margin-left: -15px`) so the dial reaches past the content
+        # edge exactly as the concept draws it. This guard exists to pin the value the CSS declares,
+        # so it moves with the declaration -- measured 15px at 390/420/430.
+        assert content_left - dial_box["x"] == 15, (
+            f"the dial must bleed the documented 15px into the left gutter "
             f"(content starts at {content_left:.1f}, dial box at {dial_box['x']:.1f})"
         )
         assert painted["left"] >= 0, (
@@ -620,3 +679,43 @@ def test_connector_runs_do_not_target_rows_the_scrolled_rail_does_not_show(dial_
     assert len(seen) > len(audit["runIds"]), (
         "scrolling the rail did not re-anchor the runs to the newly visible rows"
     )
+
+
+def test_the_phone_seating_block_is_still_last_in_the_sheet():
+    """The composition block must stay the LAST rule in dial.css, and this guard exists because the
+    failure it prevents is silent.
+
+    The block sets the panel to one column at phone width, defeating an earlier
+    `grid-template-columns: minmax(0, 1fr) 130px` rule of IDENTICAL specificity. Equal specificity
+    is resolved by ORDER, so a later `@media (max-width: 700px)` block that reimposes a callout
+    column would shrink the dial again with no error anywhere -- which is exactly what happened in
+    OS-096, when a later block re-caped the dial and the owner found it on his phone rather than in
+    CI. The block's own comment promises this assertion; here it is.
+    """
+    css = (ROOT / "static/css/meridian/dial.css").read_text(encoding="utf-8")
+    marker = "The concept's seating, at phone width"
+    assert marker in css, "the seating block's identifying comment must still be present"
+    tail = css[css.index(marker) :]
+    # Everything after the seating block's opening must be part of that block's own body: the last
+    # non-whitespace character of the sheet closes it.
+    stripped = css.rstrip()
+    assert stripped.endswith("}"), "dial.css must end with a closing brace"
+    # No other top-level rule may follow it.
+    after = stripped[stripped.index(marker) :]
+    depth = 0
+    closed_at = None
+    for index, char in enumerate(after):
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                closed_at = index
+                break
+    assert closed_at is not None, "the seating block must be a balanced @media block"
+    remainder = after[closed_at + 1 :].strip()
+    assert remainder == "", (
+        "the phone seating block must remain the LAST rule in dial.css; this follows it: "
+        f"{remainder[:120]!r}"
+    )
+    assert tail, "the seating block must not be empty"

@@ -45,6 +45,17 @@ const VIEWBOX = { w: 600, h: 600, cx: 300, cy: 300, r: 282 };
    short of the roofline too. */
 const ARC_START = -100;
 const ARC_END = 120;
+/* Where an event's marker badge sits, as a radius from the dial centre.
+ *
+ * This is a shared constant because TWO placements must agree: the badge itself and the run that
+ * leaves it. It was the literal `VIEWBOX.r - 84` (198 units) in both places.
+ *
+ * It moved inward (2026-09-24, owner: "the numbers in the dial still seem very disorganized") to
+ * separate the badge from the day-number label, which sits at the rim at the SAME angle. At a
+ * 370px wrap the old radius put the badge's centre 28px from the label's centre, while the badge's
+ * own radius (~14px) plus the label's half-diagonal (~19.6px) needs ~34px -- so the badge sat ON
+ * the number. At 164 units the separation is ~49px and the two no longer touch. */
+const MARKER_RADIUS_UNITS = VIEWBOX.r - 118;
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /* Where a day label may sit, measured rather than hand-tuned (owner, 2026-09-24: "dates
@@ -91,6 +102,17 @@ export function placeDayLabels(state, wrap) {
   const insetUnits = widestHalfDiagonal / pxPerUnit + DAY_LABEL_CLEARANCE_UNITS;
   // The floor keeps a pathologically small dial from stacking labels on the centre readout.
   const radius = Math.max(VIEWBOX.r * 0.45, VIEWBOX.r - insetUnits);
+  // Where each callout claims the dial. The row's FULL box counts, not only the opaque part of its
+  // scrim: a day number under the transparent tail is still visibly ghosted behind the gradient
+  // (caught in the review capture of this composition), which reads as the same clutter the yield
+  // exists to prevent.
+  const panel = wrap.closest(".obs-dial-panel");
+  const opaque = panel
+    ? [...panel.querySelectorAll(".obs-dial-events .obs-event-item")].map((el) => {
+        const box = el.getBoundingClientRect();
+        return {left: box.left, right: box.right, top: box.top, bottom: box.bottom};
+      })
+    : [];
   const placed = [];
   for (const span of labels) {
     const day = Number(span.dataset.day);
@@ -98,9 +120,107 @@ export function placeDayLabels(state, wrap) {
     const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, radius, dayToAngle(day, state.model.totalDays));
     span.style.left = `${((point.x / VIEWBOX.w) * 100).toFixed(2)}%`;
     span.style.top = `${((point.y / VIEWBOX.h) * 100).toFixed(2)}%`;
+    // A callout's opaque part WINS over a day number it lands on -- reset first, so a label a
+    // previous layout hid comes back once it no longer collides. Nothing is lost by yielding: the
+    // callout states that date itself ("Sep 30", "Oct 6"), and two overlapping date readings is
+    // exactly the clutter the owner reported as "the numbers in the dial still seem very
+    // disorganized". This only can arise at phone width, where the callouts overlap the instrument
+    // by request; on desktop the rail is a column beside the dial and `opaque` is empty.
+    span.style.visibility = "";
+    if (opaque.length) {
+      const box = span.getBoundingClientRect();
+      if (
+        opaque.some(
+          (entry) =>
+            box.right > entry.left &&
+            box.left < entry.right &&
+            box.bottom > entry.top &&
+            box.top < entry.bottom
+        )
+      ) {
+        span.style.visibility = "hidden";
+      }
+    }
     placed.push({day, radius});
   }
   return placed;
+}
+
+/* Where a callout row sits on the dial's right side (owner, 2026-09-24, with the concept supplied:
+   "The bills on the right follow the dials curved path in the concept, can there be a curved side
+   rail?").
+
+   Yes. At phone width the rail is an OVERLAY on the dial's right rather than a column beside it
+   (dial.css declares that last, on purpose), and each row is placed at the height of its own
+   event's marker, so the stack follows the instrument's curve the way the concept draws it. Three
+   things make this more than a per-row `top`:
+
+   1. Rows must not collide. Two events a day apart sit at nearly the same angle, so rows are
+      pushed down in angular order until `CALLOUT_MIN_GAP_PX` separates the neighbours.
+   2. The group must not walk off the dial. When the pushed stack ends below the dial's bottom the
+      whole group is lifted to fit -- never above the dial's top.
+   3. If it still does not fit, nothing is lost: the rows are absolutely positioned inside a
+      scrollable rail, whose scrollable overflow includes them.
+
+   Desktop is left completely alone: the placement applies only when the rail is actually an
+   overlay, and elsewhere any inline `top` is CLEARED so a column layout cannot inherit stale
+   offsets from a previous phone-width layout. */
+export const CALLOUT_MIN_GAP_PX = 8;
+
+export function placeCalloutRows(state, container) {
+  const panel = container.querySelector(".obs-dial-panel");
+  const rail = panel && panel.querySelector(".obs-dial-events");
+  const wrap = panel && panel.querySelector(".obs-dial-svg-wrap");
+  if (!panel || !rail || !wrap || !state || !state.model) return [];
+  const items = [...rail.querySelectorAll(".obs-event-list--orbit > li")];
+  if (!items.length) return [];
+  if (getComputedStyle(rail).position !== "absolute") {
+    for (const item of items) item.style.top = "";
+    return [];
+  }
+  const wrapWidth = wrap.clientWidth;
+  if (!wrapWidth) return [];
+  const scale = wrapWidth / VIEWBOX.w;
+  const wrapTop = wrap.offsetTop;
+  // The rail spans the INSTRUMENT, not the panel. The panel also contains the ticket and the day
+  // controls, so 100% of the panel would let a callout drift down over the ticket and break the
+  // curve the rows are placed on. Pinning it here keeps the whole stack on the dial.
+  rail.style.height = `${Math.round(wrap.offsetHeight)}px`;
+  const entries = [];
+  items.forEach((item, index) => {
+    const row = item.querySelector(".obs-event-item");
+    const date = item.dataset.eventDate;
+    if (!row || !date) return;
+    const day = dayIndexForDate(date, state.model.today);
+    if (!Number.isFinite(day)) return;
+    const point = positionOnArc(
+      VIEWBOX.cx, VIEWBOX.cy, MARKER_RADIUS_UNITS, dayToAngle(day, state.model.totalDays)
+    );
+    entries.push({
+      item,
+      index,
+      id: row.dataset.eventId || null,
+      target: wrapTop + point.y * scale,
+      height: row.offsetHeight,
+    });
+  });
+  if (!entries.length) return [];
+  // Angular order, with document order as a stable tie-break so equal angles keep their sequence.
+  entries.sort((a, b) => a.target - b.target || a.index - b.index);
+
+  let cursor = -Infinity;
+  for (const entry of entries) {
+    entry.top = Math.max(entry.target, cursor + CALLOUT_MIN_GAP_PX);
+    cursor = entry.top + entry.height;
+  }
+  const last = entries[entries.length - 1];
+  const overflow = last.top + last.height - wrap.offsetHeight;
+  if (overflow > 0) {
+    const lift = Math.min(overflow, entries[0].top);
+    for (const entry of entries) entry.top -= lift;
+  }
+  for (const entry of entries) entry.item.style.top = `${Math.round(entry.top)}px`;
+  return entries.map((entry) => ({id: entry.id, top: Math.round(entry.top)}));
 }
 
 export function clamp(value, min, max) {
@@ -758,9 +878,9 @@ function renderDialSVG(state, container) {
     if (eventDate < today || eventDate > horizonEnd) continue;
     const day = dayIndexForDate(eventDate, today);
     const angle = dayToAngle(day, totalDays);
-    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 84, angle);
-    const leaderStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 90, angle);
-    const leaderEnd = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 73, angle);
+    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, MARKER_RADIUS_UNITS, angle);
+    const leaderStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, MARKER_RADIUS_UNITS - 6, angle);
+    const leaderEnd = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, MARKER_RADIUS_UNITS + 11, angle);
     const leader = document.createElementNS("http://www.w3.org/2000/svg", "line");
     leader.setAttribute("class", "obs-dial-leader");
     leader.setAttribute("x1", String(leaderStart.x.toFixed(2)));
@@ -1031,7 +1151,7 @@ function renderConnectors(state, container) {
     if (!row) continue;
     const day = dayIndexForDate(event.date, state.model.today);
     const angle = dayToAngle(day, state.model.totalDays);
-    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 84, angle);
+    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, MARKER_RADIUS_UNITS, angle);
     const sx = originX + point.x * scale;
     const sy = originY + point.y * scale;
     const rowBox = row.getBoundingClientRect();
@@ -1321,13 +1441,6 @@ function update(state, container, rangeValue) {
   const newEvents = renderEventList(state, container);
   if (oldEvents) oldEvents.replaceWith(newEvents);
   newEvents.scrollTop = previousScroll;
-  const selectedRow = newEvents.querySelector('.obs-event-item[data-selected="true"]');
-  if (selectedRow) {
-    const rowBox = selectedRow.getBoundingClientRect();
-    const railBox = newEvents.getBoundingClientRect();
-    if (rowBox.top < railBox.top) newEvents.scrollTop -= railBox.top - rowBox.top;
-    else if (rowBox.bottom > railBox.bottom) newEvents.scrollTop += rowBox.bottom - railBox.bottom;
-  }
 
   const oldTicket = panel.querySelector(".obs-evidence-ticket");
   if (oldTicket) oldTicket.replaceWith(renderEvidenceTicket(state, selectedEventForState(state)));
@@ -1339,8 +1452,25 @@ function update(state, container, rangeValue) {
     range.setAttribute("aria-valuetext", describeSelectedDay(state));
   }
 
-  // The event rows were just replaced, so the runs must be re-anchored to the new boxes.
+  // The event rows were just replaced, so their arc seating and the runs that follow them must
+  // both be recomputed -- rows first, because a run ends at the row's box.
+  placeCalloutRows(state, container);
   renderConnectors(state, container);
+
+  // Keep the selected row in view, AFTER the arc seating. It used to run where the rail was
+  // replaced, which was correct while the rows were a stacked column: their order was their layout,
+  // so the box measured there was final. With the rows placed along the dial's arc their positions
+  // are only known once `placeCalloutRows` has run, and the earlier measurement was made against
+  // rows every one of which still sat at `top: 0` -- so a long horizon left the selected row out of
+  // the scrollport. On the phone seating this is also the only path that scrolls the rail at all,
+  // because an absolutely placed row is revealed by scrolling the rail vertically.
+  const settledRow = newEvents.querySelector('.obs-event-item[data-selected="true"]');
+  if (settledRow) {
+    const rowBox = settledRow.getBoundingClientRect();
+    const railBox = newEvents.getBoundingClientRect();
+    if (rowBox.top < railBox.top) newEvents.scrollTop -= railBox.top - rowBox.top;
+    else if (rowBox.bottom > railBox.bottom) newEvents.scrollTop += rowBox.bottom - railBox.bottom;
+  }
 
   // Keep the actual control nodes alive: replacing them drops keyboard focus
   // and interrupts native range dragging on every date change.
@@ -1494,6 +1624,7 @@ export function renderDial(container, inputModel) {
   // (rotating a phone, or any window change), because the labels' own boxes stay a fixed
   // pixel size while the radius grows or shrinks with the wrap.
   const redraw = () => {
+    placeCalloutRows(state, container);
     renderConnectors(state, container);
     placeDayLabels(state, svgWrap);
   };

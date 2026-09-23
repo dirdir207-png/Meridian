@@ -1153,3 +1153,107 @@ body.obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab.
     clip-path: inset(50%);
   }
 }
+
+/* ── The concept's seating, at phone width ──────────────────────────────────────────────────────
+
+   Owner, 2026-09-24, supplying the concept: "seat it how it is in the concept, overlap on the left
+   and on the bottom with the ticket ... the bills on the right follow the dials curved path in the
+   concept, can there be a curved side rail?"
+
+   Measured off the concept he supplied (1260x2736 = 420x912 CSS at DPR 3): the dial's ring spans
+   x 31..390 -- 359px, 85% of the viewport -- reaching past the content edge into the left gutter,
+   the callouts sit at x 321..402 (OVERLAPPING the dial's right third rather than occupying a column
+   of their own), and the ticket's top edge tucks under the dial's bottom arc.
+
+   So the dial owns the row, the rail is an OVERLAY on its right, and the ticket rides up under the
+   dial's bottom. `placeCalloutRows()` in dial.js then puts each row at its own event's height, which
+   is what "follows the curved path" means in practice.
+
+   DECLARED LAST ON PURPOSE. This block has the same specificity as the
+   `grid-template-columns: minmax(0, 1fr) 130px` rule above it, and equal specificity is resolved by
+   ORDER -- the exact mechanism that kept the dial small in the first place (OS-096). A guard in
+   tests/browser/test_dial_fidelity.py asserts this block is still last, so a later edit cannot
+   silently re-cape the dial by appending after it. */
+@media (max-width: 700px) {
+  [data-observatory-dial] .obs-dial-panel {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  /* The dial is the row, and it bleeds into the left gutter rather than sitting inside the content
+     column. 15px is the measured bleed: the content edge is at x=16 and the concept's ring reaches
+     x=31 at 85% of the viewport, so the instrument box starts one gutter left. */
+  [data-observatory-dial] .obs-dial-instrument {
+    order: 1;
+    width: calc(100% + 15px);
+    margin-left: -15px;
+  }
+  [data-observatory-dial] .obs-dial-svg-wrap { width: min(100%, 84vw); margin: 0; }
+  /* The rail is an overlay, so it takes no layout width from the dial. It keeps its own scroll for
+     a long horizon, and its rows are placed by JS rather than stacked. */
+  [data-observatory-dial] .obs-dial-events {
+    order: 1;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 132px;
+    height: 100%;
+    max-height: none;
+    padding-right: 0;
+    background: none;
+    z-index: 3;
+    /* The rows sit at the panel's right edge, and the panel is narrower than the instrument (the
+       instrument bleeds 15px left), so the callouts reach past the dial's right edge exactly as the
+       concept draws them -- overlapping the ring, not the centre readout. */
+    right: -10px;
+  }
+  [data-observatory-dial] .obs-event-list--orbit {
+    position: relative;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  [data-observatory-dial] .obs-event-list--orbit > li {
+    position: absolute;
+    right: 0;
+    width: 100%;
+    top: 0; /* replaced per row by placeCalloutRows() */
+  }
+  [data-observatory-dial] .obs-event-item {
+    width: 100%;
+    /* NO BOX. The concept draws these callouts as text floating over the instrument -- date, name,
+       amount, status -- with a thin connector and no card around them. An opaque rounded rectangle
+       over the dial (as this first shipped) reads as a panel that has been dropped on top of the
+       artwork, which is not what the concept does. Legibility over the engraving comes from a text
+       shadow and the dial's own dark disc instead. */
+    border: 0;
+    padding: var(--obs-space-1) 0 var(--obs-space-1) var(--obs-space-3);
+    text-align: right;
+    /* A soft scrim from the dial side outward, NOT a card: ivory text over bare brass is
+       unreadable (measured in the first capture of this composition), and the concept solves the
+       same problem by seating the text at the ring's outer edge. This keeps the floating feel
+       while giving the text ground, and it fades rather than ending in a hard rectangle. */
+    background: linear-gradient(
+      to right,
+      rgba(10, 16, 26, 0) 0%,
+      rgba(10, 16, 26, 0.55) 24%,
+      rgba(10, 16, 26, 0.72) 100%
+    );
+    border-radius: var(--obs-radius-md) 0 0 var(--obs-radius-md);
+    text-shadow: 0 1px 5px rgba(7, 12, 21, 0.9);
+  }
+  /* The amount in a callout is the dial's own scale, not a headline. */
+  [data-observatory-dial] .obs-event-item .obs-event-amount { font-size: 19px; }
+  /* The ticket tucks under the dial's bottom. Grid items may overlap, and the ticket paints on top
+     of the instrument -- which is how the concept seats it (its dome and treeline are occluded by
+     the ticket's top edge). */
+  [data-observatory-dial] .obs-evidence-ticket {
+    order: 2;
+    position: relative;
+    z-index: 2;
+    margin-top: -20px;
+  }
+  /* Day navigation moves below the ticket so the dial and the ticket can overlap at all. */
+  [data-observatory-dial] .obs-dial-controls { order: 3; position: relative; z-index: 4; }
+}
