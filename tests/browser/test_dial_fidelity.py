@@ -202,6 +202,55 @@ def test_iphone_air_dial_and_right_callouts_have_separate_hit_areas(dial_page):
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
 
+@pytest.mark.parametrize("width,height", [(390, 844), (420, 912), (430, 932), (1440, 900)])
+def test_day_labels_sit_inside_the_painted_wheel(dial_page, width, height):
+    """Every day label's own BOX must stay inside the wheel it is engraved on.
+
+    Owner, 2026-09-24: *"dates aligned inside the wheel instead of clipping."* The labels were
+    anchored at a fixed `VIEWBOX.r - 22` units and centred there, which made each label's own
+    box the deciding factor. Measured before the fix at 420px: the anchor sat 117px from the
+    centre, the painted wheel's edge is at **127px**, and a 24x31px label centred on that
+    anchor reached 132-137px — so four of five labels hung 5-10px outside the visible wheel.
+    It was scale-dependent, which is why desktop looked nearly right (one label 2px over) and
+    the phone did not.
+
+    The painted radius is the authority rather than my own arithmetic: it is read from the
+    plate's own clip-path circle, and it measures 127px at a 270px wrap and 291px at 620px —
+    i.e. the drawn wheel edge, not a chosen tolerance. `placeDayLabels` now insets each label
+    by half ITS OWN diagonal, so a wide two-digit day is pulled in further than a narrow one.
+    """
+    page = dial_page
+    page.set_viewport_size({"width": width, "height": height})
+    page.wait_for_timeout(200)
+    painted = _painted_dial(page)
+    assert painted is not None, "the dial art must be present to measure its painted wheel"
+    labels = page.evaluate("""([cx, cy, r]) => {
+        const centre = document.querySelector('.obs-dial-center').getBoundingClientRect();
+        return [...document.querySelectorAll('.obs-dial-day-label')].map((el) => {
+            const q = el.getBoundingClientRect();
+            const corners = [[q.left, q.top], [q.right, q.top],
+                             [q.left, q.bottom], [q.right, q.bottom]]
+                .map(([x, y]) => Math.hypot(x - cx, y - cy));
+            return {
+                text: (el.textContent || '').trim().slice(0, 8),
+                furthest: Math.max(...corners),
+                radius: r,
+                overlapsCentre: !(q.right <= centre.left || q.left >= centre.right
+                                  || q.bottom <= centre.top || q.top >= centre.bottom),
+            };
+        });
+    }""", [painted["cx"], painted["cy"], painted["r"]])
+    assert labels, "the dial must render labels for today, events and the horizon end"
+    for label in labels:
+        assert label["furthest"] <= painted["r"] + 1, (
+            f"the {label['text']!r} label reaches {label['furthest']:.1f}px from the centre, "
+            f"outside the painted wheel at {label['radius']:.1f}px"
+        )
+        assert not label["overlapsCentre"], (
+            f"the {label['text']!r} label collides with the centre readout"
+        )
+
+
 @pytest.mark.parametrize("width,height", [(390, 844), (430, 932), (1024, 768), (1440, 900)])
 @pytest.mark.parametrize("theme", ["light", "dark"])
 def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height, theme):

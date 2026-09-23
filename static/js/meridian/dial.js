@@ -47,6 +47,48 @@ const ARC_START = -100;
 const ARC_END = 120;
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
+/* Where a day label may sit, measured rather than hand-tuned (owner, 2026-09-24: "dates
+   aligned inside the wheel instead of clipping").
+
+   The labels used to be anchored at a fixed `VIEWBOX.r - 22` units and centred on that point,
+   which made the label's own BOX the thing that decided whether it fitted. Measured at the
+   governed mobile size (a 270px wrap, so 1 unit = 0.45px): the anchor sat 117px from the
+   centre while the rim is at 127px, and a 24x31px label centred there reached 132-137px —
+   i.e. its corner overhung the rim by 5-10px on four of five labels. Desktop overhung less
+   (620px wrap, one label by 2px), which is why this read as a mobile-only defect.
+
+   The inset is therefore per label: half the label's own diagonal, converted from pixels to
+   viewBox units with the wrap's MEASURED width, plus a clearance. A label whose box is
+   wider (a two-digit day) is pulled in further than a narrow one, so each sits as close to
+   the rim as its own size allows while staying inside it. `DAY_LABEL_MAX_INSET_UNITS` is the
+   largest such inset any governed dial needs (the biggest label at the smallest dial: a
+   31x38px box on a 240px wrap = 61 units of half-diagonal, plus clearance), and it seeds the
+   pre-measurement position so nothing is ever painted overhanging. */
+export const DAY_LABEL_CLEARANCE_UNITS = 6;
+export const DAY_LABEL_MAX_INSET_UNITS = 68;
+
+export function placeDayLabels(state, wrap) {
+  if (!wrap || !state || !state.model) return [];
+  const labels = wrap.querySelectorAll(".obs-dial-day-label");
+  const width = wrap.clientWidth;
+  if (!width || width <= 0 || !labels.length) return [];
+  const pxPerUnit = width / VIEWBOX.w;
+  const placed = [];
+  for (const span of labels) {
+    const day = Number(span.dataset.day);
+    if (!Number.isFinite(day)) continue;
+    const halfDiagonal = Math.hypot(span.offsetWidth, span.offsetHeight) / 2;
+    const insetUnits = halfDiagonal / pxPerUnit + DAY_LABEL_CLEARANCE_UNITS;
+    // The floor keeps a pathologically small dial from stacking labels on the centre readout.
+    const radius = Math.max(VIEWBOX.r * 0.45, VIEWBOX.r - insetUnits);
+    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, radius, dayToAngle(day, state.model.totalDays));
+    span.style.left = `${((point.x / VIEWBOX.w) * 100).toFixed(2)}%`;
+    span.style.top = `${((point.y / VIEWBOX.h) * 100).toFixed(2)}%`;
+    placed.push({day, radius});
+  }
+  return placed;
+}
+
 export function clamp(value, min, max) {
   if (Number.isNaN(value)) return min;
   return Math.min(max, Math.max(min, value));
@@ -385,9 +427,17 @@ function renderInstrumentOverlay(state) {
       continue;
     }
     const angle = dayToAngle(day, state.model.totalDays);
-    const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 22, angle);
+    // A CONSERVATIVE first position, replaced by the measured pass once the overlay is in
+    // the document. The inset is the largest any governed dial needs, so a label can never
+    // be painted overhanging the rim even for one frame.
+    const point = positionOnArc(
+      VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - DAY_LABEL_MAX_INSET_UNITS, angle
+    );
     const span = document.createElement("span");
     span.className = "obs-dial-day-label";
+    // The day index is what placeDayLabels() needs to re-anchor from the wrap's MEASURED
+    // width; the rendered date text would have to be parsed back into a day offset.
+    span.dataset.day = String(day);
     if (date === state.model.today) span.classList.add("is-today");
     if (date === state.selectedDate) span.classList.add("is-selected");
     const parsed = parseDateKey(date);
@@ -1424,17 +1474,26 @@ export function renderDial(container, inputModel) {
   panel.append(instrument, eventsColumn, controls, renderEvidenceTicket(state, selectedEventForState(state)));
   container.appendChild(panel);
 
-  // Both ends of a run follow live geometry, so recompute when either side resizes.
-  renderConnectors(state, container);
-  const redrawConnectors = () => renderConnectors(state, container);
+  // Both ends of a run follow live geometry, so recompute when either side resizes. The day
+  // labels are anchored from the wrap's MEASURED width, so they need the same treatment: a
+  // label inset computed for one dial size would overhang the rim again after a resize
+  // (rotating a phone, or any window change), because the labels' own boxes stay a fixed
+  // pixel size while the radius grows or shrinks with the wrap.
+  const redraw = () => {
+    renderConnectors(state, container);
+    placeDayLabels(state, svgWrap);
+  };
+  // Runs AFTER the panel is in the document, which is the first moment the wrap has a
+  // measurable width; the labels were seeded with a conservative inset at build time.
+  redraw();
   const resizeObserver =
-    typeof ResizeObserver !== "undefined" ? new ResizeObserver(redrawConnectors) : null;
+    typeof ResizeObserver !== "undefined" ? new ResizeObserver(redraw) : null;
   if (resizeObserver) resizeObserver.observe(panel);
-  else window.addEventListener("resize", redrawConnectors);
+  else window.addEventListener("resize", redraw);
 
   return function stop() {
     if (resizeObserver) resizeObserver.disconnect();
-    else window.removeEventListener("resize", redrawConnectors);
+    else window.removeEventListener("resize", redraw);
     container.replaceChildren();
   };
 }
