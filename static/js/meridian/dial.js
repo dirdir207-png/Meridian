@@ -57,30 +57,44 @@ const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
    i.e. its corner overhung the rim by 5-10px on four of five labels. Desktop overhung less
    (620px wrap, one label by 2px), which is why this read as a mobile-only defect.
 
-   The inset is therefore per label: half the label's own diagonal, converted from pixels to
-   viewBox units with the wrap's MEASURED width, plus a clearance. A label whose box is
-   wider (a two-digit day) is pulled in further than a narrow one, so each sits as close to
-   the rim as its own size allows while staying inside it. `DAY_LABEL_MAX_INSET_UNITS` is the
-   largest such inset any governed dial needs (the biggest label at the smallest dial: a
-   31x38px box on a 240px wrap = 61 units of half-diagonal, plus clearance), and it seeds the
-   pre-measurement position so nothing is ever painted overhanging. */
+   The first fix to that made the inset per label — half each label's OWN diagonal — which
+   kept every label inside the rim but put them at DIFFERENT distances from the centre, and the
+   owner reported the result on 2026-09-24: "dates aren't well centered in the dial." He was
+   reading a real property of that code, not a rendering artifact: a two-digit day was pulled in
+   further than a narrow one, so the ring of dates was visibly uneven.
+
+   ONE radius is now used for every label, sized by the WIDEST box present, so the dates sit
+   evenly on a single circle and no label can overhang. The invariant is unchanged (the inset
+   still accounts for the largest half-diagonal, converted from pixels to viewBox units with the
+   wrap's MEASURED width, plus a clearance) — only the evenness differs.
+   `DAY_LABEL_MAX_INSET_UNITS` is the largest such inset any governed dial needs (the biggest
+   label at the smallest dial: a 31x38px box on a 240px wrap = 61 units of half-diagonal, plus
+   clearance), and it seeds the pre-measurement position so nothing is ever painted overhanging. */
 export const DAY_LABEL_CLEARANCE_UNITS = 6;
 export const DAY_LABEL_MAX_INSET_UNITS = 68;
 
 export function placeDayLabels(state, wrap) {
   if (!wrap || !state || !state.model) return [];
-  const labels = wrap.querySelectorAll(".obs-dial-day-label");
+  const labels = [...wrap.querySelectorAll(".obs-dial-day-label")];
   const width = wrap.clientWidth;
   if (!width || width <= 0 || !labels.length) return [];
   const pxPerUnit = width / VIEWBOX.w;
+  // ONE radius for all of them: sized by the widest label's half-diagonal so nothing overhangs,
+  // then applied to every label so the ring reads as even (see the note above).
+  let widestHalfDiagonal = 0;
+  for (const span of labels) {
+    widestHalfDiagonal = Math.max(
+      widestHalfDiagonal,
+      Math.hypot(span.offsetWidth, span.offsetHeight) / 2
+    );
+  }
+  const insetUnits = widestHalfDiagonal / pxPerUnit + DAY_LABEL_CLEARANCE_UNITS;
+  // The floor keeps a pathologically small dial from stacking labels on the centre readout.
+  const radius = Math.max(VIEWBOX.r * 0.45, VIEWBOX.r - insetUnits);
   const placed = [];
   for (const span of labels) {
     const day = Number(span.dataset.day);
     if (!Number.isFinite(day)) continue;
-    const halfDiagonal = Math.hypot(span.offsetWidth, span.offsetHeight) / 2;
-    const insetUnits = halfDiagonal / pxPerUnit + DAY_LABEL_CLEARANCE_UNITS;
-    // The floor keeps a pathologically small dial from stacking labels on the centre readout.
-    const radius = Math.max(VIEWBOX.r * 0.45, VIEWBOX.r - insetUnits);
     const point = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, radius, dayToAngle(day, state.model.totalDays));
     span.style.left = `${((point.x / VIEWBOX.w) * 100).toFixed(2)}%`;
     span.style.top = `${((point.y / VIEWBOX.h) * 100).toFixed(2)}%`;
