@@ -65,6 +65,7 @@ def sync_provider(adapter: ProviderAdapter, repository, *, ai_classifier=None) -
                 connection_id=run.connection_id,
                 currency=account.currency,
                 available_balance=account.available_balance,
+                goal_target=account.goal_target,
                 is_active=account.is_active,
                 source_updated_at=account.source_updated_at,
             )

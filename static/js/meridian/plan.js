@@ -213,14 +213,13 @@ const ALLOCATION_STATIONS = {
   extra: { left: 50, top: 88, modifier: "is-extra" },
 };
 
-/* Semantic kit glyph per segment, reusing the vocabulary the handoff fixes: the
-   compass for what is still free to allocate, a bell for an unfunded shortfall, and
-   the bank for money already committed. */
+/* Semantic kit glyph per station. Goals use Crew's pocket-goal meaning; the
+   fallback remains conservative for malformed/unexpected payload labels. */
 function allocationIcon(label) {
   if (/available/i.test(label)) return "compass";
   if (/goal/i.test(label)) return "flag";
-  if (/unfund/i.test(label)) return "bell";
-  return "bank";
+  if (/bill/i.test(label) || /commit/i.test(label)) return "bank";
+  return "bell";
 }
 
 /* The three marks the governing concept actually draws (02-plan.png), generated as RAISED brass
@@ -229,16 +228,13 @@ function allocationIcon(label) {
    star rose that the concept uses at two sizes -- large for the map's hub and small for
    Available. Nothing else has a concept original, so nothing else gets one.
 
-   `null` is a decision and not a gap: the app labels its second station "Unfunded commitments",
-   which is a SHORTFALL, and the concept's second mark is a summit -- the opposite claim. The
-   owner chose to keep the labels and let each mark follow its own label's meaning, so an unfunded
-   segment keeps the kit's bell. Painting a summit over a shortfall would assert the opposite of
-   the number printed beneath it. */
+   The three current stations are Bills, Goals and Available. Unexpected labels
+   intentionally keep the kit fallback rather than borrowing a station mark. */
 function allocationMark(label) {
   if (/available/i.test(label)) return "star-rose";
   if (/goal/i.test(label)) return "mountain-flag";
-  if (/unfund/i.test(label)) return null;
-  return "rotunda";
+  if (/bill/i.test(label) || /commit/i.test(label)) return "rotunda";
+  return null;
 }
 
 function renderAllocation(root, plan) {

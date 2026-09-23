@@ -19,6 +19,7 @@ class AccountRecord:
     synced_at: str
     created_at: str
     updated_at: str
+    goal_target: Optional[float] = None
     # Set when a complete provider read no longer returns this account. The row
     # keeps its history; it simply stops being a current observation.
     absent_since: Optional[str] = None

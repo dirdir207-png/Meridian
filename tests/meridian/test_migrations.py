@@ -36,6 +36,7 @@ _LATER_MIGRATIONS = [
     "026_calendar_context.sql",
     "027_ai_run_records.sql",
     "028_allow_negative_bill_reserve.sql",
+    "029_crew_pocket_goals.sql",
 ]
 
 
@@ -155,6 +156,7 @@ def test_migrations_are_idempotent_and_preserve_legacy_rows(tmp_path):
         ("026", "026_calendar_context.sql"),
         ("027", "027_ai_run_records.sql"),
         ("028", "028_allow_negative_bill_reserve.sql"),
+        ("029", "029_crew_pocket_goals.sql"),
     ]
     assert legacy_row == ("2026-08-26", 1234.56)
     assert {

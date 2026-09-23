@@ -444,7 +444,27 @@ def build_plan(
         _ZERO,
     )
     unfunded = max(_ZERO, total_target - total_funded)
-    available = max(_ZERO, cash_total - committed - unfunded)
+    # Crew goals are pocket targets, so their current balances are already inside
+    # cash_total. When goal metadata is observed, keep the Goals station separate
+    # from bill obligations and re-derive the residual instead of appending cash.
+    goal_pockets = [
+        account
+        for account in accounts.values()
+        if account.is_active
+        and account.account_type == "pocket"
+        and account.goal_target is not None
+        and _money(account.goal_target) > _ZERO
+    ]
+    goals_total = sum((_money(account.balance) for account in goal_pockets), _ZERO)
+    bill_purpose = committed + unfunded
+    if goal_pockets:
+        # Crew's provider goal pockets are distinct from the bill obligations. Their
+        # balances are already in cash_total, so subtract them once as a purpose.
+        available = max(_ZERO, cash_total - bill_purpose - goals_total)
+    else:
+        # Legacy/local planning records have no provider goal metadata; retain the
+        # established commitment partition rather than guessing that a pocket is a goal.
+        available = max(_ZERO, cash_total - bill_purpose)
 
     coverage_ratio = float(min(_money("1"), total_funded / total_target)) if total_target > _ZERO else 0.0
     if commitments:
@@ -496,8 +516,8 @@ def build_plan(
         "allocation": {
             "cash_total": float(cash_total),
             "segments": [
-                {"label": "Committed to commitments", "amount": float(committed)},
-                {"label": "Unfunded commitments", "amount": float(unfunded)},
+                {"label": "Bills", "amount": float(committed + unfunded)},
+                {"label": "Goals", "amount": float(goals_total)},
                 {"label": "Available", "amount": float(available)},
             ],
         },

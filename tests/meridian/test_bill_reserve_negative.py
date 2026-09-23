@@ -127,7 +127,10 @@ def test_the_rebuild_preserves_every_row_value_and_id(tmp_path, monkeypatch):
 
     monkeypatch.undo()
     applied = run_migrations(db_path)
-    assert applied == ["028_allow_negative_bill_reserve.sql"]
+    assert applied == [
+        "028_allow_negative_bill_reserve.sql",
+        "029_crew_pocket_goals.sql",
+    ]
 
     after = sorted(
         sqlite3.connect(db_path).execute(

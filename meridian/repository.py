@@ -145,7 +145,7 @@ _COMPATIBLE_CURSOR_OCCURRED_AT = re.compile(
 
 _ACCOUNT_COLUMNS = (
     "id, provider, external_id, name, account_type, balance, currency, "
-    "available_balance, is_active, source_updated_at, synced_at, created_at, "
+    "available_balance, goal_target, is_active, source_updated_at, synced_at, created_at, "
     "updated_at, absent_since"
 )
 _TRANSACTION_COLUMNS = (
@@ -267,6 +267,7 @@ class FinancialRepository:
         balance: float,
         currency: str = "USD",
         available_balance: Optional[float] = None,
+        goal_target: Optional[float] = None,
         is_active: bool = True,
         connection_id: Optional[int] = None,
         source_updated_at: Optional[str] = None,
@@ -284,13 +285,24 @@ class FinancialRepository:
                 if _reconciles_absence(connection)
                 else ""
             )
+            has_goal_target = "goal_target" in {
+                row["name"] for row in connection.execute("PRAGMA table_info(financial_accounts)")
+            }
+            goal_columns = ", goal_target" if has_goal_target else ""
+            goal_values = ", ?" if has_goal_target else ""
+            goal_update = (
+                f"goal_target = CASE WHEN {_ACCOUNT_FRESHNESS_CONDITION} "
+                "THEN excluded.goal_target ELSE financial_accounts.goal_target END,"
+                if has_goal_target
+                else ""
+            )
             connection.execute(
                 f"""
                 INSERT INTO financial_accounts (
                     provider, external_id, name, account_type, balance,
-                    connection_id, available_balance, currency, is_active, source_updated_at,
+                    connection_id, available_balance{goal_columns}, currency, is_active, source_updated_at,
                     synced_at, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?{goal_values}, ?, ?, ?, ?, ?)
                 ON CONFLICT(provider, external_id) DO UPDATE SET
                     connection_id = COALESCE(excluded.connection_id, financial_accounts.connection_id),
                     name = CASE WHEN {_ACCOUNT_FRESHNESS_CONDITION}
@@ -302,6 +314,7 @@ class FinancialRepository:
                     available_balance = CASE WHEN {_ACCOUNT_FRESHNESS_CONDITION}
                         THEN excluded.available_balance
                         ELSE financial_accounts.available_balance END,
+                    {goal_update}
                     currency = CASE WHEN {_ACCOUNT_FRESHNESS_CONDITION}
                         THEN excluded.currency ELSE financial_accounts.currency END,{absence_reset}
                     is_active = CASE WHEN {_ACCOUNT_FRESHNESS_CONDITION}
@@ -329,6 +342,7 @@ class FinancialRepository:
                     balance,
                     connection_id,
                     available_balance,
+                    *((goal_target,) if has_goal_target else ()),
                     currency,
                     int(is_active),
                     source_updated_at,

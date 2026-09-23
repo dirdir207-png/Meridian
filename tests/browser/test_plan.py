@@ -101,8 +101,8 @@ PLAN_PAYLOAD = {
     "allocation": {
         "cash_total": 1500.0,
         "segments": [
-            {"label": "Committed to commitments", "amount": 250.0},
-            {"label": "Unfunded commitments", "amount": 750.0},
+            {"label": "Bills", "amount": 1000.0},
+            {"label": "Goals", "amount": 0.0},
             {"label": "Available", "amount": 500.0},
         ],
     },
@@ -139,9 +139,9 @@ def test_plan_renders_command_timeline_and_allocation():
         # the decorative art and rules must stay out of the accessibility tree.
         medallions = page.locator("[data-allocation-medallions] .m-plan-medallion")
         assert medallions.count() == 3
-        assert "Committed to commitments" in medallions.nth(0).inner_text()
-        assert "250" in medallions.nth(0).inner_text()
-        assert "Unfunded commitments" in medallions.nth(1).inner_text()
+        assert "Bills" in medallions.nth(0).inner_text()
+        assert "1,000" in medallions.nth(0).inner_text()
+        assert "Goals" in medallions.nth(1).inner_text()
         assert "Available" in medallions.nth(2).inner_text()
         assert "500" in medallions.nth(2).inner_text()
         assert page.locator("[data-allocation-links]").get_attribute("aria-hidden") == "true"

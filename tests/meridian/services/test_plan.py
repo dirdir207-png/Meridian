@@ -37,13 +37,14 @@ def _synced_checking(graph, balance=2000.0):
     return account
 
 
-def _pocket(graph, external_id, name, balance):
+def _pocket(graph, external_id, name, balance, goal_target=None):
     return graph.upsert_account(
         provider="crew",
         external_id=external_id,
         name=name,
         account_type="pocket",
         balance=balance,
+        goal_target=goal_target,
         source_updated_at=datetime.now(timezone.utc).isoformat(),
     )
 
@@ -51,7 +52,7 @@ def _pocket(graph, external_id, name, balance):
 def test_plan_summarizes_commitments_and_coverage(env):
     graph, commitments, rules = env
     _synced_checking(graph, balance=1500.0)
-    pocket = _pocket(graph, "vac-1", "Vacation", 250.0)
+    pocket = _pocket(graph, "vac-1", "Vacation", 250.0, goal_target=1000.0)
     commitments.create(
         type=CommitmentType.GOAL,
         name="Vacation",
@@ -235,7 +236,7 @@ def test_plan_reports_first_projected_shortfall(env):
 def test_plan_allocation_segments_reconcile(env):
     graph, commitments, rules = env
     _synced_checking(graph, balance=1500.0)
-    pocket = _pocket(graph, "vac-1", "Vacation", 250.0)
+    pocket = _pocket(graph, "vac-1", "Vacation", 250.0, goal_target=1000.0)
     commitments.create(
         type=CommitmentType.GOAL,
         name="Vacation",
@@ -249,9 +250,9 @@ def test_plan_allocation_segments_reconcile(env):
     total = sum(Decimal(str(segment["amount"])) for segment in segments)
     assert total == Decimal("1500.00")
     by_label = {segment["label"]: Decimal(str(segment["amount"])) for segment in segments}
-    assert by_label["Committed to commitments"] == Decimal("250.00")
-    assert by_label["Unfunded commitments"] == Decimal("750.00")
-    assert by_label["Available"] == Decimal("500.00")
+    assert by_label["Bills"] == Decimal("1000.00")
+    assert by_label["Goals"] == Decimal("250.00")
+    assert by_label["Available"] == Decimal("250.00")
 
 
 def test_plan_labels_stale_freshness(env):

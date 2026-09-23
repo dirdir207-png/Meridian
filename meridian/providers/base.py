@@ -12,6 +12,8 @@ class NormalizedAccount:
     balance: float
     currency: str = "USD"
     available_balance: Optional[float] = None
+    # Crew's observed pocket goal target; NULL means the provider did not report a goal.
+    goal_target: Optional[float] = None
     is_active: bool = True
     source_updated_at: Optional[str] = None
 

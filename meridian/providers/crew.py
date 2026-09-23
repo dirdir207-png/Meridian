@@ -16,6 +16,7 @@ query CurrentUser {
         displayName
         name
         overallBalance
+        targetAmount
         isPrimary
       }
     }
@@ -62,6 +63,20 @@ _TRANSACTION_STATUS_REVISIONS = {
     "pending": 10,
     "posted": 30,
 }
+
+
+def _goal_target(source: Dict[str, Any]) -> Optional[float]:
+    """Return Crew's pocket target in dollars, preserving an unreported goal as NULL."""
+    raw = source.get("targetAmount")
+    if raw is None:
+        goal = source.get("goal")
+        raw = goal.get("targetAmount") if isinstance(goal, dict) else goal
+    if raw is None:
+        return None
+    try:
+        return float(raw) / 100
+    except (TypeError, ValueError):
+        return None
 
 
 class CrewReadAdapter:
@@ -145,6 +160,7 @@ class CrewReadAdapter:
             name=str(name),
             account_type="checking" if is_primary or str(name).lower() == "checking" else "pocket",
             balance=float(source.get("overallBalance") or 0) / 100,
+            goal_target=_goal_target(source),
             is_active=True,
             source_updated_at=observed_at,
         )
@@ -207,6 +223,7 @@ class CrewReadAdapter:
                 seen_cursors.add(next_cursor)
                 cursor = next_cursor
         return transactions, errors
+
 
     @staticmethod
     def _normalize_transaction(

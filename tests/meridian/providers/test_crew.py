@@ -21,6 +21,7 @@ class FixtureCrewClient:
                                     "id": "pocket-checking",
                                     "displayName": "Checking",
                                     "overallBalance": 12345,
+                                    "targetAmount": 20000,
                                     "isPrimary": True,
                                     "accountNumber": "4444333322221111",
                                 }
@@ -60,6 +61,7 @@ def test_adapter_normalizes_cents_and_omits_sensitive_source_fields():
     snapshot = CrewReadAdapter(client, observed_at="2026-08-26T10:00:00Z").fetch_snapshot()
 
     assert snapshot.accounts[0].balance == 123.45
+    assert snapshot.accounts[0].goal_target == 200.0
     assert snapshot.transactions[0].amount == -4.59
     assert snapshot.transactions[0].status == "pending"
     assert "status" in client.queries[1][1]
