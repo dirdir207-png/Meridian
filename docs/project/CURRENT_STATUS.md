@@ -1,5 +1,57 @@
 # Enhanced SimpleCrew — Current Status
 
+## The Today dial's day labels sit inside the wheel, and the Plan map's hub star is centred (`OS-094`, `OS-095`) (2026-09-24)
+
+**Two owner-reported fixes, one of them a regression this lane had just introduced.**
+
+**1. "dates aligned inside the wheel instead of clipping" (`OS-094`).** The day labels were anchored
+at a fixed `VIEWBOX.r - 22` units and centred on that point, so each label's own BOX decided whether
+it fitted. Measured at 420px: the anchor sat **117px** from the centre, the painted wheel edge is at
+**127px**, and a 24x31px label centred on that anchor reached **132-137px** — four of five labels
+hung 5-10px outside the visible wheel. It is scale-dependent, which is why desktop looked nearly
+right (one label 2px over) and the phone did not. `placeDayLabels()` now insets each label by half
+its OWN diagonal, converted from pixels to viewBox units with the wrap's measured width, and runs
+from the existing ResizeObserver as well as at render — an inset computed for one dial size would
+overhang again after a resize, because the labels stay a fixed pixel size while the radius scales.
+The acceptance target is the plate's **own painted circle**, read from its clip-path (127px at a
+270px wrap, 291px at 620px), so it is the drawn wheel edge rather than a tolerance I chose.
+
+**2. "Top star on plan is off center" and "the right still says unfounded commitments and has the
+same icon as committed to commitments" (`OS-095`).** Both were real, and the second was **my own
+regression from `f5e7ef7`** — `git log -S` traces it there, not to anything pre-existing.
+
+- **The centring defect, and the trap it names.** `place-items: center` does NOT centre an item that
+  overflows its container. With no explicit row, the implicit grid row auto-sized to the 75px mark
+  inside a 62px disc, and the initial `align-content: start` pinned that oversized row to the top —
+  so the mark sat low by the full overflow: **0px above the disc, 8.9px below at 420px** (0/13 at
+  desktop). My earlier reasoning said the geometry was symmetric; the measurement said otherwise,
+  and the measurement was right. `align-content: center` splits it evenly (4.45/4.45, 6.5/6.5).
+- **The glyph regression.** OS-090 replaced an explicit `/unfund/` test with a broad
+  `/bill|commit/` fall-through, so "Unfunded commitments" — which contains the word "commitments" —
+  began resolving to the Bills station's rotunda and bank glyph. The explicit shortfall case is
+  restored ahead of the bills case, and the mapping moved into a **DOM-free module**
+  (`plan-map-marks.js`) because no guard could have caught the original defect: a text match on
+  `plan.js` cannot see that two *different* labels resolve to the *same* mark. It is now called in a
+  round trip. This matters beyond the mapping: the service's labels and the client ship at different
+  moments, so the interim state — old labels, new mapping — is user-visible and must be correct on
+  its own. That is the state the owner photographed.
+
+**Verification.** Full suite **1917 passed, 94-96 skipped**; `ruff` clean over
+`app.py meridian/ scripts/ tests/`; Node syntax and `git diff --check` clean. Every new guard is
+proved load-bearing by negative control: restoring the fixed 22-unit label inset fails
+390/420/430 and passes 1440 (the defect's own signature), removing `align-content: center` fails
+both hub cases, and the mapping round-trip pins the shortfall case by name. Two existing guards that
+read the mapping from `plan.js` were **retargeted to the module rather than deleted**, per OS-090's
+own acceptance rule.
+
+**Still open, and named rather than glossed.** The dial's size is **64.3% of the 420px viewport**
+against the concept's 82.5%, and what blocks it is the still-hard **130px** callout rail to its right
+— that is the "left-and-under overlap" half of the owner's four-item request. The moon is currently
+upper-**left** (x 37..109 mobile, x 266 desktop) rather than upper-right, and the dial's centre
+repeats the Safe-to-spend figure (`$248.50`), which is why it reads as belonging to the compass even
+though the header already carries it. **Not claimed:** no capture of the enlarged dial, because it
+is not built; no deployment; no provider, financial or authority change.
+
 ## Accounts no longer overflows on a phone, and two Plan ornament defects are fixed (`OS-091`, `OS-092`) (2026-09-24)
 
 **Three owner-reported defects from the iPhone Air, all reproduced by measurement before any edit.**

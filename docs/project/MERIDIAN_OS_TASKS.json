@@ -2203,6 +2203,63 @@
       },
       "notes": "Recorded before being worked on. The two code-level defects are bounded; the layout half needs a reproduction before any edit, because guessing at a visual defect is how a fix lands on the wrong thing.",
       "phase": "track-D-surfaces"
+    },
+    {
+      "id": "OS-094",
+      "title": "Today: day labels clipped outside the wheel",
+      "status": "complete",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "owner_decided": true,
+      "authority": [
+        "owner request, 2026-09-24: 'dates aligned inside the wheel instead of clipping' (one of the four Today items; BUILD_SPEC.md:25 makes concept 06 the dial's target)"
+      ],
+      "why": "The labels were anchored at a fixed `VIEWBOX.r - 22` units and centred on that point, so each label's own BOX decided whether it fitted. Measured at 420px: the anchor sat 117px from the centre while the painted wheel edge is at 127px, and a 24x31px label centred there reached 132-137px -- four of five labels hung 5-10px outside the visible wheel. It is scale-dependent, which is why desktop looked nearly right (one label 2px over) and the phone did not.",
+      "scope": [
+        "dial.js only: inset each label by half its OWN diagonal, converted from pixels to viewBox units with the wrap's measured width, and recompute on resize as well as at render."
+      ],
+      "acceptance": [
+        "Every label's furthest corner stays inside the painted wheel edge at 390/420/430/1440.",
+        "No label collides with the centre readout.",
+        "A label is never painted overhanging, even before the measured pass runs."
+      ],
+      "blocked_by": [],
+      "evidence": {
+        "measurement": "Before: labels 132-137px from centre against a 127px painted radius at 420px (5-10px outside), 293px against 291px at desktop. After: 116-123px against 127px, and 275-284px against 291px -- per-label radii (105/107 mobile, 261/265 desktop) because the inset is each label's own half-diagonal.",
+        "authority_check": "The painted radius was read from the plate's own clip-path circle and measures 127px at a 270px wrap and 291px at 620px, i.e. it IS the VIEWBOX.r circle -- so the labels were genuinely outside the drawn wheel rather than outside a radius I chose.",
+        "tests": "tests/browser/test_dial_fidelity.py::test_day_labels_sit_inside_the_painted_wheel (new, 4 viewports) RED->GREEN by negative control: restoring the fixed 22-unit inset fails 390/420/430 and passes 1440, which is the defect's own signature.",
+        "verification": "Full suite 1917 passed / 96 skipped; ruff clean; Node syntax and git diff --check clean."
+      },
+      "notes": "First slice of the four-item Today rehash the owner set. The dial's own size (64.3% of the viewport against the concept's 82.5%) is still open and is blocked on relocating the 130px callout rail, which is the 'left-and-under overlap' half of his request."
+    },
+    {
+      "id": "OS-095",
+      "title": "Plan map second pass: the hub mark centred on its disc, and a shortfall stopped sharing the Bills glyph",
+      "status": "complete",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "owner_decided": true,
+      "authority": [
+        "owner report, 2026-09-24: 'Top star on plan is off center ... the whole thing needs to move up in the circle with the edges matching, the knobs can overlap' and 'The right still says unfounded commitments and has the same icon as committed to commitments'"
+      ],
+      "why": "Two defects, one of them a REGRESSION introduced by this lane's own OS-090 commit. (1) `place-items: center` cannot centre an item that overflows its container: with no explicit row, the implicit row auto-sized to the 75px mark inside a 62px disc and the initial `align-content: start` pinned that oversized row to the top, so the mark sat LOW by the full overflow (0px above, 8.9px below at 420px; 13px at desktop). (2) OS-090 replaced an explicit `/unfund/` test with a broad `/bill|commit/` fall-through, so 'Unfunded commitments' -- which contains 'commitments' -- began resolving to the Bills station's rotunda and bank glyph.",
+      "scope": [
+        "plan.css: centre the hub's grid track so the knob overflow is even.",
+        "Move the station-to-mark mapping into a DOM-free module so it can be round-trip tested, and restore the explicit shortfall case ahead of the bills case."
+      ],
+      "acceptance": [
+        "The hub mark overflows its disc evenly (within 1px) and its bezel fills the disc.",
+        "Every label resolves to the mark its meaning calls for, including the service's older labels.",
+        "No existing guard deleted: the two that read the mapping from plan.js were retargeted to the module."
+      ],
+      "blocked_by": [],
+      "evidence": {
+        "measurement": "Hub: overflow 0px above / 8.9px below at 420px and 0/13px at desktop before; 4.45/4.45 and 6.5/6.5 after.",
+        "attribution": "`git log -S` traces the glyph regression to this lane's OS-090 commit f5e7ef7, not to anything pre-existing -- the mapping before it returned null for 'Unfunded commitments'.",
+        "tests": "tests/browser/test_plan_ornaments.py::test_the_hub_mark_overflows_its_disc_symmetrically (new) RED->GREEN by negative control; tests/meridian/test_plan_map_marks.py (new) round-trips every label case through the DOM-free module and pins the shortfall case by name.",
+        "verification": "Full suite 1917 passed / 96 skipped; ruff clean; git diff --check clean. Captures in artifacts/plan-map-fixes-2026-09-24/ show the interim state (old labels, distinct glyphs) and the post-restart state (Bills / Goals / Available)."
+      },
+      "notes": "The station LABELS still read 'Committed to commitments' / 'Unfunded commitments' until the :8081 preview is restarted, because services/plan.py is Python. The mapping fix matters precisely because that interim state is user-visible."
     }
   ]
 }

@@ -118,6 +118,45 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-24 (later) — The Today dial's labels, and a Plan regression this lane caused (`OS-094`, `OS-095`)
+
+**Two commits, both verified before landing:** `0182e43` (fix/today — day labels anchored inside the
+painted wheel) and `e882843` (fix/plan — the hub star centred, and a shortfall keeping its own glyph).
+
+**`OS-095` is a regression I introduced and the owner caught, and the attribution was checked rather
+than excused.** `git log -S` traces it to this lane's own `f5e7ef7` (OS-090): replacing an explicit
+`/unfund/` test with a broad `/bill|commit/` fall-through made "Unfunded commitments" resolve to the
+Bills station's rotunda. **The deeper lesson is about guard design, not regexes.** The mapping lived
+inside `plan.js`, where the only possible guard was a text match on the source — and a text match
+cannot express "these two DIFFERENT labels must not resolve to the SAME mark". The mapping now lives
+in a DOM-free module and is exercised by calling it. That is the shape of guard that would have
+caught this, and it is now in place for every label case including the service's older ones.
+
+**A measurement corrected my own reasoning, and that is worth recording.** I had argued from the CSS
+that the hub mark's geometry was symmetric. Measuring the DOM said otherwise: **0px of overflow above
+the disc and 8.9px below**, because `place-items: center` cannot centre a grid item that overflows
+its container — the implicit row grew to the mark and `align-content: start` pinned it to the top.
+The reasoning was wrong; the measurement was right. Owner's framing was also the accurate diagnosis
+before any code was read: *"the whole thing needs to move up in the circle."*
+
+**The same discipline fixed the day labels.** They were anchored on a fixed radius, so each label's
+own box decided whether it fitted; they hung 5-10px outside the painted wheel on mobile and looked
+nearly right at desktop, which is exactly how a scale-dependent defect hides from a single-viewport
+review. The acceptance target is now the plate's OWN painted circle read from its clip-path, not a
+radius chosen by the implementer, and the negative control reproduces the defect's signature (three
+mobile widths fail, desktop passes).
+
+**Interim-state correctness is now a stated requirement in this lane.** Because Python changes need
+a restart while static assets update on refresh, the app can serve OLD labels with a NEW mapping.
+That state is user-visible — it is the state the owner photographed — so it is asserted by the
+round-trip guard rather than treated as a transient. **The `:8081` preview still needs a restart**
+before the Plan map reads Bills / Goals / Available.
+
+**Still open from the owner's four Today items:** the dial's size (64.3% of the viewport against the
+concept's 82.5%), blocked on relocating the 130px callout rail — the "left-and-under overlap" half;
+the moon, currently upper-left rather than upper-right; and the dial centre repeating the
+Safe-to-spend figure, which the header already carries.
+
 ### 2026-09-24 — OS-090 completed, and three owner-reported defects fixed (`OS-090`, `OS-091`, `OS-092`)
 
 **This session's three commits, all verified before landing:**
