@@ -2077,6 +2077,37 @@
         "third_pass_same_day": "Owner: 'Can we get everything a little closer together to allow three bills to show?' Delivered by reclaiming spacing only, and by two measurements that changed the approach. (1) The collapsed row's height is set by the 44px disclosure toggle -- the touch-target floor, KEPT -- not by the medallion, so the row came down 69px -> 61/62px by tightening padding alone, which also lands it on the concept's own ~60px pitch. (2) The map's box must be SCALED, not narrowed: narrowing it to 89% width shrank the art and the stations' boxes but not their type, so `Goals $200.00` wrapped onto two lines -- caught by the capture, not by the numbers. A transform scales art, stations and type together (259px -> 231px), and the reclaim is expressed as a ratio (7.33% of the container width) rather than a pixel count. Everything else taken back is a padding or margin carrying no information: the shell's 24px canvas pad -> 6px, the tab bar's 16px bottom margin -> 0, the 8px row gap -> 4px, the funding footer's 12px -> 6px. Measured after at 420x912: band 200px showing THREE whole rows (they need 193px of the 198px client box), map section 157..387, ticket 637..705, add control bottom 823px -- still inside the canvas (826px). No control, figure or word was removed."
       },
       "notes": "The ONE deliberate desktop content change is the removal of `due <date>` from the fact line. That fragment duplicated the desktop NEXT column exactly as it duplicated the mobile date, so the same reason applies; no other desktop text moved. The map's medallions also changed on every viewport, which is OS-087's material fix and not the table. Observed and NOT fixed (out of scope, shell-level): the floating `Ask Virgil` control overlaps the right end of the full-width add button on mobile. It overlapped the bill rows before this slice too. SECOND PASS: the ONE desktop layout change beyond the fact line is the funding bar moving from between the fact line and the invoice entries to directly under the name, because the bar is now a row cell on both surfaces rather than a disclosure item; keeping a second copy inside the panel would have let the two drift. The governed desktop structural diff is 0.34%, entirely the map's brass ring, the heading rename, the removed duplicate date and that move. THIRD PASS LESSON: the pass's overrides sit in a late `max-width: 600px` block because CSS resolves equal-specificity ties by ORDER. The first attempt declared them earlier, so the row margin silently did not move -- no error, no warning, only the measurement showed it. A guard now asserts the block is last."
+    },
+    {
+      "id": "OS-090",
+      "title": "Plan map: make the second station GOALS from Crew pocket goals",
+      "status": "in_progress",
+      "priority": "high",
+      "owner_decided": true,
+      "authority": [
+        "docs/project/MERIDIAN_DECISIONS.md (D-023 point 8)",
+        "design/observatory-drafts-2026-09-08/02-plan.png"
+      ],
+      "why": "The map's governing concept and the Observatory kit's own specimen both name its stations Bills / Goals / Available, but the service emits Committed to commitments / Unfunded commitments / Available, so the concept's mountain mark can never appear on a real plan. Goals exist natively in Crew as a target on a pocket, and the owner asked for exactly that case -- 'vehicle registration... a pocket goal instead of a bill' -- and agreed to switch the station.",
+      "scope": [
+        "Extend the provider's subaccounts query and normalisation to carry a pocket's goal target (meridian/providers/crew.py:12-20).",
+        "Derive a Goals figure from the balances of goal-bearing pockets and re-derive the cash partition rather than appending to it, because pocket balances are already inside cash_total.",
+        "Replace the 'Unfunded commitments' segment with 'Goals' in the allocation payload.",
+        "KEEP available = cash_total - committed - unfunded unchanged in meaning: the unfunded figure stops being a station but must keep reducing free cash, or the map silently overstates spendable money.",
+        "Leave the unreachable-here legacy goal path in app.py exactly as found."
+      ],
+      "acceptance": [
+        "The map shows exactly three stations whose figures partition cash by purpose, and a test asserts that partition rather than the labels alone.",
+        "A plan with goal-bearing pockets shows Goals > 0 and the mountain mark; a plan with no goals shows Goals $0.00 and still renders the concept's three-station composition.",
+        "Available is unchanged for a fixture whose pockets and goals are unchanged -- the guard that catches an accidental redefinition.",
+        "Every existing guard updated rather than deleted, and tests/browser/test_plan.py retargeted from 'Unfunded commitments' to the station that replaces it."
+      ],
+      "blocked_by": [],
+      "evidence": {
+        "discovery": "meridian/services/plan.py:430-447 builds the allocation; :496-502 hardcodes the three labels; :474 already exposes obligations.unfunded. meridian/providers/crew.py:12-20 is the read path and does not request goal. meridian/crew_commands.py:32 selects a pocket's goal on create and :167-175 sends targetAmount. app.py:~1776 is a second direct-HTTP path that requests goal and sums pocket balances into a misleadingly named total_goals, on its own credential helper -- left untouched, and explicitly NOT the foundation.",
+        "open_question": "Whether a card's/commitment's funding and a pocket's goal can ever describe the same money, which would make the Goals station overlap the Bills station. Must be resolved from the data model before the partition is asserted in a test, not assumed."
+      },
+      "notes": "Agreed by the owner on 2026-09-23 in the same session as the OS-087 marks."
     }
   ]
 }
