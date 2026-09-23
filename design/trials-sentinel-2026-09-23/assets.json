@@ -1,0 +1,38 @@
+{
+  "asset": "static/img/meridian/observatory/trials-sentinel-hourglass.png",
+  "created": "2026-09-23",
+  "kind": "newly-authored-generated-raster",
+  "source_reference": "design/trials-sentinel-2026-09-23/master-gpt-image-2.png",
+  "dimensions": "607x1222",
+  "mode": "RGBA",
+  "alpha_extrema": [0, 255],
+  "transparent_fraction": 0.7604,
+  "visible_bounds": [12, 12, 595, 1210],
+  "sha256": "8860ebbd3fab718027865c45e3886674626467571d9fb5bdde21a9427d9d529b",
+  "master": {
+    "path": "design/trials-sentinel-2026-09-23/master-gpt-image-2.png",
+    "dimensions": "1920x1280",
+    "mode": "RGB",
+    "sha256": "d14d2b248975d476fbec1c5a9edd756d8d5fe3762ab2f67397dd3325d0519c5f"
+  },
+  "generation": {
+    "service": "Runway",
+    "tool": "RUNWAY_GENERATE_IMAGE",
+    "model": "gpt_image_2",
+    "ratio": "1920:1280",
+    "quality": "high",
+    "output_count": 1,
+    "background": "opaque",
+    "reference_images": [],
+    "task_id": "46eb3dc5-c9ce-4413-8150-722bf5e5e36f",
+    "credit_cost": 20,
+    "prompt": "prompt.txt"
+  },
+  "derivation": {
+    "tool": "scripts/key_raster_background.py",
+    "floor": 16,
+    "white_point": 198,
+    "crop_pad": 12,
+    "note": "Alpha is derived from luminance and the box is cropped to the visible ink plus 12px. Re-running the tool on the master with these values reproduces the delivered asset byte for byte."
+  }
+}

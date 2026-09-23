@@ -581,6 +581,26 @@ a.m-settings-row:focus-visible {
   line-height: 1.55;
 }
 
+/* The Trials pane ornament: the brass sand-timer of design/trials-sentinel-2026-09-23/. It is a
+   CSS MASK, not a background image, so the engraving takes the colour token and follows the theme
+   the way every other engraved line does -- a background image would freeze the generated brass.
+   The same pattern serves the Settings row glyphs. Dimensioned by height because the subject is a
+   tall figure (607x1222). */
+.m-trials-sentinel {
+  flex: 0 0 auto;
+  height: clamp(104px, 13vw, 168px);
+  aspect-ratio: 607 / 1222;
+  background: color-mix(in srgb, var(--obs-brass, #c6aa71) 78%, transparent);
+  -webkit-mask: url("/static/img/meridian/observatory/trials-sentinel-hourglass.png") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/trials-sentinel-hourglass.png") center / contain no-repeat;
+}
+
+/* Brass on the light canvas (#f4ecdf) is too low-contrast to read, so the light theme uses a
+   darker bronze instead of the dark theme's ink. */
+html[data-theme="light"] .m-trials-sentinel {
+  background: color-mix(in srgb, #7d5c22 84%, transparent);
+}
+
 .m-connection-ledger {
   display: grid;
   gap: var(--m-space-5);
@@ -832,6 +852,14 @@ a.m-settings-row:focus-visible {
   .m-settings-command {
     display: grid;
     margin-bottom: var(--m-space-6);
+  }
+
+  /* The command header becomes a single-column grid here, so the ornament would otherwise claim a
+     whole row under the copy and push the panel down. It stays, smaller and hard right, because
+     the pane is read on a phone more often than on a desktop. */
+  .m-trials-sentinel {
+    justify-self: end;
+    height: 92px;
   }
 
   .m-settings-command h1 {

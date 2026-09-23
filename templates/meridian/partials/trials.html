@@ -11,6 +11,11 @@
         charge. This pane is read-only; it never cancels anything on your behalf.
       </p>
     </div>
+    {# The pane's ornament: the brass sand-timer of design/trials-sentinel-2026-09-23/, rendered as
+       a CSS mask so it takes the brass token instead of a frozen generated colour. Decoration with
+       no meaning of its own: it states no deadline, count or progress, so it is hidden from the
+       accessibility tree rather than described. #}
+    <span class="m-trials-sentinel" aria-hidden="true"></span>
   </header>
 
   <section class="m-card m-trials-panel" data-trials-panel aria-labelledby="trials-panel-heading">
