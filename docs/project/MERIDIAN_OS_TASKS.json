@@ -2047,6 +2047,25 @@
         "The medallion is verified on the mobile viewports in both themes",
         "A guard asserts that an unmapped category does not fall through to a wrong glyph"
       ]
+    },
+    {
+      "id": "OS-089",
+      "title": "Plan mobile: one-line bill rows, everything else in the disclosure, and the medallion material",
+      "status": "ready",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "detail": "Owner-directed 2026-09-23 and fully specified in docs/project/PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md, which carries his verbatim request, the measured current state, the target structure and the acceptance criteria. READ THAT SPEC FIRST; this entry is the pointer and the spend record, not the spec. The shape of it: the concept draws a bill row that is ONE LINE -- name, status, figure, an evidence indicator and a chevron -- while the app carries a facts line, a progress bar, a NEXT column and invoice pills on the collapsed row. The owner wants all of that extra information moved INTO the existing disclosure panel, which then also displays every attached piece of evidence in full. Plus: the section banner becomes 'Upcoming bills', the 'BILL' tag is removed, the status badge must survive a long name ('like it is on everything but verizon payment arrangement'), 'Add a bill or goal' stretches full width, SEPTEMBER COVERAGE moves under the add controls, and NEXT PAYCHECK is restyled with a generated icon. RUNWAY SPEND IS AUTHORISED for this work ('we can spend that'), and the headline item is the medallion material -- see OS-087, which this task consumes rather than duplicates.",
+      "progress": "NOT STARTED. Two of the three defects the owner reported were reproduced and their causes measured before this entry was written, so the next session does not have to rediscover them: (1) the evidence control reads as unstyled because both its background and its border are faint washes on a D-022 dark box -- the same 'value chosen for one surface, kept after the surface moved' bug D-022 already recorded; (2) the status badge is inline-block with a left margin inside a wrapping name row, so a long name pushes it out of position. The third report, 'reserved is over the dollar amount', measured as crowding rather than overlap, and the owner's own spec removes it anyway by moving the label into the panel.",
+      "limits": "Never generate unattended, and state the planned spend to the owner before generating -- D-021: a generation is a SPEND. Do not infer a bill's category from its name (OS-088). Do not regenerate the 61-icon set; HANDOFF_FOR_ASTRA_2026-09-19.md:200 forbids bulk replacement on initiative. Do not remove the existing disclosure guards in tests/meridian/test_plan_row_disclosure.py -- update them, and add guards for the badge-with-long-name case and the evidence indicator's conditional render. Do not merge to main.",
+      "acceptance_criteria": [
+        "A capture at 420x912 in both themes shows one-line rows, with the status badge beside EVERY name including a long one, an evidence indicator only where evidence exists, and no BILL tag",
+        "The collapsed row is measurably shorter than the 113px recorded in the spec",
+        "The full bill name is present in the disclosure panel and in the accessible name, so truncation never makes two different bills look identical",
+        "'Add a bill or goal' spans the page width, and the section order reads bills -> next paycheck -> add controls -> September coverage",
+        "Next income AND the add control are both reachable within one screen at 420x912, which is the owner's actual complaint and the reason for the slice",
+        "A generated asset ships with its design record, its index row, and a sha256 verified by recomputation, and the Runway spend was stated to the owner before it happened",
+        "ruff clean, full suite green, session_close.py exit 0, session_close reports pushed"
+      ]
     }
   ]
 }
