@@ -223,6 +223,24 @@ function allocationIcon(label) {
   return "bank";
 }
 
+/* The three marks the governing concept actually draws (02-plan.png), generated as RAISED brass
+   rasters on 2026-09-23 under D-021 and delivered in design/plan-map-marks-2026-09-23/: a domed
+   rotunda for money already committed, a flagged mountain summit for a goal, and ONE eight-point
+   star rose that the concept uses at two sizes -- large for the map's hub and small for
+   Available. Nothing else has a concept original, so nothing else gets one.
+
+   `null` is a decision and not a gap: the app labels its second station "Unfunded commitments",
+   which is a SHORTFALL, and the concept's second mark is a summit -- the opposite claim. The
+   owner chose to keep the labels and let each mark follow its own label's meaning, so an unfunded
+   segment keeps the kit's bell. Painting a summit over a shortfall would assert the opposite of
+   the number printed beneath it. */
+function allocationMark(label) {
+  if (/available/i.test(label)) return "star-rose";
+  if (/goal/i.test(label)) return "mountain-flag";
+  if (/unfund/i.test(label)) return null;
+  return "rotunda";
+}
+
 function renderAllocation(root, plan) {
   const host = root.querySelector("[data-allocation-medallions]");
   const links = root.querySelector("[data-allocation-links]");
@@ -264,14 +282,26 @@ function renderAllocation(root, plan) {
     const disk = document.createElement("span");
     disk.className = "m-plan-medallion-disk";
     disk.setAttribute("aria-hidden", "true");
-    /* A CSS mask, not an <img>: inside an image an external SVG's currentColor
-       resolves to black, which would vanish on the navy "right" medallion. */
+    /* A generated mark is used as a background IMAGE, never as a mask: masking it to a single
+       brass token would flatten exactly the raised highlight and shadow the owner asked for, and
+       the asset already carries its own metal. The kit fallback stays a CSS mask, not an <img>,
+       because inside an image an external SVG's currentColor resolves to black and would vanish
+       on the navy medallion. */
     const glyph = document.createElement("span");
-    glyph.className = "m-plan-medallion-glyph";
-    glyph.style.setProperty(
-      "--m-medallion-icon",
-      `url("/static/img/meridian/observatory/kit-2026-09-16/icons/${allocationIcon(segment.label)}.svg")`
-    );
+    const mark = allocationMark(segment.label);
+    if (mark) {
+      glyph.className = `m-plan-medallion-mark is-${mark}`;
+      glyph.style.setProperty(
+        "--m-mark",
+        `url("/static/img/meridian/observatory/plan-map-${mark}.png")`
+      );
+    } else {
+      glyph.className = "m-plan-medallion-glyph";
+      glyph.style.setProperty(
+        "--m-medallion-icon",
+        `url("/static/img/meridian/observatory/kit-2026-09-16/icons/${allocationIcon(segment.label)}.svg")`
+      );
+    }
     disk.appendChild(glyph);
 
     const label = document.createElement("span");
@@ -291,11 +321,17 @@ function renderAllocation(root, plan) {
   hub.setAttribute("aria-hidden", "true");
   hub.style.left = `${ALLOCATION_STATIONS.hub.left}%`;
   hub.style.top = `${ALLOCATION_STATIONS.hub.top}%`;
+  /* The hub is NOT the same mark as Available after all. A full-resolution read of 02-plan.png
+     shows the top medallion as a compass with its own medium-thick solid bezel carrying rivet
+     knobs at north and south, while the bottom one is smaller with shorter points and a thinner
+     rim. Reusing one asset for both was the error the owner caught ("the top star is different
+     than the bottom one"), so the hub gets its own generated medallion and Available keeps the
+     star rose. */
   const rose = document.createElement("span");
-  rose.className = "m-plan-map-hub-rose";
+  rose.className = "m-plan-map-hub-mark";
   rose.style.setProperty(
-    "--m-medallion-icon",
-    'url("/static/img/meridian/observatory/kit-2026-09-16/icons/star.svg")'
+    "--m-mark",
+    'url("/static/img/meridian/observatory/plan-map-hub-compass.png")'
   );
   hub.appendChild(rose);
   host.appendChild(hub);

@@ -1,0 +1,161 @@
+{
+  "record": "plan-map-marks-2026-09-23",
+  "created": "2026-09-23",
+  "kind": "newly-authored-generated-raster",
+  "authorised_by": "Owner approved four concept-exact marks at 20 credits each on 2026-09-23 (80 credits); 80 were spent. The first three resolved the map's stations; the fourth, the hub compass, was generated after the owner compared the delivery with the concept and reported that the top star differs from the bottom one.",
+  "spend_credits": 80,
+  "assets": {
+    "rotunda": {
+      "role": "Money already committed to bills: the concept's Bills station.",
+      "delivered": "static/img/meridian/observatory/plan-map-rotunda.png",
+      "delivered_sha256": "bab8e3d9752599660eb24df84d946e3f19cd9e822dfe0c17fe04cdd5e7409b7a",
+      "keyed": "design/plan-map-marks-2026-09-23/keyed-rotunda.png",
+      "keyed_sha256": "4fce5eb012d57a7117235c3e764523eabb120c9f4512ae06383c2f760d651163",
+      "keyed_dimensions": "1224x1692",
+      "master": "design/plan-map-marks-2026-09-23/master-rotunda.png",
+      "master_dimensions": "1920x1920",
+      "master_mode": "RGB",
+      "master_sha256": "cbbb09eb104ec495fcd3a190d943226117a097eb0c3a53d3d1f532ebba27e17a",
+      "transparent_fraction": 0.4366,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "generation": {
+        "service": "Runway",
+        "tool": "RUNWAY_GENERATE_IMAGE",
+        "model": "gpt_image_2",
+        "ratio": "1920:1920",
+        "quality": "high",
+        "output_count": 1,
+        "background": "opaque",
+        "reference_images": [],
+        "task_id": "4973b074-27e9-4202-99e2-653e626b2a8f",
+        "credit_cost": 20,
+        "prompt": "prompts/rotunda.txt"
+      },
+      "derivation": {
+        "tool": "scripts/key_raster_background.py",
+        "floor": 16,
+        "white_point": 198,
+        "crop_pad": 12,
+        "delivered_resize_max_edge": 256,
+        "undelivered_reason": null
+      }
+    },
+    "mountain-flag": {
+      "role": "Money building toward a goal: the concept's Goals station.",
+      "delivered": "static/img/meridian/observatory/plan-map-mountain-flag.png",
+      "delivered_sha256": "92fdc1bcf59efce302a1bf9677b17f841d44022c078beff7ff7b1e176b94d9b9",
+      "keyed": "design/plan-map-marks-2026-09-23/keyed-mountain-flag.png",
+      "keyed_sha256": "e7870992095570b843a405c6c77de64e29d93f7cfae5cedbe3dc79d94a71d423",
+      "keyed_dimensions": "1524x1524",
+      "master": "design/plan-map-marks-2026-09-23/master-mountain-flag.png",
+      "master_dimensions": "1920x1920",
+      "master_mode": "RGB",
+      "master_sha256": "3fefb266a51f5e6941c50e10334e116f2665b68bc0863e3a77cfcbf16c60fdc4",
+      "transparent_fraction": 0.6189,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "generation": {
+        "service": "Runway",
+        "tool": "RUNWAY_GENERATE_IMAGE",
+        "model": "gpt_image_2",
+        "ratio": "1920:1920",
+        "quality": "high",
+        "output_count": 1,
+        "background": "opaque",
+        "reference_images": [],
+        "task_id": "62adffbd-ec16-4536-a83e-5dc734d550ec",
+        "credit_cost": 20,
+        "prompt": "prompts/mountain-flag.txt"
+      },
+      "derivation": {
+        "tool": "scripts/key_raster_background.py",
+        "floor": 16,
+        "white_point": 198,
+        "crop_pad": 12,
+        "delivered_resize_max_edge": 256,
+        "undelivered_reason": null
+      }
+    },
+    "star-rose": {
+      "role": "The concept's Available station, the smaller of its two stars.",
+      "delivered": "static/img/meridian/observatory/plan-map-star-rose.png",
+      "delivered_sha256": "6852a8fa4af34c14ace593946b9541ca617ca919e4587573662d38ec828e09b1",
+      "keyed": "design/plan-map-marks-2026-09-23/keyed-star-rose.png",
+      "keyed_sha256": "e72bb7590f1f314b11fe83fd0bdd3caf88203be0301a40d7b32583589e7927ea",
+      "keyed_dimensions": "1761x1834",
+      "master": "design/plan-map-marks-2026-09-23/master-star-rose.png",
+      "master_dimensions": "1920x1920",
+      "master_mode": "RGB",
+      "master_sha256": "df849fdf412e8024ad0d5459ba190244b226636bd4680e4604254fd2b005819d",
+      "transparent_fraction": 0.8069,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "generation": {
+        "service": "Runway",
+        "tool": "RUNWAY_GENERATE_IMAGE",
+        "model": "gpt_image_2",
+        "ratio": "1920:1920",
+        "quality": "high",
+        "output_count": 1,
+        "background": "opaque",
+        "reference_images": [],
+        "task_id": "f653d5f6-d326-4a50-81cb-05c32a31378b",
+        "credit_cost": 20,
+        "prompt": "prompts/star-rose.txt"
+      },
+      "derivation": {
+        "tool": "scripts/key_raster_background.py",
+        "floor": 16,
+        "white_point": 198,
+        "crop_pad": 12,
+        "delivered_resize_max_edge": 256,
+        "undelivered_reason": null
+      }
+    },
+    "hub-compass": {
+      "role": "The hub: the concept's LARGER compass, with its own knobbed bezel.",
+      "delivered": "static/img/meridian/observatory/plan-map-hub-compass.png",
+      "delivered_sha256": "d95d61bcdce201503d21305680a0b2c2a3944c7500a1a3cbba745e259ea4cf17",
+      "keyed": "design/plan-map-marks-2026-09-23/keyed-hub-compass.png",
+      "keyed_sha256": "949949baaee8238689e8d02a88981c166586ad84079ba39d2d02e0fc397e4267",
+      "keyed_dimensions": "1404x1659",
+      "master": "design/plan-map-marks-2026-09-23/master-hub-compass.png",
+      "master_dimensions": "1920x1920",
+      "master_mode": "RGB",
+      "master_sha256": "d1fa625d6960e1d40bb26516abc65005fafa04932c9a5e051f93e536dbb6dd19",
+      "transparent_fraction": 0.7461,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "generation": {
+        "service": "Runway",
+        "tool": "RUNWAY_GENERATE_IMAGE",
+        "model": "gpt_image_2",
+        "ratio": "1920:1920",
+        "quality": "high",
+        "output_count": 1,
+        "background": "opaque",
+        "reference_images": [],
+        "task_id": "adf24671-3bac-4213-ada6-0c98d51072b9",
+        "credit_cost": 20,
+        "prompt": "prompts/hub-compass.txt"
+      },
+      "derivation": {
+        "tool": "scripts/key_raster_background.py",
+        "floor": 16,
+        "white_point": 198,
+        "crop_pad": 12,
+        "delivered_resize_max_edge": 256,
+        "undelivered_reason": null
+      }
+    }
+  }
+}

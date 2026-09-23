@@ -800,6 +800,8 @@
   position: relative;
   display: grid;
   place-items: center;
+  /* The glyph and the fleck field both sit inside the disc; the glyph must stay on top. */
+  isolation: isolate;
   width: 54px;
   height: 54px;
   border-radius: 50%;
@@ -810,6 +812,22 @@
      doubled edge. */
   border: 0;
   box-shadow: none;
+}
+
+/* The concept's field is not empty: a full-resolution read of 02-plan.png describes "a sparse
+   scatter of small gold four-pointed stars plus a few tinier gold dots, irregularly spaced like a
+   night sky, not a dense glitter fill". Drawn here as one tiled inline SVG so it stays
+   deterministic, needs no generation, and cannot drift from the disc it sits in. One star and one
+   dot on a 24px tile at low opacity reads as the concept's irregular scatter, not wallpaper. */
+.m-plan-medallion-disk::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M7 1.6l1.05 3.35L11.4 6 8.05 7.05 7 10.4 5.95 7.05 2.6 6l3.35-1.05z' fill='%23c6aa71'/%3E%3Ccircle cx='18' cy='16' r='1' fill='%23c6aa71'/%3E%3Ccircle cx='15.5' cy='21' r='0.7' fill='%23c6aa71'/%3E%3C/svg%3E");
+  background-size: 24px 24px;
 }
 
 /* OS-087. The concept's medallions are rendered METAL -- a bevelled brass ring with a real
@@ -840,6 +858,43 @@
   background-color: currentColor;
   -webkit-mask: var(--m-medallion-icon) center / contain no-repeat;
   mask: var(--m-medallion-icon) center / contain no-repeat;
+}
+
+/* OS-087, glyph half (2026-09-23). The concept draws the map's three marks as RAISED brass, so
+   these are the generated rasters placed as an image rather than a mask: a mask would replace
+   every pixel with one brass token and flatten the relief the owner asked for. The assets carry
+   their own highlight and shadow, so no colour is set here and the two themes share them, which
+   matches the disc (`#20263b` field, brass glyph) being a literal rather than a theme token.
+   Boxes are sized PER MARK because the art's aspect ratios differ: the rotunda is a tall building
+   (185x256) and would shrink to two thirds width inside a square box, while the star rose is
+   square and should use the full box. */
+/* Measured against the concept rather than guessed. The concept's station disc is ~54 CSS px with
+   its mark filling roughly two thirds of it; this app draws the disc at 42px on a phone, so the
+   marks were not only smaller in absolute terms but also smaller RELATIVE to their disc, and a
+   hairline engraving at 23px averages out into grey mush -- which is what "the concept's icons are
+   much brighter seeming" turned out to describe. The assets themselves measure BRIGHTER than the
+   concept's brass (median luminance 209-212 against 177), so nothing was regenerated for this: the
+   mark is drawn larger and lifted slightly in the render. */
+.m-plan-medallion-mark {
+  display: block;
+  width: 34px;
+  height: 36px;
+  background: var(--m-mark) center / contain no-repeat;
+  /* The lift is deliberately small. A large filter would clip the engraved highlights that give
+     the mark its relief and turn the brass into flat orange. */
+  filter: brightness(1.1) saturate(1.06);
+}
+
+.m-plan-medallion-mark.is-rotunda {
+  width: 26px;
+}
+
+.m-plan-map-hub-mark {
+  display: block;
+  width: 40px;
+  height: 40px;
+  background: var(--m-mark) center / contain no-repeat;
+  filter: brightness(1.1) saturate(1.06);
 }
 
 .m-plan-medallion-label,
@@ -875,22 +930,16 @@
 }
 
 /* The hub is the same instrument as the stations, so it takes the same real brass ring. */
+/* The hub's generated medallion carries its OWN bezel -- the solid band with the north and south
+   rivet knobs the concept draws -- so the shared kit frame is suppressed here only, or the two
+   rings would double exactly as they did on the station discs before OS-087. The disc stays: the
+   medallion's interior is deliberately transparent so the navy field and its gold flecks show
+   through it. */
 .m-plan-map-hub::after {
-  content: "";
-  position: absolute;
-  inset: -6px;
-  background: url("/static/img/meridian/observatory/kit-2026-09-16/medallion-frame.png") center / contain no-repeat;
-  pointer-events: none;
+  content: none;
 }
 
-.m-plan-map-hub-rose {
-  display: block;
-  width: 30px;
-  height: 30px;
-  background-color: #c6aa71;
-  -webkit-mask: var(--m-medallion-icon) center / contain no-repeat;
-  mask: var(--m-medallion-icon) center / contain no-repeat;
-}
+
 
 @media (max-width: 560px) {
   .m-plan-medallion-disk {
@@ -901,6 +950,20 @@
   .m-plan-medallion-glyph {
     width: 20px;
     height: 20px;
+  }
+
+  .m-plan-medallion-mark {
+    width: 30px;
+    height: 32px;
+  }
+
+  .m-plan-medallion-mark.is-rotunda {
+    width: 23px;
+  }
+
+  .m-plan-map-hub-mark {
+    width: 34px;
+    height: 34px;
   }
 
   .m-plan-medallion-label {
@@ -916,10 +979,7 @@
     height: 48px;
   }
 
-  .m-plan-map-hub-rose {
-    width: 22px;
-    height: 22px;
-  }
+
 }
 
 .m-timeline {

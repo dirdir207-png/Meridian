@@ -83,26 +83,81 @@ def test_plan_map_stations_are_composition_not_amounts():
     assert "/available/i.test(segment.label)" in js
 
 
-def test_plan_map_glyphs_are_masks_so_each_disk_colours_its_own_glyph():
-    """Regression guard for a defect caught by inspecting the capture, not by a test:
-    an external SVG's currentColor resolves to black inside an <img>, which made the
-    glyph on the navy station nearly invisible. The glyphs are CSS masks instead."""
+def test_the_kit_fallback_glyph_is_still_a_mask_and_the_generated_marks_are_not():
+    """Regression guard for a defect caught by inspecting the capture, not by a test: an external
+    SVG's currentColor resolves to black inside an <img>, which made the glyph on the navy station
+    nearly invisible. The KIT glyphs are therefore still CSS masks.
+
+    OS-087's glyph half changed the picture without weakening that finding, so this guard is
+    RETARGETED rather than deleted. The three concept marks are generated rasters that carry their
+    own brass, highlight and shadow; masking one would replace every pixel with a single token and
+    flatten exactly the relief the owner asked for ("the concept ones look almost raised"). So the
+    two paths now have OPPOSITE requirements, and both are asserted here:
+
+      * the kit fallback (still used for `Unfunded commitments`, which the concept never draws)
+        stays a mask driven by `--m-medallion-icon`;
+      * a generated mark is a background IMAGE driven by `--m-mark`, and its rule must carry no
+        mask property at all, or the relief disappears silently.
+    """
     js = _read("static/js/meridian/plan.js")
     css = _read("static/css/meridian/plan.css")
+
+    # Kit fallback: still a mask.
     assert "m-plan-medallion-glyph" in js
     assert "--m-medallion-icon" in js
-    assert "m-plan-map-hub-rose" in js
-    # The medallion and rose glyphs are masks painted with currentColor, so the disk's
-    # own colour decides the glyph colour.
+    assert "mask: var(--m-medallion-icon)" in css
+
+    # Generated marks: image, never mask.
+    assert "m-plan-medallion-mark" in js
+    assert "--m-mark" in js
+    # The segment URL is BUILT from the mark name, so the literal file name is not in the JS: the
+    # guard pins the template and the names instead, or it would pass on a hub-only literal.
+    assert 'plan-map-${mark}.png' in js
+    for name in ("rotunda", "mountain-flag", "star-rose"):
+        assert name in js
+    mark_rule = css.split(".m-plan-medallion-mark {", 1)[1].split("}", 1)[0]
+    assert "var(--m-mark)" in mark_rule
+    assert "mask" not in mark_rule, "a mask on a generated mark flattens its relief"
+    assert "background-color" not in mark_rule, "the mark carries its own metal"
+
+    # The hub and Available share ONE star rose, exactly as the concept draws them.
+    assert "m-plan-map-hub-mark" in js
+    hub_rule = css.split(".m-plan-map-hub-mark {", 1)[1].split("}", 1)[0]
+    assert "var(--m-mark)" in hub_rule
+    assert "mask" not in hub_rule
+    assert "star-rose" in js
+
+
+def test_every_segment_maps_to_a_mark_the_concept_actually_draws():
+    """The concept draws exactly three marks. `allocationMark` may not invent a fourth, and an
+    unfunded segment must return `null` so it keeps the kit bell: the app labels that station
+    "Unfunded commitments", which is a SHORTFALL, and the concept's second mark is a summit --
+    the opposite claim, printed above the number it would contradict."""
+    js = _read("static/js/meridian/plan.js")
+    fn = js.split("function allocationMark(label) {", 1)[1].split("\n}", 1)[0]
+    assert 'return "star-rose"' in fn
+    assert 'return "mountain-flag"' in fn
+    assert 'return "rotunda"' in fn
+    assert "return null" in fn
+    # Only the three delivered assets may be referenced.
+    for name in ("rotunda", "mountain-flag", "star-rose"):
+        assert f"plan-map-{name}.png" in js or name in fn
+    # No <img> glyph remains in the medallion renderer.
+    assert "glyph.src" not in js
+
+
+def test_the_medallion_disc_and_glyph_still_differ_in_colour():
+    """The navy station must not paint its glyph in the same navy. Asserted on the INTENT rather
+    than on the cream literal it used to be achieved with: the concept draws all three stations as
+    one medallion -- a dark disc carrying a BRASS glyph -- so the stations were unified on
+    2026-09-23 and this now pins the disc/glyph pair that must differ, not the old value. It also
+    still pins the KIT fallback's mechanism, because that path is the one the <img> defect broke."""
+    css = _read("static/css/meridian/plan.css")
+    js = _read("static/js/meridian/plan.js")
     assert "mask: var(--m-medallion-icon) center / contain no-repeat" in css
     assert "background-color: currentColor" in css
-    # The navy station must not paint its glyph in the same navy. Asserted on the INTENT rather
-    # than on the cream literal it used to be achieved with: the concept draws all three stations
-    # as one medallion -- a dark disc carrying a BRASS glyph -- so the stations were unified on
-    # 2026-09-23 and the guard now pins the disc/glyph pair that must differ, not the old value.
     assert "background: #20263b" in css
     assert "color: #c6aa71" in css
-    # No <img> glyph remains in the medallion renderer.
     assert "glyph.src" not in js
 
 
