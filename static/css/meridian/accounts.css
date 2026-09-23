@@ -630,6 +630,13 @@ html[data-theme="dark"] .m-accounts-summary .m-accounts-ticket {
    with it and the winner falls to stylesheet order. Three classes is deliberate. */
 .memory-management {
   display: grid;
+  /* A grid track is `auto` by default, which can never go below its item's MIN-CONTENT.
+     The pending-proposal row below has a min-content of ~420px, so that default widened
+     this whole column and pushed the strip's Execute control off a 420px phone screen
+     (owner-reported 2026-09-24: "the accounts page is now larger than my screen").
+     `minmax(0, 1fr)` lets the track shrink and the children do the wrapping. */
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: var(--m-space-3);
   padding: var(--m-space-4);
   border: 20px solid transparent;
@@ -637,6 +644,13 @@ html[data-theme="dark"] .m-accounts-summary .m-accounts-ticket {
   border-radius: 0;
   background: none;
   box-shadow: none;
+}
+
+/* Grid and flex items are `min-width: auto` by default, i.e. they refuse to shrink below
+   their content and force the container wider instead. Every child of this strip is a
+   candidate, so the relaxation is declared once here rather than per child. */
+.memory-management > * {
+  min-width: 0;
 }
 
 .obs-shell .memory-management .m-section-label {
@@ -651,7 +665,27 @@ html[data-theme="dark"] .m-accounts-summary .m-accounts-ticket {
 
 .memory-management__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--m-space-2);
+}
+
+/* A pending memory proposal is one row of: label, the recorded-parameter review, Approve,
+   Execute and a status. `workspaces.css` sets that row to a single non-wrapping flex line,
+   which is right at desktop width and impossible on a phone: at 420px the row needs ~420px
+   inside a ~316px content box. Wrapping is what makes the row fit; the review block gets a
+   basis so it takes a full line of its own once the row wraps, instead of squeezing the
+   label into a sliver beside it. Nothing here removes a control or a recorded parameter. */
+.memory-management .pending-memory-proposal {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.memory-management .pending-memory-proposal > * {
+  min-width: 0;
+}
+
+.memory-management .pending-memory-proposal .m-action-review {
+  flex: 1 1 14rem;
 }
 
 /* ---------- Responsive ---------- */
