@@ -38,6 +38,8 @@ Measured rather than recalled. Do not re-derive these; re-verify only if the cod
 | `.m-plan-cell-funded::before` | `content: "Reserved"`, `display: block`, `margin-bottom: 4px` |
 | `.m-plan-cell-name` text | `"Electric\nBILL"` — the word BILL is a separate span |
 | `.m-bill-badge` | `display: inline-block; margin-left: 0.5rem` |
+| section heading | DOM text `Commitments`, rendered `COMMITMENTS` by `text-transform: uppercase` |
+| section/table `aria-label` | BOTH are `Commitments` — two attributes, not one |
 | `.m-invoice-link` | pill whose `background` is `--m-surface-muted` and `border` is `--m-border` |
 | bill row height | 113px collapsed, 162px expanded |
 
@@ -59,17 +61,26 @@ Measured rather than recalled. Do not re-derive these; re-verify only if the cod
 
 ## 3. Target structure
 
-### Collapsed row — one line, matching the concept's density
+### Collapsed row — matching the concept's density
+
+The concept's row is **name over date** on the left, **figure over `Reserved`** on the right, then a
+chevron:
 
 ```
-[ medallion ]  Name …truncated…  [status]        $84        [◈]  [>]
-                                                 Reserved
+[ medallion ]  Electric …truncated…  [status]      $84        [◈]  [>]
+               Sep11                              Reserved
 ```
 
 - **Medallion** — the concept's per-bill medallion (§5).
 - **Name** — truncated intelligently (§4).
 - **Status** — `Underfunded` / `Funded` / `Due soon` etc. typed next to the name, ALWAYS, including
   when the name is long. This is the badge, moved so it cannot be pushed out.
+- **Date** — the bill's next date, under the name, exactly where the concept puts `Sep11`.
+  **This is a CORRECTION to the first draft of this spec.** That draft moved both the fact line and
+  the `NEXT` column into the panel, which would have left the collapsed row with no date at all —
+  plainly contradicting the concept, which shows one. The app carries that date TWICE today: as
+  `due …` inside the fact line, and as the `NEXT` column. The fix is to keep ONE and drop the
+  duplicate, not to drop both, and do not assume which without looking.
 - **Figure** — the reserved amount in the concept's orange (`#f2873e`, measured from 02-plan.png).
 - **Evidence indicator** (§6) — an ICON ONLY, present only when evidence exists.
 - **Chevron** — the existing disclosure (`m-plan-row-toggle`, `aria-expanded`, `data-expanded`).
@@ -78,14 +89,17 @@ Measured rather than recalled. Do not re-derive these; re-verify only if the cod
 
 All additional information moves into the panel, which the owner explicitly wants:
 
-- the next date (currently a `NEXT` column on the collapsed row)
+- the `NEXT` column, which is the DUPLICATE of the date kept above (drop the duplicate, never the
+  date itself)
 - the `$X of $Y · backed by …` fact line
 - the funding progress bar
 - **every attached piece of evidence**, in full, each opening its invoice
 - the existing actions (`Edit funding`, `Save to Crew`, `Delete`)
 
-Consequence to verify: the collapsed row loses the facts line, the progress bar and `NEXT`, so the
-row must get SHORTER than 113px. If it does not, the panel did not absorb them.
+Consequence to verify: the collapsed row must measure SHORTER than the 113px recorded in §2 — it
+loses the fact line, the progress bar and the duplicate `NEXT` block, while keeping the name, the
+status, ONE date, the figure, the evidence indicator and the chevron. If it does not get shorter,
+the panel did not absorb them.
 
 ---
 
@@ -147,10 +161,11 @@ that evidence exists in text. If it does not, the indicator needs a real accessi
 
 ## 6a. Copy changes
 
-- The section banner reads **`Commitments`** today; the governing concept's banner is
-  **`Upcoming bills`**. Owner, 2026-09-23: *"commitments can also be changed to upcoming bills, its
-  all under the commitments banner, but these commitments specifically are bills"*. Rename the
-  visible heading to **Upcoming bills**.
+- The section banner reads **`Commitments`** today (measured: DOM text `Commitments`, rendered
+  `COMMITMENTS` by `text-transform: uppercase`); the governing concept's banner is
+  **`Upcoming bills`** — the owner confirmed this against the concept artwork on 2026-09-23 with
+  *"I was referring to this"* and *"It says commitments in the preview"*. Rename it to
+  **Upcoming bills**.
 - Remove the **`BILL`** tag beside each name (owner: *"the word bill can be removed"*). This is
   also what frees the space the status badge needs in §3.
 - **One wrinkle to resolve while implementing, not to skip.** The section's own creation control
