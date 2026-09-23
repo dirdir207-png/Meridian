@@ -2320,6 +2320,37 @@
         "environment_note": "A single full-suite run with APP_URL set reported 49 failed and 46 errors across 14 files, including 24 errors in a file that passes 24/24 when run alone. Re-running the biggest offenders individually gives 5 failures, so the large run's shape is an environment/capacity artefact (many sequential Chromium launches) rather than 49 product regressions. Recorded so the number is not mistaken for a baseline."
       },
       "notes": "Not fixed here: a shell/contrast/dock-inset slice is a different surface from Today's dial, and doing it inside this slice would make the change unbounded. It is recorded so the next session does not rediscover it or, worse, treat the giant run's failure count as its own doing."
+    },
+    {
+      "id": "OS-098",
+      "title": "Today: Safe-to-spend is readable outside the compass again, and the moon is upper-right",
+      "status": "complete",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "owner_decided": true,
+      "authority": [
+        "owner request, 2026-09-24: 'Safe-to-spend moved back outside the compass to match the concept as it originally was'",
+        "owner request, 2026-09-24: 'moon in the upper-right'"
+      ],
+      "why": "Both remaining Today items lived in ONE block, and the block was the cause. `.m-observatory-overview` carried `m-visually-hidden`, which collapses a container to a 1x1 clipped box: measured before, the container was 1x1, the Safe-to-spend figure inside it was 0px WIDE (present, populated with the real figure, and unreadable), and the moon overflowed that clipped parent at the LEFT. Meanwhile the dial's centre stated the figure instead, so the visible copy was the duplicate and the canonical one was unreadable -- the inverse of the concept, which draws the figure outside the instrument.",
+      "scope": [
+        "today.html: un-hide the overview block so the figure and the note render in the concept's arrangement.",
+        "dial.js: the centre's no-selection branch no longer states the safe-to-spend figure."
+      ],
+      "acceptance": [
+        "The safe-to-spend figure is visible outside the compass with a non-zero width.",
+        "The moon renders in the block's note column (upper-right) at phone and desktop widths.",
+        "The dial's centre does not duplicate the figure: with no event selected it states the date and a prompt.",
+        "No horizontal overflow at either width."
+      ],
+      "blocked_by": [],
+      "evidence": {
+        "measurement": "420x912 before -> after: the overview container 1x1 (clipped) -> 388x129; the figure 0px wide at (15,110) -> 280x62 at (16,232); the moon (37,110) upper-left 72x72 -> (318,214) upper-right 72x72; the dial centre '$248.50' -> '--' with the title 'No event selected'; document overflow 0 in both states. Desktop 1440: the figure 922x84 on the left, the moon 150x150 at x=1189 in the note column.",
+        "guards_retargeted": "Two, both INVERTED rather than deleted, because the owner reversed the requirement they encoded: tests/browser/test_dial_fidelity.py asserted `not [data-sts-figure].is_visible()` with the message 'the duplicate safe-to-spend block must not displace the dial' (it now asserts the figure IS visible, with a non-zero width, and that the CENTRE does not state the figure); and tests/meridian/test_dial_js.py asserted the centre's `kicker.textContent = \"Safe to spend\"` (it now asserts that string is absent, so reintroducing the duplicate fails).",
+        "captures": "artifacts/today-header-2026-09-24/{before,after}-{viewport,full}.png. The before pass was produced by REVERTING the two changed files and capturing, then restoring them -- a real captured state, not a reconstruction.",
+        "verification": "tests/browser/test_dial_fidelity.py 24 passed; tests/meridian/test_dial_js.py 37 passed; full non-browser suite 1921 passed / 96 skipped (the single failure is the handoff-dirty-tree check, which resolves on commit); ruff clean; node --check and git diff --check clean."
+      },
+      "notes": "The third and fourth of the owner's four Today items; the first two (dial size, dates inside the wheel) are OS-096 and OS-094. Attribution of the five browser failures seen alongside this work was re-proven for THESE files by reverting today.html and dial.js: byte-identical counts (5 failed / 22 passed) with and without the change, recorded under OS-097."
     }
   ]
 }

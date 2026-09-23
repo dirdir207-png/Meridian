@@ -1,5 +1,43 @@
 # Enhanced SimpleCrew — Current Status
 
+## Safe-to-spend is readable outside the compass, and the moon is upper-right (`OS-098`) (2026-09-24)
+
+**The last two of the owner's four Today items, and they turned out to be one defect.** Both the
+Safe-to-spend figure and the moon live inside `.m-observatory-overview`, which carried
+`m-visually-hidden` — the idiom that collapses a container to a **1×1 clipped box**. Measured
+before: the container was 1×1, the figure inside it was **0px wide** (present, populated with the
+real value, and unreadable), and the moon overflowed that clipped parent at the **left**. Meanwhile
+the dial's centre stated the figure instead — so the *visible* copy was the duplicate and the
+canonical one was the copy nobody could read, the exact inverse of the concept, which draws the
+figure outside the instrument.
+
+Measured at 420×912, before → after: container **1×1 → 388×129**; figure **0px wide at (15,110) →
+280×62 at (16,232)**; moon **(37,110) upper-left → (318,214) upper-right**; dial centre **"$248.50" →
+"—" with "No event selected"**; document overflow **0 in both states**. Desktop 1440: the figure
+922×84 on the left, the moon 150×150 at x=1189 in the note column.
+
+**The centre no longer states the figure at all.** With no event selected it states the date and a
+prompt — copy that already existed — because the centre belongs to the selected moment and the figure
+belongs outside the compass. That removes the duplicate rather than moving it.
+
+**Two guards INVERTED rather than deleted, because the owner reversed the requirement they encoded.**
+`test_dial_fidelity.py` asserted `not [data-sts-figure].is_visible()` ("the duplicate safe-to-spend
+block must not displace the dial"); it now asserts the figure **is** visible **with a non-zero width**
+— a 0px figure is precisely the clipped state this fixes — and that the centre does not state it.
+`test_dial_js.py` asserted the centre's `kicker.textContent = "Safe to spend"`; it now asserts that
+string is **absent**, so reintroducing the duplicate fails there.
+
+**Evidence is a real captured state, not a reconstruction:** `artifacts/today-header-2026-09-24/`
+`{before,after}-{viewport,full}.png`, where the *before* pass was produced by reverting the two
+changed files, capturing, and restoring them.
+
+**Verification.** `test_dial_fidelity.py` **24 passed**; `test_dial_js.py` **37 passed**; full
+non-browser suite **1921 passed / 96 skipped** (the one failure is the handoff-dirty-tree check, which
+resolves on commit); ruff, `node --check` and `git diff --check` clean. The five browser failures seen
+alongside this work were **re-attributed for these files** by reverting `today.html` and `dial.js`:
+byte-identical counts (5 failed / 22 passed) with and without the change, so they stay pre-existing
+under `OS-097`. No deployment; no provider, financial or authority change.
+
 ## The phone dial is the concept's size at last — 55% → **82.7%** of the viewport (`OS-096`, `OS-097`) (2026-09-24)
 
 **The first of the owner's four Today items, and the one the others depended on: "large dial with the

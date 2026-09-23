@@ -118,6 +118,38 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-24 (fourth pass) — The last two Today items were ONE defect (`OS-098`)
+
+**"Safe-to-spend moved back outside the compass" and "moon in the upper-right" were not two
+positions to nudge: they were one hidden container.** `.m-observatory-overview` carried
+`m-visually-hidden`, the idiom that collapses a box to **1×1 clipped**. So the figure inside it
+measured **0px wide** — populated with the real value and unreadable — and the moon overflowed that
+clipped parent at the **left**. The dial's centre stated the figure instead, which meant the VISIBLE
+copy was the duplicate and the canonical copy was invisible. Reading the markup once was worth more
+than any amount of repositioning.
+
+**The centre now says nothing about Safe-to-spend.** With no event selected it states the date and a
+prompt. The figure belongs outside the compass; the centre belongs to the selected moment. That
+deletes the duplicate rather than relocating it.
+
+**Two guards were INVERTED, not deleted, and that is the point worth recording.** Both asserted the
+old arrangement in as many words — `not [data-sts-figure].is_visible()` with the message "the
+duplicate safe-to-spend block must not displace the dial", and the centre's
+`kicker.textContent = "Safe to spend"`. When an owner reverses a requirement, the guard that encoded
+it must be inverted with the new reason recorded, or the next session reads the old assertion as the
+intent and reverts the fix. The non-zero-width assertion is deliberate: a 0px figure is exactly the
+clipped state being fixed, so "visible" alone would not have caught it.
+
+**Evidence is a captured state rather than a reconstruction:** the before images were produced by
+reverting the two changed files, capturing, and restoring them.
+
+**Attribution was re-proven for THESE files** (not borrowed from the earlier finding): reverting
+`today.html` and `dial.js` gives byte-identical counts, 5 failed / 22 passed, so the shell and
+activity failures remain pre-existing (`OS-097`).
+
+**The owner's four Today items are now all delivered:** dial size (`OS-096`), dates inside the wheel
+(`OS-094`), the moon's station and Safe-to-spend outside the compass (`OS-098`).
+
 ### 2026-09-24 (third pass) — The phone dial reaches the concept's size (`OS-096`), and a baseline that was wrong (`OS-097`)
 
 **The dial was never too big to fit; it was capped by one declaration.** A later `max-width: 700px`
