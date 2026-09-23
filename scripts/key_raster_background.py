@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import struct
 import zlib
 from pathlib import Path
@@ -26,6 +27,10 @@ from pathlib import Path
 _CHANNELS_BY_COLOR_TYPE = {0: 1, 2: 3, 4: 2, 6: 4}
 _MODE_BY_COLOR_TYPE = {0: "L", 2: "RGB", 4: "LA", 6: "RGBA"}
 _CHANNELS_BY_MODE = {"L": 1, "RGB": 3, "LA": 2, "RGBA": 4}
+# A colour key needs a soft edge rather than a binary cut, or anti-aliased line work gets a hard
+# stair-step. Alpha ramps from 0 at `tolerance` to 255 at `tolerance * _COLOUR_RAMP`; at the
+# defaults that is fully clear at <=12 and fully solid at >=18.
+_COLOUR_RAMP = 1.5
 
 
 def _chunk(tag: bytes, body: bytes) -> bytes:
@@ -248,11 +253,117 @@ def key_flat_background(
     return report
 
 
+def _corner_reference(width: int, height: int, pixels: bytes, channels: int) -> tuple[int, int, int]:
+    """The flat field's colour, read from the frame's corners and taken by majority.
+
+    The corners of a generated master are field, so this needs no configuration; a majority of
+    four keeps one stray corner (an orbit arc that runs off the edge) from setting the key.
+    """
+    corners = []
+    for x, y in ((0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)):
+        sample = (y * width + x) * channels
+        corners.append((pixels[sample], pixels[sample + 1], pixels[sample + 2]))
+    return max(set(corners), key=corners.count)
+
+
+def key_flat_colour_background(
+    src: Path,
+    dst: Path,
+    reference: tuple[int, int, int] | None = None,
+    tolerance: int = 12,
+    min_transparent_fraction: float = 0.2,
+    crop_pad: int | None = None,
+) -> dict:
+    """Key a raster's flat COLOUR background to alpha, by distance from that colour.
+
+    This exists because a luminance key cannot always separate a subject from its field, and
+    `moon-engraving.png` is the case that proved it: the asset is a line-art celestial scene on a
+    flat navy field rgb(15,26,42), and the moon's UNLIT limb is the same navy, with its cratered
+    interior only ~19 RGB units away. Measured, a luminance key at ANY floor that removes the
+    field also removes the subject's centre -- the moon's own centre keyed to alpha 0 at floors
+    30, 40, 50 and 60 -- so the scene would ship as a crescent outline with no moon in it.
+
+    Distance is straight RGB distance. Pixels within `tolerance` of the reference go fully
+    transparent; pixels at or beyond `tolerance * _COLOUR_RAMP` stay fully opaque; between them
+    alpha ramps linearly, so dotted orbits and thin gold line work keep anti-aliased edges rather
+    than a hard cut. With the defaults (12 and 18) the field at distance <=6 clears completely and
+    the moon's interior at ~19.5 stays solid.
+
+    A source that is NOT mostly field is refused, exactly as the luminance path refuses one: a key
+    that leaves a near-opaque rectangle is the failure both strategies guard against.
+    """
+    width, height, mode, pixels = read_png(src)
+    channels = _CHANNELS_BY_MODE[mode]
+    total = width * height
+    if reference is None:
+        reference = _corner_reference(width, height, pixels, channels)
+    opaque_at = int(round(tolerance * _COLOUR_RAMP))
+    red_ref, green_ref, blue_ref = reference
+    rgba = bytearray(total * 4)
+    for index in range(total):
+        sample = index * channels
+        if channels >= 3:
+            red, green, blue = pixels[sample], pixels[sample + 1], pixels[sample + 2]
+        else:
+            red = green = blue = pixels[sample]
+        distance = math.isqrt(
+            (red - red_ref) ** 2 + (green - green_ref) ** 2 + (blue - blue_ref) ** 2
+        )
+        if distance <= tolerance:
+            alpha = 0
+        elif distance >= opaque_at:
+            alpha = 255
+        else:
+            alpha = (distance - tolerance) * 255 // (opaque_at - tolerance)
+        rgba[index * 4] = red
+        rgba[index * 4 + 1] = green
+        rgba[index * 4 + 2] = blue
+        if channels in (2, 4) and alpha:
+            alpha = alpha * pixels[sample + channels - 1] // 255
+        rgba[index * 4 + 3] = alpha
+
+    report = alpha_report(width, height, bytes(rgba))
+    if report["transparent_fraction"] < min_transparent_fraction:
+        raise ValueError(
+            f"{src} is not a flat colour background: only "
+            f"{report['transparent_fraction']:.1%} of pixels key to transparent at distance "
+            f"<={tolerance} from {tuple(reference)}, below the required "
+            f"{min_transparent_fraction:.0%}"
+        )
+    if crop_pad is not None:
+        width, height, rgba = crop_to_bounds(
+            width, height, bytes(rgba), report["visible_bounds"], crop_pad
+        )
+        report = alpha_report(width, height, rgba)
+    write_rgba_png(dst, width, height, rgba)
+    report["source"] = str(src)
+    report["strategy"] = "colour"
+    report["reference_colour"] = list(reference)
+    report["tolerance"] = tolerance
+    report["opaque_at_distance"] = opaque_at
+    if crop_pad is not None:
+        report["crop_pad"] = crop_pad
+    return report
+
+
 def main(argv: list[str] | None = None) -> int:
     """Key one master and print its alpha report as JSON."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("source", type=Path)
     parser.add_argument("destination", type=Path)
+    parser.add_argument(
+        "--strategy",
+        choices=("luminance", "colour"),
+        default="luminance",
+        help="luminance (default) for a subject that is brighter than its field; colour for a "
+        "subject that CONTAINS the field's colour, as the moon engraving does",
+    )
+    parser.add_argument("--colour-tolerance", type=int, default=12)
+    parser.add_argument(
+        "--reference-colour",
+        default=None,
+        help="r,g,b of the flat field; default reads the frame's corners",
+    )
     parser.add_argument("--floor", type=int, default=16)
     parser.add_argument("--min-transparent-fraction", type=float, default=0.2)
     parser.add_argument(
@@ -262,13 +373,28 @@ def main(argv: list[str] | None = None) -> int:
         help="trim to the visible ink plus this many pixels of margin",
     )
     args = parser.parse_args(argv)
-    report = key_flat_background(
-        args.source,
-        args.destination,
-        floor=args.floor,
-        min_transparent_fraction=args.min_transparent_fraction,
-        crop_pad=args.crop_pad,
-    )
+    if args.strategy == "colour":
+        reference = None
+        if args.reference_colour:
+            reference = tuple(int(part) for part in args.reference_colour.split(","))
+            if len(reference) != 3:
+                parser.error("--reference-colour takes three comma-separated numbers")
+        report = key_flat_colour_background(
+            args.source,
+            args.destination,
+            reference=reference,
+            tolerance=args.colour_tolerance,
+            min_transparent_fraction=args.min_transparent_fraction,
+            crop_pad=args.crop_pad,
+        )
+    else:
+        report = key_flat_background(
+            args.source,
+            args.destination,
+            floor=args.floor,
+            min_transparent_fraction=args.min_transparent_fraction,
+            crop_pad=args.crop_pad,
+        )
     print(json.dumps(report, indent=2))
     return 0
 
