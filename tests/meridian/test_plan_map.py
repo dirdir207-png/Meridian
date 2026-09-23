@@ -94,7 +94,7 @@ def test_the_kit_fallback_glyph_is_still_a_mask_and_the_generated_marks_are_not(
     flatten exactly the relief the owner asked for ("the concept ones look almost raised"). So the
     two paths now have OPPOSITE requirements, and both are asserted here:
 
-      * the kit fallback (still used for `Unfunded commitments`, which the concept never draws)
+      * the kit fallback (used only for an unexpected segment, never the concept's three stations)
         stays a mask driven by `--m-medallion-icon`;
       * a generated mark is a background IMAGE driven by `--m-mark`, and its rule must carry no
         mask property at all, or the relief disappears silently.
@@ -129,10 +129,8 @@ def test_the_kit_fallback_glyph_is_still_a_mask_and_the_generated_marks_are_not(
 
 
 def test_every_segment_maps_to_a_mark_the_concept_actually_draws():
-    """The concept draws exactly three marks. `allocationMark` may not invent a fourth, and an
-    unfunded segment must return `null` so it keeps the kit bell: the app labels that station
-    "Unfunded commitments", which is a SHORTFALL, and the concept's second mark is a summit --
-    the opposite claim, printed above the number it would contradict."""
+    """The concept draws exactly three marks. `allocationMark` may not invent a fourth, and
+    an unexpected segment must return `null` rather than borrowing a station's meaning."""
     js = _read("static/js/meridian/plan.js")
     fn = js.split("function allocationMark(label) {", 1)[1].split("\n}", 1)[0]
     assert 'return "star-rose"' in fn
@@ -163,7 +161,7 @@ def test_the_medallion_disc_and_glyph_still_differ_in_colour():
 
 def test_plan_map_medallion_labels_wrap_inside_their_station():
     """The preview fixture uses short labels (Bills/Goals); the service emits longer
-    ones ("Committed to commitments"), so the block must wrap rather than escape the
+    ones ("Bills"), so the block must wrap rather than escape the
     parchment on the side where the nearest edge is closest."""
     css = _read("static/css/meridian/plan.css")
     assert "max-width: 34%" in css
@@ -260,13 +258,96 @@ def test_plan_tabs_are_the_concepts_bordered_bar_not_pills():
 def test_plan_mobile_rule_does_not_reintroduce_the_unequal_cells():
     """A `flex: 1` inside the <=600px block overrode the equal basis at exactly the widths
     the concept's equal cells matter, so the basis lives in one place and the mobile rule
-    only centres the labels."""
+    only centres the labels.
+
+    This reads EVERY `max-width: 600px` block, not just the first. Inserting an unrelated
+    mobile rule ahead of it (the ornament band, 2026-09-24) made the single-first-block
+    version fail on `assert ".m-seg-tab" in block` — a false failure about a rule that was
+    still present, which is the failure mode a guard must not have. The sheet now has
+    several such blocks and CSS resolves the cascade across all of them, so the guard must
+    see them all to be describing the sheet the browser actually loads.
+    """
     css = (ROOT / "static/css/meridian/plan.css").read_text()
-    block = css.split("@media (max-width: 600px) {", 1)[1].split("\n}\n", 1)[0]
-    assert ".m-seg-tab" in block
+    block = _at_rule_blocks(css, "@media (max-width: 600px) {")
+    assert ".m-seg-tab {" in block
     tab_rule = block.split(".m-seg-tab {", 1)[1].split("}", 1)[0]
     # Strip CSS comments first: the rule's own comment records the removed `flex: 1`, and
     # matching that text would make this guard fire on its own documentation.
     declarations = re.sub(r"/\*.*?\*/", "", tab_rule, flags=re.S)
     assert "flex:" not in declarations, "a shorthand flex here overrides the one-third basis"
     assert "text-align: center" in declarations
+
+
+def _at_rule_blocks(css: str, header: str) -> str:
+    """Concatenate the BODIES of every `header` at-rule, brace-balanced.
+
+    Same helper as tests/meridian/test_plan_row_disclosure.py, and for the same reason: this
+    sheet carries several `max-width: 600px` blocks and a guard that reads only the first or
+    only the last silently stops describing half the mobile layout.
+    """
+    out = []
+    start = 0
+    while True:
+        index = css.find(header, start)
+        if index == -1:
+            return "\n".join(out)
+        cursor = index + len(header)
+        depth = 1
+        while cursor < len(css) and depth:
+            if css[cursor] == "{":
+                depth += 1
+            elif css[cursor] == "}":
+                depth -= 1
+            cursor += 1
+        out.append(css[index + len(header) : cursor - 1])
+        start = cursor
+
+
+def test_the_hub_mark_is_sized_by_its_bezel_not_its_canvas():
+    """The browser guard in tests/browser/test_plan_ornaments.py converts the hub mark's BOX
+    height into a painted bezel width using the constant ``213 / 256``. That constant is a
+    measurement of the delivered asset, so it is re-measured here from the PNG itself: if the
+    art is ever regenerated with a different bezel-to-canvas ratio, the browser guard's
+    arithmetic would silently start describing a different shape. This test fails first.
+
+    Measured 2026-09-24: canvas 217x256, ink rows 2..254, the widest (mid-height) row spans
+    x 2..214 -- a 213px bezel -- and the six rows at each end are 7-13px wide, which are the
+    north and south rivet knobs rather than part of the circular bezel.
+
+    Pillow is a dev-only dependency (the roadmap records two runners disagreeing over
+    playwright for the same reason), so this skips rather than failing a runner without it.
+    """
+    pytest = __import__("pytest")
+    Image = pytest.importorskip("PIL.Image")
+
+    asset = ROOT / "static/img/meridian/observatory/plan-map-hub-compass.png"
+    image = Image.open(asset).convert("RGBA")
+    alpha = image.split()[3]
+    width, height = image.size
+
+    rows = []
+    for y in range(height):
+        filled = [x for x in range(width) if alpha.getpixel((x, y)) > 16]
+        if filled:
+            rows.append((y, filled[0], filled[-1], len(filled)))
+    assert rows, "the hub mark asset has no ink at all"
+
+    top, bottom = rows[0][0], rows[-1][0]
+    widest = max(rows, key=lambda row: row[3])
+    bezel = widest[2] - widest[1] + 1
+
+    # The knobs are why the canvas is taller than the bezel: they must be much narrower.
+    assert rows[0][3] < bezel * 0.1 and rows[-1][3] < bezel * 0.1, (
+        "the asset's end rows are expected to be the narrow rivet knobs; a wide end row means "
+        "the bezel is no longer 213/256 of the canvas and the browser guard's constant is stale"
+    )
+    assert abs(bezel / (bottom - top + 1) - 213 / 256) < 0.01, (
+        f"the hub mark's bezel-to-canvas ratio changed: measured {bezel}/{bottom - top + 1}"
+    )
+
+    # The CSS must therefore use a non-square box, or a square one caps the bezel below the disc.
+    css = _read("static/css/meridian/plan.css")
+    desktop = css.split(".m-plan-map-hub-mark {", 1)[1].split("}", 1)[0]
+    assert "width: 64px;" in desktop and "height: 75px;" in desktop, (
+        "a square box cannot fill the circle: the bezel is 83% of the canvas height"
+    )

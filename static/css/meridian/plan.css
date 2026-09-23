@@ -154,7 +154,20 @@
   box-shadow: none;
 }
 
-/* The concept flanks the strip with a small compass star. Decorative only. */
+/* The concept flanks the strip with a small compass star. Decorative only.
+
+   The offsets are NEGATIVE because they are measured from the padding box, not the border
+   box: an absolutely positioned pseudo-element offsets from its containing block's padding
+   edge, and this card's 20px border-image is part of that containing block. At `left: 2px`
+   the star therefore began 22px INSIDE the border and ran 12-16px over the content box, so
+   it sat on the first characters of the title/caption and on the end of the figure. Measured
+   at every governed viewport on 2026-09-24 (owner: "the text also overlaps with the stars on
+   the banner, as well as the dollar figure"): the caption underlapped BOTH stars by 12x17px
+   at 420px, and the date and amount by 8x10 and 8x22 at desktop.
+
+   The star now sits in the ticket's own ornament band — the border plus the padding — and
+   stops clear of the content edge: at this width it spans border-box 12..34px against a
+   content edge of 36px, leaving the 2px gap the guard asserts. */
 .m-plan-summary-grid .m-plan-funding-card::before,
 .m-plan-summary-grid .m-plan-funding-card::after {
   content: "";
@@ -170,11 +183,33 @@
 }
 
 .m-plan-summary-grid .m-plan-funding-card::before {
-  left: 2px;
+  left: -8px;
 }
 
 .m-plan-summary-grid .m-plan-funding-card::after {
-  right: 2px;
+  right: -8px;
+}
+
+/* The mobile strip keeps the same ornament band, which is narrower here: a 10px border plus
+   12px of padding is 22px of room, so a 22px star at `left: -10px` would have fitted it with
+   no gap at all and read as touching the text. The star is therefore drawn at 18px, spanning
+   the band from the card's edge to 8px inside the padding, which leaves a measured 4px
+   between the ornament and the first character. Same intent, one size smaller, nothing
+   removed — the text is what the owner needs to read. */
+@media (max-width: 600px) {
+  .m-plan-summary-grid .m-plan-funding-card::before,
+  .m-plan-summary-grid .m-plan-funding-card::after {
+    width: 18px;
+    height: 18px;
+  }
+
+  .m-plan-summary-grid .m-plan-funding-card::before {
+    left: -10px;
+  }
+
+  .m-plan-summary-grid .m-plan-funding-card::after {
+    right: -10px;
+  }
 }
 
 .m-plan-funding-card .m-section-label {
@@ -891,8 +926,22 @@
 
 .m-plan-map-hub-mark {
   display: block;
-  width: 40px;
-  height: 40px;
+  /* THE MARK FILLS ITS CIRCLE (owner, 2026-09-24: "can you make the upper most star fill the
+     circle").
+
+     Size is set by the asset's BEZEL, not by its canvas. Measured from the PNG's own alpha
+     channel: the canvas is 217x256, the ink runs rows 2..254, the widest (mid-height) row
+     spans x 2..214 -- a 213px bezel circle -- and the 6 rows at each end are only 7-13px
+     wide, i.e. the north and south rivet KNOBS. The bezel is therefore 213/256 = 83.2% of
+     the canvas height, which is why the previous square box could never fill a circle: a
+     58x58 box drew a 48px bezel inside a 62px disc (78%), leaving the dark rim the owner saw.
+
+     The box is sized so `contain` lands the BEZEL on the disc: scale = min(64/217, 75/256)
+     = 0.2930, giving a 62.4px bezel in the 62px disc. The knobs reach the full 75px, as the
+     asset draws them -- they sit at the bezel's poles, so they are the part that meets the
+     rim. The disc stays behind it for the navy field and its gold flecks. */
+  width: 64px;
+  height: 75px;
   background: var(--m-mark) center / contain no-repeat;
   filter: brightness(1.1) saturate(1.06);
 }
@@ -961,9 +1010,12 @@
     width: 23px;
   }
 
+  /* The same bezel-fills-the-circle rule against the 48px phone hub: scale =
+     min(49/217, 58/256) = 0.2258, giving a 48.1px bezel in a 48px disc. Sized per breakpoint
+     rather than by percentage because the mark is a background image in a fixed box. */
   .m-plan-map-hub-mark {
-    width: 34px;
-    height: 34px;
+    width: 49px;
+    height: 58px;
   }
 
   .m-plan-medallion-label {
