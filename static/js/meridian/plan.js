@@ -732,7 +732,40 @@ function renderCommitments(root, plan, template) {
       actionCell.appendChild(del);
     }
 
-    row.append(nameCell, fundedCell, nextCell, actionCell);
+    // The concept gives each bill a disclosure chevron rather than a permanent row of buttons:
+    // the row states the bill, and the actions arrive when it is opened. That disclosure is what
+    // makes the compact mobile row possible at all, because the three action buttons are what
+    // forced the tall card. The state lives on the row as `data-expanded` so the stylesheet owns
+    // the presentation while this owns only the state and the accessibility contract.
+    //
+    // The cell is `display: none` above the mobile breakpoint, which removes it from the desktop
+    // grid entirely, so the four-column desktop table is untouched by its presence here.
+    const toggleCell = document.createElement("div");
+    toggleCell.className = "m-plan-table-cell m-plan-cell-toggle";
+    toggleCell.setAttribute("role", "cell");
+    const rowToggle = document.createElement("button");
+    rowToggle.type = "button";
+    rowToggle.className = "m-plan-row-toggle";
+    rowToggle.setAttribute("aria-expanded", "false");
+    rowToggle.setAttribute("aria-label", `Show actions for ${commitment.name}`);
+    rowToggle.innerHTML =
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"' +
+      ' focusable="false"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2"' +
+      ' stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    rowToggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const expanded = row.dataset.expanded === "true";
+      row.dataset.expanded = expanded ? "false" : "true";
+      rowToggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+      rowToggle.setAttribute(
+        "aria-label",
+        `${expanded ? "Show" : "Hide"} actions for ${commitment.name}`
+      );
+    });
+    toggleCell.appendChild(rowToggle);
+    row.dataset.expanded = "false";
+
+    row.append(nameCell, fundedCell, nextCell, toggleCell, actionCell);
     list.appendChild(row);
   }
 

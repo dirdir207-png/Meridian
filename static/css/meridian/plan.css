@@ -528,6 +528,13 @@
   flex-basis: 100%;
 }
 
+/* The row's disclosure chevron is a MOBILE control, so above the breakpoint it is removed from
+   the grid entirely rather than left as an empty fifth column: the desktop template is four
+   columns (name, reserved, next, action) and the actions there are always visible. */
+.m-plan-cell-toggle {
+  display: none;
+}
+
 .m-plan-table-footer {
   margin: var(--m-space-3) 0 0;
   font-size: var(--m-text-sm);
@@ -1185,16 +1192,69 @@
     border-radius: var(--m-radius-lg);
   }
 
+  /* The concept's bill row (02-plan.png): the name and its date on the left, the reserved figure
+     and the next date stacked on the right, and a chevron that opens the actions. The three
+     action buttons were what made this a tall three-band card, so they now sit behind the
+     chevron and the row collapses to a single band. The actions remain reachable -- the chevron
+     is a real button carrying aria-expanded, so the state does not depend on the chevron's
+     rotation alone. */
   .m-plan-table-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     grid-template-areas:
-      "name name"
-      "funded next"
-      "action action";
-    gap: var(--m-space-2);
+      "name funded toggle"
+      "name next toggle"
+      "action action action";
+    gap: var(--m-space-1) var(--m-space-3);
     padding: var(--m-space-3);
     border-radius: var(--m-radius-md);
+  }
+
+  .m-plan-cell-funded,
+  .m-plan-cell-next {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .m-plan-cell-toggle {
+    display: flex;
+    grid-area: toggle;
+    align-self: center;
+  }
+
+  .m-plan-row-toggle {
+    /* 44px, the same touch floor the dock's items use, so the chevron is not a small target. */
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--m-border);
+    border-radius: 50%;
+    background: none;
+    color: var(--m-ink-muted);
+    cursor: pointer;
+    transition: transform var(--m-motion-fast) var(--m-ease-out);
+  }
+
+  .m-plan-row-toggle[aria-expanded="true"] {
+    transform: rotate(90deg);
+  }
+
+  /* The concept's figures are ORANGE. 02-plan.png measures rgb(242,135,62) on all three bill
+     amounts, and the shell's --obs-apricot is rgb(243,178,114) -- a lighter tone the concept does
+     not use for figures. Scoped to the mobile layout, because the governing concepts are
+     mobile-shaped and the desktop table has its own established colour. */
+  .m-plan-cell-funded {
+    color: #f2873e;
+  }
+
+  /* The bills scroll inside a fixed band so "Next income" and "Add a bill or goal" follow on the
+     SAME page instead of a screen and a half below it. `overscroll-behavior: contain` stops the
+     inner scroll from chaining out to the page once it reaches its end. */
+  .m-plan-table {
+    max-height: 44vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .m-plan-table-row + .m-plan-table-row {
@@ -1254,14 +1314,21 @@
     font-size: var(--m-text-md);
   }
 
-  /* Actions become one quiet row, right-aligned and compact. */
+  /* Actions arrive with the disclosure, so the collapsed row is a single band. The state toggle
+     lives HERE and not in the layout block above because this rule is the LATER of the two that
+     style the cell: an earlier `display: none` is simply overridden by this `display: flex`, which
+     is exactly what happened on the first attempt. */
   .m-plan-cell-action {
     grid-area: action;
-    display: flex;
+    display: none;
     gap: var(--m-space-2);
     justify-content: flex-end;
     padding-top: var(--m-space-2);
     border-top: 1px solid var(--m-border);
+  }
+
+  .m-plan-table-row[data-expanded="true"] .m-plan-cell-action {
+    display: flex;
   }
 
   .m-plan-cell-action .m-button {
