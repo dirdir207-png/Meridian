@@ -1,5 +1,65 @@
 # Enhanced SimpleCrew — Current Status
 
+## Accounts no longer overflows on a phone, and two Plan ornament defects are fixed (`OS-091`, `OS-092`) (2026-09-24)
+
+**Three owner-reported defects from the iPhone Air, all reproduced by measurement before any edit.**
+
+**1. "the accounts page is now larger than my screen."** The document reported NO overflow
+(`documentElement.scrollWidth` stayed 420), which is why every existing guard passed: on mobile the
+shell's `.m-main` is itself a scroll container, so the page scrolled sideways silently instead of
+failing a document-level check. Inside it `[data-accounts]` measured **497px in a 388px column**. The
+cause was data, not markup: `memory-manage.js` renders one `.pending-memory-proposal` per pending
+memory action, and that row is a non-wrapping flex line (label + the review `<dl>` + Approve +
+Execute + status) whose min-content is ~420px; a grid track sized `auto` cannot go below its item's
+min-content, so the whole Accounts column widened and the Execute control's right edge landed at
+**463.9px on a 420px screen**. Fixed by letting the tracks shrink (`minmax(0, 1fr)` on
+`.memory-management`, `min-width: 0` on its children) and letting the proposal row wrap, with the
+review block taking a full line once it does. Measured after: strip 388px in a 388px column, canvas
+`scrollWidth == clientWidth`, widest control right edge **368px**. Desktop is bit-identical (row
+1016px, control 1295px before and after), because the row only wraps when it must.
+
+**2. "the text also overlaps with the stars on the banner, as well as the dollar figure."** The
+parchment income strip's two decorative stars were positioned `left/right: 2px`, which is measured
+from the card's **padding** box — the containing block is the 20px border-image — so a 22px star
+began inside the border and ran over the content box. Measured: the caption underlapped **both**
+stars 12x17px at 420px, and the date and amount 8x10 and 8x22 at desktop. It was never mobile-only.
+The stars now sit in the ticket's own ornament band and stop clear of the content edge (2px gap at
+desktop, 4px on mobile, where the star is drawn at 18px because that band is only 22px wide).
+Measured after: **zero collisions at all five governed viewports**.
+
+**3. "can you make the upper most star fill the circle."** The hub's star was a 40px box in a 62px
+disc (65%). Enlarging the box alone could not fix it: measured from the asset's own alpha channel,
+the canvas is 217x256 and the circular **bezel** is only 213px of it — the extra height is the north
+and south rivet knobs — so a square `contain` box caps the bezel at 83% of the disc. The box is now
+sized by the bezel (64x75 desktop, 49x58 mobile), landing a **62.4px bezel in the 62px disc** and a
+48.1px bezel in the 48px phone disc. `tests/meridian/test_plan_map.py` re-measures the bezel ratio
+from the PNG so the browser guard's arithmetic cannot silently describe a different shape.
+
+**Verification.** Full suite **1914 passed, 94 skipped**; `ruff` clean over
+`app.py meridian/ scripts/ tests/`; Node syntax and `git diff --check` clean. Both visual fixes have
+browser guards (`tests/browser/test_plan_ornaments.py`, `tests/browser/test_accounts_memory_overflow.py`)
+proved load-bearing by negative control — reverting the stylesheets turns them red. Evidence captures
+in `artifacts/plan-ornaments-2026-09-24/` and `artifacts/accounts-overflow-2026-09-24/`, taken with
+mocked synthetic payloads so no live balance appears in a capture. **Not claimed:** no deployment, and
+no change to any amount, route, provider or authority.
+
+## Plan map Goals station is now provider-backed (`OS-090`, 2026-09-24)
+
+The Plan map now uses the concept's three stations: **Bills / Goals / Available**. Crew pocket
+reads carry the nullable observed `targetAmount`; goal-bearing pocket balances become the Goals
+figure, while the existing bill committed + unfunded amount remains the Bills purpose. Because all
+pocket balances already belong to `cash_total`, the Goals amount is subtracted once when deriving
+Available; no cash is appended or double-counted. Pockets without observed goal metadata do not
+become goals by inference. The legacy direct-HTTP `app.py` path was not touched.
+
+Migration 029 adds `financial_accounts.goal_target` with compatibility for databases before that
+migration. This is read-only presentation and observation plumbing: no provider mutation, action,
+authority, or deployment change.
+
+Verification: 58 focused tests passed (provider, Plan, map, migration and reserve regression), Ruff
+clean over `app.py meridian/ scripts/ tests/`, Node syntax clean, and `git diff --check` clean. Browser
+fixtures were updated but not executed in this environment; no visual parity capture is claimed.
+
 ## The Plan bill row is one line, and the medallion material needed no spend (`OS-089`, `OS-087`, `D-023`) (2026-09-23)
 
 **Everything the owner asked for on the mobile Plan surface is built, and the two things he asked for that

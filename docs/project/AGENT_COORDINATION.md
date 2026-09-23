@@ -30,7 +30,7 @@ would have reverted three commits had it been applied. This file is the channel.
 | Constitutional Builder (Track I: OS-072 envelope, OS-073 Investigator, I.3 council) | `meridian/ai/**` (envelope, role, investigator, skeptic, council, run_records), `meridian/migrations/027_ai_run_records.sql`, `scripts/investigate.py`, `tests/meridian/test_ai_{envelope,investigator,council,run_records}.py`, `tests/test_investigate_script.py`, `tests/meridian/test_migrations.py`, `tests/meridian/test_bill_reserve_observations.py`, `docs/project/{MERIDIAN_OS_TASKS.json,MERIDIAN_ROADMAP.md,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **released 2026-09-21** at `b2bc935` (OS-072 persisted run records), `0c30f9f` (OS-074 council + Skeptic), `331c28f` (handoff). Track I lane complete as scoped: the envelope, the permissions, the Investigator, the Skeptic, the council and the persisted run record all shipped, all tested, no role able to reach a provider write path. **Still open and Astra's design work per the owner 2026-09-21: OS-038's medallion glyphs and the Investigator's customer-facing surface -- which THIS LANE IMPLEMENTS when the assets/design land.** |
 | Constitutional Builder (Track D closure: OS-038 remainder, OS-065, OS-071) | `static/css/meridian/accounts.css`, `static/js/meridian/accounts.js` (only if an SVG layer proves necessary), `tests/meridian/test_accounts_rail.py`, `tests/meridian/test_accounts_connectors.py` (new), `templates/meridian/settings.html`, `templates/meridian/partials/settings-navigation.html`, `static/css/meridian/settings.css`, `templates/meridian/partials/virgil.html` (new), `static/css/meridian/virgil.css` (new), `scripts/preview_observatory_dial.py`, `tests/meridian/test_settings_visual_preview.py`, `tests/meridian/test_settings_hub.py` (new), `tests/meridian/test_virgil_surface.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `design-qa.md` | 2026-09-21 | **released 2026-09-21** at `d60f1c9`, `25181bd`, `38328df`, `9a55413`, `56e3372` (owner-directed Track D closure: OS-065 Settings hub, the calendar read-only leg, the Settings ingestion routes, OS-071 Virgil). Visual authority is `design/observatory-extension-2026-09-18/`; the 09-08 drafts are superseded only where 09-18 does NOT cover a surface, verified this session. Presentation and read-only only: no route, data, financial, provider or authority change. Virgil ships INERT. **OS-038's medallion glyph artwork remains OPEN and is now Astra's work, not this lane's.** |
 | Codex owner-rulings | `docs/project/{agent-claims.json,AGENT_COORDINATION.md,MERIDIAN_DECISIONS.md,CURRENT_STATUS.md,MERIDIAN_OS_TASKS.json,HANDOFF_FOR_ASTRA_2026-09-19.md,DEEPSEEK_HANDOFF_2026-09-19.md}`, `design/observatory-sun-2026-09-19/**`, `static/css/meridian/activity.css`, `static/js/meridian/activity.js` (comment), `static/img/meridian/observatory/sun-engraving-2026-09-19.png`, `artifacts/observatory-sun-2026-09-19/**` | 2026-09-19 | **released** at `052ab3e` (adopted and committed by DeepSeek; the adoption row was removed on release and the evidence is in the log entry of that date). Scope as declared: owner-approved visual pass. Additional scope: `artifacts/visual-pass-2026-09-19/**`, `docs/project/VISUAL_CORRECTIONS_2026-09-19.md`, `design-qa.md` (declared, unmodified), wordmark partial/shell CSS, Settings template, preview/capture scripts, `tests/meridian/test_settings_visual_preview.py`. Sun work preserved. No provider/live operation. |
-| Builder (this lane) | `docs/project/*` (roadmap, plans, decisions, claims, coordination), `scripts/check_guardrails.py`, `tests/test_check_guardrails.py`, `tests/test_concept_coverage.py`, `AGENTS.md`, `.dockerignore` | 2026-09-13 | **released** 2026-09-16. The `docs/project/*` portion of this blanket claim is superseded by the path-scoped per-slice claims logged below, each released at its own commit; no work is held under this row. `scripts/check_guardrails.py`, `tests/test_concept_coverage.py` and `.dockerignore` were not modified by this lane's recent slices. |
+
 | Astra | `scripts/verify_readiness.py`, `tests/test_readiness_tools.py`, `docs/project/MERIDIAN_READINESS_AUDIT.md`, `docs/project/MERIDIAN_EXECUTION_GAMEPLAN.md`, `artifacts/readiness-2026-09-13/**` | 2026-09-13 | **released** at `648be9f`; retained as a declared-scope record, not a work lock (Astra's own wording) |
 | Builder (C4 create readback) | `meridian/crew_write_actions.py`, `tests/meridian/test_crew_write_actions.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-13 | **released** at `41387f5`; retained as a declared-scope record |
 | Builder (C4 pocket readback) | `meridian/crew_write_actions.py`, `tests/meridian/test_crew_write_actions.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-13 | **released** at `c027d1d`; retained as a declared-scope record |
@@ -117,6 +117,37 @@ would have reverted three commits had it been applied. This file is the channel.
 | Constitutional Builder (OS-089: Plan mobile concept alignment) | `static/js/meridian/plan.js`, `static/css/meridian/plan.css`, `templates/meridian/partials/plan.html`, `scripts/preview_observatory_dial.py` (synthetic fixture only), `tests/meridian/test_plan_row_disclosure.py`, `tests/meridian/test_plan_funding_label.py`, `tests/browser/test_plan.py`, `design-qa.md`, `docs/project/{MERIDIAN_OS_TASKS.json,MERIDIAN_DECISIONS.md,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json,PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md,HANDOFF.md}` | 2026-09-23 | **released at this commit**. NOTE: the before/after captures live in the UNTRACKED scratch tree `artifacts/plan-mobile-concept-alignment-2026-09-23/`, per this repo's convention that nothing under `artifacts/` is committed; `design-qa.md` references them by path. Owner-directed 2026-09-23 slice per `docs/project/PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md`: one-line bill rows, the facts/progress/evidence/NEXT move into the existing disclosure, the section becomes `Upcoming bills` with matching `aria-label`s, the `BILL` tag is removed, the add control stretches full width, and September coverage moves below the controls. **Presentation and copy only: no route, data, financial, authority, migration or provider change.** The medallion material is applied from the kit's existing brass ring (`medallion-frame.png`, already tracked and indexed), so no Runway generation occurs in this slice without a separately stated spend. |
 
 ## Log (append only — newest first)
+
+### 2026-09-24 — OS-090 completed, and three owner-reported defects fixed (`OS-090`, `OS-091`, `OS-092`)
+
+**This session's three commits, all verified before landing:**
+`bf6844f` (fix/accounts — the Assets & Contracts strip no longer widens the column),
+`ad57836` (fix/plan — the strip's stars clear its text, and the hub star fills its circle),
+`f5e7ef7` (feat/plan — the map's second station is GOALS, OS-090).
+
+**OS-090 is complete, not partially done.** Migration 029 carries Crew's nullable pocket `targetAmount`
+through the provider, sync and repository; Plan derives Goals from goal-bearing pocket balances and
+subtracts them once from the residual, so pocket cash cannot be double-counted; the unfunded figure keeps
+reducing free cash even though it is no longer a station. The legacy direct-HTTP goal path in `app.py` was
+left exactly as found. **The `:8081` preview needs a RESTART to show this** — `services/plan.py` is Python,
+so the running process still serves "Unfunded commitments" and the rotunda until it is restarted.
+
+**OS-091 (accounts overflow) and OS-092 (plan ornaments) were found by the owner, not by the gate, and both
+are recorded rather than remembered.** OS-091's trigger was DATA: a pending memory proposal row whose
+min-content is ~420px inside a 388px column. It produced **no document-level overflow** — on mobile `.m-main`
+is itself a scroll container — so every existing guard passed while the page scrolled sideways and the
+Execute control sat 44px off-screen. That is the lesson worth carrying: a document overflow check cannot see
+overflow inside a scroll container. OS-092's two defects were likewise invisible to a source read, because
+the values were reasonable in isolation and only their interaction with the border width and the disc size
+made them wrong. All three now have measured browser guards proved load-bearing by negative control.
+
+**Attribution was checked, not assumed.** `git log -S` puts the offending accounts rules at `4514a7a`
+(2026-08-31) and `972a114` (2026-09-01) — pre-existing, and nothing in this session's diff had touched those
+files. Reverting the stylesheets, not the agent's reasoning, is what proves a guard load-bearing.
+
+**Still open from the owner's reports, and NOT fixed:** the Today evidence ticket's layout when a bill has
+two tickets, and the "no evidence is attached to this event" line standing beside a "View bill" link that
+navigates to Plan. Recorded as `OS-093` before being worked on.
 
 ### 2026-09-23 — The Plan bill row is one line, and the medallion material needed no spend (`OS-089`, `OS-087`, `D-023`)
 
