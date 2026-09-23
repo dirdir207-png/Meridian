@@ -92,6 +92,12 @@
       "arose": "2026-09-21",
       "promoted_to": "OS-080",
       "decision_owed": false
+    },
+    {
+      "summary": "The floating `Ask Virgil` advisor control overlaps the right end of Plan's new full-width `Add a bill or goal` button at 420x912",
+      "arose": "2026-09-23",
+      "why": "Observed in the governed OS-089 capture after the owner's full-width button shipped (artifacts/plan-mobile-concept-alignment-2026-09-23/after/plan-mobile-air-*-viewport.png): the shell's inline advisor chip floats near the bottom-right of the canvas and sits over the last ~90px of the primary action. The button stays tappable across most of its width, so this is a legibility and target-area concern rather than a blocked action, and it is NOT introduced by this slice -- the same chip overlapped the bill rows before, and the shell's own comments record that its position was already tuned once to stop it occluding this control on first paint. Deliberately NOT fixed here: the chip is a shell-level element shared by every workspace, so moving it is a design decision about the shell, not a Plan fidelity fix, and OS-089's scope was explicitly the Plan surface. Recorded rather than remembered, and not an assignment.",
+      "parked_in": "design-qa.md § Remaining gaps (measured, unresolved) item 2 -- 'Inline Virgil control overlaps the bottom navigation on mobile', sharpened 2026-09-23 with the measured overlap against Plan's full-width add button"
     }
   ]
 }

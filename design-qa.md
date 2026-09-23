@@ -1237,6 +1237,97 @@ never the daily banking runtime, never credentials, never a database.
   `test_capture_contract` 7, `test_meridian_workspace_invariant` + `services/test_today` 27. Ruff clean;
   `git diff --check` clean.
 
+## Plan mobile — one-line bill rows against concept 02 (`OS-089`, 2026-09-23)
+
+Authority: `docs/project/PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md` and
+`design/observatory-drafts-2026-09-08/02-plan.png` (still the governing Plan concept; nothing newer
+supersedes it). Captures: `artifacts/plan-mobile-concept-alignment-2026-09-23/{before,after}`, produced by
+`scripts/capture_meridian_matrix.py` against the **isolated synthetic preview**
+(`http://127.0.0.1:8093`, `--skip-login`, no `.env`, no Crew) with `--fixture synthetic-plan` and a frozen
+clock — never against the daily runtime, which loads `.env`.
+
+**Measured on the owner's own viewport, 420x912.** The shell is exactly one viewport tall and `.m-main` owns
+the scrolling, so "one screen" is the canvas rectangle, `68..826px`, and not `window.innerHeight`:
+
+| | before | after |
+|---|---|---|
+| collapsed bill row | 113/114px | **61/62px** |
+| next-income card (top) | 1034px | **675px** (fully inside the canvas) |
+| add control (top) | 1427px | **789px** (37px inside the canvas) |
+
+The synthetic fixture carries five rows — Electric, Internet, Rent, `Verizon Payment Arrangement` and a
+goal — so the bills band (120px) scrolls and shows two. That longer page length is a **fixture** property,
+not a design defect: the concept draws three bills and no coverage card, which is why it needs no scroll.
+No theme, viewport or page-length comparison here is treated as a fidelity gap.
+
+**What the captures show, and the four things they caught that the source did not.**
+
+1. `plan-mobile-air-{dark,light}-viewport.png`: the concept's row is realised — medallion, name with its ONE
+   lilac date beneath it, the reserved figure in the concept's orange with `Reserved` beneath it, the
+   evidence indicator on exactly the rows that have evidence, and the chevron. Banner reads
+   `UPCOMING BILLS`; no `BILL` tag; the ticket and the full-width apricot plate follow, with September
+   coverage below them.
+2. **The income ticket painted over its own title.** The nine-slice was overridden on `border-width` alone,
+   leaving the layout reserving 10px while the image still drew 20px. Numbers alone did not catch this; the
+   image did. Both sides of the shorthand are now set.
+3. **The desktop table HEAD lost its column order.** `grid-area: name` on `m-plan-cell-commitment` — a class
+   the HEAD's first cell also carries — created an implicit named line at the END of the head's grid, so the
+   header read `RESERVED | NEXT | COMMITMENT` above rows that had not moved. Caught by diffing the governed
+   desktop capture; now scoped to the row, with a browser guard on the rendered header order.
+4. **The desktop row grew by 12px**, because the new grid row inherited the shared 16px COLUMN gap as a row
+   gap. The row now sets `row-gap: var(--m-space-1)`, the exact gap the name cell used internally before, and
+   the row's name text sits at the identical y before and after (verified, not assumed).
+
+**Desktop is unchanged except three things, each deliberate.** Structural pixel difference (>60/255) between
+the governed desktop captures is **0.24% dark / 0.20% light**, and it is entirely: the map's medallions (the
+OS-087 brass-ring material), the section heading's rename (`COMMITMENTS` → `UPCOMING BILLS`), and the removal
+of the duplicated `due <date>` fragment from the fact line. Column order, row height, row geometry and every
+figure are unchanged.
+
+**OS-087 material, verified visually rather than asserted.** Cropping the map region out of the before and
+after mobile captures side by side shows the stations and the hub now carrying the kit's real bevelled brass
+ring — a double ring with four rivets and a genuine highlight — where they previously drew a flat 2px circle
+plus inset box-shadows. No credits were spent: the asset is already tracked and already used by Accounts,
+Settings, Activity and the dock.
+
+**Supplementary capture.** `after/plan-mobile-air-dark-expanded.png` shows the disclosure open on the
+`Verizon Payment Arrangement` row, with the full name, the fact line, the progress bar and both invoice
+entries. It is marked supplementary because the mobile chevron does not exist at the desktop viewports, so
+the governed runner — which clicks its `--ui-state-selector` at every viewport — cannot express that one
+state. The BEHAVIOUR is browser-guarded in `tests/browser/test_plan.py`; the image is for review.
+
+**Second pass (same day, owner-directed from his own iPhone Air).** He reported that the spacing did not
+work on mobile, that the bills section was too small, and that the parchment should sit closer to the top with
+the bills closer to the parchment so the bills could be extended; he also corrected the spec on the progress
+bar (*"Also I would still want progress bars"*) and asked whether his phone was too small for the concept's
+layout. D-023 point 6 is the record. **His phone is not too small:** the iPhone Air is 420x912 CSS, exactly the
+`mobile-air` viewport here and exactly the concept's own scale (852x1846 at 0.494), and the concept fits because
+its top block is ~148px against the app's ~250px. Re-measured after the second pass:
+
+| | before | first pass | second pass |
+|---|---|---|---|
+| collapsed row | 113/114px | 61/62px | **69px** (the funding hairline is back on it) |
+| bills band | 44vh | 120px | **`min(170px, 19svh)`** = 170px, 2.5 rows |
+| map section top | 302px | 244px | **191px** |
+| income ticket | 102px tall | 102px | **68px** (label, date, figure on one line) |
+| add control top | 1427px | 789px | **753px**, fully inside the canvas (68..826) |
+
+The `svh` term in the band is deliberate and is the answer to his device question: a handset loses roughly
+100px to the status bar and the home-indicator inset that a desktop Chromium preview cannot reproduce, so the
+band is sized against the SMALL viewport height rather than a fixed 912px. The map keeps its concept size; the
+height came from the ticket and from the gaps, and none of it removed a control, a figure or a word.
+
+**Verified in the captures after the second pass:** the top block reads Meridian -> the centred subline -> the
+tab bar -> the parchment, with no headline between them; the bills list shows two and a half rows each carrying
+its own funding hairline with the end dot at the funded share; the ticket is one band with its caption beneath;
+the add plate spans the width. The desktop diff rose from 0.24% to **0.34%** structural pixels for one further
+reason: the funding bar is now a row cell on both surfaces, so on desktop it sits directly under the name
+instead of between the fact line and the invoice entries.
+
+**Not claimed.** The concept's engraved metal glyphs (the app masks a single-colour SVG — OS-087's remaining
+half), the tinted per-category bill disc (OS-088, blocked on category data that does not exist), light-theme
+contrast re-verification beyond the captures, live served-app acceptance, or any deployment.
+
 ## Remaining gaps (measured, unresolved)
 
 1. **Payday amount is a tight fit in the callout.** `+$1,660.00` sits in a 79px box and reports
@@ -1245,6 +1336,14 @@ never the daily banking runtime, never credentials, never a database.
    grow. This is the "callout amount fit" item.
 2. **Inline Virgil control overlaps the bottom navigation on mobile.** Visual pass records
    `Ask Virgil about this plan` partially truncated by the bottom navigation panel. No current test covers this.
+   **Sharpened 2026-09-23 (OS-089):** the same chip now also covers the right end of Plan's new full-width
+   `Add a bill or goal` button at 420x912 — visible in
+   `artifacts/plan-mobile-concept-alignment-2026-09-23/after/plan-mobile-air-dark-viewport.png`. The button
+   stays tappable across most of its width, so the action is not blocked, and this is NOT introduced by the
+   Plan work: the chip overlapped the bill rows before, and `shell.css` already records one earlier tuning
+   pass made to stop it occluding a control on first paint. Deliberately not fixed there, because the chip is
+   a shell-level element shared by every workspace and moving it is a shell design decision, not a Plan
+   fidelity fix.
 3. **Light-theme foregrounds: not verified — and not verifiable by the computed-ratio method used here.**
    A contrast probe reported 19–24 "low contrast" elements in light theme. Inspection showed the figure is an
    artifact on both sides: text inside `[hidden]` other-workspace partials was being measured, and the backdrop

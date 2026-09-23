@@ -90,8 +90,31 @@
 .m-plan-summary-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--m-space-4);
+  /* Column gap only. The controls used to sit immediately BELOW this grid with no space
+     between them, and they now live inside it, so keeping the row gap at 0 is what preserves
+     the desktop spacing the owner did not ask to change. */
+  column-gap: var(--m-space-4);
+  row-gap: 0;
   align-items: stretch;
+}
+
+/* Owner-directed order, 2026-09-23: bills -> next paycheck -> add controls -> September
+   coverage. The DOM carries that order (it is the mobile order, and the governing concepts are
+   mobile-shaped); these placements reproduce the arrangement the desktop had before, so the
+   tabled desktop keeps coverage left, next paycheck right, and the controls flush beneath. */
+.m-plan-summary-grid .m-plan-coverage-card {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.m-plan-summary-grid .m-plan-funding-card {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.m-plan-summary-grid .m-plan-create-actions {
+  grid-column: 1 / -1;
+  grid-row: 2;
 }
 
 .m-plan-coverage-card,
@@ -341,6 +364,76 @@
   align-items: center;
 }
 
+/* The disclosure panel gets its OWN grid row in the first column, and the funded, next and
+   action cells SPAN both rows. That is deliberate, not incidental: the desktop row is tabled
+   by the owner, and this places the panel where the old name cell used to stack its fact line
+   and progress bar -- under the name -- while the spanning cells still centre on the row's
+   full height exactly as before. It also lets the mobile layout below take the panel across
+   the whole row instead of squeezing it into the name column. Named areas rather than
+   implicit placement, because implicit placement would depend on the order this script
+   happens to append cells in, and a silently shifted desktop column is not a change the
+   owner asked for. */
+.m-plan-table-row {
+  grid-template-areas:
+    "name     funded next action"
+    "progress funded next action"
+    "panel    funded next action";
+  /* Each of those rows sits 4px from the next, which is the gap the name cell used internally
+     before the panel became its own row. Without this the row inherits the shared 16px COLUMN
+     gap as a row gap as well, and the desktop row grows -- a desktop change the owner did not
+     ask for, caught by diffing the governed capture rather than by reading the CSS. */
+  row-gap: var(--m-space-1);
+}
+
+/* The funding bar is a ROW cell on both surfaces and not a disclosure item, because the owner
+   corrected the spec on seeing the first build ("I would still want progress bars") and the
+   governing concept draws it along the bottom of every bill row. ONE consequence is recorded
+   rather than hidden: on desktop the bar now sits directly under the name instead of between
+   the fact line and the invoice entries -- a move of one short line, visible in the governed
+   capture diff. Keeping a second copy inside the panel would have been the alternative, and two
+   progressbars for one figure is how the two of them drift apart. */
+.m-plan-cell-progress {
+  grid-area: progress;
+}
+
+/* Scoped to the ROW, and that scoping is load-bearing rather than tidiness: the desktop table
+   HEAD's first cell carries this same class, and a bare `grid-area: name` on a grid with no
+   such template creates an implicit named line AT THE END of the grid -- which silently moved
+   the "Commitment" column header to the far right of the head while the rows stayed put. The
+   browser guard asserts the three headers' left-to-right order, because the source alone looked
+   correct. */
+.m-plan-table-row .m-plan-cell-commitment {
+  grid-area: name;
+}
+
+.m-plan-cell-panel {
+  grid-area: panel;
+  /* Matches the name cell's internal rhythm, so moving the fact line out of the name cell
+     does not change the desktop spacing. */
+  display: grid;
+  gap: var(--m-space-1);
+}
+
+.m-plan-cell-funded {
+  grid-area: funded;
+}
+
+.m-plan-cell-next {
+  grid-area: next;
+}
+
+.m-plan-cell-action {
+  grid-area: action;
+}
+
+/* The medallion and the evidence indicator are COLLAPSED-ROW controls. Above the breakpoint
+   the table has no column for them, so they are removed from the grid entirely rather than
+   left as empty cells that would shift the four established desktop columns. */
+.m-plan-cell-medallion,
+.m-plan-cell-evidence {
+  display: none;
+}
+
 .m-plan-table-head {
   padding: var(--m-space-3) var(--m-space-5);
   border-bottom: 1px solid var(--m-border);
@@ -493,6 +586,89 @@
   border: 1px solid color-mix(in oklab, var(--m-danger, #c0392b) 40%, transparent);
 }
 
+/* ---------- Collapsed bill row: medallion, date, evidence indicator (OS-089) ---------- */
+
+/* The concept's bill row leads with a medallion. This ships the SLOT in the app's own unified
+   medallion -- dark disc, brass glyph, and the kit's real brass ring layered above, the same
+   asset Accounts, Settings and Activity already use. It is NOT the concept's per-bill "Bill
+   Reserve" tint, and that is deliberate rather than an oversight: the tint in the concept IS
+   the bill's CATEGORY (lilac electric, mint internet), a commitment carries no category field,
+   and OS-088 owns that variant until the field exists. The glyph therefore follows the
+   commitment's TYPE, which is real data, and no colour is ever chosen by matching a name. */
+.m-bill-medallion {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #20263b;
+  color: var(--obs-brass, #c6aa71);
+}
+
+/* The kit's brass double ring, layered above the disc exactly as the Accounts medallion does.
+   Sized so the disc sits inside the ring's transparent centre rather than under its metal:
+   Accounts holds 46px inside a 54px frame, so 34px takes a 40px frame, i.e. inset -3px. */
+.m-bill-medallion::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/medallion-frame.png") center / contain no-repeat;
+  pointer-events: none;
+}
+
+.m-bill-medallion-glyph {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask: var(--m-bill-medallion-icon) center / contain no-repeat;
+  mask: var(--m-bill-medallion-icon) center / contain no-repeat;
+}
+
+/* The one date on the row. Desktop keeps it in the NEXT column instead, so the row adds no
+   second date there and the desktop table is untouched. */
+.m-commitment-date {
+  display: none;
+}
+
+/* The full name, un-truncated, belongs to the disclosure -- the collapsed row may ellipsise
+   the name on a narrow phone, and the spec requires the full text to stay available. It is
+   `display: none` above the breakpoint because the desktop name cell never truncates, so the
+   heading would be a duplicate rather than a disclosure. */
+.m-plan-panel-name {
+  display: none;
+}
+
+/* The evidence indicator: an icon-only control that opens the disclosure holding the
+   evidence. 44px like the chevron, so a 22px glyph never becomes a small tap target. */
+.m-evidence-indicator {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--m-ink-muted);
+  cursor: pointer;
+}
+
+.m-evidence-indicator::before {
+  content: "";
+  width: 22px;
+  height: 22px;
+  background-color: currentColor;
+  -webkit-mask: var(--m-evidence-icon) center / contain no-repeat;
+  mask: var(--m-evidence-icon) center / contain no-repeat;
+}
+
+.m-evidence-indicator:focus-visible {
+  outline: none;
+  box-shadow: var(--m-focus-ring);
+  border-radius: 50%;
+}
+
 .m-plan-cell-funded,
 .m-plan-cell-next {
   font-variant-numeric: tabular-nums;
@@ -621,6 +797,7 @@
    themes -- the discs sit on the parchment, not on the theme surface -- so the values are the
    same either way and a token would only add a layer that never varies. */
 .m-plan-medallion-disk {
+  position: relative;
   display: grid;
   place-items: center;
   width: 54px;
@@ -628,8 +805,27 @@
   border-radius: 50%;
   background: #20263b;
   color: #c6aa71;
-  border: 2px solid #c6aa71;
-  box-shadow: inset 0 0 0 1px #20263b, inset 0 0 0 2px #c6aa71;
+  /* No CSS border and no inset brass ring: the kit's real brass ring below now draws that
+     metal. Keeping both drew a flat 2px circle UNDERNEATH a bevelled ring, which reads as a
+     doubled edge. */
+  border: 0;
+  box-shadow: none;
+}
+
+/* OS-087. The concept's medallions are rendered METAL -- a bevelled brass ring with a real
+   highlight and shadow -- while this map was composed from a flat disc, a 2px border and inset
+   box-shadows. The kit's `medallion-frame.png` is exactly that bevelled brass double ring with
+   four rivets, and Accounts, Settings and Activity have used it since 2026-09-23; the Plan map
+   was the one surface still drawing its own ring. So the material gap closes with an asset that
+   is ALREADY tracked and indexed -- no generation, and therefore no spend, was needed to lift
+   every medallion at once. `inset: -4px` reproduces the Accounts ratio (46px disc in a 54px
+   ring frame), i.e. the disc sits inside the ring's transparent centre rather than under it. */
+.m-plan-medallion-disk::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/medallion-frame.png") center / contain no-repeat;
+  pointer-events: none;
 }
 
 /* The per-station disc overrides that lived here were REMOVED on 2026-09-23: `.is-right` set a
@@ -671,8 +867,20 @@
   height: 62px;
   border-radius: 50%;
   background: #20263b;
-  border: 3px solid #c6aa71;
+  border: 0;
+  /* The dark halo is kept deliberately: the hub sits on PARCHMENT, and this is what separates
+     the instrument from the map art behind it. It sits BELOW the brass ring rather than
+     replacing it. */
   box-shadow: 0 0 0 3px rgba(32, 38, 59, 0.85);
+}
+
+/* The hub is the same instrument as the stations, so it takes the same real brass ring. */
+.m-plan-map-hub::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/medallion-frame.png") center / contain no-repeat;
+  pointer-events: none;
 }
 
 .m-plan-map-hub-rose {
@@ -1165,6 +1373,20 @@
     grid-template-columns: 1fr;
   }
 
+  /* Once the grid is one column the desktop placement above would force an implicit SECOND
+     column (grid-column: 2), so it is released here and the blocks stack in DOM order --
+     which IS the owner-directed order: next paycheck, add controls, September coverage. */
+  .m-plan-summary-grid .m-plan-coverage-card,
+  .m-plan-summary-grid .m-plan-funding-card,
+  .m-plan-summary-grid .m-plan-create-actions {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .m-plan-summary-grid {
+    row-gap: var(--m-space-3);
+  }
+
   .m-coverage {
     gap: var(--m-space-4);
   }
@@ -1177,11 +1399,138 @@
   }
 
   .m-plan {
-    gap: var(--m-space-5);
+    gap: 6px;
+  }
+
+  /* The command block is compacted on mobile and the headline is REMOVED, both owner-directed
+     after seeing the first build on his iPhone Air: "everything is a lot closer together in the
+     concept, even Plan is closer to the Meridian at the top, if need be, I would even remove the
+     Plan and center give every dollar a destination, if needed". So the kicker (which printed
+     PLAN a third time) and the headline both go, and the subline carries the block alone, centred
+     where the concept's title block sits. The workspace is still named twice above the fold -- by
+     the tab bar's active tab and by the document title -- and the page keeps its heading
+     structure through the section headings. */
+  .m-plan-command .m-workspace-kicker {
+    display: none;
+  }
+
+  .m-plan-command {
+    align-items: center;
+    gap: 0;
+    text-align: center;
   }
 
   .m-plan-command .m-editorial-headline {
-    font-size: 2.25rem;
+    display: none;
+  }
+
+  .m-plan-command .m-editorial-subline {
+    margin-top: 0;
+  }
+
+  /* The owner: "add a bill or goal is still short and situated next to new autopilot rule,
+     instead of stretching the length of the page". The primary takes the full width, and the
+     secondary is placed deliberately UNDER it as a quieter full-width control rather than left
+     as the leftover half of a two-up row. The concept draws only the apricot plate; keeping the
+     autopilot control below it preserves a real capability without competing with the primary. */
+  .m-plan-create-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    align-items: stretch;
+  }
+
+  .m-plan-create-actions .m-plan-new,
+  .m-plan-create-actions .m-plan-new.m-primary-button {
+    width: 100%;
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  /* The apricot plate is 58px by default because its nine-slice border carries the rivets; at
+     48px it still meets the 44px target the kit specifies for this control. The SECONDARY is
+     left at 44px and is not trimmed: it is a real control, and shrinking it below the touch
+     floor is not a saving, it is a defect. */
+  .m-plan-create-actions .m-plan-new.m-primary-button {
+    min-height: 48px;
+  }
+
+  .m-plan-create-actions .m-plan-new-rule {
+    background: none;
+    color: var(--m-ink-muted);
+  }
+
+  /* The concept's income ticket is ONE band: the label, the date and the figure on a single
+     line, with the caption beneath. The card spent four stacked bands on the same content and
+     measured 102px against the concept's ~55px, which is where most of the height the bills
+     section needed had gone. The label and the date now share the line, the caption sits
+     underneath, and nothing is removed or reworded. `display: contents` on the figure lets the
+     date and the amount take their own grid columns without a wrapper box; it is a plain div. */
+  .m-plan-summary-grid .m-plan-funding-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title   date   amount"
+      "caption caption caption"
+      "shortfall shortfall shortfall";
+    align-items: baseline;
+    column-gap: var(--m-space-2);
+    row-gap: 2px;
+    padding: 0 var(--m-space-3);
+    border-width: 10px;
+    border-image-width: 10px;
+  }
+
+  .m-plan-funding-card .m-section-label {
+    display: none;
+  }
+
+  .m-plan-funding-card .m-plan-next-title {
+    grid-area: title;
+    margin: 0;
+    font-family: var(--m-font-sans);
+    font-size: var(--m-text-sm);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .m-plan-funding-card .m-plan-funding-figure {
+    display: contents;
+  }
+
+  .m-plan-funding-card .m-plan-funding-date {
+    grid-area: date;
+    justify-self: start;
+    font-size: var(--m-text-sm);
+  }
+
+  .m-plan-funding-card .m-plan-funding-amount {
+    grid-area: amount;
+    justify-self: end;
+    font-size: 1.35rem;
+  }
+
+  .m-plan-funding-card .m-plan-funding-caption {
+    grid-area: caption;
+    margin: 0;
+    font-size: var(--m-text-xs);
+  }
+
+  .m-plan-funding-card .m-plan-shortfall {
+    grid-area: shortfall;
+    margin: 0;
+  }
+
+  /* The map's own margin is a spacing value, not content, and the owner asked for the parchment
+     to sit closer to the top and the bills closer to the parchment: "make the parchment move
+     closer to the top and bills closer to the parchment so we can extend bills and move the
+     other components up". Every one of these gaps is tightened rather than any control being
+     dropped, which is what buys the bills band its extra height. */
+  .m-plan-map-section {
+    margin-top: 0;
+    margin-bottom: 6px;
   }
 
   .m-plan-table-head {
@@ -1192,27 +1541,98 @@
     border-radius: var(--m-radius-lg);
   }
 
-  /* The concept's bill row (02-plan.png): the name and its date on the left, the reserved figure
-     and the next date stacked on the right, and a chevron that opens the actions. The three
-     action buttons were what made this a tall three-band card, so they now sit behind the
-     chevron and the row collapses to a single band. The actions remain reachable -- the chevron
-     is a real button carrying aria-expanded, so the state does not depend on the chevron's
-     rotation alone. */
+  /* The concept's bill row (02-plan.png): the medallion, then the name with its ONE date
+     beneath it, the reserved figure with its label beneath it, the evidence indicator and the
+     chevron -- a single band. Everything else the row used to carry (the fact line, the
+     progress bar, the invoices and the now-duplicated NEXT figure) is in the disclosure panel
+     on the second row. The actions follow on the third. */
   .m-plan-table-row {
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
     grid-template-areas:
-      "name funded toggle"
-      "name next toggle"
-      "action action action";
-    gap: var(--m-space-1) var(--m-space-3);
-    padding: var(--m-space-3);
+      "medallion name funded evidence toggle"
+      "progress progress progress progress progress"
+      "panel panel panel panel panel"
+      "action action action action action";
+    /* NO row gap. The template declares four rows, and a row gap applies BETWEEN them even when
+       the progress cell is empty and the panel and actions are `display: none`, which silently
+       cost the collapsed row 8px. Each of those carries its own spacing instead. */
+    gap: 0 var(--m-space-2);
+    padding: var(--m-space-2) var(--m-space-3);
     border-radius: var(--m-radius-md);
   }
 
-  .m-plan-cell-funded,
-  .m-plan-cell-next {
+  /* The concept's funding bar: a thin hairline along the bottom of the row, with the funded
+     share drawn in mint and a dot marking where the fill ends. Moving it back out of the
+     disclosure is the owner's correction of the spec ("I would still want progress bars"), and
+     the governing concept 02-plan.png draws exactly this on every bill row. */
+  .m-plan-cell-progress {
+    grid-area: progress;
+    /* A row with no target renders an empty cell; it must not reserve height. */
+    min-height: 0;
+  }
+
+  .m-plan-cell-progress:empty {
+    display: none;
+  }
+
+  .m-commitment-progress {
+    margin-top: 6px;
+  }
+
+  .m-plan-cell-progress .m-commitment-progress-track {
+    position: relative;
+    display: block;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--m-border);
+    overflow: visible;
+  }
+
+  .m-plan-cell-progress .m-commitment-progress-fill {
+    position: relative;
+    display: block;
+    height: 100%;
+    border-radius: 1px;
+    background: var(--m-healthy);
+  }
+
+  /* The end dot rides the fill's edge, so a partly funded bill shows where the money stops
+     rather than a dot pinned at the right edge regardless of the share. */
+  .m-plan-cell-progress .m-commitment-progress-fill::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 5px;
+    height: 5px;
+    transform: translate(50%, -50%);
+    border-radius: 50%;
+    background: var(--m-healthy);
+  }
+
+  .m-plan-cell-medallion {
+    display: block;
+    grid-area: medallion;
+    align-self: center;
+  }
+
+  .m-plan-cell-evidence {
+    display: flex;
+    grid-area: evidence;
+    align-self: center;
+  }
+
+  .m-plan-cell-funded {
+    grid-area: funded;
     justify-self: end;
     text-align: right;
+  }
+
+  /* The NEXT figure is NOT rendered on the row: its value is the date under the name above, and
+     repeating it inside the same row is exactly the duplication the spec removes. The desktop
+     table keeps its own NEXT column, which this rule never touches. */
+  .m-plan-cell-next {
+    display: none;
   }
 
   .m-plan-cell-toggle {
@@ -1250,9 +1670,16 @@
 
   /* The bills scroll inside a fixed band so "Next income" and "Add a bill or goal" follow on the
      SAME page instead of a screen and a half below it. `overscroll-behavior: contain` stops the
-     inner scroll from chaining out to the page once it reaches its end. */
+     inner scroll from chaining out to the page once it reaches its end. The band is measured
+     against the acceptance test this slice exists for -- next income AND the add control on the
+     first screen at 420x912 -- rather than against the 44vh the taller rows needed, because a
+     band sized for the OLD row height is dead space that pushes both further down. */
   .m-plan-table {
-    max-height: 44vh;
+    /* Sized against the SMALL viewport height rather than a fixed 912px, because on the owner's
+       iPhone Air the status bar and the home-indicator inset take roughly 100px that a desktop
+       Chromium preview cannot reproduce. The cap is the measured value at 420x912; the svh term
+       is what keeps the band from crowding the ticket and the add control on a shorter screen. */
+    max-height: min(170px, 19svh);
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -1262,37 +1689,90 @@
     border: 1px solid var(--m-border);
   }
 
-  /* Name + type + badge span the card; facts and the progress bar run beneath. */
-  .m-plan-cell-commitment {
-    grid-area: name;
+  /* The name and its date, stacked -- the concept puts the date directly under the name. The
+     line heights are set here rather than inherited: the concept's row is a tight two-line
+     block, and the default leading alone made the row 77px instead of the ~60px the measured
+     concept implies (02-plan.png: 121px row pitch at 0.494 scale). */
+  .m-plan-table-row .m-plan-cell-commitment {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name name name"
+      "date .    badge";
+    gap: 0;
   }
 
+  .m-commitment-date {
+    line-height: 1.2;
+  }
+
+  /* `display: contents` is what lets the badge ride the DETAIL line while the NAME keeps the
+     whole width of the cell. Measured at 420px the name column is ~144px, and an 85px badge
+     sharing it left the name about 50px -- which collapsed "Verizon Payment Arrangement" and
+     "Verizon Payment" into the same visible string, the exact failure the spec forbids. The
+     wrapper is a plain div with no role, so spending its box removes nothing from the
+     accessibility tree. */
   .m-plan-cell-name {
-    flex-wrap: wrap;
+    display: contents;
   }
 
-  .m-plan-cell-funded {
-    grid-area: funded;
+  .m-commitment-name {
+    grid-area: name;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
   }
 
-  .m-plan-cell-next {
-    grid-area: next;
+  /* The type tag and the status badge are the same kind of thing -- a qualifier for this row --
+     and both take the detail line, where neither can wrap away or be truncated. They are
+     mutually exclusive by construction: the script renders the tag only for a non-bill, and the
+     badge only from `biller_status`, which the plan service sets for bills. */
+  .m-commitment-type,
+  .m-bill-badge {
+    grid-area: badge;
     justify-self: end;
-    text-align: right;
+    align-self: center;
+    margin-left: 0;
+    white-space: nowrap;
   }
 
-  .m-plan-cell-funded::before,
-  .m-plan-cell-next::before {
-    content: "";
+  .m-commitment-date {
+    grid-area: date;
+    justify-self: start;
+    align-self: center;
     display: block;
-    font-size: var(--m-text-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--m-ink-faint);
-    margin-bottom: var(--m-space-1);
+    font-size: var(--m-text-sm);
+    color: var(--m-information);
   }
 
-  .m-plan-cell-funded::before {
+  /* The disclosure panel: everything else about the bill, full width. The collapsed rule must
+     stay ABOVE the expanded one -- the later declaration wins, and an earlier `display: grid`
+     would leave the panel permanently open and the row permanently tall. */
+  .m-plan-cell-panel {
+    display: none;
+  }
+
+  .m-plan-table-row[data-expanded="true"] .m-plan-cell-panel {
+    display: grid;
+    padding-top: var(--m-space-2);
+    border-top: 1px solid var(--m-border);
+  }
+
+  .m-plan-panel-name {
+    display: block;
+    margin: 0;
+    font-family: var(--m-font-serif);
+    font-size: var(--m-text-sm);
+    font-weight: 600;
+    color: var(--m-ink-muted);
+  }
+
+  /* The figure's label sits BELOW it, as the concept draws it ($84 over Reserved). The old
+     `::before` put it above, which is the crowding the owner reported as "reserved is over the
+     dollar amount". */
+  .m-plan-cell-funded::after {
     /* NOT "Funded". The rule is unconditional, so every commitment carried the word --
        including one with nothing reserved. On the owner's own ledger a card read
        "Underfunded" beside "FUNDED $0", contradicting itself in one card. The figure is
@@ -1301,17 +1781,16 @@
        of asserting a verdict, so it takes the quiet label colour rather than a status one;
        whether the bill is short is already the badge's job. */
     content: "Reserved";
+    display: block;
+    font-size: var(--m-text-xs);
+    letter-spacing: 0.05em;
     color: var(--m-ink-faint);
+    margin-top: var(--m-space-1);
   }
 
-  .m-plan-cell-next::before {
-    content: "Next";
-    color: var(--m-information);
-  }
-
-  .m-plan-cell-funded,
-  .m-plan-cell-next {
+  .m-plan-cell-funded {
     font-size: var(--m-text-md);
+    font-variant-numeric: tabular-nums;
   }
 
   /* Actions arrive with the disclosure, so the collapsed row is a single band. The state toggle

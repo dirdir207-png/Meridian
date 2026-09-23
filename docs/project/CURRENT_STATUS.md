@@ -1,5 +1,67 @@
 # Enhanced SimpleCrew — Current Status
 
+## The Plan bill row is one line, and the medallion material needed no spend (`OS-089`, `OS-087`, `D-023`) (2026-09-23)
+
+**Everything the owner asked for on the mobile Plan surface is built, and the two things he asked for that
+were about MONEY rather than pixels both resolved to "already in the kit".** The governing record is
+`docs/project/PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md`; the binding decisions are D-023.
+
+**What changed.** The collapsed bill row measured **113/114px** and carried a fact line, a progress bar, a
+NEXT figure and invoice pills. It is now **61/62px** and carries a medallion, the name with its ONE date, the
+reserved figure with `Reserved` beneath it, an evidence indicator where evidence exists, and the chevron.
+The fact line, the progress bar, every invoice entry and the duplicated NEXT figure moved into the existing
+disclosure panel, which takes the full row width on mobile. The banner and both `aria-label`s now read
+`Upcoming bills`; the `BILL` tag is gone from bill rows and kept for every other type; `Add a bill or goal`
+spans the page with `New autopilot rule` placed beneath it; the order is bills → next paycheck → add controls
+→ September coverage.
+
+**The acceptance test was the hard part, and it is met by measurement rather than by eye.** On mobile the
+shell's canvas — `.m-main`, which owns the scrolling — is **68..826px**. The add control sat at **1427px**
+before and built to **879px** after the spec's own three changes; only then did it become clear that the test
+could not pass without two more mobile-only changes, neither of which removes a control, a figure or a word:
+the `PLAN` kicker is dropped (it appeared three times above the fold) with the headline down from 2.25rem to
+1.75rem, and the bills band is capped at **120px**. Measured after: **income strip 675..777px (fully on the
+first screen), add control top 789px — 37px inside the canvas**, collapsed row 61/62px.
+
+**No Runway spend happened, and that is a finding rather than an omission.** The owner authorised spend for
+the medallion work (*"If we need to match them with runway, we can spend that"*). Looking at the shipped kit
+first showed `kit-2026-09-16/medallion-frame.png` is already a rendered bevelled brass ring with four rivets
+that Accounts, Settings, Activity and the dock have used since 2026-09-23; the Plan map's stations and hub
+were the last surfaces composing their own flat ring from a 2px border and inset shadows. They now layer the
+real asset, which closes OS-087's material gap with zero credits. What genuinely remains generative is the
+concept's **engraved glyphs**, against single-colour SVG masks — that is the half worth spending on, and per
+D-021 the spend must be stated before it happens. Balance was 468 credits read read-only on 2026-09-22.
+
+**Two defects were caught by the capture and by nothing else**, which is why the capture is the gate:
+the income ticket's nine-slice was overridden on `border-width` alone, so the layout reserved 10px while the
+image still drew 20px and the parchment painted over its own title; and a bare `grid-area: name` on
+`m-plan-cell-commitment` — a class the desktop table's HEAD cell also carries — created an implicit named
+line at the END of the head's grid, so `Commitment` rendered in the LAST column while every row stayed put.
+Both now have guards, the second a browser guard on the rendered header order, because the source read
+correctly in both cases.
+
+**Deliberate departures from the spec's row diagram, both forced by measurement:** the status badge rides the
+DETAIL line beside the date rather than the name line, because at 420px the name column is ~144px and an 85px
+badge sharing it left the name ~50px — which collapsed `Verizon Payment Arrangement` and `Verizon Payment`
+into the same visible string, the exact failure the spec forbids. And `due <date>` is gone from the fact line
+on desktop too, because the duplication it removes is the desktop NEXT column's own.
+
+**Second pass, same day — the owner reviewed the first build on his iPhone Air.** His words: *"The spacing isn't really working on mobile, bills section is too small, can you make the parchment move closer to the top and bills closer to the parchment so we can extend bills and move the other components up, or is my phone just too small for the same layout as the concept? ... everything is a lot closer together in the concept, even Plan is closer to the Meridian at the top, if need be, I would even remove the Plan and center give every dollar a destination"* and *"Also I would still want progress bars"*.
+
+**His phone is NOT too small, and that is a measurement.** The iPhone Air is 420×912 CSS px — exactly the `mobile-air` viewport in `MERIDIAN_VISUAL_CAPTURE_SPEC.md`, and exactly the concept's own scale (`02-plan.png` is 852×1846 at 0.494). The concept fits because its top block is ~148px against the app's ~250px. What changed in response, all mobile-only: the funding bar moved back **onto the collapsed row** as a 2px hairline with an end dot at the funded share (his correction of the spec, and what the concept draws — exactly one bar exists); the `Plan` headline is removed with `Give every dollar a destination.` carrying the block, centred (he pre-authorised it); every gap from the topbar to the map is tightened to 6px; the income ticket collapsed **102px → 68px** by putting label, date and figure on one line with the caption beneath; and the bills band was **EXTENDED 120px → `min(170px, 19svh)`**, two and a half rows. Measured after: map section 191..449 (was 236..495), band 473..643, ticket 673..741, **add control 753..811 — fully inside the canvas (68..826)**, collapsed row 69px. The `svh` term is deliberate: the owner's handset loses roughly 100px to the status bar and the home-indicator inset that a desktop preview cannot reproduce, so the band is sized against the small viewport height rather than a fixed 912. The map keeps its concept size; the height came from the ticket and the gaps.
+
+**Verification.** Full suite green (`tests/` entire tree, browser tests included when `APP_URL` is set);
+`ruff` clean over `app.py meridian/ scripts/ tests/`; `git diff --check` clean; `tests/browser/test_plan.py`
+passes against `APP_URL=http://127.0.0.1:8081`, including the one-screen acceptance test and a guard that the
+progress bar renders on the COLLAPSED row rather than inside the disclosure; governed captures at 5 viewports
+× 2 themes in `artifacts/plan-mobile-concept-alignment-2026-09-23/{before,after}`. **Not claimed:** the
+engraved-glyph material, the tinted per-category bill disc (OS-088, still blocked on category data), OS-087's
+glyph half, any deployment, and any provider, financial or authority change. Observed and deliberately not
+fixed: the floating `Ask Virgil` control overlaps the right end of the full-width add button on mobile, as it
+overlapped the bill rows before this slice. The one desktop layout change beyond the removed duplicate date is
+the funding bar moving from between the fact line and the invoice entries to directly under the name.
+
+
 ## Three findings from checking the artifacts against the product: untracked assets, an unreachable Settings hub, and an AI that was never broken (`OS-080`, `OS-081`) (2026-09-21, base `f940cda`)
 
 **Everything here came from asking your question the other way round: not "was it built?" but "can it be

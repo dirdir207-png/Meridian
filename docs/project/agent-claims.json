@@ -808,6 +808,32 @@
       "base_sha": "874b79c7428d002b49ca75098990dbf1d20ec1b0",
       "since": "2026-09-21T00:00:00+00:00",
       "note": "The OS-076 first slice is NOT in this claim and NOT committed: meridian/ai/investigation_service.py is written but unwired and untested, so it is left UNCOMMITTED as WIP rather than committed as a placeholder. See the log entry."
+    },
+    {
+      "agent": "constitutional-builder",
+      "claim_id": "os089-plan-mobile-concept-alignment-20260923",
+      "description": "OS-089 / D-023: owner-directed Plan mobile concept alignment against design/observatory-drafts-2026-09-08/02-plan.png. The collapsed bill row becomes one band (113/114px -> 61/62px): medallion, name with its ONE date, reserved figure with `Reserved` beneath it, evidence indicator only where evidence exists, chevron. Fact line, progress bar, invoice entries and the duplicated NEXT figure move into the existing disclosure, which takes the full row width on mobile. Section banner and both aria-labels become `Upcoming bills`; the BILL type tag is removed for bills and kept for every other type; `Add a bill or goal` spans the width with `New autopilot rule` beneath it; order is bills -> next paycheck -> add controls -> September coverage. OS-087's medallion material is applied from the kit's EXISTING medallion-frame.png brass ring, so no Runway generation and no spend occurred. Presentation and copy only: no route, data, financial, authority, migration or provider change.",
+      "generation": 1,
+      "files": [
+        "static/js/meridian/plan.js",
+        "static/css/meridian/plan.css",
+        "templates/meridian/partials/plan.html",
+        "scripts/preview_observatory_dial.py",
+        "tests/meridian/test_plan_row_disclosure.py",
+        "tests/meridian/test_plan_funding_label.py",
+        "tests/browser/test_plan.py",
+        "design-qa.md",
+        "docs/project/MERIDIAN_OS_TASKS.json",
+        "docs/project/MERIDIAN_DECISIONS.md",
+        "docs/project/CURRENT_STATUS.md",
+        "docs/project/AGENT_COORDINATION.md",
+        "docs/project/PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md",
+        "docs/project/HANDOFF.md",
+        "docs/project/agent-claims.json"
+      ],
+      "base_sha": "99a09fed49212aa3084d745c42974e87cf5cce6f",
+      "since": "2026-09-23T00:00:00-04:00",
+      "note": "Released at this commit. Verification: full suite 1907 passed / 83 skipped; ruff clean over app.py meridian/ scripts/ tests/; git diff --check clean; tests/browser/test_plan.py 8 passed against APP_URL=http://127.0.0.1:8081; governed captures at 5 viewports x 2 themes in artifacts/plan-mobile-concept-alignment-2026-09-23/. Captures live in the UNTRACKED scratch tree artifacts/plan-mobile-concept-alignment-2026-09-23/ (nothing under artifacts/ is committed in this repo); design-qa.md references them by path."
     }
   ]
 }

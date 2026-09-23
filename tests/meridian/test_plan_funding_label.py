@@ -20,13 +20,19 @@ CREWWORK = ROOT / "meridian/providers/crewwork.py"
 
 def test_the_card_labels_the_figure_reserved_rather_than_asserting_funded():
     css = PLAN_CSS.read_text(encoding="utf-8")
-    block = css.split(".m-plan-cell-funded::before {", 1)[1].split("}", 1)[0]
+    # The label moved from `::before` to `::after` on 2026-09-23: the owner reported "reserved is
+    # over the dollar amount" as crowding, and 02-plan.png draws the figure with the word UNDER
+    # it. The POSITION changed; the WORD and its meaning did not, so these assertions are
+    # unchanged -- they are the reason the move had to keep the same content.
+    block = css.split(".m-plan-cell-funded::after {", 1)[1].split("}", 1)[0]
 
     assert 'content: "Reserved";' in block
     assert 'content: "Funded";' not in block
     # A column label, not a status stamp: the shortfall is already the badge's job.
     assert "color: var(--m-ink-faint);" in block
     assert "var(--m-healthy)" not in block
+    # Nothing may re-add the label ABOVE the figure, which is the crowding the owner reported.
+    assert ".m-plan-cell-funded::before {" not in css
 
 
 def test_no_surface_still_labels_the_column_funded():

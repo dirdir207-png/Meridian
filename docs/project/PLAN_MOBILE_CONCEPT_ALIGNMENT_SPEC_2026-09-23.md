@@ -1,6 +1,8 @@
 # Plan (mobile) — concept alignment spec, owner-directed 2026-09-23
 
-**Status:** approved by the owner as the next slice. Not started.
+**Status:** approved by the owner as the next slice. **DELIVERED 2026-09-23 (OS-089)** — see
+"## 10. Resolution" below, which records every point where the built result departs from this
+document and why.
 **Supersedes nothing.** Extends D-022 and the 2026-09-23 mobile bill-row work.
 **Read with:** `design/observatory-drafts-2026-09-08/02-plan.png` (the governing Plan concept),
 `MERIDIAN_DECISIONS.md` D-021 (image generation) and D-004 (newest governing visual record wins).
@@ -216,3 +218,67 @@ that evidence exists in text. If it does not, the indicator needs a real accessi
 - Do not change the desktop Plan table. The governing concepts are mobile-shaped; the desktop is
   tabled by the owner (*"The app is primarily mobile for my purposes"*).
 - Do not merge to `main`. Branch only, per the owner's 2026-09-23 ruling.
+
+## 10. Resolution (2026-09-23, OS-089)
+
+Built on `feat/meridian-implementation`. Full detail is in D-023; this section exists so the spec
+and the product cannot drift apart, and so the NEXT session reading this document does not re-file
+a deliberate choice as a gap.
+
+**Delivered as specified.** One-line collapsed bill rows (113/114px → **61/62px**); the fact line,
+progress bar, invoice entries and duplicated NEXT figure moved into the existing disclosure, which
+takes the full row width on mobile; the banner and both `aria-label`s read `Upcoming bills`; the
+`BILL` tag is removed for bills; `Add a bill or goal` spans the width; the order is bills → next
+paycheck → add controls → September coverage. The evidence indicator renders only where evidence
+exists and carries the accessible name `Evidence available`.
+
+**Four departures, each forced by a measurement and each recorded in D-023.**
+
+1. **§3's diagram puts the status badge on the name line. It is on the DETAIL line instead.** At
+   420px the name column is ~144px; an 85px badge sharing it left the name ~50px, which collapsed
+   `Verizon Payment Arrangement` and `Verizon Payment` into the same visible string — the exact
+   collapse §4 forbids. The name now takes the whole cell and truncates with a prefix ellipsis, and
+   the badge cannot wrap away or be truncated. Two of §4's requirements were in direct conflict at
+   this width; the one about distinguishable names won.
+2. **The acceptance test in §8 could not be met by §7's changes alone.** The spec's three changes
+   brought the add control from 1427px to 879px, and the mobile canvas ends at 826px. Two further
+   mobile-only changes closed it, neither removing a control, figure or word: the `PLAN` kicker is
+   dropped (it printed the word three times above the fold) with the headline down from 2.25rem to
+   1.75rem, and the bills band is capped at a measured **120px**. Result: income strip fully on
+   screen at 675..777px, add control top at 789px.
+3. **§5's medallion work, and §7.4's "generated icon", needed no generation at all.** The kit
+   already ships `medallion-frame.png` (a rendered bevelled brass ring with four rivets) and the
+   income ticket is already the kit's parchment ticket flanked by compass stars. The Plan map's
+   stations and hub now layer the real ring asset. **No Runway credits were spent.** What remains
+   generative is the concept's engraved glyphs, which is the half worth spending on.
+4. **The row medallion (OS-088's territory) ships in the app's unified disc, not the concept's
+   tinted one.** The tint IS the category, and commitments still carry no category; the glyph
+   therefore follows the commitment's TYPE, which is real data, and no colour is chosen by matching
+   a name. OS-088 replaces the disc treatment, not the slot.
+
+**One deliberate desktop content change**, contrary to §9's "do not change the desktop Plan table"
+in letter but not in intent: `due <date>` is removed from the fact line, because the duplication it
+removes is the desktop NEXT column's own. Column order, row height and row geometry are unchanged
+(verified by diffing the governed desktop captures; structural difference 0.34%, entirely the map's
+brass ring, the heading rename, that removed fragment, and the funding bar's move one line up).
+
+### 10a. Second pass -- the owner's corrections after seeing the first build (2026-09-23)
+
+He reviewed the build on his own iPhone Air and sent three corrections. D-023 point 6 carries the
+full record and the measurements; the summary, so this spec is not read as final where it has been
+superseded:
+
+- **The progress bar's placement in SS3 is superseded.** *"Also I would still want progress bars"* --
+  the bar is back ON the collapsed row as the concept draws it (a 2px hairline with an end dot at the
+  funded share), not in the disclosure. Exactly one bar exists, so the row and the panel cannot
+  disagree.
+- **The `Plan` headline is removed on mobile** and `Give every dollar a destination.` carries the
+  block, centred -- pre-authorised by the owner (*"if need be, I would even remove the Plan and center
+  give every dollar a destination"*). The top block is compressed toward the concept's ~148px.
+- **The bills band is EXTENDED, not shrunk** -- 120px to `min(170px, 19svh)`, two and a half rows. The
+  height came from the income ticket (102px to 68px: label, date and figure on one line with the
+  caption beneath) and from the gaps, NOT from the map, which keeps its concept size.
+- **His phone is NOT too small.** The iPhone Air is 420x912 CSS, exactly the `mobile-air` capture
+  viewport and exactly the concept's own scale (852x1846 at 0.494). The concept fits because its top
+  block is ~148px against the app's ~250px, not because its screen is larger. Recorded because the
+  question will recur.

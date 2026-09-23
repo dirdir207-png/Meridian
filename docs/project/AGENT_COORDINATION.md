@@ -114,8 +114,59 @@ would have reverted three commits had it been applied. This file is the channel.
 | Builder (OS-053: unify the candidate-to-commitment mapping) | `meridian/commitments.py`, `meridian/sync.py`, `meridian/live.py`, `tests/meridian/test_commitment_candidate_mapping.py` (new), `tests/meridian/test_bill_reserve_observations.py`, `docs/project/CURRENT_STATUS.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-20 | **released at this commit**. OS-053 closed as a **latent refactor**: one shared candidate-to-commitment mapping in `commitments.py`, both entry points rewired onto it, both duplicated loops deleted, and the two divergent recurrence fallbacks (`one_time` vs `monthly`) collapsed into one named constant `UNREPORTED_RECURRENCE_FALLBACK = "monthly"`. **Corrects the handoff's Option B:** `sync_providers` also does `upsert_reimbursement`, `reconcile()` and `_reclassify_relations()` — none of which `live.py` does — so it was rewired, **not** deleted, which would have destroyed capability. **No behaviour change** (owner-confirmed: Crew always reports a frequency; pre/post suite identical at 1421 passed / 1 skipped): no migration, no backfill, no schema change, no provider mutation, no live sync, no authority change, and **no `due_date` rewriting** — the January anchors are Crew's `anchorDate` (OS-038/OS-060). 18 new tests, falsified before trusted (repointing the fallback fails 3; re-duplicating the loop in `live.py` fails 7). Read-only check on a DB **copy**: 11 bills, 0 unreported, distinct recurrence `{'monthly'}`. |
 
 | Builder (OS-060: read-only reserve-versus-amount exposure) | `meridian/services/today.py`, `templates/meridian/partials/today.html`, `static/js/meridian/today.js`, `static/css/meridian/observatory.css`, `tests/meridian/services/test_reserve_exposure.py` (new), `tests/meridian/test_today_exposure_js.py` (new), `docs/project/CURRENT_STATUS.md`, `docs/project/MERIDIAN_OS_TASKS.json`, `docs/project/AGENT_COORDINATION.md`, `docs/project/agent-claims.json` | 2026-09-20 | **released at this commit**. OS-060 shipped as a **read-only** display, per the owner's 2026-09-20 scope decision: a gap is shown ONLY where a bill's amount exceeds its **observed** reserved figure AND a reserved report exists. Only Rent qualifies today (1442.00 − 1097.10 = **344.90**); the four `0.00`-with-reported bills are normal funded-not-covered (D-015) and correctly show nothing. **Key finding:** Rent sits OUTSIDE the dial's event window (next occurrence 2026-10-16 vs horizon end 2026-10-04), so the exposure is window-independent — an event-loop field would have rendered nothing. Wording factual with no verb of action; "has to come from spendable cash" was rejected as bordering on implying a transfer. No other number moves (the gap was already inside known obligations). 21 new tests; suite 1460 passed / 1 skipped; falsified before trusted, which caught a defect in the author's own test (it passed for the wrong reason). **No provider mutation, no transfer, no reserve withdrawal, no authority change, no migration, no forecast, no lateness modelling, no re-targeting.** `meridian/**.py` change → preview restart needed. |
+| Constitutional Builder (OS-089: Plan mobile concept alignment) | `static/js/meridian/plan.js`, `static/css/meridian/plan.css`, `templates/meridian/partials/plan.html`, `scripts/preview_observatory_dial.py` (synthetic fixture only), `tests/meridian/test_plan_row_disclosure.py`, `tests/meridian/test_plan_funding_label.py`, `tests/browser/test_plan.py`, `design-qa.md`, `docs/project/{MERIDIAN_OS_TASKS.json,MERIDIAN_DECISIONS.md,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json,PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md,HANDOFF.md}` | 2026-09-23 | **released at this commit**. NOTE: the before/after captures live in the UNTRACKED scratch tree `artifacts/plan-mobile-concept-alignment-2026-09-23/`, per this repo's convention that nothing under `artifacts/` is committed; `design-qa.md` references them by path. Owner-directed 2026-09-23 slice per `docs/project/PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md`: one-line bill rows, the facts/progress/evidence/NEXT move into the existing disclosure, the section becomes `Upcoming bills` with matching `aria-label`s, the `BILL` tag is removed, the add control stretches full width, and September coverage moves below the controls. **Presentation and copy only: no route, data, financial, authority, migration or provider change.** The medallion material is applied from the kit's existing brass ring (`medallion-frame.png`, already tracked and indexed), so no Runway generation occurs in this slice without a separately stated spend. |
 
 ## Log (append only — newest first)
+
+### 2026-09-23 — The Plan bill row is one line, and the medallion material needed no spend (`OS-089`, `OS-087`, `D-023`)
+
+**Second pass, same day, owner-directed from his iPhone Air.** He reported that the spacing did not work on
+mobile, that the bills section was too small, and that the parchment should sit closer to the top so the bills
+could be EXTENDED; he corrected the spec on the progress bar (*"Also I would still want progress bars"*) and
+asked whether his phone was too small for the concept's layout. **It is not:** the iPhone Air is 420x912 CSS,
+exactly the `mobile-air` capture viewport and exactly the concept's own scale (02-plan.png is 852x1846 at
+0.494); the concept fits because its top block is ~148px against the app's ~250px. Changes, all mobile-only:
+the funding bar moved back onto the COLLAPSED ROW as a 2px hairline with an end dot at the funded share (one
+bar only, so the row and the panel cannot disagree); the `Plan` headline is removed with the subline carrying
+the block centred (he pre-authorised it); the top gaps tightened to 6px; the income ticket 102px -> 68px; and
+the bills band EXTENDED 120px -> `min(170px, 19svh)`. Measured after: map 191..449, band 473..643, ticket
+673..741, add control 753..811 -- fully inside the canvas (68..826) -- row 69px. The `svh` term exists because
+a real handset loses ~100px to the status bar and home-indicator inset that a desktop preview cannot show.
+Governed desktop structural diff is now 0.34%, the extra being the funding bar's move one line up.
+
+**Owner-directed, fully specified, and now closed on `feat/meridian-implementation`.** The governing record is
+`docs/project/PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md` and the binding decisions are D-023. The
+collapsed bill row went from **113/114px** to **61/62px**: medallion, the name with its ONE date, the reserved
+figure with `Reserved` beneath it, the evidence indicator where evidence exists, and the chevron. The fact
+line, the progress bar, the invoice entries and the duplicated NEXT figure moved into the existing disclosure,
+which takes the full row width on mobile. The banner and both `aria-label`s read `Upcoming bills`; the `BILL`
+tag is gone for bills and kept for every other type, because this list can hold a goal. Order is bills → next
+paycheck → add controls → September coverage, and `Add a bill or goal` spans the page.
+
+**The finding that matters most is about spend, not pixels.** The owner authorised Runway credits for the
+medallion material (*"If we need to match them with runway, we can spend that"*). Looking at the shipped kit
+BEFORE opening the generation route showed `kit-2026-09-16/medallion-frame.png` is already a rendered bevelled
+brass double ring with four rivets, and that the Plan map's stations and hub were the last surfaces still
+composing their own flat ring from a 2px border and inset shadows. They now layer the real asset, so OS-087's
+material gap closed with **zero credits**. What genuinely remains generative is the concept's engraved glyphs
+against single-colour SVG masks — that is the half worth spending on, and D-021 still requires the spend to be
+stated before it happens. Balance was 468 credits read read-only on 2026-09-22.
+
+**Two defects were caught by the capture and by nothing else.** The income ticket's nine-slice was overridden
+on `border-width` alone, so the layout reserved 10px while the image still drew 20px and the parchment painted
+over its own title; and a bare `grid-area: name` on `m-plan-cell-commitment` — a class the desktop table's HEAD
+cell also carries — created an implicit named line at the END of the head's grid, rendering `Commitment` in the
+last column while every row stayed put. Both now have guards; the second is a browser guard on the RENDERED
+header order, because the source read correctly in both cases.
+
+**Verification.** Full suite **1907 passed / 83 skipped**; `ruff` clean over `app.py meridian/ scripts/ tests/`;
+`git diff --check` clean; `session_close.py` exit 0; `tests/browser/test_plan.py` **8 passed** against
+`APP_URL=http://127.0.0.1:8081`, including the one-screen acceptance test. Governed captures at 5 viewports ×
+2 themes in `artifacts/plan-mobile-concept-alignment-2026-09-23/{before,after}`, taken against the isolated
+synthetic preview, never the daily runtime. Desktop structural difference **0.24%**, entirely the map's brass
+ring, the heading rename and the removed duplicate date. **No provider mutation, no transfer, no reserve
+movement, no authority change, no migration, no forecast.** Left open deliberately: OS-088's tinted
+per-category bill disc (still blocked on category data) and the engraved-glyph half of OS-087.
 
 ### 2026-09-21 — Safe to Spend ignored a negative reserve (`OS-078`, `D-019`, base `874b79c`)
 

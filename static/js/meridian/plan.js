@@ -6,6 +6,7 @@ import { MeridianApiError, meridianFetch, meridianPropose, meridianMutate } from
 import { describeAbsentBill } from "./absent-bills.js";
 import { describeActionOutcome } from "./action-outcome.js";
 import { formatCurrency, parseLocalDate } from "./format.js";
+import { ACTION_ICONS, kitIconUrl } from "./kit-icons.js";
 
 let controller = null;
 
@@ -27,6 +28,20 @@ const BILLER_STATUS_LABELS = {
   unfunded: "Underfunded",
   due_soon: "Due soon",
   changed: "Amount changed",
+};
+
+/* The collapsed row's medallion glyph, chosen from the commitment's TYPE -- a field the
+   payload really carries. It is deliberately NOT a category: a commitment has no category
+   and no tint (OS-088 owns that, and it is blocked on the missing data), so the disc keeps
+   the neutral tint class and this table never invents a colour by matching the bill's NAME.
+   A name match that is wrong about money is worse than no icon, so an unknown type falls
+   back to the kit's own question glyph rather than a confident-looking one. */
+const COMMITMENT_TYPE_ICONS = {
+  bill: "receipt",
+  goal: "flag",
+  reserve: "piggy-bank",
+  buffer: "shield-check",
+  debt: "bar-chart",
 };
 
 function money(value, currency = "USD") {
@@ -522,6 +537,27 @@ function renderCommitments(root, plan, template) {
       }
     });
 
+    // The concept's bill row leads with a medallion. OS-089 ships the SLOT with what the
+    // payload actually holds (see COMMITMENT_TYPE_ICONS): a glyph from the commitment's type
+    // on a neutral disc. It is decorative to assistive tech -- the row's own name cell
+    // states the bill -- so it is hidden from the accessibility tree rather than announced
+    // twice.
+    const medallionCell = document.createElement("div");
+    medallionCell.className = "m-plan-table-cell m-plan-cell-medallion";
+    medallionCell.setAttribute("role", "cell");
+    medallionCell.setAttribute("aria-hidden", "true");
+    const medallion = document.createElement("span");
+    medallion.className = "m-bill-medallion";
+    medallion.dataset.commitmentType = commitment.type || "unknown";
+    const medallionGlyph = document.createElement("span");
+    medallionGlyph.className = "m-bill-medallion-glyph";
+    medallionGlyph.style.setProperty(
+      "--m-bill-medallion-icon",
+      kitIconUrl(COMMITMENT_TYPE_ICONS[commitment.type] || "question-circle")
+    );
+    medallion.appendChild(medallionGlyph);
+    medallionCell.appendChild(medallion);
+
     const nameCell = document.createElement("div");
     nameCell.className = "m-plan-table-cell m-plan-cell-commitment";
     nameCell.setAttribute("role", "cell");
@@ -531,10 +567,20 @@ function renderCommitments(root, plan, template) {
     const name = document.createElement("span");
     name.className = "m-commitment-name";
     name.textContent = commitment.name;
-    const type = document.createElement("span");
-    type.className = "m-commitment-type";
-    type.textContent = TYPE_LABELS[commitment.type] || commitment.type;
-    nameWrap.append(name, type);
+    nameWrap.appendChild(name);
+
+    // The type tag is REMOVED for a bill -- the section banner above already says what the
+    // list is, and the owner directed the removal -- and KEPT for every other type. That is
+    // what stops the renamed banner from misrepresenting a row: this list can hold a goal
+    // (the synthetic fixture carries one), so a goal still states GOAL beside its name
+    // instead of being silently filed under "Upcoming bills". It is also what frees the
+    // width the status badge needs on a long bill name.
+    if (commitment.type && commitment.type !== "bill") {
+      const type = document.createElement("span");
+      type.className = "m-commitment-type";
+      type.textContent = TYPE_LABELS[commitment.type] || commitment.type;
+      nameWrap.appendChild(type);
+    }
 
     // R33: subtle per-bill badge (underfunded / due_soon) on the existing card.
     // No separate monitor page; only flags bills that need attention.
@@ -548,20 +594,54 @@ function renderCommitments(root, plan, template) {
       nameWrap.appendChild(badge);
     }
 
+    // ONE date, on the row, exactly where the concept puts `Sep11`. It is the same value the
+    // desktop table's NEXT column renders, so the two can never disagree. The first draft of
+    // the spec moved BOTH this and the NEXT cell into the disclosure, which would have left
+    // the collapsed row with no date at all; the correction is to keep one and drop the
+    // duplicate. The duplicate dropped is the fact line's own `due ...` fragment, and the
+    // NEXT cell is not rendered on mobile (see the stylesheet), so no date is lost and none
+    // is stated twice.
+    const dateLine = document.createElement("span");
+    dateLine.className = "m-commitment-date";
+    dateLine.dataset.commitmentDate = "";
+    dateLine.textContent = nextDateForCommitment(plan, commitment);
+
+    // Everything else the collapsed row used to carry moves into the disclosure: the fact
+    // line, the funding progress bar and every attached piece of evidence.
+    const panel = document.createElement("div");
+    panel.className = "m-plan-table-cell m-plan-cell-panel";
+    panel.setAttribute("role", "cell");
+
+    // The full name, un-truncated, inside the panel. The row's own name truncates on a narrow
+    // phone, and the spec requires the FULL name to remain available in the panel and in the
+    // accessible name -- a `title` attribute would not do, because it is not reliably
+    // announced and never appears on touch.
+    const panelName = document.createElement("h3");
+    panelName.className = "m-plan-panel-name";
+    panelName.textContent = commitment.name;
+    panel.appendChild(panelName);
+
     const facts = document.createElement("p");
     facts.className = "m-commitment-facts";
     const factsParts = [`${moneyWhole(commitment.funded)} of ${moneyWhole(commitment.target)}`];
     if (commitment.backing) {
       factsParts.push(`backed by ${commitment.backing.name}`);
     }
-    if (commitment.due_date) {
-      factsParts.push(`due ${formatShortDate(commitment.due_date)}`);
-    }
     facts.textContent = factsParts.join(" · ");
-    nameCell.append(nameWrap, facts);
+    panel.appendChild(facts);
 
     // Funding progress: a low-key bar so a bill's funded share reads at a
     // glance without a chart. Width is clamped to 0..100%, hidden when unknown.
+    //
+    // This lives on the COLLAPSED ROW, spanning it edge to edge, because that is where the
+    // governing concept draws it -- a thin hairline with an end dot along the bottom of every
+    // bill row. The spec had moved it into the disclosure along with the fact line and the
+    // invoices; the owner corrected that on seeing it ("I would still want progress bars"), and
+    // the concept agrees with him, so it is back on the row and is NOT duplicated inside the
+    // panel. It stays a real `progressbar` with its value, so the bar is not colour-only.
+    const progressCell = document.createElement("div");
+    progressCell.className = "m-plan-table-cell m-plan-cell-progress";
+    progressCell.setAttribute("role", "cell");
     if (typeof commitment.target === "number" && commitment.target > 0) {
       const progress = document.createElement("div");
       progress.className = "m-commitment-progress";
@@ -577,11 +657,11 @@ function renderCommitments(root, plan, template) {
       fill.style.width = `${pct}%`;
       track.append(fill);
       progress.append(track);
-      nameCell.append(progress);
+      progressCell.appendChild(progress);
     }
 
-    // Clickable invoice evidence pulled from mail (e.g. a Verizon bill email),
-    // shown on the card when a real matching email exists.
+    // Clickable invoice evidence pulled from mail (e.g. a Verizon bill email). These are the
+    // entries that actually open an invoice; the row's indicator only says one exists.
     const invoices = commitment.invoice_evidence || [];
     for (const invoice of invoices) {
       const inv = document.createElement("button");
@@ -593,8 +673,10 @@ function renderCommitments(root, plan, template) {
         event.stopPropagation();
         window.open(invoice.content_url, "_blank", "noopener");
       });
-      nameCell.appendChild(inv);
+      panel.appendChild(inv);
     }
+
+    nameCell.append(nameWrap, dateLine);
 
     const fundedCell = document.createElement("div");
     fundedCell.className = "m-plan-table-cell m-plan-cell-funded";
@@ -732,11 +814,38 @@ function renderCommitments(root, plan, template) {
       actionCell.appendChild(del);
     }
 
+    // The concept's small evidence glyph: an INDICATOR that evidence exists, and a way to open
+    // the disclosure that holds it. It is rendered ONLY when a real invoice exists -- never a
+    // disabled icon, which would imply evidence the payload does not have -- and it is not the
+    // thing that opens an invoice; the panel's entries below are. Because the collapsed row
+    // says nothing about evidence in text, this icon is the only signal that content exists,
+    // so it carries a real accessible name: an unlabelled icon that is the sole indicator of
+    // content is a defect, and a `title` would not do (not reliably announced, never on touch).
+    let evidenceCell = null;
+    let evidenceIndicator = null;
+    if (invoices.length) {
+      evidenceCell = document.createElement("div");
+      evidenceCell.className = "m-plan-table-cell m-plan-cell-evidence";
+      evidenceCell.setAttribute("role", "cell");
+      evidenceIndicator = document.createElement("button");
+      evidenceIndicator.type = "button";
+      evidenceIndicator.className = "m-evidence-indicator";
+      evidenceIndicator.dataset.evidenceCount = String(invoices.length);
+      // The glyph is the kit's own evidence icon, taken from the existing mapping rather than
+      // a new literal, so it is covered by the guard that fails when a mapped name has no
+      // shipped asset (an absent asset renders an empty ring, i.e. a broken icon).
+      evidenceIndicator.style.setProperty("--m-evidence-icon", kitIconUrl(ACTION_ICONS.evidence));
+      evidenceIndicator.setAttribute("aria-expanded", "false");
+      evidenceIndicator.setAttribute("aria-label", "Evidence available");
+      evidenceCell.appendChild(evidenceIndicator);
+    }
+
     // The concept gives each bill a disclosure chevron rather than a permanent row of buttons:
-    // the row states the bill, and the actions arrive when it is opened. That disclosure is what
-    // makes the compact mobile row possible at all, because the three action buttons are what
-    // forced the tall card. The state lives on the row as `data-expanded` so the stylesheet owns
-    // the presentation while this owns only the state and the accessibility contract.
+    // the row states the bill, and the actions and the rest of its detail arrive when it is
+    // opened. That disclosure is what makes the compact mobile row possible at all, because
+    // the three action buttons and the fact line were what forced the tall card. The state
+    // lives on the row as `data-expanded` so the stylesheet owns the presentation while this
+    // owns only the state and the accessibility contract.
     //
     // The cell is `display: none` above the mobile breakpoint, which removes it from the desktop
     // grid entirely, so the four-column desktop table is untouched by its presence here.
@@ -752,8 +861,11 @@ function renderCommitments(root, plan, template) {
       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"' +
       ' focusable="false"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2"' +
       ' stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    rowToggle.addEventListener("click", (event) => {
-      event.stopPropagation();
+
+    // ONE disclosure, two controls that open it. Keeping the state transition in one place is
+    // what stops the chevron and the evidence indicator from disagreeing about whether the
+    // panel is open, which two independent handlers would eventually do.
+    const toggleRow = () => {
       const expanded = row.dataset.expanded === "true";
       row.dataset.expanded = expanded ? "false" : "true";
       rowToggle.setAttribute("aria-expanded", expanded ? "false" : "true");
@@ -761,11 +873,32 @@ function renderCommitments(root, plan, template) {
         "aria-label",
         `${expanded ? "Show" : "Hide"} actions for ${commitment.name}`
       );
+      if (evidenceIndicator) {
+        evidenceIndicator.setAttribute("aria-expanded", expanded ? "false" : "true");
+      }
+    };
+    rowToggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleRow();
     });
+    if (evidenceIndicator) {
+      evidenceIndicator.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleRow();
+      });
+    }
     toggleCell.appendChild(rowToggle);
     row.dataset.expanded = "false";
 
-    row.append(nameCell, fundedCell, nextCell, toggleCell, actionCell);
+    // The panel cell carries the disclosure's contents and is placed in its own grid row, so
+    // it can take the full width on mobile while the desktop row keeps its own rhythm. The
+    // progress cell sits AFTER the name so its hairline draws along the bottom of the collapsed
+    // band, which is where the concept puts it and where the eye scans for it.
+    row.append(medallionCell, nameCell, progressCell, fundedCell, panel, nextCell);
+    if (evidenceCell) {
+      row.appendChild(evidenceCell);
+    }
+    row.append(toggleCell, actionCell);
     list.appendChild(row);
   }
 

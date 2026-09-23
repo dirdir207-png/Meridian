@@ -63,12 +63,33 @@ PLAN = {
          "target": 65.00, "funded": 65.00, "unfunded": 0.00,
          "due_date": "2026-09-14", "target_date": None, "backing": {"name": "Bill reserve"},
          "biller_status": "reserved", "crew_bill_id": "synthetic-internet",
-         "invoice_evidence": None},
+         # ONE invoice, deliberately. The spec requires the evidence indicator to render only
+         # where evidence exists, and it cannot be captured or guarded if no synthetic row has
+         # any -- a fixture that only ever produced the absent case would let a permanently
+         # broken indicator pass every check.
+         "invoice_evidence": [
+             {"id": "synthetic-invoice-internet", "title": "September statement",
+              "content_url": "https://example.invalid/synthetic/internet-september"}
+         ]},
         {"id": "synthetic-rent", "name": "Rent", "type": "bill",
          "target": 1171.00, "funded": 1171.00, "unfunded": 0.00,
          "due_date": "2026-09-16", "target_date": None, "backing": {"name": "Bill reserve"},
          "biller_status": "reserved", "crew_bill_id": "synthetic-rent",
          "invoice_evidence": None},
+        # The two acceptance cases the concept's own three rows cannot exercise: a name long
+        # enough to truncate, a status badge beside it, and a second row with evidence. The
+        # name is a REAL shape of the owner's data (he reported the badge vanishing on
+        # "verizon payment arrangement"), and the values stay obviously synthetic.
+        {"id": "synthetic-verizon", "name": "Verizon Payment Arrangement", "type": "bill",
+         "target": 128.00, "funded": 40.00, "unfunded": 88.00,
+         "due_date": "2026-09-18", "target_date": None, "backing": {"name": "Bill reserve"},
+         "biller_status": "unfunded", "crew_bill_id": "synthetic-verizon",
+         "invoice_evidence": [
+             {"id": "synthetic-invoice-verizon", "title": "August statement",
+              "content_url": "https://example.invalid/synthetic/verizon-august"},
+             {"id": "synthetic-invoice-verizon-2", "title": "July statement",
+              "content_url": "https://example.invalid/synthetic/verizon-july"}
+         ]},
         {"id": "synthetic-goal", "name": "Emergency fund", "type": "goal",
          "target": 200.00, "funded": 200.00, "unfunded": 0.00,
          "due_date": None, "target_date": "2027-03-01", "backing": {"name": "Pocket"},
@@ -83,6 +104,8 @@ PLAN = {
              "commitment_id": "synthetic-internet", "commitment": "Internet"},
             {"key": "synthetic-3", "date": "2026-09-16", "amount": 1171.00,
              "commitment_id": "synthetic-rent", "commitment": "Rent"},
+            {"key": "synthetic-4", "date": "2026-09-18", "amount": 128.00,
+             "commitment_id": "synthetic-verizon", "commitment": "Verizon Payment Arrangement"},
         ]
     },
     "absent_bills": [],
