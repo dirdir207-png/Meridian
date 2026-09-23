@@ -2014,6 +2014,39 @@
         "The recommendation states what it adds over hand-authored SVG, which is already proven",
         "Any adoption needing a credential or external account is surfaced as a decision, not taken"
       ]
+    },
+    {
+      "id": "OS-087",
+      "title": "Match the Observatory medallions to the concept's ENGRAVED METAL, not just its colours",
+      "status": "open",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "detail": "Owner request 2026-09-23: 'Can we make them match the visual design of the concept though? Not just the colors. If we need to match them with runway, we can spend that.' THE COLOURS ARE DONE AND ARE NOT THE GAP. Accounts, the Plan map's three stations, Settings and the dock have all been unified on the concept's structure -- dark disc, brass glyph, role colour as the band or ring -- and the dock's ink was corrected against measured artwork. What remains is the MATERIAL. The concept's medallions are rendered metal: a bevelled brass ring with real highlight and shadow, and a finely engraved glyph inside it. The app composes them from a flat CSS disc, a 2px border, inset box-shadows and a single-colour SVG mask, so they read correctly but flat. This is an ARTWORK gap, not a layout one, which is why the owner authorised Runway spend for it. SPEND AUTHORISATION IS FOR THIS TASK: see D-021 for the route (Runway through the existing Composio connection, no bespoke adapter) and its rules -- a generation is a SPEND, nothing generates unattended, and delivery is not integration. Balance was 468 credits when read read-only on 2026-09-22; gen4_image is about 8 credits and gpt_image_2 at high about 20, so confirm the live balance before generating rather than trusting that figure.",
+      "progress": "Colour and structure: DONE across Accounts, Plan map, Settings and dock. Material: NOT STARTED. Two earlier Runway attempts are recorded and one failed on a mistyped presigned 'Policy' field (upload_http=403 SignatureDoesNotMatch) rather than on the model, so the upload path is the thing to get right first. The kit's medallion-frame.png is real brass art and is already used by Accounts, Settings, Activity and the Plan bill medallions -- so the cheapest honest first step is to check whether one generated RING asset can lift every medallion at once, instead of generating per glyph.",
+      "limits": "Never generate unattended. Never integrate an asset without a design record: one README plus an assets.json carrying kind, source_reference, dimensions, mode and a sha256 that the guard recomputes, a row in design/README.md's chronological index, and the files TRACKED in git. A generated asset that is untracked works locally and vanishes in any clone. Do not bulk-replace the icon set on this task -- HANDOFF_FOR_ASTRA_2026-09-19.md:200 forbids it on initiative, and the owner's 'brass everywhere' wording is about the glyph treatment, already done, not about regenerating 61 icons.",
+      "acceptance_criteria": [
+        "The live credit balance is read before any generation, and the spend is stated to the owner before it happens",
+        "The reference upload is transcribed exactly, including the presigned Policy field character for character, since that is the step that failed before",
+        "Any generated asset ships with its design record, its index row, and its sha256 verified by recomputation",
+        "The medallion is verified in BOTH themes and at the mobile viewports, because the artwork sits on the parchment map in both",
+        "A capture before and after shows the material difference, so 'it looks more like the concept' is evidenced rather than asserted"
+      ]
+    },
+    {
+      "id": "OS-088",
+      "title": "Give the Plan bill rows the concept's medallion, which needs category data that does not exist",
+      "status": "open",
+      "priority": "medium",
+      "phase": "design-fidelity",
+      "detail": "Found 2026-09-23 while building the compact mobile bill row. The concept's bill row leads with a tinted medallion carrying a dark category glyph -- lilac with a bolt for Electric, mint with a wireless mark for Internet, lilac with a house for Rent -- and that is the one part of the row that could NOT be built, because commitments carry NO category and NO tint in the payload. Checked rather than assumed: a grep for category and tint across static/js/meridian/plan.js returns nothing, so there is no field to style and inventing a mapping would be guessing at semantics. The rest of the row IS built: name and date left, the reserved figure in the concept's orange with its label, the next date, a hairline separator and the disclosure chevron, in a 44vh scroll band with the section order the concept uses. NOTE the tinted-disc treatment here differs from the disc the map uses on the same page -- the concept draws both, and its bill medallions are the 'Bill Reserve' pattern (tinted disc, dark glyph) rather than the map's dark disc with a brass glyph, so this is not a contradiction to resolve but a second component to build deliberately.",
+      "progress": "NOT STARTED. The blocking question is where the category comes from: a category on the commitment record, a mapping from the bill's name or merchant, or the Crew bill it is backed by. The Activity workspace already renders per-category glyphs from the kit's icon set, so the icon assets exist and the open question is only the data, not the artwork.",
+      "limits": "Do not infer a category from a bill's NAME in the renderer: a guess that is wrong about money is worse than no icon, and the same name can belong to different categories. Whatever supplies the category must be a real field with a real source, recorded as such.",
+      "acceptance_criteria": [
+        "The category's source is identified and recorded before any styling is written",
+        "An unknown or absent category renders a neutral medallion rather than a guessed glyph",
+        "The medallion is verified on the mobile viewports in both themes",
+        "A guard asserts that an unmapped category does not fall through to a wrong glyph"
+      ]
     }
   ]
 }
