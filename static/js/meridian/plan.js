@@ -7,6 +7,7 @@ import { describeAbsentBill } from "./absent-bills.js";
 import { describeActionOutcome } from "./action-outcome.js";
 import { formatCurrency, parseLocalDate } from "./format.js";
 import { ACTION_ICONS, kitIconUrl } from "./kit-icons.js";
+import { allocationIcon, allocationMark } from "./plan-map-marks.js";
 
 let controller = null;
 
@@ -213,29 +214,11 @@ const ALLOCATION_STATIONS = {
   extra: { left: 50, top: 88, modifier: "is-extra" },
 };
 
-/* Semantic kit glyph per station. Goals use Crew's pocket-goal meaning; the
-   fallback remains conservative for malformed/unexpected payload labels. */
-function allocationIcon(label) {
-  if (/available/i.test(label)) return "compass";
-  if (/goal/i.test(label)) return "flag";
-  if (/bill/i.test(label) || /commit/i.test(label)) return "bank";
-  return "bell";
-}
-
-/* The three marks the governing concept actually draws (02-plan.png), generated as RAISED brass
-   rasters on 2026-09-23 under D-021 and delivered in design/plan-map-marks-2026-09-23/: a domed
-   rotunda for money already committed, a flagged mountain summit for a goal, and ONE eight-point
-   star rose that the concept uses at two sizes -- large for the map's hub and small for
-   Available. Nothing else has a concept original, so nothing else gets one.
-
-   The three current stations are Bills, Goals and Available. Unexpected labels
-   intentionally keep the kit fallback rather than borrowing a station mark. */
-function allocationMark(label) {
-  if (/available/i.test(label)) return "star-rose";
-  if (/goal/i.test(label)) return "mountain-flag";
-  if (/bill/i.test(label) || /commit/i.test(label)) return "rotunda";
-  return null;
-}
+/* The station-to-mark mapping lives in ./plan-map-marks.js so a Node round-trip can exercise
+   every label case. It moved there on 2026-09-24 after a real regression: a broad /commit/
+   test in this file gave the Bills station's rotunda to "Unfunded commitments" as well. Keep
+   the mapping out of this file, or the only possible guard is a text match that cannot see
+   two labels resolving to the same mark. */
 
 function renderAllocation(root, plan) {
   const host = root.querySelector("[data-allocation-medallions]");

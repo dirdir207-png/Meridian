@@ -100,6 +100,11 @@ def test_the_kit_fallback_glyph_is_still_a_mask_and_the_generated_marks_are_not(
         mask property at all, or the relief disappears silently.
     """
     js = _read("static/js/meridian/plan.js")
+    # The mark NAMES moved to their own DOM-free module on 2026-09-24 (see
+    # tests/meridian/test_plan_map_marks.py for why), so this guard reads both files rather
+    # than being deleted: the rendering path stays in plan.js, the vocabulary lives beside the
+    # mapping it belongs to.
+    marks_js = _read("static/js/meridian/plan-map-marks.js")
     css = _read("static/css/meridian/plan.css")
 
     # Kit fallback: still a mask.
@@ -114,7 +119,7 @@ def test_the_kit_fallback_glyph_is_still_a_mask_and_the_generated_marks_are_not(
     # guard pins the template and the names instead, or it would pass on a hub-only literal.
     assert 'plan-map-${mark}.png' in js
     for name in ("rotunda", "mountain-flag", "star-rose"):
-        assert name in js
+        assert name in marks_js
     mark_rule = css.split(".m-plan-medallion-mark {", 1)[1].split("}", 1)[0]
     assert "var(--m-mark)" in mark_rule
     assert "mask" not in mark_rule, "a mask on a generated mark flattens its relief"
@@ -125,14 +130,21 @@ def test_the_kit_fallback_glyph_is_still_a_mask_and_the_generated_marks_are_not(
     hub_rule = css.split(".m-plan-map-hub-mark {", 1)[1].split("}", 1)[0]
     assert "var(--m-mark)" in hub_rule
     assert "mask" not in hub_rule
-    assert "star-rose" in js
+    assert "star-rose" in marks_js
 
 
 def test_every_segment_maps_to_a_mark_the_concept_actually_draws():
     """The concept draws exactly three marks. `allocationMark` may not invent a fourth, and
-    an unexpected segment must return `null` rather than borrowing a station's meaning."""
+    an unexpected segment must return `null` rather than borrowing a station's meaning.
+
+    RETARGETED 2026-09-24 to the module the mapping now lives in. Its behaviour is covered
+    precisely by the round trip in tests/meridian/test_plan_map_marks.py; what this guard adds
+    is that the vocabulary stays closed -- only the three delivered assets are named, and an
+    unmatched label still has an explicit `null` path rather than a fall-through.
+    """
     js = _read("static/js/meridian/plan.js")
-    fn = js.split("function allocationMark(label) {", 1)[1].split("\n}", 1)[0]
+    marks_js = _read("static/js/meridian/plan-map-marks.js")
+    fn = marks_js.split("function allocationMark(label) {", 1)[1].split("\n}", 1)[0]
     assert 'return "star-rose"' in fn
     assert 'return "mountain-flag"' in fn
     assert 'return "rotunda"' in fn

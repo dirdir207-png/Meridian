@@ -185,3 +185,56 @@ def test_the_hub_star_fills_the_circle_it_sits_in(browser, name):
         "the bezel must stay centred on the disc: " + str(measured)
     )
     context.close()
+
+
+@pytest.mark.parametrize("name", ["desktop", "mobile-air"])
+def test_the_hub_mark_overflows_its_disc_symmetrically(browser, name):
+    """The star is deliberately taller than its disc, so the knob overflow is the thing to
+    check -- and it must be EVEN.
+
+    Owner, 2026-09-24: *"Top star on plan is off center ... the whole thing needs to move up in
+    the circle with the edges matching, the knobs can overlap."* Measured before the fix: 0px
+    of overflow above the disc and **8.9px** below on a phone (13px at desktop), because
+    `place-items: center` cannot centre an item that overflows its container: the implicit grid
+    row was auto-sized to the 75px mark inside the 62px disc, and the initial
+    `align-content: start` pinned that oversized row to the top. Adding `align-content: center`
+    splits it evenly, which is what this asserts. A one-sided overflow means the mark has
+    started hanging off the circle again.
+    """
+    from tests.browser.conftest import ensure_owner
+
+    ensure_owner()
+    context = browser.new_context(viewport=VIEWPORTS[name])
+    response = context.request.post(
+        f"{APP_URL}/api/auth/login",
+        headers={"Content-Type": "application/json"},
+        data=json.dumps({"username": "owner", "password": "meridian-owner-2026"}),
+    )
+    assert response.status == 200
+    page = context.new_page()
+    page.route("**/api/meridian/plan*",
+               lambda route: route.fulfill(status=200, content_type="application/json",
+                                           body=json.dumps(PLAN)))
+    page.goto(f"{APP_URL}/meridian?workspace=plan", wait_until="domcontentloaded")
+    page.wait_for_selector(".m-plan-map-hub-mark")
+    page.wait_for_timeout(300)
+
+    measured = page.evaluate("""() => {
+        const hub = document.querySelector('.m-plan-map-hub').getBoundingClientRect();
+        const mark = document.querySelector('.m-plan-map-hub-mark').getBoundingClientRect();
+        return {
+            above: +(hub.top - mark.top).toFixed(2),
+            below: +(mark.bottom - hub.bottom).toFixed(2),
+            hubH: Math.round(hub.height),
+            markH: Math.round(mark.height),
+            centresMatch: Math.abs((hub.top + hub.height / 2) - (mark.top + mark.height / 2)) <= 1,
+        };
+    }""")
+    assert measured["markH"] > measured["hubH"], (
+        "the mark is meant to be sized by its bezel, so it must exceed the disc: " + str(measured)
+    )
+    assert abs(measured["above"] - measured["below"]) <= 1, (
+        "the mark must overflow its disc evenly, not hang below it: " + str(measured)
+    )
+    assert measured["centresMatch"], measured
+    context.close()

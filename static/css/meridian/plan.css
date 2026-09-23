@@ -967,6 +967,18 @@
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
+  /* The mark is deliberately TALLER than this disc -- it is sized by the compass's bezel, so
+     its knobs reach past the rim on purpose (owner, 2026-09-24: "the knobs can overlap").
+
+     `place-items: center` alone does NOT centre an item that overflows its container, which is
+     the trap this rule exists for. With no explicit row, the implicit row is auto-sized to the
+     mark (75px) inside a 62px disc, and `align-content: start` (the initial value) then places
+     that oversized ROW flush with the top: the item is centred within a row that is itself
+     pushed down, so the whole mark sits LOW by the full overflow. Measured before this rule:
+     0px of overflow above the disc and 8.9px below on a phone (13px at desktop) -- the owner's
+     "top star is off center, the whole thing needs to move up in the circle". Centring the
+     track, not the item, splits the overflow evenly and puts the bezel on the rim. */
+  align-content: center;
   width: 62px;
   height: 62px;
   border-radius: 50%;
