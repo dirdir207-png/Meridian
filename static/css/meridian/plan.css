@@ -606,27 +606,29 @@
   overflow-wrap: anywhere;
 }
 
+/* The concept's three stations -- Bills, Goals and Available -- are ONE medallion: a DARK disc
+   carrying a BRASS glyph inside a brass ring. The shipped rule instead gave each station its own
+   disc colour (lilac for the left, dark for the right, brass for Available) and a dark or cream
+   glyph, so the map read as three different things rather than one instrument. The owner asked for
+   the concept on 2026-09-23. These are literals, not tokens, because the map is parchment in BOTH
+   themes -- the discs sit on the parchment, not on the theme surface -- so the values are the
+   same either way and a token would only add a layer that never varies. */
 .m-plan-medallion-disk {
   display: grid;
   place-items: center;
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: #c1a9e2;
-  color: #20263b;
+  background: #20263b;
+  color: #c6aa71;
   border: 2px solid #c6aa71;
   box-shadow: inset 0 0 0 1px #20263b, inset 0 0 0 2px #c6aa71;
 }
 
-.m-plan-medallion.is-right .m-plan-medallion-disk {
-  background: #20263b;
-  color: #ead8b5;
-}
-
-.m-plan-medallion.is-available .m-plan-medallion-disk,
-.m-plan-medallion.is-extra .m-plan-medallion-disk {
-  background: #c6aa71;
-}
+/* The per-station disc overrides that lived here were REMOVED on 2026-09-23: `.is-right` set a
+   dark disc with a CREAM glyph, and `.is-available`/`.is-extra` set a BRASS disc. The concept draws
+   all three stations the same way -- dark disc, brass glyph -- so the overrides were the bug, not
+   the base rule. Do not reintroduce a per-station disc colour without checking the concept again. */
 
 .m-plan-medallion-glyph {
   display: block;
