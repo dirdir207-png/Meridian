@@ -2260,6 +2260,66 @@
         "verification": "Full suite 1917 passed / 96 skipped; ruff clean; git diff --check clean. Captures in artifacts/plan-map-fixes-2026-09-24/ show the interim state (old labels, distinct glyphs) and the post-restart state (Bills / Goals / Available)."
       },
       "notes": "The station LABELS still read 'Committed to commitments' / 'Unfunded commitments' until the :8081 preview is restarted, because services/plan.py is Python. The mapping fix matters precisely because that interim state is user-visible."
+    },
+    {
+      "id": "OS-096",
+      "title": "Today: the phone dial is the concept's size, with the callouts beneath it",
+      "status": "complete",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "owner_decided": true,
+      "authority": [
+        "owner request, 2026-09-24: 'large dial with the left-and-under overlap'",
+        "design/observatory-drafts-2026-09-08/BUILD_SPEC.md:25 (concept 06 is the dial's primary target) and its section 7 ('when labels cannot fit, replace them with an event list beneath the dial')",
+        "docs/project/MERIDIAN_OS_TASKS.json OS-035, which recorded the concept's 82.5% proportion and escalated the composition as an owner decision"
+      ],
+      "why": "The phone dial was 246px of wrap (58.6% of the viewport) with a painted disc of 231px (55.1%), against the concept's 82.5%. The cause was one declaration rather than a size: a later max-width: 700px rule re-imposed a two-column panel with a hard 130px callout column, defeating the single-column rule declared above it -- equal specificity is resolved by ORDER, which is the OS-089 lesson. The 130px floor existed so the word 'arrangement' could not split mid-word, a real constraint on a SIDE column and not on a full-width list beneath the dial.",
+      "scope": [
+        "dial.css: at phone width the panel becomes one column, the wrap takes the concept's proportion, and the callout rail keeps a bounded band with its scroll.",
+        "Five guard sites retargeted, each with its intent preserved and the reason recorded in place."
+      ],
+      "acceptance": [
+        "The painted disc reaches the concept's proportion of the viewport (measured 82.7% against 82.5%).",
+        "The dial's position does not track the event count (the reason OS-035's centring guard existed, asserted directly).",
+        "The callouts never overlap the instrument: beneath at phone width, beside it at desktop.",
+        "No horizontal overflow, and the rail keeps a bounded, scrollable band the connector visibility rule is built on."
+      ],
+      "blocked_by": [],
+      "evidence": {
+        "measurement": "Before -> after at 420x912: wrap 246px (58.6%) -> 370px (88%); painted disc 231px (55.1%) -> 347px (82.7%); panel columns '246px 130px' -> '388px'; rail top 213 -> 594 (beneath the dial); document overflow 0 in both states. Captures in artifacts/today-rehash-2026-09-24/{before,after}-size-*.png with a synthetic fixture.",
+        "guards_retargeted": "Five sites, each preserving its original intent: OS-035's dial-position guard became a direct invariance (12 events vs 2); the hit-area guard became vertical separation; the layout test's 'larger than the callout column' comparison became the concept proportion plus callouts-below; the side-column 'rail begins past 65% of the dial width' check became conditional on the rail actually being beside the dial; and the connector-run tests moved to desktop, where runs exist, with the phone composition asserted separately (no run may cross the instrument).",
+        "negative_control": "Restoring the previous anchoring of the day labels still fails 390/420/430 and passes 1440 (OS-094's signature), so the enlargement did not quietly reintroduce label clipping -- the measured per-label inset adapts to the wrap width.",
+        "verification": "tests/browser/test_dial_fidelity.py 24 passed. Full-suite detail and the environment caveat are recorded under OS-097.",
+        "not_claimed": "The moon is still upper-left rather than upper-right, and the dial centre still repeats the Safe-to-spend figure the header carries. Neither is touched here."
+      },
+      "notes": "Second of the owner's four Today items. The composition is his decision; BUILD_SPEC section 7 independently prescribes an event list beneath the dial when labels cannot sit beside it, so the placement is not an invention."
+    },
+    {
+      "id": "OS-097",
+      "title": "Five browser guards fail in this environment, and they are PRE-EXISTING (attribution proven by revert)",
+      "status": "open",
+      "priority": "medium",
+      "phase": "design-fidelity",
+      "owner_decided": false,
+      "authority": [
+        "found while verifying OS-096; recorded rather than absorbed"
+      ],
+      "why": "Running the browser suite found four failures in tests/browser/test_meridian_shell.py and one in tests/browser/test_activity.py. Each was checked against HEAD by reverting ONLY the file this session changed (static/css/meridian/dial.css) and re-running: the failures are identical with and without the change, so they are pre-existing and NOT caused by this session's work. This matters because docs/project/CURRENT_STATUS.md records the suite as green 'browser tests included when APP_URL is set', and that claim does not hold in this environment.",
+      "scope": [
+        "Establish the real baseline for the browser suite with APP_URL set, so a future slice can tell its own regressions from these.",
+        "Then decide whether each failure is a real defect or an environment artefact."
+      ],
+      "acceptance": [
+        "Each of the five is either fixed or recorded as an environment artefact with evidence.",
+        "CURRENT_STATUS no longer implies a green browser suite unless one was actually observed."
+      ],
+      "blocked_by": [],
+      "evidence": {
+        "failures": "test_meridian_shell: test_desktop_shell_matches_editorial_atlas_hierarchy (assert 20 >= 36), test_mobile_shell_reaches_every_workspace_without_horizontal_overflow (assert (758.25 + 76) >= (844 - 2)), test_mobile_shell_uses_the_right_safe_area_inset_for_the_dock_and_inspector ('safe-area-inset-right' absent from the dock's computed style text), test_faint_ink_meets_aa_contrast_on_the_elevated_surface[light] (4.244 against a 4.5 floor). test_activity: test_today_live_data_feels_like_a_financial_command_center.",
+        "attribution": "`git checkout HEAD -- static/css/meridian/dial.css` then re-run: 4 failed / 16 passed in test_meridian_shell and 1 failed / 6 passed in test_activity -- byte-identical counts to the run with this session's change restored. Reverting the change is what proves attribution; a finding that merely exists at HEAD does not (see the repo's own attribution-trap note).",
+        "environment_note": "A single full-suite run with APP_URL set reported 49 failed and 46 errors across 14 files, including 24 errors in a file that passes 24/24 when run alone. Re-running the biggest offenders individually gives 5 failures, so the large run's shape is an environment/capacity artefact (many sequential Chromium launches) rather than 49 product regressions. Recorded so the number is not mistaken for a baseline."
+      },
+      "notes": "Not fixed here: a shell/contrast/dock-inset slice is a different surface from Today's dial, and doing it inside this slice would make the change unbounded. It is recorded so the next session does not rediscover it or, worse, treat the giant run's failure count as its own doing."
     }
   ]
 }

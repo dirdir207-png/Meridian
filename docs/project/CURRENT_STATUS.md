@@ -1,5 +1,58 @@
 # Enhanced SimpleCrew — Current Status
 
+## The phone dial is the concept's size at last — 55% → **82.7%** of the viewport (`OS-096`, `OS-097`) (2026-09-24)
+
+**The first of the owner's four Today items, and the one the others depended on: "large dial with the
+left-and-under overlap."** The cause was a single declaration rather than a size. A later
+`max-width: 700px` rule re-imposed a two-column panel with a hard **130px** callout column, defeating
+the single-column rule declared above it — equal specificity is resolved by **order**, which is the
+OS-089 lesson. That 130px floor existed so the word "arrangement" could not split mid-word: a real
+constraint on a *side* column, and no constraint at all on a full-width list beneath the dial.
+
+Measured at 420×912, before → after: wrap **246px (58.6%) → 370px (88%)**; painted disc **231px
+(55.1%) → 347px (82.7%)**; panel columns `246px 130px` → `388px`; rail top 213 → 594; document
+overflow **0 in both states**. The concept's own proportion is **82.5%**, so the disc now lands on it.
+The wrap is `88vw` rather than `82.5vw` because the painted disc is 0.94 of the wrap — a wrap of
+82.5vw draws a disc of only ~78%.
+
+**The callouts moved beneath the dial, which is not an invention.** `BUILD_SPEC.md §7` prescribes
+exactly this ("when labels cannot fit, replace them with an event list beneath the dial"), and #25
+makes concept 06 the dial's primary target. The rail **keeps its cap and its scroll** (restated as
+`min(340px, 40svh)` now that the 130px column is gone): removing the cap was my first attempt and it
+was wrong twice over — a 12-event horizon would add ~700px of page, and the cap is what the connector
+visibility rule and OS-036's fix are built on.
+
+**Five guard sites were retargeted, each with its intent preserved and the reason written in place.**
+OS-035's dial-position guard became a direct invariance (the dial's offset with 12 events must equal
+its offset with 2 — the reason that guard existed, asserted without depending on a band that no longer
+exists). The hit-area guard became vertical separation. The layout test's "larger than the callout
+column" comparison became the concept proportion plus callouts-below — OS-049's own lesson that *a
+comparison is not a requirement*. The side-column "rail begins past 65% of the dial's width" check
+became conditional on the rail actually being beside the dial, so desktop keeps exactly the check it
+had. The connector-run tests moved to desktop, where runs can exist at all, with the phone composition
+asserted separately: **no run may cross the instrument.** Their skip is correct — a run is drawn only
+when its row is to the right of its marker, which is exactly what a list beneath the dial cannot
+satisfy.
+
+**The day labels survived the enlargement, which was the real risk.** Restoring the old fixed
+anchoring still fails 390/420/430 and passes 1440 (OS-094's signature), so the enlargement did not
+quietly reintroduce clipping: the per-label inset adapts to the wrap's measured width.
+
+**`OS-097` — five browser guards fail here, and they are PRE-EXISTING, proven by revert.** Four in
+`test_meridian_shell.py` (desktop hierarchy `20 >= 36`; mobile overflow; the dock's safe-area inset
+text; a light-theme contrast of **4.244 against a 4.5 floor**) and one in `test_activity.py`. Each was
+checked by reverting **only** the file this session changed and re-running: **byte-identical counts
+with and without it**, so none is this session's doing. This matters because the previous status entry
+claims the suite is green "browser tests included when APP_URL is set" — that claim does not hold in
+this environment, and it is corrected here rather than left standing. Also recorded so a number is not
+mistaken for a baseline: one single full-suite run reported **49 failed / 46 errors** across 14 files,
+including **24 errors in a file that passes 24/24 alone** — an environment/capacity artefact of many
+sequential Chromium launches, not 49 regressions.
+
+**Not claimed, and still open from the owner's four items:** the moon is upper-**left** rather than
+upper-right, and the dial centre still repeats the Safe-to-spend figure the header already carries.
+Neither is touched by this slice. No deployment; no provider, financial or authority change.
+
 ## The Today dial's day labels sit inside the wheel, and the Plan map's hub star is centred (`OS-094`, `OS-095`) (2026-09-24)
 
 **Two owner-reported fixes, one of them a regression this lane had just introduced.**

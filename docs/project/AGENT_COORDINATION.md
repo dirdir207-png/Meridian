@@ -118,6 +118,40 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-24 (third pass) — The phone dial reaches the concept's size (`OS-096`), and a baseline that was wrong (`OS-097`)
+
+**The dial was never too big to fit; it was capped by one declaration.** A later `max-width: 700px`
+rule re-imposed a two-column panel with a hard 130px callout column, beating the single-column rule
+declared above it because equal specificity is resolved by ORDER — the same failure mode OS-089
+recorded. With the callouts moved beneath the dial (which `BUILD_SPEC.md §7` prescribes, and which is
+what the owner meant by "left-and-under overlap"), the painted disc went from **55.1% to 82.7%** of a
+420px viewport, against the concept's **82.5%**, with zero overflow in either state.
+
+**Five guards encoded the old composition and were RETARGETED, not deleted.** This is the part worth
+reading before touching dial geometry again: OS-035's dial-position guard became a direct invariance
+(the dial's offset must not change between 12 events and 2); the hit-area guard became vertical
+separation; the layout test's "larger than the callout column" comparison became the concept proportion
+plus callouts-below, because **a comparison is not a requirement** (OS-049's own lesson); the
+side-column 65% check became conditional so desktop keeps it; and the connector tests moved to desktop,
+where runs can exist, with the phone case asserted as "no run may cross the instrument".
+
+**My first attempt at the rail was wrong and is recorded as wrong.** I removed the rail's height cap to
+give the labels room. That would have added ~700px of page on a long horizon, and the cap is what the
+connector visibility rule and OS-036's fix are built on. The cap is restated (`min(340px, 40svh)`)
+rather than removed, and the reason is in the CSS.
+
+**`OS-097`: the browser suite is NOT green in this environment, and the previous status claim was
+wrong.** Four failures in `test_meridian_shell.py` and one in `test_activity.py` were each checked by
+reverting ONLY the file this session changed: **byte-identical counts with and without it**, so they
+are pre-existing. Reverting the change is what proves attribution — a finding that merely exists at
+HEAD does not, which is this repo's own attribution-trap rule. Separately, a single full-suite run
+reported 49 failed / 46 errors across 14 files, including 24 errors in a file that passes 24/24 alone;
+that shape is an environment/capacity artefact, and it is recorded so the number is not mistaken for a
+baseline.
+
+**Still open from the owner's four Today items:** the moon (upper-left, should be upper-right) and the
+dial centre repeating the Safe-to-spend figure the header carries.
+
 ### 2026-09-24 (later) — The Today dial's labels, and a Plan regression this lane caused (`OS-094`, `OS-095`)
 
 **Two commits, both verified before landing:** `0182e43` (fix/today — day labels anchored inside the
