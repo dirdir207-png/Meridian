@@ -96,8 +96,12 @@ def test_plan_map_glyphs_are_masks_so_each_disk_colours_its_own_glyph():
     # own colour decides the glyph colour.
     assert "mask: var(--m-medallion-icon) center / contain no-repeat" in css
     assert "background-color: currentColor" in css
-    # The navy station must not paint its glyph in the same navy.
-    assert "color: #ead8b5" in css
+    # The navy station must not paint its glyph in the same navy. Asserted on the INTENT rather
+    # than on the cream literal it used to be achieved with: the concept draws all three stations
+    # as one medallion -- a dark disc carrying a BRASS glyph -- so the stations were unified on
+    # 2026-09-23 and the guard now pins the disc/glyph pair that must differ, not the old value.
+    assert "background: #20263b" in css
+    assert "color: #c6aa71" in css
     # No <img> glyph remains in the medallion renderer.
     assert "glyph.src" not in js
 
