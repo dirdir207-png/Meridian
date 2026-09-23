@@ -118,6 +118,32 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-24 (sixth pass) — The rail did not have to be a column, so the tradeoff was never geometric (`OS-100`)
+
+**The lesson, and it cost two failed compositions to learn.** `OS-099` recorded a constraint as
+geometric fact: *at 420px a side callout rail and an 82.5%-of-viewport dial cannot both hold*. The
+owner's clarification plus his concept showed that was wrong — **the rail does not have to be a
+column**. As an overlay it takes no layout width, the dial keeps the row, and each callout sits at
+its own event's height, which is exactly what he meant by "follows the curved path". I had treated a
+layout choice as a physical law, and the "impossible" tradeoff I surfaced was an artefact of my own
+assumption. **Before reporting a tradeoff as inherent, check whether the constraint is in the medium
+or only in the approach.**
+
+**His clarification also corrects a misread that had already caused a revert.** "When I said no
+overlap, I was highlighting that there still wasn't when I requested it previously" — the earlier
+"no overlap to the left or under" was a complaint that the overlap was ABSENT, not an instruction
+against it. Reading a terse correction as a specification, rather than asking which of two opposite
+readings he meant, cost a revert and a round trip.
+
+**Three defects in the first attempt were caught by looking at captures, not by tests:** callouts
+drawn as opaque cards dropped on the artwork; a day number ghosting behind the scrim's transparent
+tail; and a keep-in-view adjustment measuring rows before they were seated. **A composition change
+needs a picture, not only a measurement** — the measurements were all correct while the thing looked
+wrong.
+
+**And the badge/date collision was measured rather than guessed:** same angle, so radii decide
+contact; 28px of separation against ~34px needed. That is why the number had a badge sitting on it.
+
 ### 2026-09-24 (fifth pass) — I moved the callouts beneath the dial; the owner wanted them on the right (`OS-099`)
 
 **The correction, stated plainly because the reasoning is the reusable part.** The owner asked for

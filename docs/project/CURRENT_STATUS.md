@@ -1,5 +1,61 @@
 # Enhanced SimpleCrew — Current Status
 
+## The dial is seated as the concept draws it, with a curved callout rail (`OS-100`) (2026-09-24)
+
+**The owner's clarification changed the problem rather than repeating it:** *"seat it how it is in the
+concept, overlap on the left and on the bottom with the ticket. When I said no overlap, I was
+highlighting that there still wasn't when I requested it previously … The bills on the right follow the
+dials curved path in the concept, can there be a curved side rail?"*
+
+Read with the concept he supplied, that resolves the constraint `OS-099` had recorded as impossible:
+**the dial can be large AND the callouts can stay on its right** — because the rail does not need to be
+a *column*. As an **overlay** it takes no layout width, and each row is placed at its own event's marker
+height, which is precisely what "follows the curved path" means. The tradeoff was never geometric; it
+was that I had assumed the rail must occupy space.
+
+Measured off his concept (1260×2736 = 420×912 CSS at DPR 3): the ring spans **x 31..390 (359px = 85% of
+the viewport)**, the callouts run **x 321..402 — overlapping the ring's right third** — and the ticket's
+top edge tucks **under the dial's bottom arc**.
+
+| | before | after |
+|---|---|---|
+| dial wrap | 270px (64%) | **353px (84vw)**, instrument bleeding **15px** into the left gutter |
+| callouts | 130px column beside | **132px overlay ON the dial** at their events' heights |
+| ticket | below the dial | **overlapping it by 21px** (top 703 vs dial bottom 724) |
+| day controls | between dial and ticket | **below the ticket**, so the overlap is possible at all |
+
+**Three defects the captures caught, all in my first attempt.** The callouts were drawn as opaque
+rounded cards *dropped on the artwork*; the concept draws text with no box, so they now carry a soft
+scrim fading in over the row's left 24% — enough ground to read ivory over brass, no rectangle. A day
+number under that scrim showed as a **ghost**, so numbers now **yield** to a callout's box (reset every
+pass, so a label returns when it stops colliding; nothing is lost, the callout states its date). And the
+selected row's keep-in-view adjustment ran **before** the arc seating, measuring rows that all still sat
+at `top: 0` — a long horizon left the selection off-screen.
+
+**The badge/date collision had a measurable cause.** The owner's *"numbers still seem very
+disorganized"* was a real property: the badge and the day number sit at the same **angle**, so their
+**radii** decide contact. At a 370px wrap the old radius left **28px** between them while the badge plus
+the label's half-diagonal needs **~34px** — the badge sat *on* the number. The radius is now one named
+constant, `MARKER_RADIUS_UNITS`, shared by the badge and the run that leaves it.
+
+**Four guards retargeted (never deleted), each with its reason recorded** — including two that
+*forbade the requested design* (`painted["right"] <= rail["x"]` and the clearance assertion: they said
+the instrument must not touch the callouts). They are replaced by the invariant a reader depends on: no
+callout's opaque part may cover the dial's **centre readout** or a **visible day number**. Plus a NEW
+guard, `test_the_phone_seating_block_is_still_last_in_the_sheet` — the assertion the seating block's own
+comment promised, because equal specificity resolves by **order**, which is the silent failure behind
+`OS-096`.
+
+**Verification.** `test_dial_fidelity.py` **24 passed**; `test_dial_js.py` **37 passed**; full
+non-browser suite **1924 passed / 96 skipped**; ruff, `node --check`, `git diff --check` clean. Captures
+in `artifacts/today-seating-2026-09-24/` — the *first* of which is kept because it is what caught the
+opaque-card callouts. Desktop is untouched: the placement applies only where the rail is actually an
+overlay, and inline offsets are cleared elsewhere.
+
+**Known differences from the concept, recorded rather than hidden:** the callouts carry a soft scrim
+(the concept's have none because theirs sit further outside the ring), and a long title such as
+"Verizon Payment Arrangement" wraps, making a row ~99px tall against the concept's compacter callouts.
+
 ## The dial composition is reverted, the dates are even, and the moon is transparent (`OS-099`) (2026-09-24)
 
 **Three defects, two of them mine, all reported with screenshots.** This entry exists because the

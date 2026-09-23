@@ -2387,6 +2387,45 @@
         "verification": "Full non-browser suite 1921 passed / 96 skipped, the three failures being the repo's own guards correctly reporting the new design record was unnamed in design/README.md and unstaged (both fixed, re-run 14 passed); ruff, node --check and git diff --check clean."
       },
       "notes": "The tradeoff is now explicit rather than discovered: at 420px a side rail and an 82.5%-of-viewport dial cannot both hold. The dial returned to its side-rail size when the rail came back, and enlarging it needs the rail's destination settled first."
+    },
+    {
+      "id": "OS-100",
+      "title": "The dial is seated as the concept draws it: large, bleeding left, with a curved callout rail on the instrument",
+      "status": "complete",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "owner_decided": true,
+      "authority": [
+        "owner, 2026-09-24, supplying the concept: 'seat it how it is in the concept, overlap on the left and on the bottom with the ticket'",
+        "owner clarification: 'When I said no overlap, I was highlighting that there still wasn't when I requested it previously' -- the earlier 'no overlap' was NOT a request against overlap",
+        "owner: 'The bills on the right follow the dials curved path in the concept, can there be a curved side rail?'",
+        "owner: 'the numbers in the dial still seem very disorganized'"
+      ],
+      "why": "OS-099 reverted the enlarged dial because the callouts had been moved BENEATH it; the owner clarified that they belong ON its right, following the curve, so the dial can be large AND the callouts stay on the right -- which is what makes the two requirements compatible after all. A curved rail is the mechanism: the rail takes no layout width (it is an overlay), and dial.js places each row at its own event's marker height.",
+      "scope": [
+        "dial.css: a phone-width seating block (declared LAST) making the panel one column, the instrument bleed 15px left, the rail a 132px overlay at the dial's right, the ticket overlap the dial's bottom by 20px, and the day controls move below the ticket.",
+        "dial.js: placeCalloutRows() seats each row at its event's angle height with an 8px minimum gap, lifting the group to fit the dial and keeping the rail's own scroll for a horizon too long for the arc.",
+        "dial.js: MARKER_RADIUS_UNITS, one shared constant for the badge and its run, moved inward to separate the badge from the day number at the same angle.",
+        "dial.js: day numbers yield (visibility:hidden) to a callout's box, reset on every pass.",
+        "dial.js: the selected row's keep-in-view adjustment moved to AFTER the arc seating."
+      ],
+      "acceptance": [
+        "The dial is the large element (>=84% of the viewport at phone width) and bleeds into the left gutter.",
+        "Callout rows sit at their own events' heights on the dial's right, overlapping the instrument, without covering the dial's centre readout or a visible day number.",
+        "The evidence ticket overlaps the dial's bottom edge.",
+        "Day controls remain reachable below the ticket.",
+        "No horizontal overflow; desktop is unaffected."
+      ],
+      "blocked_by": [],
+      "evidence": {
+        "measurement": "420x912 after: dial wrap 353px (84vw) against 270px before; instrument bleed 15px; rail 132px at the dial's right (right:-10px); ticket top 703 against dial bottom 724 = 21px overlap; no horizontal overflow. Rows placed at their events' heights with >=8px gaps, group lifted when it would pass the dial's bottom.",
+        "concept_reference": "Measured off the concept the owner supplied (1260x2736 = 420x912 CSS at DPR 3): ring x 31..390 (359px = 85% of width), callouts x 321..402 overlapping the ring's right third, ticket tucked under the dial's bottom.",
+        "guards_retargeted": "Four, each with its reason recorded: painted-dial/rail clearance (it forbade the requested overlap; replaced by 'no callout's opaque part covers the centre readout or a visible day number'), rail.scrollTop>0 (replaced by 'the selected row is inside the rail's scrollport'), the 12px bleed (now 15px, matching the CSS), and the connector's literal radius (now asserts the marker/run coupling via MARKER_RADIUS_UNITS).",
+        "new_guard": "test_the_phone_seating_block_is_still_last_in_the_sheet -- the assertion the seating block's own comment promised, because equal specificity resolves by order and a later block re-caping the dial is the silent failure behind OS-096.",
+        "captures": "artifacts/today-seating-2026-09-24/ (composition, composition2, composition3, final, final2). The first capture is preserved because it is what caught the opaque-card callouts.",
+        "verification": "tests/browser/test_dial_fidelity.py 24 passed; tests/meridian/test_dial_js.py 37 passed; full non-browser suite 1924 passed / 96 skipped; ruff, node --check and git diff --check clean."
+      },
+      "notes": "Known differences from the concept, recorded rather than hidden: the callouts carry a soft scrim (the concept's have none because theirs sit further outside the ring), and a long title such as 'Verizon Payment Arrangement' wraps, making a row ~99px tall against the concept's more compact callouts. Both are refinements, not structural."
     }
   ]
 }
