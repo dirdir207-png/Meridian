@@ -1033,7 +1033,12 @@ html[data-theme="light"] .m-observatory-safe .m-sts-label,
 html[data-theme="light"] .m-observatory-safe-observed { color: #655d6c; }
 html[data-theme="light"] .m-observatory-safe-horizon { color: #25644f; }
 html[data-theme="light"] .obs-shell .m-command-top .m-workspace-kicker { color: #674d86; }
-.m-observatory-moon { border-radius: 50%; background-size: 150%; }
+/* The circular clip is GONE (2026-09-24): it existed only to soften the rectangular block the
+   opaque asset painted, and the asset now carries real transparency (96.7% of pixels, all corners
+   zero-alpha -- see ASSET_MANIFEST.md and design/observatory-moon-2026-09-24/). Keeping the clip
+   would crop the scene's own orbital arcs for no reason. `background-size: 150%` is the designed
+   framing and stays. */
+.m-observatory-moon { background-size: 150%; }
 .obs-shell .m-observatory-note .obs-today-orbit { margin-top: 0; }
 /* The Virgil bubble is DELIBERATELY absent on Today, and this comment exists because the
    question was asked twice before anyone answered it. Confirmed intentional by the owner on

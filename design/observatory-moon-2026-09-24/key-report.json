@@ -1,0 +1,49 @@
+{
+  "mode": "RGBA",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "transparent_fraction": 0.9667,
+  "corners": [
+    [
+      17,
+      28,
+      42,
+      0
+    ],
+    [
+      16,
+      29,
+      43,
+      0
+    ],
+    [
+      17,
+      29,
+      45,
+      0
+    ],
+    [
+      15,
+      27,
+      41,
+      0
+    ]
+  ],
+  "visible_bounds": [
+    270,
+    215,
+    984,
+    989
+  ],
+  "source": "design/observatory-moon-2026-09-24/moon-engraving-opaque-master.png",
+  "strategy": "colour",
+  "reference_colour": [
+    17,
+    28,
+    42
+  ],
+  "tolerance": 12,
+  "opaque_at_distance": 18
+}
