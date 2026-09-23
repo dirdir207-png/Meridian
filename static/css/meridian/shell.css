@@ -78,9 +78,14 @@
   text-decoration: none;
 }
 
-/* Shared wordmark (partials/wordmark.html). The dotless second i anchors its apricot
-   dot to the glyph rather than the line box. The decorative pseudo-element
-   adds no text to the accessibility tree. */
+/* Shared wordmark (partials/wordmark.html). The concept puts an ORANGE STAR above the FIRST i of
+   "Meridian" -- settings.png and timeline.png both -- with the second i keeping an ordinary dot.
+   The shipped mark had that inverted: an apricot circular DOT on a dotless SECOND i, so it was on
+   the wrong letter and the wrong shape. The dotless letter is therefore the first i, and the
+   accent is the kit's four-point star, the same supplied glyph the Connections banner and the
+   Activity medallions use. It is a mask rather than a background image so the star takes
+   --m-apricot and follows the theme. The decorative pseudo-element adds no text to the
+   accessibility tree. */
 .m-wordmark {
   display: inline-block;
   font-family: var(--m-font-serif);
@@ -93,15 +98,19 @@
   position: relative;
 }
 
+/* Sits ABOVE the letter as a diacritic, the way the concept draws it, rather than inside the
+   x-height where a normal i-dot lives. */
 .m-wordmark-accent::after {
   content: "";
   position: absolute;
-  width: 0.18em;
-  height: 0.18em;
-  top: 0.1em;
-  left: 0.1em;
+  width: 0.42em;
+  height: 0.42em;
+  top: -0.34em;
+  left: 50%;
+  transform: translateX(-50%);
   background: var(--m-apricot, #f3b272);
-  border-radius: 50%;
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
 }
 
 .m-nav-list {

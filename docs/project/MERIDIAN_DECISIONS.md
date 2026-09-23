@@ -378,3 +378,19 @@ Standing consequences:
 5. A bespoke image adapter may be revisited for a SPECIFIC need — a model Runway does not broker, or a requirement that generation never pass through a third party. It must NOT be re-proposed as a general quality upgrade: quality was the argument tested, and it did not hold.
 
 6. Mechanics worth not rediscovering: the tool accepts up to three reference images (taggable), which is how the 2026-09-22 calibration ornament was made from the Settings concept, and it returns a task id with an ESTIMATED credit cost, so spend is visible before it is spent. The tool schema confirms `gen4_image` and `gen4_image_turbo` as accepted model constants; the exact string for the brokered `gpt_image_2` family is confirmed on first real use rather than assumed from the tier list.
+
+## D-022 — In the light theme, content boxes carry the dark textured blue and parchment is the page only (owner, 2026-09-23)
+
+Owner direction, reviewing the light theme: *"to avoid washout, I think the best option is keep the background the light color and have the boxes have the same textured blue as dark mode."*
+
+1. In the LIGHT theme `--m-canvas` stays parchment (`#f4ecdf`), and content boxes become the dark textured blue: `#141b32` plus `ink-texture.webp`. Each box therefore flips its LOCAL `--m-ink*`, `--m-border*`, `--m-surface` and `--m-surface-muted` tokens, because a dark box on a light page needs cream ink and a dark control surface inside it while the page keeps dark ink and light controls.
+
+2. This SUPERSEDES OS-043's light-theme rule that "every content surface resolves to the page colour and separation is drawn with hairlines, not fills". Fills are back in the light theme; parchment is now the page only. OS-043's rule stands unchanged for the dark theme.
+
+3. The reason is measured rather than a matter of taste. On a parchment surface the Observatory accent inks read: mint `#a5d4bf` **1.40:1**, slate `#b9c2d2` **1.53:1**, apricot `#f3b272` **1.57:1**, lilac `#c1a9e2` **1.78:1**, brass `#c6aa71` **1.91:1**. Every accent in the system was drawn against indigo and not one of them works on parchment. Keeping the boxes indigo keeps every accent exactly as designed, instead of darkening each one per theme — and it deletes that whole class of problem rather than patching it colour by colour.
+
+4. TWO FAILURES THIS CAUSED, both caught by capture rather than by reading the CSS, and both worth not rediscovering:
+   - `.m-account-name` was pinned to `#20263b` by the light-theme block for a CREAM surface. Once its sheet turned indigo, the account name became dark-on-dark and vanished from the Accounts page. A hex pinned for one surface is a bug waiting for that surface to move.
+   - Flipping the INK on a box is not enough. Controls inside it kept the light `--m-surface` for their background while inheriting the box's cream ink, so the connection-health buttons computed `background rgb(244,236,223)` with `color rgb(238,228,207)` — cream on cream, invisible. The surface tokens must flip with the ink.
+
+5. Scope is EXPLICIT, not a shell-wide token flip. The boxes are enumerated in the light-theme rule in `observatory.css` so each surface can be verified on its own and unwound on its own. Page-level controls (selects, inputs, buttons, links, hover states) are deliberately excluded: they sit on the parchment page, and darkening them would float dark chrome on a light page. Still parchment as of this decision, and therefore still to do: the advisor and inspector overlays, the Settings hub's detail pane, and Plan's selected-rule panel.

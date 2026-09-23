@@ -375,8 +375,12 @@ a.m-settings-row:focus-visible {
    across the whole app." The Settings hub proves the treatment first because the concept governs
    it directly; the same correction across Plan, Activity, Accounts and the dock is OS-082.
 
-   The ring is CSS, not an asset: the shipped kit carries no ring, and fabricating one would be an
-   Astra artwork decision rather than a styling one. The tints keep their meanings unchanged, so a
+   THE RING IS SUPPLIED ART AFTER ALL, and this comment previously claimed the opposite -- that
+   "the shipped kit carries no ring, and fabricating one would be an Astra artwork decision rather
+   than a styling one". That was FALSE. kit-2026-09-16/medallion-frame.png IS a brass double ring
+   with four rivets, and accounts.css had been using it all along. The false premise is why this
+   surface got a single CSS hairline where Accounts and Activity got the kit's double ring, and it
+   is the whole visible difference between them. The tints keep their meanings unchanged, so a
    row's colour still says what it always said -- only its place in the medallion moves. */
 .m-settings-row-icon {
   position: relative;
@@ -385,8 +389,23 @@ a.m-settings-row:focus-visible {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--obs-brass, #c6aa71) 62%, transparent);
 }
+
+/* The kit's brass double ring, layered over the tint exactly as Accounts and Activity do, so the
+   frame has one owner and one treatment across every surface. Settings shows no star at the ring's
+   shoulder: its concept ornaments the section ribbons instead, and the star is added per surface
+   only where that surface's concept draws one. */
+.m-settings-row-icon::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/medallion-frame.png") center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* The frame is brass ART. Its light-theme darkening filter was removed on 2026-09-23 by D-022:
+   the row is now a dark textured blue, so brass reads at full strength and the filter would only
+   dull it. */
 
 .m-settings-row-icon--lilac {
   background: color-mix(in srgb, #c1a9e2 15%, transparent);
@@ -427,6 +446,13 @@ a.m-settings-row:focus-visible {
 .m-settings-row-icon--slate .m-settings-icon {
   background: #b9c2d2;
 }
+
+/* The light-theme ink overrides that lived here were REMOVED on 2026-09-23 by D-022. They existed
+   only because the medallion sat on a PARCHMENT row, where every accent in the system measures
+   under 1.9:1 (lilac 1.78, mint 1.40, apricot 1.57, slate 1.53). D-022 makes the row a dark
+   textured blue instead, so the ORIGINAL accent inks above are correct again and no per-theme
+   darkening is needed. Do not re-add these without first checking that the surface behind them
+   went back to parchment. */
 
 .m-settings-icon--piggy-bank {
   -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/piggy-bank.svg") center / contain no-repeat;

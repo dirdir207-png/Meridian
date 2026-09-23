@@ -1,7 +1,10 @@
 {# Shared Observatory wordmark.
-   The dotless second i carries the requested apricot dot as a CSS pseudo-element, so
-   the mark itself contributes no text to the accessibility tree and the visible
-   letters still read "Meridian". Callers own the accessible name: the rail and the
-   Settings header supply aria-label on the surrounding link, and the main mobile
-   header supplies a visually-hidden "Meridian" text alternative. #}
-<span class="m-wordmark">Merid<span class="m-wordmark-accent">&#x131;</span>an</span>
+   The concept draws an ORANGE STAR above the FIRST i of "Meridian" (settings.png and timeline.png
+   both), with the second i keeping an ordinary dot. The shipped mark had it inverted -- an apricot
+   circular DOT on a dotless SECOND i -- so the mark was on the wrong letter and the wrong shape.
+   The dotless letter (U+0131) is therefore the first i, and the star is a CSS pseudo-element that
+   contributes no text to the accessibility tree, so the visible letters still read "Meridian".
+   Callers own the accessible name: the rail and the Settings header supply aria-label on the
+   surrounding link, and the main mobile header supplies a visually-hidden "Meridian" text
+   alternative. #}
+<span class="m-wordmark">Mer<span class="m-wordmark-accent">&#x131;</span>dian</span>

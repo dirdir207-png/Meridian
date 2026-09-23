@@ -768,14 +768,80 @@ html[data-theme="light"] .obs-shell .m-surface,
 html[data-theme="light"] .obs-shell .m-ledger-card,
 html[data-theme="light"] .obs-shell .m-selected-summary,
 html[data-theme="light"] .obs-shell .m-activity .m-surface,
-html[data-theme="light"] .obs-shell .m-accounts .m-surface {
-  background: var(--m-surface);
-  color: #20263b;
+html[data-theme="light"] .obs-shell .m-accounts .m-surface,
+/* Content boxes across the workspaces, ENUMERATED rather than done by flipping the surface token,
+   so each surface can be verified on its own and unwound on its own. The 63 rules that paint a
+   surface token were classified by hand: page-level controls (selects, inputs, buttons, links and
+   hover states) are deliberately NOT here, because they sit directly on the parchment page and
+   darkening them would float dark chrome on a light page. The advisor and inspector overlays are
+   also deferred, since they render from their own container and need their own verification. */
+html[data-theme="light"] .obs-shell .m-today-brief,
+html[data-theme="light"] .obs-shell .m-commitment-card,
+html[data-theme="light"] .obs-shell .m-plan-table,
+html[data-theme="light"] .obs-shell .m-plan-table-head,
+html[data-theme="light"] .obs-shell .m-rule-card,
+html[data-theme="light"] .obs-shell .m-action-form,
+html[data-theme="light"] .obs-shell .m-sheet.m-funding-editor,
+html[data-theme="light"] .obs-shell .obs-plan-scenario,
+html[data-theme="light"] .obs-shell .obs-panel,
+html[data-theme="light"] .obs-shell .m-review-card,
+html[data-theme="light"] .obs-shell .m-account-activity,
+html[data-theme="light"] .obs-shell .m-account-list-sheet,
+html[data-theme="light"] .obs-shell .m-connection-health,
+html[data-theme="light"] .obs-shell .m-settings-row,
+html[data-theme="light"] .obs-shell .m-settings-inspector,
+html[data-theme="light"] .obs-shell .m-action-card,
+html[data-theme="light"] .obs-shell .m-security-section,
+html[data-theme="light"] .obs-shell .m-connection-chooser-card,
+html[data-theme="light"] .obs-shell .m-payday-editor,
+html[data-theme="light"] .obs-shell .m-payday-preview,
+html[data-theme="light"] .obs-shell .m-payday-summary article {
+  /* Owner direction, 2026-09-23: keep the background the light colour and give the boxes the
+     same textured blue as dark mode, to avoid the washout.
+
+     This SUPERSEDES OS-043's light-theme rule that "every content surface resolves to the page
+     colour and separation is drawn with hairlines, not fills" -- the fills are back, and
+     parchment is now only the page. The reason is measurable: on a parchment surface the
+     Observatory accent inks read 1.40-1.91:1 (mint 1.40, slate 1.53, apricot 1.57, lilac 1.78,
+     brass 1.91), so the accents only work on the indigo they were drawn for. Keeping the boxes
+     indigo keeps every accent exactly as designed instead of darkening each one per theme.
+
+     The ink scale is flipped INSIDE the box and nowhere else, because the box is dark while the
+     page is not; flipping it page-wide would put cream text on cream parchment. */
+  background:
+    url("/static/img/meridian/observatory/ink-texture.webp") center / 256px 256px repeat,
+    #141b32;
+  color: var(--obs-ink);
+  --m-ink: #eee4cf;
+  --m-ink-muted: #b3a894;
+  --m-ink-faint: #a89f90;
+  --m-border: rgba(238, 228, 207, 0.16);
+  --m-border-strong: rgba(238, 228, 207, 0.3);
+  /* The SURFACE tokens flip too, and not only the ink. Without this a control INSIDE the box keeps
+     the light surface for its background while inheriting the box's cream ink -- cream on cream.
+     Caught on the connection-health buttons in the Accounts capture, 2026-09-23, where they
+     measured background rgb(244,236,223) with color rgb(238,228,207): invisible. The box's own
+     background is set explicitly above, so flipping the token here cannot recurse into it. */
+  --m-surface: #141b32;
+  --m-surface-muted: rgba(238, 228, 207, 0.08);
 }
 
+/* The Accounts ticket carries `.m-surface`, but it is a TICKET, not a content box: its face is the
+   parchment border-image and its own rule already sets `background: none` for that reason. The
+   blue-box rule out-specified it -- (0,3,1) against `.m-accounts-summary .m-accounts-ticket`'s
+   (0,2,0) -- and painted a navy surround behind the parchment, which the owner flagged on
+   2026-09-23. This selector matches the blue rule's specificity and follows it, so source order
+   restores the ticket. */
+html[data-theme="light"] .obs-shell .m-surface.m-accounts-ticket {
+  background: none;
+}
+
+/* `.m-account-name` was pinned in this list too, but the account name renders INSIDE the ledger
+   sheet, which is now a blue box in the light theme -- so a dark pin made it invisible against
+   the indigo. Caught in the Accounts capture on 2026-09-23, not from the CSS. It now inherits the
+   box's cream ink, which is the whole point of flipping the ink scale on the box. */
 html[data-theme="light"] .obs-shell .m-editorial-headline,
 html[data-theme="light"] .obs-shell .m-workspace-heading,
-html[data-theme="light"] .obs-shell .m-account-name,
 html[data-theme="light"] .obs-shell .m-activity-command h2 {
   color: #20263b;
 }

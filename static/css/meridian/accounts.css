@@ -104,9 +104,17 @@
   transform-origin: center;
   /* The concept's fine dotted border, inset from the edge. `outline-offset` does this
      without a third pseudo-element, and an outline is decorative by nature, so it adds
-     nothing to the accessibility tree. */
+     nothing to the accessibility tree.
+
+     REMOVED IN DARK MODE, owner direction 2026-09-23: against the midnight palette it read as an
+     unintended border left on a ticket that had been sloppily pasted on, rather than as the
+     concept's deliberate stitch. The light theme keeps it, where it reads as intended. */
   outline: 1px dotted var(--obs-brass);
   outline-offset: -14px;
+}
+
+html[data-theme="dark"] .m-accounts-summary .m-accounts-ticket {
+  outline: none;
 }
 
 /* The concept's punched notches: a semicircle bitten out of each side at mid-height, as a
@@ -121,7 +129,13 @@
    the same edge, and a concept-sized notch disappears into them -- verified at 22px, where
    it read as a missing scallop rather than a punched hole. Enlarging it is what makes the
    concept's gesture legible on the kit's edge, and it is recorded here rather than left as
-   an unexplained size. */
+   an unexplained size.
+
+   The fill is `--m-canvas`, not `--obs-bg`. The comment above always said "the page
+   background colour", but `--obs-bg` is the page colour of the MIDNIGHT palette only, so in
+   the light theme the notches were painted dark indigo bites into a parchment ticket -- the
+   same "pasted on" artifact as the dark-mode outline, in the other theme. `--m-canvas` is the
+   page colour in both. */
 .m-accounts-summary .m-accounts-ticket::before,
 .m-accounts-summary .m-accounts-ticket::after {
   content: "";
@@ -131,7 +145,7 @@
   height: 36px;
   margin-top: -18px;
   border-radius: 50%;
-  background: var(--obs-bg);
+  background: var(--m-canvas);
   pointer-events: none;
 }
 

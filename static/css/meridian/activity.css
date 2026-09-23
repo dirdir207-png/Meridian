@@ -766,6 +766,10 @@ body:has([data-workspace-section="activity"]:not([hidden])) #advisor-fab.m-advis
   pointer-events: none;
 }
 
+/* The frame's light-theme darkening filter was removed on 2026-09-23 by D-022, for the same
+   reason as the glyph ink above: the ledger is now a dark textured blue, so the brass art needs
+   no correction and the filter would only dull it. */
+
 /* The concept's small brass star at the ring's shoulder, where the dot used to sit. */
 .m-review-glyph::after {
   content: "";
@@ -780,17 +784,10 @@ body:has([data-workspace-section="activity"]:not([hidden])) #advisor-fab.m-advis
   mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
 }
 
-/* Brass on the light canvas is too faint to read: the glyph measures 1.91:1 against the card,
-   so the light theme uses a darker bronze for the glyph and its star. The glyph is decorative
-   and aria-hidden, so WCAG 1.4.11 does not strictly bind it -- but a glyph nobody can see is
-   not an improvement, and the concept's brass was drawn for indigo, not parchment. */
-html[data-theme="light"] .m-review-glyph {
-  color: #8a6a34;
-}
-
-html[data-theme="light"] .m-review-glyph::after {
-  background: #8a6a34;
-}
+/* The light-theme bronze that lived here was REMOVED on 2026-09-23 by D-022. Brass on the
+   parchment card measures 1.91:1, which is why the override existed; D-022 makes the ledger a
+   dark textured blue instead, so the original brass is correct again and reads at 7.6:1. Do not
+   re-add this without first checking that the surface behind the glyph went back to parchment. */
 
 .m-review-glyph-icon {
   display: block;
