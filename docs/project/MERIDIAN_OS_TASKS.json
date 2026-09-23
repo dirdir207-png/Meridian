@@ -2351,6 +2351,42 @@
         "verification": "tests/browser/test_dial_fidelity.py 24 passed; tests/meridian/test_dial_js.py 37 passed; full non-browser suite 1921 passed / 96 skipped (the single failure is the handoff-dirty-tree check, which resolves on commit); ruff clean; node --check and git diff --check clean."
       },
       "notes": "The third and fourth of the owner's four Today items; the first two (dial size, dates inside the wheel) are OS-096 and OS-094. Attribution of the five browser failures seen alongside this work was re-proven for THESE files by reverting today.html and dial.js: byte-identical counts (5 failed / 22 passed) with and without the change, recorded under OS-097."
+    },
+    {
+      "id": "OS-099",
+      "title": "The Today dial composition was reverted to the side rail, the dates evened out, and the moon made transparent",
+      "status": "complete",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "owner_decided": true,
+      "authority": [
+        "owner report with screenshots, 2026-09-24: 'the bills aren't scrollable on the right to select as they should be', 'Nothing else is on the main page but the compass now'",
+        "owner clarification, 2026-09-24: 'No overlap to the left or under'",
+        "owner report, 2026-09-24: 'the moon image needs to have transparency so it doesn't have a block of different colored blue behind it'",
+        "owner report, 2026-09-24: 'dates aren't well centered in the dial'"
+      ],
+      "why": "Three defects, two of them mine. (1) I read 'large dial with the left-and-under overlap' as an instruction to move the callouts BENEATH the dial and did so; the owner's clarification is that they belong on the RIGHT, scrollable, with no overlap to the left or under, and his screenshot showed a page containing only the compass. (2) The dates were uneven because my OS-094 inset was computed per label from each label's own diagonal, so a two-digit day sat further in than a narrow one -- a real property of that code, which he read correctly. (3) The moon asset shipped OPAQUE with no alpha channel on a flat #101a28 field that does not match the page's #161c34 navy, so it drew a block of a different blue.",
+      "scope": [
+        "dial.css + test_dial_fidelity.py: revert 51bebdd's composition and its guard retargets.",
+        "dial.js: one radius for every day label, sized by the widest box present.",
+        "moon asset re-derived to RGBA; the circular clip that existed to hide the block removed; master, derivation and report archived in design/observatory-moon-2026-09-24/.",
+        "key_raster_background.py: a colour-distance strategy, because the luminance one provably cannot do this asset."
+      ],
+      "acceptance": [
+        "The bills rail is on the right and scrolls internally on a long horizon.",
+        "The evidence ticket and controls are on the page again.",
+        "Every day label sits at one radius, evenly, and none overhangs the rim.",
+        "The moon has real transparency: no rectangular edge over the page.",
+        "No horizontal overflow; the page scrolls normally."
+      ],
+      "blocked_by": [],
+      "evidence": {
+        "measurement": "420x912 with a 12-event horizon after the fix: rail width 130 beside the dial, scrollHeight 1295 against clientHeight 318 (scrollable, rows 12), evidence ticket at y=742, all five day labels at anchor radius 104 (one distinct value), document overflow 0. With the old composition the same page had the callouts beneath the dial and the owner's viewport showed only the compass.",
+        "moon": "Opaque RGB 1254x1254, corners (17,28,42) -> RGBA 96.7% fully transparent, all four corners zero-alpha, reference colour (17,28,42) read from the frame's corners. Luminance keying was measured to fail on this asset: the moon's own centre keyed to alpha 0 at floors 30, 40, 50 and 60. Composited over #161c34 the disc keeps its limb and craters.",
+        "tests": "tests/browser/test_dial_fidelity.py 23 passed (including the side-column assertions the revert restores); tests/test_key_raster_background.py 8 passed, of which one asserts the two keying strategies behave differently on the same input and another pins the refusal guard.",
+        "verification": "Full non-browser suite 1921 passed / 96 skipped, the three failures being the repo's own guards correctly reporting the new design record was unnamed in design/README.md and unstaged (both fixed, re-run 14 passed); ruff, node --check and git diff --check clean."
+      },
+      "notes": "The tradeoff is now explicit rather than discovered: at 420px a side rail and an 82.5%-of-viewport dial cannot both hold. The dial returned to its side-rail size when the rail came back, and enlarging it needs the rail's destination settled first."
     }
   ]
 }

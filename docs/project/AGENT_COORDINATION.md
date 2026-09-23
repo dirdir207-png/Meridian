@@ -118,6 +118,39 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-24 (fifth pass) — I moved the callouts beneath the dial; the owner wanted them on the right (`OS-099`)
+
+**The correction, stated plainly because the reasoning is the reusable part.** The owner asked for
+"large dial with the left-and-under overlap". I implemented that as *callouts beneath the dial*, citing
+`BUILD_SPEC.md §7`, which does prescribe an event list beneath the instrument **when labels cannot sit
+beside it**. His screenshot showed a Today page containing only the compass, and his clarification was
+"no overlap to the left or under" — the callouts belong on the **right**, scrollable. `51bebdd` is
+reverted.
+
+**The constraint that makes this a lesson rather than an accident: at 420px, a side callout rail and an
+82.5%-of-viewport dial CANNOT both hold.** The enlargement was only achievable by taking the rail's
+place. A governing spec clause that permits a fallback is not a mandate for it, and where two owner
+requirements are geometrically exclusive, the tradeoff has to be surfaced BEFORE the change is built —
+not discovered by the owner on his phone. `OS-099` records the constraint so the next attempt starts
+there.
+
+**His screenshot also settled the "double ticket" report from earlier in the session**, which I had
+been unable to reproduce: the funding-schedule text runs through the perforation line between the two
+ticket halves. A screenshot is a reproduction; `OS-093` now carries it. **When a visual defect cannot
+be reproduced, asking for the capture is the work — not a substitute for it.**
+
+**Two smaller corrections, both mine.** The day labels were uneven because my `OS-094` inset was per
+label (a two-digit day pulled further in than a narrow one); they now share one radius sized by the
+widest box, measured at a single value of 104. And the moon's block was in the ASSET, not the CSS: it
+shipped opaque with no alpha channel on a flat `#101a28` field against a `#161c34` page.
+
+**That last one needed a new keying capability, not a retuned threshold**, and the measurement is
+worth keeping: a luminance key cannot separate a subject that CONTAINS its field's colour — the moon's
+centre keyed to alpha 0 at floors 30, 40, 50 and 60, so the scene would have shipped as a crescent
+outline. `scripts/key_raster_background.py` gained a colour-distance strategy; the default is
+unchanged, and a test asserts the two strategies behave differently on the same input rather than
+merely existing.
+
 ### 2026-09-24 (fourth pass) — The last two Today items were ONE defect (`OS-098`)
 
 **"Safe-to-spend moved back outside the compass" and "moon in the upper-right" were not two

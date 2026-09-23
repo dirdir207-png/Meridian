@@ -1,5 +1,64 @@
 # Enhanced SimpleCrew — Current Status
 
+## The dial composition is reverted, the dates are even, and the moon is transparent (`OS-099`) (2026-09-24)
+
+**Three defects, two of them mine, all reported with screenshots.** This entry exists because the
+owner's `OS-096` feedback reversed a composition change I had made in this same session.
+
+**1. "the bills aren't scrollable on the right to select as they should be … Nothing else is on the
+main page but the compass now"**, followed by the clarification **"no overlap to the left or under."**
+I had read *"large dial with the left-and-under overlap"* as an instruction to move the callouts
+**beneath** the dial, and did it from `BUILD_SPEC.md §7` — which does prescribe exactly that *when
+labels cannot sit beside the instrument*. His clarification settles the intent: the callouts belong on
+the **right**, scrollable, with no overlap to the left or underneath. `51bebdd` is reverted.
+Verified after the revert at 420×912 on a 12-event horizon: the rail is back at **width 130** beside
+the dial with **scrollHeight 1295 against 318 visible** (genuinely scrollable), the evidence ticket is
+on the page at y=742, and there is no horizontal overflow.
+
+**The dial returns to its side-rail size as a consequence, and that tradeoff is the lesson.** At 420px
+a **side rail and an 82.5%-of-viewport dial cannot both hold** — the enlargement was only achievable by
+taking the rail's place away. That is why the enlargement should not have been taken before the rail's
+destination was settled. Recorded in `OS-099` so the next attempt starts from the constraint instead of
+rediscovering it.
+
+**2. "dates aren't well centered in the dial"** — a real property of my `OS-094` fix, not a rendering
+artifact. The inset was computed **per label** from each label's *own* diagonal, so a two-digit day was
+pulled further in than a narrow one and the ring of dates was visibly uneven. `placeDayLabels` now
+derives **one radius from the widest label present** and applies it to every label. The invariant is
+unchanged — the inset still accounts for the largest half-diagonal, so nothing overhangs — only the
+evenness differs. Measured at 420px: all five labels now sit at **anchor 104**, a single value.
+
+**3. "the moon image needs to have transparency so it doesn't have a block of different colored blue
+behind it."** Measured, the cause was in the asset, not the CSS: it shipped as **opaque RGB with no
+alpha channel at all**, on a flat `#101a28` field — which is what the original spec asked for
+(`OBSERVATORY_REFINEMENT_2026-09-12.md`: *"uniform `#101a28` background … no text/numerals/UI/
+transparency"*). Today's page navy is `#161c34`, so the mismatch read as a rectangular block, and a
+`border-radius: 50%` clip had been added to soften it. That clip is now removed too. Re-derived to
+RGBA: **96.7% of pixels fully transparent, all four corners zero-alpha.**
+
+**The keying needed a new capability, and that is the substantive engineering here.** The tool only
+keyed by **luminance**, which separates a subject brighter than its field. This asset's subject
+*contains* the field's colour: the moon's unlit limb is the same navy and its cratered interior sits
+only ~19 RGB units away. Measured, a luminance key at **any** floor that clears the field also removes
+the moon — its own centre keyed to **alpha 0 at floors 30, 40, 50 and 60** — so the scene would have
+shipped as a crescent outline with no moon in it. `scripts/key_raster_background.py` now has a
+**colour-distance** strategy (`--strategy colour`, default unchanged): field within ~6 units clears,
+interior at ~19.5 stays solid, with a soft ramp so dotted orbits keep anti-aliased edges. The opaque
+master, the derivation command and the tool's report live in `design/observatory-moon-2026-09-24/`,
+named in `design/README.md`, with `ASSET_MANIFEST.md` updated to the transparency facts the other
+entries record.
+
+**Verification.** `test_dial_fidelity.py` **23 passed** (including the side-column assertions the revert
+restores); `test_key_raster_background.py` **8 passed**, one of which asserts the two keying strategies
+behave *differently* on the same input — the measurement that justifies the new mode rather than a
+second name for the old one. Full non-browser suite **1921 passed / 96 skipped**; ruff, `node --check`
+and `git diff --check` clean. Three failures along the way were the repo's own guards correctly
+reporting that the new design record was unnamed in `design/README.md` and unstaged — both fixed.
+
+**Still open: the "double ticket" layout** the owner photographed, where the funding-schedule text runs
+through the perforation line between the two ticket halves. That screenshot is the first reproduction
+this lane has had of it; `OS-093` carries it.
+
 ## Safe-to-spend is readable outside the compass, and the moon is upper-right (`OS-098`) (2026-09-24)
 
 **The last two of the owner's four Today items, and they turned out to be one defect.** Both the
