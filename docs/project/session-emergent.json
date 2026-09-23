@@ -98,6 +98,20 @@
       "arose": "2026-09-23",
       "why": "Observed in the governed OS-089 capture after the owner's full-width button shipped (artifacts/plan-mobile-concept-alignment-2026-09-23/after/plan-mobile-air-*-viewport.png): the shell's inline advisor chip floats near the bottom-right of the canvas and sits over the last ~90px of the primary action. The button stays tappable across most of its width, so this is a legibility and target-area concern rather than a blocked action, and it is NOT introduced by this slice -- the same chip overlapped the bill rows before, and the shell's own comments record that its position was already tuned once to stop it occluding this control on first paint. Deliberately NOT fixed here: the chip is a shell-level element shared by every workspace, so moving it is a design decision about the shell, not a Plan fidelity fix, and OS-089's scope was explicitly the Plan surface. Recorded rather than remembered, and not an assignment.",
       "parked_in": "design-qa.md § Remaining gaps (measured, unresolved) item 2 -- 'Inline Virgil control overlaps the bottom navigation on mobile', sharpened 2026-09-23 with the measured overlap against Plan's full-width add button"
+    },
+    {
+      "summary": "Today's event ticket offers a dead-end pair: 'View bill' opens the Plan workspace, and the ticket always says no evidence is attached (OS-093)",
+      "why": "Two defects confirmed by reading the code, reported together by the owner from his phone ('it says no evidence is attached to this event and has a view bill link, the link just brings you to the plan page'). Every bill event's `detailHref` is the literal `/meridian?workspace=plan` (`meridian/services/dial.py:440`, and the same literal at :487 and :534), so the control labelled 'View bill' (`dial.js:1125`) delivers a workspace landing page rather than the bill; and `evidenceIds` is a hard-coded empty list (`dial.py:439`, :486), so `dial.js:1118` states 'No evidence is attached to this event' for a bill even where Plan already holds invoice evidence for it. The destination is a product decision rather than a bug fix: a deep link that focuses the bill, an in-place sheet, or leaving Plan as the landing page and rewording the control so it stops promising a bill -- the last is legitimate and free, and choosing it is the owner's call.",
+      "arose": "2026-09-24",
+      "promoted_to": "OS-093",
+      "decision_owed": true
+    },
+    {
+      "summary": "The reported 'double ticket' layout problem on Today's Eversource bill was NOT reproduced, so it is recorded rather than fixed",
+      "why": "The owner reported it in the same message as OS-093: 'the double ticket eversource bill looks messy where the text is placed, overlapping with the line between the two tickets'. A synthetic model shaped like the reported case -- an Eversource bill with a stated funding schedule (the long '$29.89/event, Crew's own estimate, due Sep 20 for Veterans Home' note), no evidence attached, a detailHref, plus a coexisting 'Eversource Payment Arrangement' bill in the same horizon -- measured ZERO text-box overlaps, ZERO nodes escaping the ticket's own border box, and exactly ONE `.obs-evidence-ticket` on the page, at 420x912 and 1440x900 (tmp/probe_today_ticket.py). The first fixture attempt used wrong field names (`perEventAmount`/`dueDate` instead of `contribution`/`deadline`) and rendered none of the long text, so it was re-measured rather than reported. Not reproducing a defect is not evidence that it is absent, and guessing at a visual defect is how a fix lands on the wrong element -- so this half needs the owner's screenshot, or the date and bill he had selected.",
+      "arose": "2026-09-24",
+      "promoted_to": "OS-093",
+      "decision_owed": true
     }
   ]
 }
