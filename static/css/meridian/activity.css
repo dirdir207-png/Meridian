@@ -732,10 +732,19 @@ body:has([data-workspace-section="activity"]:not([hidden])) #advisor-fab.m-advis
 
 /* ---------- Framed category glyph (concept 03) ---------- */
 
-/* The concept frames each ledger row's category glyph in a ring carrying a small
-   marker dot. The glyph is decorative — it is a mask painted with currentColor so the
-   ring's own ink decides its colour, and it is hidden from assistive tech because the
-   category text beside it is what actually states the classification. */
+/* The concept frames each ledger row's category glyph in a BRASS DOUBLE RING carrying a
+   small star at the ring's shoulder, and draws the glyph itself in brass. Accounts already
+   implements exactly that treatment: the kit's medallion-frame.png is "a brass double ring
+   with four rivets, specified as a decorative frame above a code-owned colored disk and
+   semantic SVG icon". Activity had drifted from it -- a single hairline ring with an ink
+   glyph -- and its marker was a green status dot rather than the concept's star.
+
+   The dot was decoration that had lost its shape, not information: it was painted
+   var(--m-healthy) unconditionally, so it never varied per row and carried no state. The
+   glyph is aria-hidden and the category text beside it states the classification, so
+   correcting the ornament removes nothing a screen reader or a reader relied on.
+
+   The glyph stays a mask painted with currentColor; only the ink and the frame change. */
 .m-review-glyph {
   position: relative;
   flex: 0 0 auto;
@@ -744,20 +753,43 @@ body:has([data-workspace-section="activity"]:not([hidden])) #advisor-fab.m-advis
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  border: 1px solid var(--m-border-strong);
-  color: var(--m-ink);
+  color: var(--obs-brass, #c6aa71);
 }
 
+/* The kit's brass double ring, layered over the disc exactly as Accounts does. It carries a
+   transparent centre, so it frames the glyph without masking it. */
+.m-review-glyph::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background: url("/static/img/meridian/observatory/kit-2026-09-16/medallion-frame.png") center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* The concept's small brass star at the ring's shoulder, where the dot used to sit. */
 .m-review-glyph::after {
   content: "";
   position: absolute;
-  left: -4px;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--m-healthy);
-  transform: translateY(-50%);
+  left: 50%;
+  top: -7px;
+  width: 9px;
+  height: 9px;
+  background: var(--obs-brass, #c6aa71);
+  transform: translateX(-50%);
+  -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+  mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
+}
+
+/* Brass on the light canvas is too faint to read: the glyph measures 1.91:1 against the card,
+   so the light theme uses a darker bronze for the glyph and its star. The glyph is decorative
+   and aria-hidden, so WCAG 1.4.11 does not strictly bind it -- but a glyph nobody can see is
+   not an improvement, and the concept's brass was drawn for indigo, not parchment. */
+html[data-theme="light"] .m-review-glyph {
+  color: #8a6a34;
+}
+
+html[data-theme="light"] .m-review-glyph::after {
+  background: #8a6a34;
 }
 
 .m-review-glyph-icon {
