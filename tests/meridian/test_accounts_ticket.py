@@ -92,7 +92,13 @@ def test_accounts_ticket_takes_the_concepts_angle_notches_and_dotted_inset():
         1,
     )[1].split("}", 1)[0]
     assert "border-radius: 50%" in shared
-    assert "background: var(--obs-bg)" in shared
+    # `--m-canvas`, not `--obs-bg`. The comment above has always said "the page background
+    # colour", but `--obs-bg` is the page colour of the MIDNIGHT palette only, so in the light
+    # theme this rule was painting dark indigo bites into a parchment ticket -- the same "pasted
+    # on" artifact as the dark-mode outline, in the other theme. `--m-canvas` is the page colour
+    # in both themes, which is what the rule was always trying to say. The assertion moved with
+    # the code on 2026-09-23 rather than the code moving back to satisfy it.
+    assert "background: var(--m-canvas)" in shared
     assert "pointer-events: none" in shared
     assert "top: 50%" in shared
     assert "left: -38px" in css
