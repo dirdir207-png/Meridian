@@ -451,6 +451,19 @@ body.obs-shell {
     linear-gradient(180deg, #101a28 0%, #0c1420 100%);
 }
 
+/* The dock and rail items at rest. In the Observatory shell `--m-forest-muted` resolves to
+   `--obs-muted` (#b7b8cb), a COOL blue-grey, and shell.css paints `.m-nav-item` with it. Every
+   concept in the governing bundle instead inks the resting items WARM CREAM -- measured
+   2026-09-23 at rgb(238,227,209) in settings.png, rgb(241,232,213) in timeline.png and
+   rgb(255,247,206) in review.png. `--obs-ink` is #eee4cf = rgb(238,228,207), within a couple of
+   units of the first two, so the concepts are asking for the shell's own ink rather than a new
+   value. The glyph and the label both take `currentColor`, so this one declaration settles both --
+   which is the actual request: the icon and its text were reading as two different colours.
+   The active-state rules BELOW stay later and more specific, so lilac still wins when selected. */
+.obs-shell .m-nav-item {
+  color: var(--obs-ink);
+}
+
 .obs-shell .m-nav-item[aria-current="page"]::before {
   background: var(--obs-lilac);
 }
