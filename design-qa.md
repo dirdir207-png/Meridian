@@ -1324,6 +1324,28 @@ the add plate spans the width. The desktop diff rose from 0.24% to **0.34%** str
 reason: the funding bar is now a row cell on both surfaces, so on desktop it sits directly under the name
 instead of between the fact line and the invoice entries.
 
+**Third pass (same day, owner): "Can we get everything a little closer together to allow three bills
+to show?"** Two measured findings decided it. The collapsed row's height was set by the 44px disclosure toggle
+(the touch-target floor, kept) rather than by the medallion, so padding alone brought the row from 69px to
+**61/62px** -- the concept's own ~60px pitch. And the map had to be SCALED rather than narrowed: at 89% width
+its art and station boxes shrank but its TYPE did not, so `Goals $200.00` broke across two lines. The capture
+caught that; the numbers looked right. A `transform: scale(0.89)` scales art, stations and type together
+(259px -> 231px), and the height is reclaimed as a ratio rather than a pixel count.
+
+| | before | pass 1 | pass 2 | pass 3 |
+|---|---|---|---|---|
+| collapsed row | 113/114px | 61/62px | 69px | **61/62px** |
+| bills band | 44vh | 120px | 200px (`min(200px, 28svh)`) | **200px, three whole rows** |
+| rows visible | ~2 | ~1.5 | ~2.5 | **3** |
+| map section | 302..561 | 244..503 | 191..449 | **157..387** (scaled 89%) |
+| add control bottom | — | 795 | 811 | **823** (canvas bottom 826) |
+
+Everything reclaimed is a padding or a margin that carries no information: the shell's 24px canvas pad -> 6px,
+the tab bar's 16px bottom margin -> 0, the 8px between rows -> 4px, the funding footer's 12px -> 6px. No
+control, figure or word was removed. Note for the next session: this pass's overrides live in a LATE
+`max-width: 600px` block on purpose -- CSS breaks equal-specificity ties by order, and the first attempt
+declared them earlier, so the row margin silently did not move.
+
 **Not claimed.** The concept's engraved metal glyphs (the app masks a single-colour SVG — OS-087's remaining
 half), the tinted per-category bill disc (OS-088, blocked on category data that does not exist), light-theme
 contrast re-verification beyond the captures, live served-app acceptance, or any deployment.

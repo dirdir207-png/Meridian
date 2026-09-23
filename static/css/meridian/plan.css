@@ -1679,7 +1679,7 @@
        iPhone Air the status bar and the home-indicator inset take roughly 100px that a desktop
        Chromium preview cannot reproduce. The cap is the measured value at 420x912; the svh term
        is what keeps the band from crowding the ticket and the add control on a shorter screen. */
-    max-height: min(170px, 19svh);
+    max-height: min(200px, 28svh);
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -1829,5 +1829,79 @@
   .m-coverage-orbit-fill,
   .m-plan-table-row {
     transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------
+   THIRD PASS -- 2026-09-23, owner: "Can we get everything a little closer together to allow
+   three bills to show?"
+
+   Declared as ONE block at the END of this file on purpose. CSS resolves equal-specificity
+   conflicts by order, and these rules deliberately override mobile rules written earlier (the
+   row's 8px padding, the 8px between rows, the 16px under the tab bar). A second
+   `max-width: 600px` block placed anywhere earlier loses to them silently -- which is exactly
+   what happened on the first attempt at this pass, and why the row margin did not move.
+
+   Measured, nothing here removes a control, a figure or a word, and no block changes its
+   concept proportions except the map's width (kept at the same ratio, so the parchment and the
+   DOM stations over it scale together). The row's height was being set by the 44px disclosure
+   toggle -- the touch-target floor, which is KEPT -- and not by the medallion, so the row comes
+   down to the concept's own ~60px pitch by tightening padding alone: 69px -> 60px. Three rows
+   then fit inside the existing band.
+   --------------------------------------------------------------------------------------- */
+@media (max-width: 600px) {
+  /* The shell's canvas pad is 24px above the pane and the tab bar carried a 16px bottom
+     margin; neither carries information, and the owner asked for the top to come down. */
+  .obs-shell:has([data-workspace-section="plan"]:not([hidden])) .m-main {
+    padding-top: 6px;
+  }
+
+  .m-plan-seg {
+    margin-bottom: 0;
+  }
+
+  /* The one block with real slack, and it is SCALED rather than narrowed. Narrowing the box
+     shrank the parchment and the stations' boxes but not their type, so "Goals $200.00" broke
+     across two lines -- caught by the capture, not by the numbers. A transform scales the art,
+     the stations and their type together, so the composition is untouched and only its size
+     changes. The negative margin is not a magic pixel count: the scale wastes 11% of the box's
+     height, and the box's height is its width / 1.5, so that is 7.33% of the container's width
+     -- which is what a percentage margin resolves against, hence the expression. 259px -> 231px. */
+  .m-plan-map-section {
+    /* flow-root so the map's negative margin cannot collapse OUT of the section and leave the
+       section 259px tall with the reclaim applied one level up: that happened to land in the
+       right place, but by accident rather than by rule. With a block formatting context the
+       section's own height is the scaled one, and the following content is placed by it. */
+    display: flow-root;
+  }
+
+  .m-plan-map {
+    transform: scale(0.89);
+    transform-origin: top center;
+    margin-bottom: calc(-7.33%);
+  }
+
+  .m-plan-table-row {
+    padding: 6px var(--m-space-3);
+  }
+
+  .m-plan-table-row + .m-plan-table-row {
+    margin-top: var(--m-space-1);
+  }
+
+  .m-plan-cell-progress .m-commitment-progress {
+    margin-top: 2px;
+  }
+
+  .m-plan-table-footer {
+    margin-top: 6px;
+  }
+
+  .m-plan-table {
+    /* Three full rows at the measured 61/62px pitch plus their two 6px gaps = 197px, so the cap
+       is 202 and leaves the band its 2px of border. The svh term is the same guard as before:
+       on a handset whose safe areas take height a desktop preview cannot show, the band yields
+       rather than pushing the ticket and the add control off the screen. */
+    max-height: min(200px, 28svh);
   }
 }

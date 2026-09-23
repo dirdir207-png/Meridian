@@ -517,3 +517,64 @@ def test_the_desktop_column_headers_keep_their_left_to_right_order():
             "el => getComputedStyle(el).display"
         ) != "none"
         browser.close()
+
+
+def test_three_bills_are_fully_visible_and_no_map_figure_wraps():
+    """Owner, third pass: "Can we get everything a little closer together to allow three bills
+    to show?"
+
+    Three rows must fit the band WHOLE -- a third row cut off at the knee is not three bills --
+    and the add control must still be on the screen, because the band and the control are the
+    two things this slice trades against each other. The map assertion is the regression guard
+    for a fix that read as correct in the numbers: narrowing the map's box shrank the type's
+    container but not the type, so `$200.00` wrapped onto a second line. A range rect count is
+    the honest measure of wrapping -- a block's own height can stay one line's worth while the
+    text inside breaks.
+    """
+    playwright_api = pytest.importorskip("playwright.sync_api")
+    with playwright_api.sync_playwright() as pw:
+        browser = pw.chromium.launch()
+        context, page = _authed_page(browser, OWNER_VIEWPORT)
+        _install_routes(page, ROW_PAYLOAD)
+        page.goto(f"{APP_URL}/meridian?workspace=plan", wait_until="domcontentloaded")
+        page.wait_for_timeout(500)
+
+        band = page.locator(".m-plan-table").first
+        band_box = band.bounding_box()
+        rows = page.locator("[data-commitment-card]")
+        assert rows.count() >= 3, "the fixture must carry at least three bills"
+
+        for i in range(3):
+            box = rows.nth(i).bounding_box()
+            assert box["y"] >= band_box["y"] - 1
+            assert box["y"] + box["height"] <= band_box["y"] + band_box["height"] + 1, (
+                f"bill {i + 1} is cut off by the band: its bottom "
+                f"{box['y'] + box['height']:.0f} exceeds {band_box['y'] + band_box['height']:.0f}"
+            )
+
+        # The money on the map must each render on ONE line.
+        wrapped = page.evaluate(
+            """() => {
+              const out = [];
+              for (const el of document.querySelectorAll('.m-plan-medallion-amount, .m-plan-medallion-label')) {
+                const r = document.createRange();
+                r.selectNodeContents(el);
+                const lines = r.getClientRects().length;
+                if (lines > 1) out.push([el.textContent, lines]);
+              }
+              return out;
+            }"""
+        )
+        assert wrapped == [], f"map figures wrapped onto extra lines: {wrapped}"
+
+        # ...and the add control is still inside the canvas the shell scrolls.
+        canvas = page.evaluate(
+            "() => { const m = document.querySelector('.m-main'); const r = m.getBoundingClientRect();"
+            " return {top: r.top, bottom: r.bottom}; }"
+        )
+        add = page.locator("[data-plan-new-commitment]").first.bounding_box()
+        assert add["y"] + add["height"] <= canvas["bottom"] + 1, (
+            "the add control must stay on the first screen: its bottom "
+            f"{add['y'] + add['height']:.0f} exceeds the canvas bottom {canvas['bottom']:.0f}"
+        )
+        browser.close()

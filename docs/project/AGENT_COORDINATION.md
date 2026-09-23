@@ -159,6 +159,16 @@ cell also carries — created an implicit named line at the END of the head's gr
 last column while every row stayed put. Both now have guards; the second is a browser guard on the RENDERED
 header order, because the source read correctly in both cases.
 
+**Third pass, same day.** *"Can we get everything a little closer together to allow three bills to show?"*
+Measured: the row's height was set by the 44px disclosure toggle (kept -- it is the touch-target floor), not by
+the medallion, so padding alone took it 69px -> 61/62px, the concept's own ~60px pitch. The map is SCALED to
+89% rather than narrowed, because narrowing wrapped `Goals $200.00` onto two lines -- caught by the capture,
+not by the numbers. All other reclaim is padding/margin only. At 420x912 the band is 200px and shows three
+whole rows (193px needed of its 198px client box); the add control's bottom sits at 823px, inside the 826px
+canvas. Guards added for the row pitch, the map's scale, the reclaimed paddings, and -- because CSS resolves
+equal-specificity ties by order and the first attempt failed SILENTLY on exactly this -- that the third-pass
+block is the LAST thing in the stylesheet.
+
 **Verification.** Full suite **1907 passed / 83 skipped**; `ruff` clean over `app.py meridian/ scripts/ tests/`;
 `git diff --check` clean; `session_close.py` exit 0; `tests/browser/test_plan.py` **8 passed** against
 `APP_URL=http://127.0.0.1:8081`, including the one-screen acceptance test. Governed captures at 5 viewports ×

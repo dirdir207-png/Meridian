@@ -50,6 +50,18 @@ on desktop too, because the duplication it removes is the desktop NEXT column's 
 
 **His phone is NOT too small, and that is a measurement.** The iPhone Air is 420×912 CSS px — exactly the `mobile-air` viewport in `MERIDIAN_VISUAL_CAPTURE_SPEC.md`, and exactly the concept's own scale (`02-plan.png` is 852×1846 at 0.494). The concept fits because its top block is ~148px against the app's ~250px. What changed in response, all mobile-only: the funding bar moved back **onto the collapsed row** as a 2px hairline with an end dot at the funded share (his correction of the spec, and what the concept draws — exactly one bar exists); the `Plan` headline is removed with `Give every dollar a destination.` carrying the block, centred (he pre-authorised it); every gap from the topbar to the map is tightened to 6px; the income ticket collapsed **102px → 68px** by putting label, date and figure on one line with the caption beneath; and the bills band was **EXTENDED 120px → `min(170px, 19svh)`**, two and a half rows. Measured after: map section 191..449 (was 236..495), band 473..643, ticket 673..741, **add control 753..811 — fully inside the canvas (68..826)**, collapsed row 69px. The `svh` term is deliberate: the owner's handset loses roughly 100px to the status bar and the home-indicator inset that a desktop preview cannot reproduce, so the band is sized against the small viewport height rather than a fixed 912. The map keeps its concept size; the height came from the ticket and the gaps.
 
+**Third pass, same day — "Can we get everything a little closer together to allow three bills to show?"**
+Measured, the collapsed row's height was being set by the 44px disclosure toggle (the touch-target floor, kept)
+and not by the medallion, so padding alone took the row 69px → **61/62px**, which is also the concept's own
+~60px pitch. The map's box had to be **scaled**, not narrowed: narrowing it wrapped `Goals $200.00` onto two
+lines — a defect the capture caught and the numbers did not. Everything else reclaimed is a padding or a
+margin carrying no information (the shell's 24px canvas pad → 6px, the tab bar's 16px bottom margin → 0, the
+8px row gap → 4px, the funding footer's 12px → 6px); no control, figure or word was removed. Result at
+420×912: the band is 200px and shows **three whole rows** (they need 193px of its 198px client box), with the
+add control's bottom at 823px, still inside the canvas. **One lesson worth keeping:** this pass's overrides
+sit in a late `max-width: 600px` block because CSS resolves equal-specificity ties by order — the first
+attempt declared them earlier and the row margin silently did not move, with no error of any kind.
+
 **Verification.** Full suite green (`tests/` entire tree, browser tests included when `APP_URL` is set);
 `ruff` clean over `app.py meridian/ scripts/ tests/`; `git diff --check` clean; `tests/browser/test_plan.py`
 passes against `APP_URL=http://127.0.0.1:8081`, including the one-screen acceptance test and a guard that the

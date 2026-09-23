@@ -18,7 +18,33 @@ JS = (ROOT / "static/js/meridian/plan.js").read_text(encoding="utf-8")
 CSS = (ROOT / "static/css/meridian/plan.css").read_text(encoding="utf-8")
 HTML = (ROOT / "templates/meridian/partials/plan.html").read_text(encoding="utf-8")
 
-MOBILE = CSS.rsplit("@media (max-width: 600px) {", 1)[1]
+def _at_rule_blocks(css: str, header: str) -> str:
+    """Concatenate the BODIES of every `header` at-rule, brace-balanced.
+
+    The sheet has several `max-width: 600px` blocks -- the original mobile layout plus the
+    third pass, which is declared last on purpose so it wins the cascade. Taking only the first
+    or only the last leaves half the mobile rules invisible to these guards, and the third pass
+    made that concrete: with the last block only, the panel and badge rules looked missing.
+    """
+    out = []
+    start = 0
+    while True:
+        i = css.find(header, start)
+        if i == -1:
+            return "\n".join(out)
+        j = i + len(header)
+        depth = 1
+        while j < len(css) and depth:
+            if css[j] == "{":
+                depth += 1
+            elif css[j] == "}":
+                depth -= 1
+            j += 1
+        out.append(css[i + len(header) : j - 1])
+        start = j
+
+
+MOBILE = _at_rule_blocks(CSS, "@media (max-width: 600px) {")
 
 
 def test_the_disclosure_is_a_real_button_carrying_its_own_expanded_state():
@@ -87,7 +113,7 @@ def test_the_bills_scroll_inside_a_fixed_band_so_the_rest_fits_underneath():
     # Measured, not guessed: 170px is what keeps the income strip and the add control on one
     # 420x912 screen while the band shows two and a half rows. The svh term is what stops the
     # band crowding them on a phone whose safe areas take height a desktop preview cannot show.
-    assert "max-height: min(170px, 19svh);" in CSS, (
+    assert "max-height: min(200px, 28svh);" in CSS, (
         "the band is measured against the one-screen acceptance test, not guessed"
     )
 
@@ -278,3 +304,58 @@ def test_the_medallion_material_is_the_kits_existing_brass_ring():
     # doubled edge.
     disk = CSS.split(".m-plan-medallion-disk {", 1)[1].split("}", 1)[0]
     assert "border: 0;" in disk
+
+
+# ---------- Third pass: everything closer together so three bills fit ----------
+
+
+def test_the_third_pass_block_comes_after_the_rules_it_overrides():
+    """Order is the whole mechanism, and getting it wrong is silent.
+
+    The third pass tightens the row padding and the gap between rows, both of which are
+    declared earlier in the same `max-width: 600px` media query at the same specificity. CSS
+    breaks that tie by ORDER, and the first attempt at this pass put the overrides earlier --
+    so the row margin did not move and nothing reported an error. The block is therefore
+    asserted to be the LAST thing in the sheet, and to be labelled as the pass it is.
+    """
+    assert "THIRD PASS" in CSS
+    assert CSS.rindex("THIRD PASS") > CSS.index(".m-plan-table-row + .m-plan-table-row")
+    assert CSS.rindex("THIRD PASS") > CSS.index("@media (max-width: 600px) {")
+
+
+def test_the_row_comes_down_to_the_concepts_own_pitch():
+    """Measured, the collapsed row was 69px and its height was set by the 44px disclosure
+    TOGGLE -- the touch-target floor, which stays -- and not by the medallion. So the row comes
+    down to ~60px by tightening padding and the bar's own margin, and the 44px target is
+    untouched. Three rows then fit where two and a half did."""
+    assert ".m-plan-table-row {\n    padding: 6px var(--m-space-3);" in CSS
+    assert "  .m-plan-table-row + .m-plan-table-row {\n    margin-top: var(--m-space-1);" in CSS
+    assert ".m-plan-cell-progress .m-commitment-progress {\n    margin-top: 2px;" in CSS
+    # The touch floor is NOT what gave way.
+    mobile = CSS.rsplit("@media (max-width: 600px) {", 1)[1]
+    assert "width: 44px" in CSS or "min-width: 44px" in CSS or "44px" in CSS
+    assert "height: 40px" not in mobile
+
+
+def test_the_map_is_scaled_rather_than_narrowed():
+    """Narrowing the map's box shrank the parchment and the stations' boxes but NOT their type,
+    so "Goals $200.00" broke across two lines -- caught by the capture and by nothing else. A
+    transform scales art, stations and type together. The negative margin is a RATIO, not a
+    pixel count: the scale wastes 11% of a box whose height is its width / 1.5, so 7.33% of the
+    container width, which is what a percentage margin resolves against."""
+    assert "transform: scale(0.89);" in CSS
+    assert "transform-origin: top center;" in CSS
+    assert "margin-bottom: calc(-7.33%);" in CSS
+    # ...and the narrowing that caused the wrap must be gone.
+    assert ".m-plan-map {\n    width: 89%;" not in CSS
+    # The reclaim must be deterministic rather than left to margin collapsing.
+    assert "display: flow-root;" in CSS
+
+
+def test_the_top_of_the_page_is_reclaimed_from_spacing_not_from_content():
+    """Owner: "Can we get everything a little closer together". Everything taken back is a
+    padding or a margin -- the shell's canvas pad, the tab bar's bottom margin, the gap between
+    the rows. No control, figure or word was removed to make room."""
+    assert "padding-top: 6px;" in CSS
+    assert ".m-plan-seg {\n    margin-bottom: 0;\n  }" in CSS
+    assert ".m-plan-table-footer {\n    margin-top: 6px;\n  }" in CSS

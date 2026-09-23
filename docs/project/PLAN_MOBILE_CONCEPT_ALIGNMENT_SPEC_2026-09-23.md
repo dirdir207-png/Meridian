@@ -282,3 +282,19 @@ superseded:
   viewport and exactly the concept's own scale (852x1846 at 0.494). The concept fits because its top
   block is ~148px against the app's ~250px, not because its screen is larger. Recorded because the
   question will recur.
+
+### 10b. Third pass -- three bills (2026-09-23, same day)
+
+Owner, verbatim: *"Can we get everything a little closer together to allow three bills to show?"*
+D-023 point 7 is the full record. Summary, so this spec is not read as current where it has moved
+again:
+
+- the collapsed row is **61/62px** (was 69, and 113/114 before the slice). Its height was being set
+  by the 44px disclosure toggle -- the touch floor, which is kept -- so it came down by tightening
+  padding alone, which also lands it on the concept's own ~60px pitch;
+- the bills band is **200px** and shows **three whole rows** (they need 193px of the 198px client
+  box), with the add control still inside the canvas;
+- the map is **scaled to 89%** (`transform`, not a narrower box, which wrapped `$200.00` onto two
+  lines), 259px -> 231px;
+- the shell's 24px canvas pad and the tab bar's 16px bottom margin are gone, the row gap is 4px and
+  the funding footer's margin is 6px. No control, figure or word was removed to make the room.
