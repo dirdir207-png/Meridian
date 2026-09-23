@@ -284,7 +284,17 @@ def test_dial_opens_on_today_while_preloading_the_next_event_evidence():
     assert "selectedEventId: initialEvent ? initialEvent.id : null" in js
     assert 'mode: "today"' in js
     assert 'state.mode === "today"' in js
-    assert 'kicker.textContent = "Safe to spend"' in js
+    # RETARGETED 2026-09-24. This asserted `'kicker.textContent = "Safe to spend"' in js`, i.e.
+    # that the dial's CENTRE states the safe-to-spend figure. The owner has since asked for the
+    # concept's arrangement -- "Safe-to-spend moved back outside the compass to match the
+    # concept as it originally was" -- so the centre must NOT state it, and the figure is made
+    # readable outside by un-hiding the header block. The assertion is inverted rather than
+    # deleted, so a future edit that reintroduces the duplicate fails here.
+    assert 'kicker.textContent = "Safe to spend"' not in js, (
+        "the dial's centre must not duplicate the safe-to-spend figure; it belongs outside the "
+        "compass, where the header block states it"
+    )
+    assert '"Choose a day to explore"' in js, "the centre keeps its neutral no-selection copy"
 
 
 def test_observatory_today_stage_gets_full_width_on_desktop():

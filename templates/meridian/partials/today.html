@@ -13,7 +13,17 @@
         <p class="obs-today-orbit-heading">Your next orbit.</p>
       </header>
 
-      <div class="m-observatory-overview m-visually-hidden">
+      {# The concept's own header block, and it is VISIBLE again (owner, 2026-09-24):
+         "Safe-to-spend moved back outside the compass to match the concept as it originally
+         was."
+
+         The `m-visually-hidden` class this container carried was the reason the figure had
+         migrated into the dial's centre: the block was collapsed to a 1x1 clipped box, so the
+         outside figure was unreadable (measured width 0px) while the centre stated it instead.
+         That is a duplicate the owner did not want, and the concept draws the figure outside
+         the instrument. The moon shares this block, so it also renders in the note column now
+         -- the concept's upper-right -- rather than overflowing a clipped parent at the left. #}
+      <div class="m-observatory-overview">
       <dl class="m-observatory-safe m-sts" data-today-safe>
         <dt class="m-sts-label" data-sts-label>Safe to spend</dt>
         <dd class="m-sts-figure-block">

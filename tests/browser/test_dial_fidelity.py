@@ -335,10 +335,26 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
     assert orbit.is_visible()
     assert orbit.inner_text() == "Your next orbit."
     safe = page.locator("[data-sts-figure]")
-    assert not safe.is_visible(), "the duplicate safe-to-spend block must not displace the dial"
+    # RETARGETED 2026-09-24, inverting the previous requirement. This read
+    # `assert not safe.is_visible(), "the duplicate safe-to-spend block must not displace the
+    # dial"`, because an earlier pass collapsed the outside block into a 1x1 clipped box and
+    # moved the figure into the dial's CENTRE -- measured then: the figure's box was 0px wide,
+    # i.e. present but unreadable, while the centre stated it.
+    #
+    # The owner has asked for the concept's own arrangement ("Safe-to-spend moved back outside
+    # the compass to match the concept as it originally was"), so the outside figure is the
+    # readable one and the CENTRE must not duplicate it.
+    assert safe.is_visible(), "the safe-to-spend figure must be readable outside the compass"
+    assert safe.evaluate("el => el.getBoundingClientRect().width") > 0, (
+        "a 0px-wide figure is the clipped-container state this retarget exists to prevent"
+    )
     dial_box = page.locator(".obs-dial-svg").bounding_box()
     center_amount = page.locator(".obs-dial-center-amount")
-    assert center_amount.inner_text() == "$248.50"
+    assert center_amount.inner_text() == "—", (
+        "the dial's centre must not state the safe-to-spend figure: with no event selected it "
+        "states the date and a prompt, and the figure lives outside the compass"
+    )
+    assert page.locator(".obs-dial-center-title").inner_text() == "No event selected"
     assert page.locator(".obs-ticket-title").inner_text() == "Electric"
     amount_box = center_amount.bounding_box()
     assert dial_box["y"] < amount_box["y"] < dial_box["y"] + dial_box["height"]

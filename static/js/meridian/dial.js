@@ -392,12 +392,12 @@ function renderInstrumentOverlay(state) {
       fundingScheduleSummary(selected) ||
       fundingSourceSummary(selected) ||
       fundingLabel(selected.fundingStatus);
-  } else if (state.model.availableToSpend && state.model.availableToSpend.minor != null) {
-    kicker.textContent = "Safe to spend";
-    title.textContent = "";
-    amount.textContent = minorToDisplay(state.model.availableToSpend) || "—";
-    status.textContent = `Available until ${formatShortDay(state.model.horizonEnd)}`;
   } else {
+    // No event selected: the centre states the DATE and what to do, deliberately NOT the
+    // safe-to-spend figure. It used to state the figure here, which duplicated the header block
+    // the owner has now made visible outside the instrument ("Safe-to-spend moved back outside
+    // the compass", 2026-09-24). The figure belongs outside the compass; the centre belongs to
+    // the selected moment. The copy below already existed.
     kicker.textContent = formatLongDate(state.selectedDate);
     title.textContent = "No event selected";
     amount.textContent = "—";
