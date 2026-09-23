@@ -2018,7 +2018,7 @@
     {
       "id": "OS-087",
       "title": "Match the Observatory medallions to the concept's ENGRAVED METAL, not just its colours",
-      "status": "open",
+      "status": "done",
       "priority": "high",
       "phase": "design-fidelity",
       "detail": "Owner request 2026-09-23: 'Can we make them match the visual design of the concept though? Not just the colors. If we need to match them with runway, we can spend that.' THE COLOURS ARE DONE AND ARE NOT THE GAP. Accounts, the Plan map's three stations, Settings and the dock have all been unified on the concept's structure -- dark disc, brass glyph, role colour as the band or ring -- and the dock's ink was corrected against measured artwork. What remains is the MATERIAL. The concept's medallions are rendered metal: a bevelled brass ring with real highlight and shadow, and a finely engraved glyph inside it. The app composes them from a flat CSS disc, a 2px border, inset box-shadows and a single-colour SVG mask, so they read correctly but flat. This is an ARTWORK gap, not a layout one, which is why the owner authorised Runway spend for it. SPEND AUTHORISATION IS FOR THIS TASK: see D-021 for the route (Runway through the existing Composio connection, no bespoke adapter) and its rules -- a generation is a SPEND, nothing generates unattended, and delivery is not integration. Balance was 468 credits when read read-only on 2026-09-22; gen4_image is about 8 credits and gpt_image_2 at high about 20, so confirm the live balance before generating rather than trusting that figure.",
@@ -2031,7 +2031,11 @@
         "The medallion is verified in BOTH themes and at the mobile viewports, because the artwork sits on the parchment map in both",
         "A capture before and after shows the material difference, so 'it looks more like the concept' is evidenced rather than asserted"
       ],
-      "notes": "The zero-spend finding was found by LOOKING at the shipped assets before opening the generation route, which the task's own framing ('If we need to match them with runway, we can spend that') explicitly allowed for. A spend remains available for the engraved glyphs and must be stated before it happens, per D-021."
+      "notes": "The zero-spend finding was found by LOOKING at the shipped assets before opening the generation route, which the task's own framing ('If we need to match them with runway, we can spend that') explicitly allowed for. A spend remains available for the engraved glyphs and must be stated before it happens, per D-021.",
+      "evidence": {
+        "glyph_half_delivered_2026-09-23": "Four marks generated with Runway gpt_image_2 under D-021 and integrated on the Plan map: rotunda (money committed to bills), mountain-flag (goals), star-rose (Available) and hub-compass (the hub, regenerated because a full-resolution read showed the top star as its own compass with a knobbed bezel rather than a second size of the bottom one). 80 credits spent, the owner-approved four-mark envelope, from a balance of 500 read read-only first. Delivery record: design/plan-map-marks-2026-09-23/ (README + assets.json with verified sha256 for master, keyed and delivered files, prompts and raw masters) plus a row in design/README.md. Marks are applied as background IMAGES, never masks, so their own highlight and shadow survive; the kit glyph is retained for any segment the concept never draws."
+      },
+      "open_remainder": "The gold-fleck field (drawn as one deterministic inline SVG from the concept's sparse scatter of four-point stars) reads FAINT at medallion size and wants strengthening. Not a blocker; recorded so a later session does not have to rediscover it. Everything else in this task is delivered."
     },
     {
       "id": "OS-088",
