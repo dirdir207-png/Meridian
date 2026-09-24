@@ -37,14 +37,32 @@ def test_the_report_never_promotes_or_assigns():
 
 
 def test_an_uncommitted_tree_is_reported_as_unsafe():
-    """Falsification of the core rule: a half-finished slice must never be handed over."""
-    result = _run()
+    """Falsification of the core rule: a half-finished slice must never be handed over.
+
+    RETARGETED 2026-09-24, because this test was asserting the wrong thing and failed on a CLEAN
+    tree. It derived its premise from `git status --porcelain` (uncommitted paths) but then asserted
+    the SCRIPT'S EXIT CODE, which is `not dirty and not unpushed and handoff_current`. A session that
+    has committed its slice and simply not pushed yet therefore failed a test named "an uncommitted
+    tree is reported as unsafe", even though the tree was clean -- and the four unpushed commits were
+    a perfectly ordinary mid-session state that the owner had not asked to push. The mismatch between
+    the premise and the assertion is the bug: the test could not distinguish "uncommitted" from
+    "unpushed", which are different rows of the very table it is about.
+
+    It now asserts the row it names, so the falsification is real in both directions: a dirty tree
+    must show FAIL and must suppress a CLEAN STOP; a clean tree must show ok on THAT row (the overall
+    verdict may still differ, and correctly so, because of the unrelated checks)."""
     dirty = [l for l in close.git("status", "--porcelain").splitlines() if not l.startswith("??")]
+    result = _run()
+    row = [l for l in result.stdout.splitlines() if l.startswith("| uncommitted tracked changes |")]
+    assert len(row) == 1, f"the damage-state table must carry the row exactly once: {result.stdout}"
     if dirty:
-        assert result.returncode == 1
-        assert "NOT SAFE TO END" in result.stdout
+        assert "**FAIL**" in row[0], row[0]
+        assert "NOT SAFE TO END" in result.stdout, result.stdout
+        # And the paths themselves are listed, so a reader knows what to finish or revert.
+        for entry in dirty:
+            assert f"`{entry}`" in result.stdout, entry
     else:
-        assert result.returncode == 0, result.stdout
+        assert "ok (clean)" in row[0], row[0]
 
 
 def test_parked_items_must_name_a_checkpoint_or_a_ledger_id():
