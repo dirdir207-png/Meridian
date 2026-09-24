@@ -1,5 +1,53 @@
 # Enhanced SimpleCrew — Current Status
 
+## "View bill" opens the real invoice, the dial is obstructed by the phone's edge, and the moon fills the quadrant (`OS-101`) (2026-09-24)
+
+**"View bill" now opens the bill's mail-ingested invoice** — the one Plan already attaches to the same
+bill. `OS-093` had recorded this as blocked on an owner decision between three destinations; the owner
+chose. The control used to say *"View bill"* and land on `/meridian?workspace=plan`, and the ticket also
+said *"No evidence is attached to this event"* **while an invoice existed**.
+
+The invoice lookup already existed — `_bill_invoice_evidence` in the plan service, which ranks
+bill/statement subjects first and **refuses marketing from the same domain** — so this exposes it
+(`bill_invoice_link`) and reuses it rather than writing a second matcher. Two implementations of *"what
+counts as this bill's invoice"* would drift, and the drift would surface as Today opening a promo email
+that Plan correctly declines to call an invoice. `build_dial` takes the same `EvidenceRepository` the
+Plan surface builds and attaches `invoice` to each bill event, **resolved once per bill** rather than per
+occurrence. Three properties are pinned: the dial's invoice is the **same evidence id and content URL**
+Plan resolves; no matching mail means **no** invoice; and a broken evidence store costs the **link, not
+the page**.
+
+**Its own tests caught a latent bug in the first attempt:** the field was added to the **goal** branch,
+where `invoice` is not in scope — a `NameError` waiting for the first goal with a target date — while the
+bill branch had none. A first *frontend* attempt also rendered a **second** "Invoice · subject" control
+beside "View bill"; the ticket is a **named-area grid** whose `facts` and `actions` share a row, so the
+long subject collapsed the facts column to **84px** and its amounts ran under the action text. The
+concept's ticket carries **one** control in that row, so the duplicate was wrong as well as broken.
+
+**Three layout directions from the same review, all measured against the concept** (1260×2736 =
+420×912 CSS at DPR 3):
+
+| direction | result |
+|---|---|
+| *"the dial needs to move considerably to the left so that it is partially obstructed by the left side of the phone like the concept"* | bleed **15px → 56px**; the instrument starts 40px left of the viewport with **~30px of the ring off-screen** (~a tenth — partial, as asked), no horizontal scroll |
+| the moon *"also needs to fill much more of the space in the upper right quadrant"* | **72px → 168px**, matching the concept's measured scene width; `background-size: 150%` removed, because that zoom **cropped the scene's outer orbits** — the opposite of filling the space |
+| *"remove today and your next orbit in the upper left, that moves everything up, not present in the concept"* | the phone header is hidden entirely (the concept's phone header is the wordmark, date line and Settings), so the instrument rises by its height |
+
+**Guards retargeted, each with its reason recorded** — two of them *forbade what the owner asked for*:
+`painted["left"] >= 0` ("must stay inside the viewport") became "the left edge **is** off-screen, the
+obstruction stays **partial** (≥ −48px), and the right edge still clears the viewport"; and an older
+`calc(100% + 56px) must NOT appear` guard, whose premise was that a one-sided bleed is worthless because
+the dial's right edge stays on the track — true while the callouts were a 130px column, and the clipping
+is now the requirement. The heading guard was **inverted** for phone width and kept for desktop.
+
+**Verification.** `test_dial_js.py` **38 passed**; `test_dial_fidelity.py` **24 passed**;
+`test_dial.py` **7 passed**; full non-browser suite **1928 passed / 96 skipped**; ruff, `node --check`,
+`git diff --check` clean. Captures in `artifacts/today-seating-2026-09-24/`.
+
+**Still open:** the "double ticket" perforation through the funding-schedule text (his screenshot is the
+reproduction, `OS-093`), and the callouts' scrim, which is a deliberate stand-in for the concept's
+unboxed text while they overlap the brass.
+
 ## The dial is seated as the concept draws it, with a curved callout rail (`OS-100`) (2026-09-24)
 
 **The owner's clarification changed the problem rather than repeating it:** *"seat it how it is in the

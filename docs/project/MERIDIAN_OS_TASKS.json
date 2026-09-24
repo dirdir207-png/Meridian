@@ -2426,6 +2426,38 @@
         "verification": "tests/browser/test_dial_fidelity.py 24 passed; tests/meridian/test_dial_js.py 37 passed; full non-browser suite 1924 passed / 96 skipped; ruff, node --check and git diff --check clean."
       },
       "notes": "Known differences from the concept, recorded rather than hidden: the callouts carry a soft scrim (the concept's have none because theirs sit further outside the ring), and a long title such as 'Verizon Payment Arrangement' wraps, making a row ~99px tall against the concept's more compact callouts. Both are refinements, not structural."
+    },
+    {
+      "id": "OS-101",
+      "title": "View bill opens the bill's mail-ingested invoice, resolved by Plan's own matcher",
+      "status": "complete",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "owner_decided": true,
+      "authority": [
+        "owner, 2026-09-24: 'View bill should link to the mail ingested invoice we already have attached to the same bill on plan'"
+      ],
+      "why": "OS-093 recorded this as blocked on an owner decision between three destinations. The owner has chosen: the invoice mail Plan already attaches to the same bill. The control previously said 'View bill' and landed on /meridian?workspace=plan, and the ticket also said 'No evidence is attached to this event' while an invoice existed.",
+      "scope": [
+        "plan.py: bill_invoice_link(), the public face of the existing _bill_invoice_evidence matcher.",
+        "dial.py: build_dial(evidence_repository=...) attaching the invoice to each bill event, resolved once per bill.",
+        "api.py: the dial endpoint passes the EvidenceRepository the Plan surface builds.",
+        "dial.js: the ticket resolves its target invoice-first, falls back to detailHref, and no longer claims no evidence when an invoice is attached."
+      ],
+      "acceptance": [
+        "The dial's invoice is the same evidence id and content URL bill_invoice_link returns for that bill.",
+        "A bill with no invoice mail carries no invoice.",
+        "A broken evidence store costs the link, not the dial.",
+        "The ticket shows one control (as the concept does), pointing at the invoice, and does not claim evidence is missing when the invoice is it."
+      ],
+      "blocked_by": [],
+      "evidence": {
+        "measurement": "Capture with the fixture's invoice present: the ticket's single action link hrefs /api/meridian/evidence/41/content -- the invoice -- where it previously hrefed the Plan workspace; the ticket reads 'Bill email attached. View bill'.",
+        "coupling": "tests/meridian/services/test_dial.py asserts the dial event's invoice equals bill_invoice_link()'s id AND content_url, that a marketing email from the biller's domain is not treated as the invoice, that no matching mail means no invoice, and that an exploding evidence store still yields a dial.",
+        "caught_by_its_own_tests": "The event field was first added to the GOAL branch, where `invoice` is not in scope -- a NameError for the first goal with a target date -- while the bill branch had none. The three new tests failed on exactly that.",
+        "css_lesson": "A first attempt rendered a SECOND 'Invoice - <subject>' anchor beside 'View bill'. The ticket is a named-area grid whose `facts` and `actions` share a row, and the long subject collapsed the facts column to 84px so the amounts ran under the action text. The concept's ticket carries one control in that row, so the duplicate was wrong as well as broken."
+      },
+      "notes": "Read-only: no write path, no authority change, no new provider call. The invoice subject is not rendered in the ticket because the action row is narrow; the control carries the destination and the ticket states that the bill email is attached."
     }
   ]
 }
