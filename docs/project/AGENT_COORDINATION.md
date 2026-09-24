@@ -122,6 +122,18 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ### 2026-09-24 (seventh pass) — The pointer "missing" three times was 18px wide, and two derived estimates passed colliding geometry
 
+**Two verification guards were asserting something other than what they claimed, and both fired only
+once the slice was actually committed.** `test_session_close.py` derived its premise from
+`git status --porcelain` but asserted the *script's exit code*, which also folds in `push state` and
+the handoff basis — so a session that had committed its slice and simply not pushed yet **failed a
+test named "an uncommitted tree is reported as unsafe" with a clean tree**. The same shape appeared in
+`test_generate_handoff.py`: editing a tracked file after regenerating `HANDOFF.md` makes the handoff
+under-report the tree, which is a *sequencing* consequence of committing, not a regression. **A guard
+whose premise and assertion read different rows of the same table cannot distinguish the states it
+names.** Both were retargeted to the row they name, and the session-close one was falsified in both
+directions (dirty tree → FAIL + `NOT SAFE TO END` + paths listed; clean tree → `ok (clean)`) rather
+than assumed.
+
 **The owner's report was not a rendering mystery.** Three separate rounds went looking for a
 clipping, stacking, lifecycle or bundle problem, because `OS-037` had already recorded "the pointer
 moves correctly in the isolated preview, could not reproduce". A live DOM read settled it in one
