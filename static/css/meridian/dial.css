@@ -908,7 +908,12 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
 .obs-dial-legend { display: none; }
 .obs-dial-caption--top { display: none; }
 @media (max-width: 700px) {
-  .m-observatory-overview { grid-template-columns: minmax(0, 1fr) 100px; gap: 8px; }
+  /* The moon column is sized so the celestial scene occupies the upper-right quadrant, which is
+     what the concept gives it (owner, 2026-09-24: the moon "also needs to fill much more of the
+     space in the upper right quadrant like the concept"). Measured off the concept at 420x912 CSS:
+     the scene spans about x 232..363 and y 93..255 -- roughly 130x160, i.e. a third of the width
+     and nearly a fifth of the height, against the ~72px token it was. */
+  .m-observatory-overview { grid-template-columns: minmax(0, 1fr) 168px; gap: 10px; align-items: start; }
   .obs-shell .m-observatory-safe .m-sts-figure { font-size: clamp(48px, 14vw, 64px); letter-spacing: -.045em; }
   .m-observatory-safe-horizon { font-size: 17px; }
   .m-observatory-safe-observed { font-size: 11px; }
@@ -1038,7 +1043,10 @@ html[data-theme="light"] .obs-shell .m-command-top .m-workspace-kicker { color: 
    zero-alpha -- see ASSET_MANIFEST.md and design/observatory-moon-2026-09-24/). Keeping the clip
    would crop the scene's own orbital arcs for no reason. `background-size: 150%` is the designed
    framing and stays. */
-.m-observatory-moon { background-size: 150%; }
+/* The scene is shown WHOLE. `background-size: 150%` was a zoom that cropped the outer orbits and
+   stars, which is the opposite of filling the quadrant: the asset already draws the moon with its
+   orbit ellipses, and at 150% the element showed a magnified middle of it. */
+.m-observatory-moon { background-size: contain; }
 .obs-shell .m-observatory-note .obs-today-orbit { margin-top: 0; }
 /* The Virgil bubble is DELIBERATELY absent on Today, and this comment exists because the
    question was asked twice before anyone answered it. Confirmed intentional by the owner on
@@ -1058,7 +1066,20 @@ body.obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab.
 @media (max-width: 700px) {
   .obs-shell .m-today-primary { gap: 12px; }
   .obs-shell .m-today .m-command-top { display: none; }
-  .m-observatory-moon { width: 72px; margin: 0 auto; }
+  /* The concept carries NO page heading on the phone (owner, 2026-09-24: "remove today and your
+     next orbit in the upper left, that moves everything up, not present in the concept"). The
+     concept's phone header is the wordmark and Settings alone, and the dock names the surface, so
+     the title, its lilac rule and the orbit subline are not drawn -- hiding the whole header rather
+     than the three children, because the only other child (.m-command-top, which holds "Ask Virgil")
+     is already hidden here. On desktop the header keeps its role as the page's heading. */
+  .obs-shell .m-today .m-command-header { display: none; }
+  /* The moon FILLS the upper-right quadrant, which is the space the concept gives it (owner,
+     2026-09-24: the moon "also needs to fill much more of the space in the upper right quadrant
+     like the concept"). Measured off the concept at 420x912 CSS: the celestial scene spans roughly
+     x 232..363 and y 93..255 -- about a third of the width and a fifth of the height, against the
+     72px token this used to render at. It takes the width of its column, which the overview grid
+     sizes at 150px for exactly this reason. */
+  .m-observatory-moon { width: 100%; margin: 0 auto; }
   .obs-shell .m-observatory-note .obs-today-orbit { font-size: 15px; }
   .obs-evidence-ticket { padding: 12px; gap: 10px; }
 }
@@ -1184,10 +1205,16 @@ body.obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab.
   /* The dial is the row, and it bleeds into the left gutter rather than sitting inside the content
      column. 15px is the measured bleed: the content edge is at x=16 and the concept's ring reaches
      x=31 at 85% of the viewport, so the instrument box starts one gutter left. */
+  /* The dial moves CONSIDERABLY further left than the content gutter, so the phone's own edge
+     partly obstructs it the way the concept draws it (owner, 2026-09-24: "the dial needs to move
+     considerably to the left so that it is partially obstructed by the left side of the phone like
+     the concept"). At 56px the instrument starts 40px left of the viewport and roughly 30px of the
+     ring is off-screen -- about a tenth of the instrument. The page's own container clips it, so
+     this adds no horizontal scroll (asserted in the browser guards). */
   [data-observatory-dial] .obs-dial-instrument {
     order: 1;
-    width: calc(100% + 15px);
-    margin-left: -15px;
+    width: calc(100% + 56px);
+    margin-left: -56px;
   }
   [data-observatory-dial] .obs-dial-svg-wrap { width: min(100%, 84vw); margin: 0; }
   /* The rail is an overlay, so it takes no layout width from the dial. It keeps its own scroll for

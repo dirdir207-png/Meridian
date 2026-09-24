@@ -127,6 +127,12 @@ export function placeDayLabels(state, wrap) {
     // disorganized". This only can arise at phone width, where the callouts overlap the instrument
     // by request; on desktop the rail is a column beside the dial and `opaque` is empty.
     span.style.visibility = "";
+    // A label the phone's own edge would cut in half is hidden rather than shown sliced: the
+    // instrument now reaches 40px past the viewport (owner, 2026-09-24), so a number at 9 or 10
+    // o'clock would otherwise render as half a date.
+    if (span.getBoundingClientRect().left < 0) {
+      span.style.visibility = "hidden";
+    }
     if (opaque.length) {
       const box = span.getBoundingClientRect();
       if (
@@ -372,6 +378,10 @@ function normalizeEvent(event) {
     source: event.source || "crew",
     observedAt: event.observedAt || null,
     evidenceIds: Array.isArray(event.evidenceIds) ? event.evidenceIds : [],
+    // The mail-ingested invoice for this bill, resolved server-side by the SAME matcher the Plan
+    // surface uses. Today's "View bill" opens it directly (owner, 2026-09-24: "View bill should
+    // link to the mail ingested invoice we already have attached to the same bill on plan").
+    invoice: event.invoice && event.invoice.content_url ? event.invoice : null,
     detailHref: event.detailHref || null,
   };
 }
@@ -1274,6 +1284,13 @@ function renderEvidenceTicket(state, event) {
 
   const actions = document.createElement("div");
   actions.className = "obs-ticket-actions";
+  // NO second link here. "View bill" below already opens the mail-ingested invoice (owner,
+  // 2026-09-24: "View bill should link to the mail ingested invoice we already have attached to the
+  // same bill on plan"), and a first attempt added an "Invoice · <subject>" anchor beside it. That
+  // was wrong twice over: the concept's ticket carries ONE control in this row ("View bill →"), and
+  // the ticket is a named-area grid in which `facts` and `actions` share a row -- so the long
+  // subject starved the facts column to 84px and its amounts ran under the action text. The
+  // invoice is stated in the ticket's own detail line instead, where it wraps.
   if (event.evidenceIds && event.evidenceIds.length) {
     const evidenceLink = document.createElement("a");
     evidenceLink.className = "obs-button obs-button--ghost";
@@ -1296,16 +1313,34 @@ function renderEvidenceTicket(state, event) {
       ticket.appendChild(list);
     });
     actions.appendChild(evidenceLink);
+  } else if (event.invoice) {
+    // The bill's invoice IS evidence, so the ticket must not say otherwise. This was the owner's
+    // first report on this ticket -- "it says no evidence is attached to this event and has a view
+    // bill link" -- and the sentence stayed even after the link was pointed at the invoice. The
+    // line is deliberately SHORT: `facts` and `actions` share a grid row, so a long subject here
+    // starves the amounts beside it (measured: the facts column collapsed to 84px).
+    const invoiceNote = document.createElement("p");
+    invoiceNote.className = "obs-ticket-detail";
+    invoiceNote.textContent = "Bill email attached.";
+    actions.appendChild(invoiceNote);
   } else {
     const noEvidence = document.createElement("p");
     noEvidence.className = "obs-ticket-detail";
     noEvidence.textContent = "No evidence is attached to this event.";
     actions.appendChild(noEvidence);
   }
-  if (event.detailHref) {
+  // "View bill" opens the bill's actual invoice when one was matched, and only falls back to the
+  // Plan workspace when it was not. This is the owner's correction of 2026-09-24: the control used
+  // to say "View bill" and land on the Plan page, which is not the bill.
+  const billHref = event.invoice ? event.invoice.content_url : event.detailHref;
+  if (billHref) {
     const detail = document.createElement("a");
     detail.className = "obs-button";
-    detail.href = event.detailHref;
+    detail.href = billHref;
+    if (event.invoice) {
+      detail.target = "_blank";
+      detail.rel = "noopener";
+    }
     detail.textContent = event.kind === "bill" ? "View bill" : "View detail";
     actions.appendChild(detail);
   }

@@ -338,10 +338,26 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
     page.wait_for_function("document.querySelector('[data-sts-figure]').textContent.includes('248.50')")
     title = page.locator(".obs-today-title")
     orbit = page.locator(".obs-today-orbit-heading")
-    assert title.is_visible()
-    assert title.inner_text() == "Today"
-    assert orbit.is_visible()
-    assert orbit.inner_text() == "Your next orbit."
+    # RETARGETED 2026-09-24, INVERTED. These asserted the page heading was visible and read "Today"
+    # / "Your next orbit.", which is how the surface was built. The owner has since removed it from
+    # the phone: "remove today and your next orbit in the upper left, that moves everything up, not
+    # present in the concept" -- and the concept he supplied has no page heading, only the wordmark,
+    # the date line and Settings. So the assertion is inverted rather than deleted, and it asserts
+    # the CONSEQUENCE he asked for as well: the instrument rises. The heading still exists in the
+    # document at desktop width, where it is the page's h2.
+    if width <= 700:
+        assert not title.is_visible(), "the concept draws no page heading at phone width"
+        assert not orbit.is_visible(), "the concept draws no orbit subline at phone width"
+        heading_gone = page.evaluate("""() => {
+          const header = document.querySelector('.m-command-header');
+          return !header || header.getBoundingClientRect().height === 0;
+        }""")
+        assert heading_gone, "the phone header block must occupy no space at all"
+    else:
+        assert title.is_visible()
+        assert title.inner_text() == "Today"
+        assert orbit.is_visible()
+        assert orbit.inner_text() == "Your next orbit."
     safe = page.locator("[data-sts-figure]")
     # RETARGETED 2026-09-24, inverting the previous requirement. This read
     # `assert not safe.is_visible(), "the duplicate safe-to-spend block must not displace the
@@ -425,20 +441,39 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
             "() => { const m = document.querySelector('.m-main');"
             " return m.getBoundingClientRect().x + parseFloat(getComputedStyle(m).paddingLeft); }"
         )
-        # RETARGETED 2026-09-24 from 12 to 15. The bleed used to come from a -12px margin on the
-        # wrap; the concept's seating sets it explicitly on the instrument
-        # (`width: calc(100% + 15px); margin-left: -15px`) so the dial reaches past the content
-        # edge exactly as the concept draws it. This guard exists to pin the value the CSS declares,
-        # so it moves with the declaration -- measured 15px at 390/420/430.
-        assert content_left - dial_box["x"] == 15, (
-            f"the dial must bleed the documented 15px into the left gutter "
+        # RETARGETED 2026-09-24 from 12 -> 15 -> 56. It began as the -12px wrap margin, then the
+        # concept's seating set it explicitly, and the owner then asked for much more: "the dial
+        # needs to move considerably to the left so that it is partially obstructed by the left side
+        # of the phone like the concept". This guard pins the value the CSS declares, so it moves
+        # with the declaration -- measured 56px at 390/420/430.
+        assert content_left - dial_box["x"] == 56, (
+            f"the dial must bleed the documented 56px into the left gutter "
             f"(content starts at {content_left:.1f}, dial box at {dial_box['x']:.1f})"
         )
-        assert painted["left"] >= 0, (
-            f"the painted dial ({painted['left']:.1f}px) must stay inside the viewport"
+        # RETARGETED 2026-09-24. This read `painted["left"] >= 0` -- the instrument had to sit
+        # wholly inside the viewport -- and the owner has asked for the opposite: "the dial needs to
+        # move considerably to the left so that it is partially obstructed by the left side of the
+        # phone like the concept". So the LEFT edge is now expected off-screen, and what must hold
+        # instead is that the obstruction stays partial and controlled: it clears the right edge
+        # (where the callouts live), it is bounded rather than runaway, and it still costs the
+        # document no horizontal scroll (asserted on the next line, unchanged).
+        assert painted["left"] < 0, (
+            f"the concept obstructs the instrument at the phone's left edge "
+            f"(painted left {painted['left']:.1f}px)"
+        )
+        assert painted["left"] >= -48, (
+            f"the obstruction must stay partial: {painted['left']:.1f}px of a "
+            f"{painted['right'] - painted['left']:.0f}px dial is off-screen"
+        )
+        assert painted["right"] <= width, (
+            f"the painted dial ({painted['right']:.1f}px) must not run past the right edge "
+            f"({width}px), where its callouts sit"
         )
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
-        assert title.bounding_box()["y"] < dial_box["y"]
+        # The heading only exists at desktop width now (the concept's phone header is the wordmark
+        # and Settings alone), so "the heading sits above the instrument" is a desktop claim.
+        if title.is_visible():
+            assert title.bounding_box()["y"] < dial_box["y"]
         assert rail_box["y"] < dial_box["y"] + dial_box["height"] * .5
         assert rail_box["x"] > dial_box["x"] + dial_box["width"] * .65
         assert not page.locator(".m-observatory-advice").is_visible()

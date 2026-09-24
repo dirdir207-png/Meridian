@@ -40,18 +40,26 @@ def test_mobile_dial_grows_on_both_sides_and_keeps_the_callout_column():
     because "arrangement" measures 112.7px at 17px serif and splits mid-word below that.
     """
     css = _read("static/css/meridian/dial.css")
-    # Grows on both sides: +24 total, spending the 12px column gap on each side.
-    assert "calc(100% + 24px)" in css
-    assert "margin: 0 0 0 -12px" in css
-    # Growth past the gap put the brass ring behind "Internet"/"Reserved" and cost the
-    # text its contrast, so the larger value is pinned out.
-    assert "calc(100% + 56px)" not in css
-    assert "margin: 0 0 0 -28px" not in css
-    # The one-sided over-bleed that clipped ~20% of the dial must not return either.
+    # RETARGETED 2026-09-24. This guard's premise was that a one-sided left bleed is worthless:
+    # the dial's right edge stays on the track, so everything the bleed adds lands in the CLIPPED
+    # region and only more of the dial is cut off. That reasoning held while the callouts occupied
+    # a 130px column beside the instrument -- and it is exactly the shape the owner has now asked
+    # for: "the dial needs to move considerably to the left so that it is partially obstructed by
+    # the left side of the phone like the concept". The clipping is the requirement, not the bug.
+    #
+    # What replaces the old absolute prohibitions:
+    #
+    #   * the bleed is the measured value the CSS declares (56px, asserted in the browser guard
+    #     against real geometry at 390/420/430, where the painted left edge is ~-30px -- about a
+    #     tenth of the dial, i.e. PARTIAL obstruction as asked);
+    #   * no runaway value returns (80px, which clipped ~20%);
+    #   * the contrast concern that motivated "56px must not appear" is now handled where it
+    #     belongs: the callouts are an OVERLAY carrying their own scrim, so the ring no longer has
+    #     to stay away from them (see the seating block, which is asserted last in the sheet).
+    assert "calc(100% + 56px)" in css
+    assert "margin-left: -56px" in css
     assert "calc(100% + 80px)" not in css
     assert "margin: 0 0 0 -80px" not in css
-    # The callout column stays at its measured floor.
-    assert "grid-template-columns: minmax(0, 1fr) 130px" in css
 
 
 def test_dial_css_defines_instrument_surface():
@@ -638,3 +646,35 @@ def test_dial_js_ticket_states_the_bill_level_basis():
     assert "fundingBasisNote(event)" in js
     # The unresolved row survives for the cases that are genuinely unknown.
     assert 'rowData.push(["Funding", fundingLabel(event.fundingStatus)])' in js
+
+def test_the_ticket_prefers_the_bills_invoice_over_the_plan_page():
+    """The owner asked for this in as many words: "View bill should link to the mail ingested
+    invoice we already have attached to the same bill on plan" (2026-09-24).
+
+    Today the ticket said "View bill" and landed on `detailHref`, which is the Plan workspace --
+    not the bill. Two properties matter and both are asserted, because either alone can regress
+    silently:
+
+    1. the model keeps the server's invoice (so the URL reaches the client at all), and
+    2. the ticket resolves its target as invoice-first, falling back to `detailHref` only when
+       there is no invoice.
+
+    The second half also pins the correction of a first attempt: a SECOND, duplicated
+    "Invoice - <subject>" anchor was rendered beside "View bill". The concept's ticket carries one
+    control in that row, and the ticket is a named-area grid whose `facts` and `actions` share a
+    row, so the long subject starved the amounts beside it (measured: the facts column collapsed to
+    84px). This asserts the duplicate is not reintroduced.
+    """
+    js = _read("static/js/meridian/dial.js")
+    assert "invoice: event.invoice && event.invoice.content_url ? event.invoice : null" in js, (
+        "the model must keep the server-resolved invoice, keyed on its content URL"
+    )
+    assert "const billHref = event.invoice ? event.invoice.content_url : event.detailHref;" in js, (
+        "the ticket must resolve the bill's invoice FIRST and fall back to the Plan workspace"
+    )
+    assert "invoiceLink" not in js, (
+        "no duplicate invoice anchor in the action row: one control, as the concept draws it"
+    )
+    assert "Bill email attached." in js, (
+        "when an invoice is attached the ticket must not claim no evidence is attached"
+    )
