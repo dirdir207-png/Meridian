@@ -23,6 +23,8 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Agent | Files claimed | Since | Status |
 |---|---|---|---|
+| Constitutional Builder (dial ticket contrast + invoice-note spacing follow-up) | `static/css/meridian/dial.css`, `static/js/meridian/dial.js`, `tests/meridian/test_dial_js.py`, `tests/browser/test_dial_fidelity.py`, `docs/project/{CURRENT_STATUS,AGENT_COORDINATION}.md` | 2026-09-24 | **released** with the row below at the 2026-09-24 (seventh pass) commit: the parchment ticket ink correction and the removal of the redundant `"Bill email attached."` line shipped together with the pointer/controls work, because both touch `dial.js` and `dial.css` and could not be separated at file level. |
+| Constitutional Builder (Today control/pointer and Settings ornament follow-up) | `static/js/meridian/dial.js`, `static/css/meridian/dial.css`, `static/css/meridian/settings.css`, `tests/meridian/test_dial_js.py`, `tests/browser/test_dial_fidelity.py`, `meridian/api.py`, `meridian/services/dial.py`, `templates/meridian/partials/today.html`, `tests/meridian/services/test_dial.py`, `tests/browser/test_dial_reserved_amount.py`, `tests/meridian/test_plan_view_switch_contrast.py`, `docs/project/{CURRENT_STATUS,AGENT_COORDINATION,MERIDIAN_OS_TASKS,session-emergent}.json`, `docs/project/MERIDIAN_OS_TASKS.json` | 2026-09-24 | **released** at the 2026-09-24 (seventh pass) commit. Owner-requested read-only visual work: the stylus becomes a visible instrument hand, the duplicate day-navigation buttons are removed (the keyboard range path and `T` survive), every day number can be shown from ONE revertible constant, the arc spreads to +132°, and the decorative Settings hourglass moves to the upper-right corner and grows to 132px. No financial authority, provider, route or action-pipeline change. |
 | Constitutional Builder (OS-078: negative reserve vs Safe to Spend) | `meridian/services/reserves.py` (new), `meridian/services/today.py`, `meridian/services/dial.py`, `tests/meridian/services/test_reserve_deficit.py` (new), `tests/meridian/services/test_today.py`, `docs/project/{MERIDIAN_DECISIONS.md,MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **active**. Owner-reported correctness fix to a headline figure; display only, no route or schema change. |
 | Constitutional Builder (OS-077: evidence fact bundle) | `meridian/ai/facts.py` (new), `meridian/ai/investigator.py`, `scripts/investigate.py`, `tests/meridian/test_ai_facts.py` (new), `tests/meridian/test_ai_investigator.py`, `tests/test_investigate_script.py`, `docs/project/{MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **active**. Backend PREREQUISITE for OS-076, delivered under its own id so OS-076's acceptance is not redefined. Read-only: no route, template, JS or CSS in this claim, and `meridian/ai/**` stays this lane's. |
 | Constitutional Builder (OS-075 defect fix: negative bill reserve) | `meridian/migrations/028_allow_negative_bill_reserve.sql` (new), `tests/meridian/test_bill_reserve_negative.py` (new), `tests/meridian/test_migrations.py`, `tests/meridian/test_bill_reserve_observations.py`, `docs/project/{MERIDIAN_DECISIONS.md,MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **released 2026-09-21** at `1fb530f`. See the log entry below. |
@@ -117,6 +119,44 @@ would have reverted three commits had it been applied. This file is the channel.
 | Constitutional Builder (OS-089: Plan mobile concept alignment) | `static/js/meridian/plan.js`, `static/css/meridian/plan.css`, `templates/meridian/partials/plan.html`, `scripts/preview_observatory_dial.py` (synthetic fixture only), `tests/meridian/test_plan_row_disclosure.py`, `tests/meridian/test_plan_funding_label.py`, `tests/browser/test_plan.py`, `design-qa.md`, `docs/project/{MERIDIAN_OS_TASKS.json,MERIDIAN_DECISIONS.md,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json,PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md,HANDOFF.md}` | 2026-09-23 | **released at this commit**. NOTE: the before/after captures live in the UNTRACKED scratch tree `artifacts/plan-mobile-concept-alignment-2026-09-23/`, per this repo's convention that nothing under `artifacts/` is committed; `design-qa.md` references them by path. Owner-directed 2026-09-23 slice per `docs/project/PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md`: one-line bill rows, the facts/progress/evidence/NEXT move into the existing disclosure, the section becomes `Upcoming bills` with matching `aria-label`s, the `BILL` tag is removed, the add control stretches full width, and September coverage moves below the controls. **Presentation and copy only: no route, data, financial, authority, migration or provider change.** The medallion material is applied from the kit's existing brass ring (`medallion-frame.png`, already tracked and indexed), so no Runway generation occurs in this slice without a separately stated spend. |
 
 ## Log (append only — newest first)
+
+### 2026-09-24 (seventh pass) — The pointer "missing" three times was 18px wide, and two derived estimates passed colliding geometry
+
+**The owner's report was not a rendering mystery.** Three separate rounds went looking for a
+clipping, stacking, lifecycle or bundle problem, because `OS-037` had already recorded "the pointer
+moves correctly in the isolated preview, could not reproduce". A live DOM read settled it in one
+call: `.obs-dial-pointer` present, `visibility: visible`, `opacity: 1`, `fill: #a5d4bf`, angle 10°,
+tip at viewBox (345.5, 43.9) — everything correct except that `POINTER_INNER_UNITS = 96` and a
+5.4-unit half-width painted an **18.1 x 6.4px** wedge at the governed 352.8px wrap. He was not
+failing to find the pointer; there was almost nothing to find. **Measure the rendered size before
+theorising about why something is invisible.**
+
+**Two derived numbers were wrong, and the browser caught both; the estimates did not.** The
+concept's pointer sits at 53% of its radius, so that is where the tip went — but the rim day numbers
+are seated at a **measured 243.7 units**, so a 250-unit tip put the circle across the number ring and
+the wedge under a date. Then a bounding-box overlap test "failed" on a 1.7px box corner while the
+painted wedge cleared by ~3px, because the needle is a rotated path. Both were resolved by measuring
+at the governed viewports, not by reasoning: the tip ends at 244, and the selected day draws no
+number while every day is numbered.
+
+**Sheet order beat a stale assertion's premise.** `BUILD_SPEC.md` §7 requires `Previous day` /
+`Next day` / `Back to today`. The owner has since seen them and asked them back out; the newest
+explicit record wins (D-004), and the tests were retargeted to the behaviour rather than the
+widgets — the range control keeps the keyboard path and the removed "back to today" survives as `T`.
+A latent trap went with them: `.obs-dial-controls .obs-control:last-child` would have silently
+retargeted to `.obs-dial-range-wrap` once the buttons were gone.
+
+**Two stale counts were found, only one of them mine.** The arc-end literal was replaced by the
+relationship it protected. The paper-literal test asserted `8` while the tree actually held **11** —
+it had drifted when `.m-observatory-virgil-snapshot` landed, so a passing total would have been a
+coincidence; it is now a per-file allowance. And `CURRENT_STATUS` recorded that targeted tests "could
+not run because the system Python has no pytest", which was a wrong premise hiding the Eversource
+ticket from the gate: the repository's own `.venv311/bin/python` runs them.
+
+**Earmarked, not started:** `OS-102` — the Plan page's **Rules and Crew tabs have almost no styling**
+and, per the owner, no previous concept, so they are the first surface in this lane where a NEW
+composition is authorised rather than derived. Design proposal and owner approval come before any
+implementation; recorded in `session-emergent.json` as well so it cannot be lost to a compaction.
 
 ### 2026-09-24 (sixth pass) — The rail did not have to be a column, so the tradeoff was never geometric (`OS-100`)
 

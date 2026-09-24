@@ -41,10 +41,21 @@ const VIEWBOX = { w: 600, h: 600, cx: 300, cy: 300, r: 282 };
    for how a hand should treat it. The concept's own arc does start near the top and sweep
    clockwise, so shifting the start right is also the direction it points in.
 
-   `ARC_END` is unchanged, so the sweep narrows 240deg -> 220deg and the visible arc stops
-   short of the roofline too. */
+   `ARC_END` moves to 132 (owner, 2026-09-24: "can we spread them out a little more, so the
+   numbers extend down to the graphic on the bottom right and to the graphic at the top left (the
+   rotunda image)"). Only the END could move, and the start's own measurement above is why: the
+   rotunda occupies the arc's beginning, so -100 is already the closest the sweep can come to the
+   top-left engraving without a hand entering the building. The end had no such obstacle, so the
+   ring of numbers now reaches ~12deg further clockwise — down toward the lower-right graphic —
+   and the sweep widens 220deg -> 232deg rather than narrowing.
+
+   The numbers themselves cannot spread radially, which is worth recording because it was the
+   first interpretation measured: their ring already sits at radius 243 of the painted wheel's
+   280 (their outermost corner reaches 275.6), i.e. ~4 units from the edge, pinned there by
+   `placeDayLabels` which keeps every label inside the wheel. Widening the ARC is the only
+   spread this instrument has left. */
 const ARC_START = -100;
-const ARC_END = 120;
+const ARC_END = 132;
 /* Where an event's marker badge sits, as a radius from the dial centre.
  *
  * This is a shared constant because TWO placements must agree: the badge itself and the run that
@@ -56,7 +67,80 @@ const ARC_END = 120;
  * own radius (~14px) plus the label's half-diagonal (~19.6px) needs ~34px -- so the badge sat ON
  * the number. At 164 units the separation is ~49px and the two no longer touch. */
 const MARKER_RADIUS_UNITS = VIEWBOX.r - 118;
+/* The stylus, measured off the concept's own dial: a point at POINTER_INNER_UNITS widening to a
+ * wedge POINTER_TIP_HALF_WIDTH either side at POINTER_TIP_UNITS, where its tip circle sits ON the
+ * ring band (the painted disc's outer edge is ~265 units at r=282).
+ *
+ * RE-MEASURED 2026-09-24 (owner: "just need the pointer now"). The first pass read the concept as
+ * a SHORT needle -- inner point 96 units, tip base 5.4 units either side -- and at the governed
+ * mobile size (a 352.8px wrap, so 1 unit = 0.588px) that drew an 18.1 x 6.4px mint sliver lying on
+ * the dial's engraved sky. It was in the DOM, it was visible, and it was unreadable, which is why
+ * the owner kept reporting it as missing.
+ *
+ * RE-MEASURED, not guessed, from
+ * `design/observatory-drafts-2026-09-08/06-interactive-observatory-vision.png`, whose dial has a
+ * radius of ~271.2px:
+ *   tip circle centre   144.5px = 0.533 r  -> 233 units (a measured 0.83 r; see the spacing note)
+ *   inner point         114.7px = 0.423 r  -> 126 units (was 96; the concept's point is longer AND
+ *                                            the wedge is what carries the reading)
+ *   tip base half-width  19.9px = 0.073 r  -> 14 units (was 5.4, then 10.5)
+ *   tip circle radius    10.4px = 0.038 r  -> 11 units   (unchanged)
+ *
+ * BOTH ends were under-scaled, and the half-width is what the owner saw last (2026-09-24: "the
+ * pointer is barely visible it's so thin as well, does not match the scope of the concept"). At
+ * 420x912 a 10.5-unit half-width painted a wedge 12.3px across at its base -- thinner than the
+ * 13.2px event badges it points past -- so the hand read as engraving rather than an instrument. At
+ * 14 units it is 16.5px across, which is the concept's own measured proportion (its wedge is 0.146
+ * of the dial radius at the base; 14/282 = 0.0496 of r measured as HALF-width, i.e. 0.099 of the
+ * diameter).
+ *
+ * GEOMETRY CHECK, and these figures are MEASURED IN THE BROWSER at the governed phone widths rather
+ * than derived, because two derived estimates passed geometry that actually collided:
+ *   - `placeDayLabels()` seats the rim numbers' centres at radius **243.7 units** (389..432px from the
+ *     dial centre at 390/420/430 CSS, DPR 3). The tip circle's far edge is 244, i.e. it ends exactly
+ *     where the numbers' own centres begin, with the whole stylus INSIDE the number ring. The
+ *     browser guard asserts that no painted part of the stylus overlaps a number.
+ *   - The selected day draws no number while every day is numbered (see `renderInstrumentOverlay`),
+ *     because the stylus is that day's mark and the two sit at the same angle.
+ *   - The wedge's base reaches 126 + 10.5 = 136.5 units, and the centre readout is a 52%-wide HTML
+ *     overlay around the dial's middle, so the hand reaches neither.
+ * The needle spans 37.9% of the radius -- 107 units, i.e. 63px of hand at 420x912 against the 18.1px
+ * sliver the owner reported as missing. The 53% the concept shows is not reachable on this
+ * instrument: at 250 units the tip circle straddled the number ring and the wedge ran under a date. */
+const POINTER_INNER_UNITS = 126;
+const POINTER_TIP_UNITS = 233;
+const POINTER_TIP_HALF_WIDTH = 14;
+const POINTER_TIP_RADIUS = 11;
+const POINTER_TIP_RING_RADIUS = 6.6;
+const POINTER_TIP_PUPIL_RADIUS = 3.4;
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/* ── Reversible visual preview: every day number on the rim ──────────────────────────────────────
+ *
+ * Owner, 2026-09-24: "compare a visual state with all month numbers populated in the dial, with an
+ * easy revert." This is that state, and the REVERT IS THIS ONE LINE — flip `false` back, or revert
+ * the commit that changed it; nothing else in the file depends on it.
+ *
+ * What it does: `renderInstrumentOverlay` normally labels only the KEY days (today, the selected
+ * day, every day that carries an event, and the horizon end), which is what `BUILD_SPEC.md` §7 asks
+ * for ("Render a tick per day, but show labels only for today, selected day, major events, and
+ * horizon end. At longer horizons thin labels; don't squeeze them."). With this true, every civil
+ * day in the horizon is labelled instead.
+ *
+ * Two guards keep this honest while the preview is on, because a visible number must never be a
+ * false claim and must never be unreadable:
+ *   - The horizon is capped (`ALL_DAY_NUMBERS_MAX_DAYS`). A 31-day horizon puts 32 labels on a
+ *     220deg arc, ~6.9deg apart; at the governed phone size that is ~21px of arc for a ~31px label,
+ *     so labels would collide into an unreadable ring. Beyond the cap the dial falls back to key
+ *     days rather than drawing a smear.
+ *   - Each label still comes from `addDays(today, day)`, so every number is a real civil date in the
+ *     owner's timezone and no label is ever a sample or a mock. The callout-yield and off-screen
+ *     hiding in `placeDayLabels` still apply unchanged.
+ *
+ * The panel states which state is live via `data-day-numbers` on `.obs-dial-overlay` ("key" or
+ * "all"), so a test can assert the rendered state without reaching into module internals. */
+const ALL_DAY_NUMBERS = true;
+const ALL_DAY_NUMBERS_MAX_DAYS = 31;
 
 /* Where a day label may sit, measured rather than hand-tuned (owner, 2026-09-24: "dates
    aligned inside the wheel instead of clipping").
@@ -188,10 +272,15 @@ export function placeCalloutRows(state, container) {
   if (!wrapWidth) return [];
   const scale = wrapWidth / VIEWBOX.w;
   const wrapTop = wrap.offsetTop;
-  // The rail spans the INSTRUMENT, not the panel. The panel also contains the ticket and the day
-  // controls, so 100% of the panel would let a callout drift down over the ticket and break the
-  // curve the rows are placed on. Pinning it here keeps the whole stack on the dial.
-  rail.style.height = `${Math.round(wrap.offsetHeight)}px`;
+  // The rail stops at the TICKET'S TOP EDGE -- not at the panel's edge and not at the dial's
+  // bottom. The owner, 2026-09-24: "the terminus of the scrollable bills on the right is slight
+  // too low, so it clips into and overlaps the ticket, I feel the edge of the ticket should be the
+  // lowest visible point, almost like the text is going behind the ticket". So the rail's scroll
+  // band ends exactly where the ticket begins: a row on its way out is cut off by the ticket
+  // instead of being drawn across it (the ticket also paints above, at z-index 2).
+  const ticketEl = panel.querySelector(".obs-evidence-ticket");
+  const ticketTop = ticketEl ? ticketEl.offsetTop : wrap.offsetTop + wrap.offsetHeight;
+  rail.style.height = `${Math.round(Math.max(80, ticketTop - rail.offsetTop))}px`;
   const entries = [];
   items.forEach((item, index) => {
     const row = item.querySelector(".obs-event-item");
@@ -514,7 +603,13 @@ function renderInstrumentOverlay(state) {
   // concept art's dark sky with real data in the middle.
   const center = document.createElement("div");
   center.className = "obs-dial-center";
-  const selected = state.mode === "today" ? null : selectedEventForState(state);
+  // The centre states the SELECTED event in either mode. It used to be forced to null in "today"
+  // mode -- a leftover from when the centre carried the safe-to-spend figure there, which OS-098
+  // moved back outside the instrument. With that figure gone the gate left the centre permanently
+  // empty on the page the owner opens, so the ticket named a bill while the dial said "No event
+  // selected" (owner, 2026-09-24: "unless you are on the date of a bill, it says no event
+  // selected, lets have it default to the next nearest event, so something populates").
+  const selected = selectedEventForState(state);
   const kicker = document.createElement("p");
   kicker.className = "obs-dial-center-kicker";
   const title = document.createElement("p");
@@ -565,9 +660,22 @@ function renderInstrumentOverlay(state) {
   }
   const labels = document.createElement("div");
   labels.className = "obs-dial-day-labels";
+  // `ALL_DAY_NUMBERS` (see the note beside it) widens this to every civil day while the horizon is
+  // short enough for the ring to stay readable; `data-day-numbers` records which state rendered, so
+  // the reversible comparison is assertable without reaching into module internals.
+  const showEveryDay = ALL_DAY_NUMBERS && state.model.totalDays <= ALL_DAY_NUMBERS_MAX_DAYS;
+  labels.dataset.dayNumbers = showEveryDay ? "all" : "key";
   for (let day = 0; day <= state.model.totalDays; day += 1) {
     const date = addDays(state.model.today, day);
-    if (!date || !specialDates.has(date)) {
+    if (!date || (!showEveryDay && !specialDates.has(date))) {
+      continue;
+    }
+    // The SELECTED day does not get a number while every day is numbered, because the stylus is
+    // that day's mark: it is drawn at the selected day's own angle, and the two were measured
+    // colliding at the governed phone size (at tip 250 the wedge crosses the 206..236 unit band the
+    // numbers occupy). Drawing both would be the same fact twice, the second time illegibly under a
+    // mint wedge. The key-days state still labels the selection, where there is room for it.
+    if (showEveryDay && date === state.selectedDate) {
       continue;
     }
     const angle = dayToAngle(day, state.model.totalDays);
@@ -939,22 +1047,45 @@ function renderDialSVG(state, container) {
   // Pointer for selected day.
   const selectedIndex = dayIndexForDate(state.selectedDate, today);
   const pointerAngle = dayToAngle(selectedIndex, totalDays);
-  const pointerPoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 84, pointerAngle);
+  // The stylus is a TAPERED WEDGE, not a line with a dot on the end (owner, 2026-09-24: "the
+  // stylus on the dial is much more tapered on the concept"). Measured off the concept: it comes
+  // to a POINT at the inner end and widens as it runs out to the ring, where the tip circle sits.
+  // The pivot end is well inside the dark disc, so the wedge reads as a needle rather than a spoke.
   const pointerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
   pointerGroup.setAttribute("class", "obs-dial-pointer");
-  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  line.setAttribute("class", "obs-dial-pointer-line");
-  const pointerStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 118, pointerAngle);
-  line.setAttribute("x1", String(pointerStart.x.toFixed(2)));
-  line.setAttribute("y1", String(pointerStart.y.toFixed(2)));
-  line.setAttribute("x2", String(pointerPoint.x.toFixed(2)));
-  line.setAttribute("y2", String(pointerPoint.y.toFixed(2)));
+  const needlePoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, POINTER_INNER_UNITS, pointerAngle);
+  const tipPoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, POINTER_TIP_UNITS, pointerAngle);
+  // The perpendicular at the tip, which is the wedge's base.
+  const radians = (pointerAngle * Math.PI) / 180;
+  const perpX = -Math.sin(radians) * POINTER_TIP_HALF_WIDTH;
+  const perpY = Math.cos(radians) * POINTER_TIP_HALF_WIDTH;
+  const needle = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  needle.setAttribute("class", "obs-dial-pointer-needle");
+  needle.setAttribute(
+    "d",
+    `M${needlePoint.x.toFixed(2)} ${needlePoint.y.toFixed(2)} ` +
+      `L${(tipPoint.x + perpX).toFixed(2)} ${(tipPoint.y + perpY).toFixed(2)} ` +
+      `L${(tipPoint.x - perpX).toFixed(2)} ${(tipPoint.y - perpY).toFixed(2)} Z`
+  );
+  // The tip circle, drawn as the concept does: a mint disc with the DARK ring INSIDE it and a mint
+  // centre, rather than a cream dot (owner: "a black circle on it instead of the orange/cream one
+  // ... an inner circle instead of an outer one").
   const tip = document.createElementNS("http://www.w3.org/2000/svg", "circle");
   tip.setAttribute("class", "obs-dial-pointer-tip");
-  tip.setAttribute("cx", String(pointerPoint.x.toFixed(2)));
-  tip.setAttribute("cy", String(pointerPoint.y.toFixed(2)));
-  tip.setAttribute("r", "6");
-  pointerGroup.append(line, tip);
+  tip.setAttribute("cx", String(tipPoint.x.toFixed(2)));
+  tip.setAttribute("cy", String(tipPoint.y.toFixed(2)));
+  tip.setAttribute("r", String(POINTER_TIP_RADIUS));
+  const tipRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  tipRing.setAttribute("class", "obs-dial-pointer-tip-ring");
+  tipRing.setAttribute("cx", String(tipPoint.x.toFixed(2)));
+  tipRing.setAttribute("cy", String(tipPoint.y.toFixed(2)));
+  tipRing.setAttribute("r", String(POINTER_TIP_RING_RADIUS));
+  const tipPupil = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  tipPupil.setAttribute("class", "obs-dial-pointer-tip-pupil");
+  tipPupil.setAttribute("cx", String(tipPoint.x.toFixed(2)));
+  tipPupil.setAttribute("cy", String(tipPoint.y.toFixed(2)));
+  tipPupil.setAttribute("r", String(POINTER_TIP_PUPIL_RADIUS));
+  pointerGroup.append(needle, tip, tipRing, tipPupil);
   svg.appendChild(pointerGroup);
 
   return svg;
@@ -1191,7 +1322,10 @@ function renderConnectors(state, container) {
 
 function renderEvidenceTicket(state, event) {
   const ticket = document.createElement("article");
-  ticket.className = "obs-panel obs-panel--paper obs-evidence-ticket";
+  // The ticket owns its parchment silhouette. Do not also give it the generic obs-panel--paper
+  // surface: that produced a parchment box around the ticket-shaped receipt (owner, 2026-09-24:
+  // "the ticket is surrounded by a parchment box, the box needs to be removed").
+  ticket.className = "obs-evidence-ticket";
   if (!event) {
     // The populated ticket places its children by named grid area. The empty state has no
     // header/facts/actions children, so without this modifier they auto-place into the two
@@ -1229,28 +1363,23 @@ function renderEvidenceTicket(state, event) {
 
   const rows = document.createElement("dl");
   rows.className = "obs-ticket-rows";
+  // TWO FACTS. Today is a snapshot of the money, and the rest of the story is on Plan -- the
+  // owner's own framing (2026-09-24): "All of the other additional information can be found on
+  // plan, so we don't need it on today I feel. Today is more of a snapshot of information."
+  // So the ticket states what the bill IS (its amount) and where it STANDS (reserved / stated /
+  // funding status), and drops the funding source, the funding schedule and the shortfall
+  // paragraph -- which is also what the concept's ticket carries ("Bill amount | Reserved").
+  // Nothing is lost that the reader cannot see: the gap between the two figures IS the shortfall.
   const rowData = [
     ["Amount", displayAmount || "—"],
   ];
-  const sourceValue = fundingSourceValue(event);
-  if (sourceValue) {
-    // Identity first, then what is still unresolved about the money.
-    rowData.push(["Funding source", sourceValue]);
-  }
-  if (event.fundingSchedule) {
-    rowData.push(["Funding schedule", fundingScheduleNote(event)]);
-  }
   if (isStatedFigure(event)) {
-    // The bill-level statement, with its author: "$1,200.00 · observed from Crew ·
-    // Sep 8, 2026". The label stays short on purpose: the ticket's row grid gives
-    // AMOUNT / FUNDING SOURCE / RESERVED
-    // widths this long label overflows at 420px, where a wrapped label collided with its
-    // own value. A stated-zero reserve reads "$0.00" here while the row states it in
-    // words, so the ticket never has to invent a figure for missing data.
+    // The bill-level statement. The author and the observation date that used to ride along here
+    // ("$0.00 · observed from Crew · Sep 8, 2026") are Plan's detail, not the snapshot's.
     const figure = event.reserved && event.reserved.minor > 0
       ? minorToDisplay(event.reserved)
       : minorToDisplay({ minor: 0, currency: event.amount.currency });
-    rowData.push(["Set aside", `${figure} · ${fundingBasisNote(event)}`]);
+    rowData.push(["Set aside", figure]);
   } else if (event.reserved && event.reserved.minor != null) {
     rowData.push(["Reserved", minorToDisplay(event.reserved)]);
   } else {
@@ -1269,18 +1398,13 @@ function renderEvidenceTicket(state, event) {
     rows.appendChild(group);
   }
 
-  const body = [header, rows];
-  if (event.fundingStatus === "unfunded" || event.fundingStatus === "partial") {
-    const shortfall = document.createElement("p");
-    shortfall.className = "obs-shortfall";
-    const amountMinor = event.amount.minor || 0;
-    const reservedMinor = event.reserved && event.reserved.minor != null ? event.reserved.minor : 0;
-    const remainingMinor = Math.max(0, amountMinor - reservedMinor);
-    const strong = document.createElement("strong");
-    strong.textContent = minorToDisplay({ minor: remainingMinor, currency: event.amount.currency }) || "—";
-    shortfall.append("Exact shortfall: ", strong, " remains unfunded.");
-    body.push(shortfall);
-  }
+  // The bill's icon, on the left, as the concept draws it. `.obs-ticket-kind` is sized by the
+  // phone seating block; on desktop it keeps the shared event-kind styling.
+  const kind = document.createElement("span");
+  kind.className = "obs-ticket-kind";
+  kind.appendChild(kindIcon(event));
+
+  const body = [kind, header, rows];
 
   const actions = document.createElement("div");
   actions.className = "obs-ticket-actions";
@@ -1290,7 +1414,7 @@ function renderEvidenceTicket(state, event) {
   // was wrong twice over: the concept's ticket carries ONE control in this row ("View bill →"), and
   // the ticket is a named-area grid in which `facts` and `actions` share a row -- so the long
   // subject starved the facts column to 84px and its amounts ran under the action text. The
-  // invoice is stated in the ticket's own detail line instead, where it wraps.
+  // invoice remains available through the single View bill destination below.
   if (event.evidenceIds && event.evidenceIds.length) {
     const evidenceLink = document.createElement("a");
     evidenceLink.className = "obs-button obs-button--ghost";
@@ -1313,22 +1437,10 @@ function renderEvidenceTicket(state, event) {
       ticket.appendChild(list);
     });
     actions.appendChild(evidenceLink);
-  } else if (event.invoice) {
-    // The bill's invoice IS evidence, so the ticket must not say otherwise. This was the owner's
-    // first report on this ticket -- "it says no evidence is attached to this event and has a view
-    // bill link" -- and the sentence stayed even after the link was pointed at the invoice. The
-    // line is deliberately SHORT: `facts` and `actions` share a grid row, so a long subject here
-    // starves the amounts beside it (measured: the facts column collapsed to 84px).
-    const invoiceNote = document.createElement("p");
-    invoiceNote.className = "obs-ticket-detail";
-    invoiceNote.textContent = "Bill email attached.";
-    actions.appendChild(invoiceNote);
-  } else {
-    const noEvidence = document.createElement("p");
-    noEvidence.className = "obs-ticket-detail";
-    noEvidence.textContent = "No evidence is attached to this event.";
-    actions.appendChild(noEvidence);
   }
+  // An invoice still determines the View bill destination below, but its status does not need a
+  // second line in the shared actions row. Removing that redundant "Bill email attached" copy keeps
+  // the evidence ticket's facts and single action aligned at the compact phone width.
   // "View bill" opens the bill's actual invoice when one was matched, and only falls back to the
   // Plan workspace when it was not. This is the owner's correction of 2026-09-24: the control used
   // to say "View bill" and land on the Plan page, which is not the bill.
@@ -1337,11 +1449,15 @@ function renderEvidenceTicket(state, event) {
     const detail = document.createElement("a");
     detail.className = "obs-button";
     detail.href = billHref;
-    if (event.invoice) {
-      detail.target = "_blank";
-      detail.rel = "noopener";
-    }
-    detail.textContent = event.kind === "bill" ? "View bill" : "View detail";
+    // Same tab, deliberately. Opening the evidence page in a NEW tab is what made it a one way
+    // street: the page's Back control can only return the tab it lives in, and on the owner's
+    // phone the app was left behind in the other tab (2026-09-24). Navigating in place means the
+    // invoice's Back control lands back on Today, where the reader started.
+
+    // The arrow says the control LEAVES this page for the bill/invoice, as the concept draws it
+    // ("View bill ->"). It is part of the label rather than decoration so a screen reader reports
+    // the same affordance.
+    detail.textContent = event.kind === "bill" ? "View bill \u2192" : "View detail \u2192";
     actions.appendChild(detail);
   }
   body.push(actions);
@@ -1353,53 +1469,31 @@ function renderControls(state, onChange) {
   const controls = document.createElement("div");
   controls.className = "obs-dial-controls";
 
-  const prev = document.createElement("button");
-  prev.type = "button";
-  prev.className = "obs-control";
-  prev.textContent = "Previous day";
-  prev.setAttribute("aria-label", "Previous day");
-  prev.addEventListener("click", () => {
-    const next = addDays(state.selectedDate, -1);
-    if (next && next >= state.model.today) {
-      state.selectedDate = next;
-      state.selectedEventId = null;
-      onChange();
-    }
-  });
-
-  const next = document.createElement("button");
-  next.type = "button";
-  next.className = "obs-control";
-  next.textContent = "Next day";
-  next.setAttribute("aria-label", "Next day");
-  next.addEventListener("click", () => {
-    const nextDate = addDays(state.selectedDate, 1);
-    if (nextDate && nextDate <= state.model.horizonEnd) {
-      state.selectedDate = nextDate;
-      state.selectedEventId = null;
-      onChange();
-    }
-  });
-
-  const back = document.createElement("button");
-  back.type = "button";
-  back.className = "obs-control";
-  back.textContent = "Back to today";
-  back.addEventListener("click", () => {
-    state.selectedDate = state.model.today;
-    state.mode = "today";
-    state.selectedEventId = state.model.events.find(
-      (event) => event.date >= state.model.today && event.date <= state.model.horizonEnd,
-    )?.id || null;
-    onChange();
-  });
+  /* No Previous day / Next day / Back to today buttons.
+   *
+   * `BUILD_SPEC.md` §7 asked for those three controls, and they were built. The owner has since
+   * seen them on the phone and asked for them back out: "remove the redundant previous day, next
+   * day, and similar dial navigation controls because navigation exists elsewhere." On Today they
+   * were a second, worse copy of navigation the dial already carries -- the rim ticks and day
+   * numbers select a day, the event rows select an event, dragging the ring scrubs the horizon --
+   * and at 420x912 they sat in their own 44px row between the evidence ticket and "Explore my
+   * plan", which pushed the ticket off the first screen for no new capability. Sheet order follows
+   * the newest explicit governing record (D-004).
+   *
+   * Navigation is NOT lost, and that is the point of leaving the range control in place:
+   * `#obs-dial-range` is the keyboard path -- Arrow keys step one day, Home/End jump to the
+   * horizon ends, and its `aria-valuetext` states the date, its events and their amounts. It stays
+   * visually collapsed (`.obs-dial-range-wrap` is clipped to 1px) and expands into the controls row
+   * on `:focus-within`, so a keyboard or screen-reader user still reaches every day in the horizon
+   * without a drag. Removing the three buttons removes a duplicate affordance, not an ability: the
+   * dial's own drag, tap and marker paths and this range control cover the same state changes. */
 
   const rangeWrap = document.createElement("div");
   rangeWrap.className = "obs-dial-range-wrap";
   const label = document.createElement("label");
   label.className = "obs-dial-range-label";
   label.setAttribute("for", "obs-dial-range");
-  label.textContent = "Explore upcoming dates";
+  label.textContent = "Explore upcoming dates. Press T to return to today.";
   const range = document.createElement("input");
   range.type = "range";
   range.id = "obs-dial-range";
@@ -1415,9 +1509,23 @@ function renderControls(state, onChange) {
     state.selectedEventId = null;
     onChange();
   });
+  // What the removed "Back to today" button did, kept as a keyboard path because Home/End jump to
+  // the horizon's ends rather than to today. Only an event that IS today is re-selected, so the
+  // needle's angle and the centre readout still agree, exactly as that button's note required.
+  range.addEventListener("keydown", (event) => {
+    if (event.key !== "t" && event.key !== "T") return;
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    event.preventDefault();
+    state.selectedDate = state.model.today;
+    state.mode = "today";
+    state.selectedEventId =
+      state.model.events.find((entry) => entry.date === state.model.today)?.id || null;
+    onChange();
+    announce(`Returned to today, ${formatLongDate(state.model.today)}.`);
+  });
   rangeWrap.append(label, range);
 
-  controls.append(prev, rangeWrap, next, back);
+  controls.append(rangeWrap);
   return controls;
 }
 
@@ -1436,21 +1544,29 @@ function announce(message) {
 function paintSVGSelection(svg, state) {
   if (!svg) return;
   const { today, totalDays } = state.model;
-  const pointerLine = svg.querySelector(".obs-dial-pointer-line");
+  const pointerNeedle = svg.querySelector(".obs-dial-pointer-needle");
   const pointerTip = svg.querySelector(".obs-dial-pointer-tip");
+  const pointerRing = svg.querySelector(".obs-dial-pointer-tip-ring");
+  const pointerPupil = svg.querySelector(".obs-dial-pointer-tip-pupil");
   const selectedIndex = dayIndexForDate(state.selectedDate, today);
   const pointerAngle = dayToAngle(selectedIndex, totalDays);
-  const pointerPoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, VIEWBOX.r - 84, pointerAngle);
-  if (pointerLine) {
-    const pointerStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 118, pointerAngle);
-    pointerLine.setAttribute("x1", String(pointerStart.x.toFixed(2)));
-    pointerLine.setAttribute("y1", String(pointerStart.y.toFixed(2)));
-    pointerLine.setAttribute("x2", String(pointerPoint.x.toFixed(2)));
-    pointerLine.setAttribute("y2", String(pointerPoint.y.toFixed(2)));
+  const needlePoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, POINTER_INNER_UNITS, pointerAngle);
+  const tipPoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, POINTER_TIP_UNITS, pointerAngle);
+  const radians = (pointerAngle * Math.PI) / 180;
+  const perpX = -Math.sin(radians) * POINTER_TIP_HALF_WIDTH;
+  const perpY = Math.cos(radians) * POINTER_TIP_HALF_WIDTH;
+  if (pointerNeedle) {
+    pointerNeedle.setAttribute(
+      "d",
+      `M${needlePoint.x.toFixed(2)} ${needlePoint.y.toFixed(2)} ` +
+        `L${(tipPoint.x + perpX).toFixed(2)} ${(tipPoint.y + perpY).toFixed(2)} ` +
+        `L${(tipPoint.x - perpX).toFixed(2)} ${(tipPoint.y - perpY).toFixed(2)} Z`,
+    );
   }
-  if (pointerTip) {
-    pointerTip.setAttribute("cx", String(pointerPoint.x.toFixed(2)));
-    pointerTip.setAttribute("cy", String(pointerPoint.y.toFixed(2)));
+  for (const circle of [pointerTip, pointerRing, pointerPupil]) {
+    if (!circle) continue;
+    circle.setAttribute("cx", String(tipPoint.x.toFixed(2)));
+    circle.setAttribute("cy", String(tipPoint.y.toFixed(2)));
   }
   svg.querySelectorAll(".obs-dial-marker").forEach((marker) => {
     const date = marker.getAttribute("data-date");
@@ -1616,12 +1732,19 @@ function bindPointerDrag(svg, state, container, totalDays) {
 export function renderDial(container, inputModel) {
   if (!container) return null;
   const model = normalizeModel(inputModel);
-  const initialEvent = model.events.find(
-    (event) => event.date >= model.today && event.date <= model.horizonEnd,
-  ) || null;
+  // The NEAREST upcoming event, so the dial, the centre readout and the evidence ticket all have
+  // something to state the moment the page opens. Sorted explicitly: `find` would take whichever
+  // event the model happened to list first, which is an ordering coincidence rather than "nearest".
+  const upcoming = model.events
+    .filter((event) => event.date >= model.today && event.date <= model.horizonEnd)
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const initialEvent = upcoming[0] || null;
   const state = {
     model,
-    selectedDate: model.today,
+    // The pointer, the centre readout and the evidence ticket all state the SAME selection, so
+    // opening on the nearest event moves the selected DATE to that event as well. Leaving the date
+    // at today would point the stylus at today while the centre named a bill a week away.
+    selectedDate: initialEvent ? initialEvent.date : model.today,
     selectedEventId: initialEvent ? initialEvent.id : null,
     mode: "today",
     drag: null,

@@ -350,7 +350,14 @@ def _invoice_for_bill(evidence_repository, bill_name: str) -> Optional[dict]:
     try:
         from meridian.services.plan import bill_invoice_link
 
-        return bill_invoice_link(evidence_repository, bill_name)
+        link = bill_invoice_link(evidence_repository, bill_name)
+        if link and link.get("content_url"):
+            # Name the surface that opened it, so the evidence page's Back control returns the
+            # reader HERE. Without it the page offered only "Back to Plan", which is a one way
+            # street when the invoice was opened from Today (owner, 2026-09-24). The value is
+            # validated server-side against the known workspaces.
+            link = dict(link, content_url=f"{link['content_url']}?from=today")
+        return link
     except Exception:  # noqa: BLE001 - an invoice link is a nice-to-have, never a hard failure
         return None
 

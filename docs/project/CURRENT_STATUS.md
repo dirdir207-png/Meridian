@@ -1,5 +1,92 @@
 # Enhanced SimpleCrew — Current Status
 
+## The stylus is an instrument hand, the duplicate day controls are gone, every day can be numbered, and the hourglass moved to the corner (2026-09-24)
+
+Five owner requests on Today's dial and Settings' Trials pane, all read-only and visual. No route,
+no data, no financial behaviour, no authority change.
+
+**1. The pointer was in the DOM and could not be seen — and that was measurable, not a rendering
+mystery.** A live DOM read at 420x912 found `.obs-dial-pointer` present, visible and correctly
+positioned (`fill: #a5d4bf`, opacity 1, angle 10°, tip at (345.5, 43.9) in viewBox units). The
+defect was SCALE: `POINTER_INNER_UNITS` was 96 and the tip base 5.4 units either side, so at the
+governed 352.8px wrap (1 unit = 0.588px) the "wedge" painted an **18.1 x 6.4px** mint sliver lying
+on the engraved sky — thinner than the 13.2px event badges it points past, which is why the owner
+reported it as missing three times. Re-measured off `06-interactive-observatory-vision.png`
+(dial r≈271.2px): tip circle centre 0.533 r, inner point 0.423 r, base half-width 0.066 r. The
+inner point and base are now **126 and 14 units** — a 107-unit hand (37.9% of the radius, 63px at
+420x912 against 18.1px), with the tip at 233 units.
+
+**Two derived estimates were wrong, and the browser caught both.** The tip cannot simply take the
+concept's 53%: the rim day numbers are seated at a **measured 243.7 units**, so a 250-unit tip put
+the circle *across* the number ring and the wedge *under* a date. The tip now ends at 244, and
+because the stylus is the selected day's mark, **the selected day draws no number** while every day
+is numbered — the same fact twice, the second time illegibly.
+
+**2. The redundant day controls are removed**, per the owner: "navigation exists elsewhere." The
+`Previous day` / `Next day` / `Back to today` buttons were a second, worse copy of navigation the
+dial already carries (rim ticks, day numbers, event rows, ring drag), and at 420x912 they held a
+44px row that pushed the evidence ticket off the first screen. `BUILD_SPEC.md` §7 asked for them, so
+this is the newest explicit governing record overriding the older one (D-004) — the sheet order the
+roadmap records. **Navigation is not lost:** `#obs-dial-range` remains the keyboard path (arrows
+step a day, Home/End jump to the horizon ends), stays clipped to 1px until focused, and the removed
+"back to today" survives as **T** on that control. A latent CSS trap was removed with them: the two
+`.obs-dial-controls .obs-control:last-child` rules would have silently retargeted to
+`.obs-dial-range-wrap` and stretched a 1px clipped box to fill the row.
+
+**3. Every day number, reversibly.** `ALL_DAY_NUMBERS = true` in `dial.js` is the single line that
+carries the state and the single line that reverts it; the panel records which state rendered in
+`data-day-numbers` ("all"/"key") so a test asserts it without reaching into module internals. Two
+guards keep the preview honest: the horizon is capped at 31 days (32 labels on a 220° arc would
+smear), and beyond the cap the dial falls back to the spec's key days. Every number still comes from
+`addDays(today, day)`, so no label is ever a sample.
+
+**4. The arc spreads 220° → 232°.** The owner asked for the numbers to "extend down to the graphic on
+the bottom right and to the graphic at the top left (the rotunda image)". Only the END could move:
+the rotunda occupies the arc's beginning, so −100° is already the closest the sweep may come to the
+top-left engraving without a hand entering the building (measured roofline at −110°). The numbers
+cannot spread radially at all — their ring already sits at 243.2 of the painted wheel's 280, ~4
+units from the edge — which is recorded beside the constant because it was the first interpretation
+measured and rejected.
+
+**5. The Settings hourglass moved to the upper-right corner and grew.** It left the grid flow
+entirely: as a grid item it claimed its own row *below* the copy (measured before: 45.7x92px at
+y=336.5 with the copy ending at y=312.5), so the panel started at y=460. Positioned absolutely it is
+now **65.6x132px at the content box's top-right** — inside the 120–160px header-art slot
+`design/observatory-extension-2026-09-18/` governs — and the panel rises to **y=344.5**, 116px
+higher. The measured copy boxes overlap the ornament's *box* while no painted text does (the h1 ends
+at x≈265, the ornament starts at x≈338); the ornament is `aria-hidden`, is not a control, and states
+no deadline, count or progress.
+
+**Verification.** Whole-tree suite: **1938 passed, 96 skipped**; `ruff check app.py meridian/ scripts/
+tests/` clean; `git diff --check` clean. Focused new guards: the stylus's painted share of the wheel
+at 390/420/430, no overlap between the stylus and any rim number or the centre readout, the
+`data-day-numbers` state with its long-horizon fallback, the removed buttons plus the surviving
+keyboard path and the collapsed row, and the pointer's single authoritative paint site (a test that
+would have caught the deleted `stroke: none` copy). Two stale assertions were retargeted with their
+reasons recorded: the arc-end literal (now a relationship, not a number) and the paper-literal
+count, which had drifted to 11 while the test still said 8 — it is now a per-file allowance.
+
+**Not touched:** no route, service, migration, schema, provider call or action-pipeline change. No
+deployment.
+
+## Dial ticket text contrast correction (2026-09-24)
+
+The owner supplied the correct reference image and reported that the bill ticket still rendered
+white/parchment text on its parchment face. The ticket artwork is intentionally parchment in both
+themes, while inherited shell ink is light in dark mode. The bounded CSS correction explicitly uses
+`--obs-paper-ink` for ticket titles and values, with dark-ink mixes for supporting detail, labels, and
+source stamps. No data, route, financial, or authority behavior changed. Targeted automated tests could
+not run in this environment because the available system Python has no pytest installation; `git diff
+--check` passes. Browser recapture remains required before visual acceptance.
+
+**FOLLOW-UP, same session:** those targeted tests DID run once the repository's own interpreter
+(`.venv311/bin/python`) was used rather than the system Python — the note above is corrected rather
+than deleted, because "the environment has no pytest" was a wrong premise that would have hidden the
+Eversource ticket from the whole-tree gate. The same batch removed the visible `"Bill email
+attached."` line from that ticket, which is what the owner asked for after the contrast fix: the
+invoice stays reachable through the ticket's single "View bill" control, and the extra line was the
+height the owner objected to.
+
 ## "View bill" opens the real invoice, the dial is obstructed by the phone's edge, and the moon fills the quadrant (`OS-101`) (2026-09-24)
 
 **"View bill" now opens the bill's mail-ingested invoice** — the one Plan already attaches to the same

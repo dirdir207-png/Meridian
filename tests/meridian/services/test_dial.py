@@ -209,8 +209,12 @@ def test_a_bill_event_carries_the_same_invoice_plan_shows(tmp_path):
     assert carried is not None, "a bill with matching bill mail must carry its invoice"
     assert expected is not None
     assert carried["id"] == expected["id"] == invoice.id
-    assert carried["content_url"] == expected["content_url"]
-    assert carried["content_url"] == f"/api/meridian/evidence/{invoice.id}/content"
+    # The path is the same document Plan opens; the dial appends its ORIGIN so the evidence page's
+    # Back control returns to Today rather than to Plan (owner, 2026-09-24: "it's a one way street,
+    # we need a back button on those"). Asserted as "the same URL plus a from=" so a future change
+    # of origin cannot silently point the two surfaces at different documents.
+    assert carried["content_url"] == f"{expected['content_url']}?from=today"
+    assert carried["content_url"].startswith(f"/api/meridian/evidence/{invoice.id}/content")
     assert "promo" not in carried["title"].lower(), "a marketing email is not the bill's invoice"
 
 

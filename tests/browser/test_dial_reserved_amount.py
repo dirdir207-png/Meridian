@@ -282,7 +282,9 @@ def test_the_ticket_names_the_bill_level_author_and_the_funding_schedule(dial_pa
     rows = ticket.locator(".obs-ticket-rows").inner_text().lower()
     assert "set aside" in rows
     assert "$1,200.00" in rows
-    assert "observed from crew" in rows
+    # RETARGETED 2026-09-24: Today is now the compact snapshot; provenance and funding schedule
+    # details remain on Plan. The amount and set-aside figures are the only facts here.
+    assert "observed from crew" not in rows
     assert "meridian estimate" not in rows
 
     # The label and its value must not collide. The first version used the full sentence
@@ -305,10 +307,10 @@ def test_the_ticket_names_the_bill_level_author_and_the_funding_schedule(dial_pa
 
     page.get_by_role("button", name="Internet", exact=False).click()
     schedule_rows = page.locator(".obs-evidence-ticket .obs-ticket-rows").inner_text().lower()
-    assert "funding schedule" in schedule_rows
-    assert "$29.89/event" in schedule_rows
-    assert "crew's own estimate" in schedule_rows
-    assert "due sep 20" in schedule_rows
+    # RETARGETED 2026-09-24: funding schedule provenance is Plan detail; Today's ticket remains
+    # two compact facts even when the selected event has a schedule.
+    assert "funding schedule" not in schedule_rows
+    assert "$0.00" in schedule_rows
     assert "meridian estimate" not in schedule_rows
 
     # The centre states the STRONGEST honest thing it can, so precedence is visible here:

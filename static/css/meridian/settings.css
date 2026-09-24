@@ -877,15 +877,26 @@ html[data-theme="light"] .m-trials-sentinel {
 
   .m-settings-command {
     display: grid;
+    /* Also the containing block for the absolutely positioned ornament below. */
+    position: relative;
     margin-bottom: var(--m-space-6);
   }
 
-  /* The command header becomes a single-column grid here, so the ornament would otherwise claim a
-     whole row under the copy and push the panel down. It stays, smaller and hard right, because
-     the pane is read on a phone more often than on a desktop. */
+  /* The owner's direction (2026-09-24) was to move the sand-timer into the UPPER-RIGHT CORNER and
+     enlarge it, so it leaves the grid flow entirely. As a grid item it claimed its own row BELOW the
+     copy: measured at 420x912 before this change the sentinel sat at y=336.5 with the copy ending at
+     y=312.5 -- a 45.7x92px ornament parked under the paragraph, with the panel pushed down to
+     y=460. Absolute positioning lets the taller ornament live in the corner without a row of its own
+     and without moving the panel.
+
+     The png's own aspect (607x1222) makes 132px tall = ~65.6px wide in a 388px column, which is
+     inside the 120-160px header-art slot that design/observatory-extension-2026-09-18/ governs for
+     this header, and it is larger than the 92px it replaces, as the owner asked. */
   .m-trials-sentinel {
-    justify-self: end;
-    height: 92px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 132px;
   }
 
   .m-settings-command h1 {

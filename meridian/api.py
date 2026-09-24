@@ -1442,7 +1442,7 @@ def evidence_content(evidence_id: str):
         # their navigation with Sec-Fetch-Mode: navigate, and a fetch/XHR does not.
         if request.headers.get("Sec-Fetch-Mode") == "navigate":
             return Response(
-                _evidence_unavailable_html(item.title),
+                _evidence_unavailable_html(item.title, request.args.get("from")),
                 status=404,
                 mimetype="text/html",
             )
@@ -1456,18 +1456,47 @@ def evidence_content(evidence_id: str):
     # email, not raw source) while never running its scripts. Plain text is
     # shown escaped in a readable block.
     text = content.decode("utf-8", errors="replace")
-    return Response(_evidence_viewer_html(text, item.title), mimetype="text/html")
+    return Response(
+        _evidence_viewer_html(text, item.title, request.args.get("from")), mimetype="text/html"
+    )
 
 
-def _evidence_unavailable_html(title: str | None) -> str:
+EVIDENCE_BACK_WORKSPACES = {
+    "today": "Today",
+    "plan": "Plan",
+    "activity": "Activity",
+    "accounts": "Accounts",
+}
+
+
+def _evidence_back_target(origin: str | None) -> tuple[str, str]:
+    """The (label, href) for the way back out of an evidence page.
+
+    The owner, 2026-09-24: "When clicking view bill, it's a one way street, we need a back button on
+    those." The pages offered only a link labelled "Back to Plan" (and the not-stored page offered
+    a bare word inside a sentence), so a reader who arrived from Today had no way back to Today.
+
+    `origin` comes from the query string, so it is VALIDATED against the known workspaces rather
+    than reflected: an unvalidated parameter in an href is an open redirect, and this page is
+    reachable by any logged-in navigation. An unknown origin falls back to Plan, which is where
+    invoices are also opened from.
+    """
+    workspace = origin if origin in EVIDENCE_BACK_WORKSPACES else "plan"
+    return f"Back to {EVIDENCE_BACK_WORKSPACES[workspace]}", f"/meridian?workspace={workspace}"
+
+
+def _evidence_unavailable_html(title: str | None, origin: str | None = None) -> str:
     """A readable page for a browser that opened evidence whose content is not stored.
 
-    The invoice link opens in a new tab, so this is a real navigation and deserves a
-    human-readable explanation with the same facts the JSON carries: what happened and
-    what to do about it. No scripts, no external resources.
+    This is a real navigation, so it deserves a human-readable explanation with the same facts the
+    JSON carries -- AND a way back. It offered neither a bar nor a control: the only route home was
+    the word "Meridian" inside a sentence, which is what the owner hit when a bill's mail had no
+    stored file (2026-09-24: "it's a one way street, we need a back button on those"). No scripts,
+    no external resources.
     """
     import html as _html
 
+    back_label, back_href = _evidence_back_target(origin)
     heading = _html.escape(title or "This document")
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -1478,22 +1507,30 @@ def _evidence_unavailable_html(title: str | None) -> str:
   body {{ margin: 0; padding: 2rem 1.25rem; font: 16px/1.6 -apple-system, system-ui, sans-serif;
          background: #0f1117; color: #e7e9ee; }}
   main {{ max-width: 34rem; margin: 0 auto; }}
+  .bar {{ position: sticky; top: 0; display: flex; align-items: center; gap: .75rem;
+          padding: .75rem 1.25rem; background: #171a22; border-bottom: 1px solid #2a2f3a; }}
+  .bar a {{ display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .8rem;
+            border: 1px solid #3a4050; border-radius: 999px; background: #1e222c;
+            color: #e9a75a; font-size: .85rem; font-weight: 600; text-decoration: none; }}
   h1 {{ font-size: 1.25rem; line-height: 1.35; margin: 0 0 .75rem; }}
   p {{ margin: 0 0 .85rem; color: #b9bec9; }}
   .what {{ color: #e7e9ee; }}
   a {{ color: #e9a75a; }}
 </style></head>
-<body><main>
+<body>
+  <div class="bar"><a href="{back_href}">&larr; {back_label}</a></div>
+  <main>
   <h1>This document isn&rsquo;t stored</h1>
   <p class="what">{heading} was recorded in Meridian, but the file itself was never saved.</p>
   <p>It arrived before Meridian began keeping document contents, so only the details it
      knew at the time remain &mdash; the subject, the sender, and the date.</p>
-  <p>New mail is stored in full, so this affects older items only. Returning to
-     <a href="/meridian">Meridian</a> and refreshing the mail intake can backfill it.</p>
-</main></body></html>"""
+  <p>New mail is stored in full, so this affects older items only. Returning to Meridian
+     and refreshing the mail intake can backfill it.</p>
+  </main>
+</body></html>"""
 
 
-def _evidence_viewer_html(content: str, title: str | None) -> str:
+def _evidence_viewer_html(content: str, title: str | None, origin: str | None = None) -> str:
     """Wrap evidence content in a safe, readable viewer.
 
     HTML content is embedded in a sandboxed iframe (no scripts, no remote
@@ -1508,6 +1545,7 @@ def _evidence_viewer_html(content: str, title: str | None) -> str:
     else:
         framed = f"<pre>{_html.escape(content)}</pre>"
     safe_title = _html.escape(title or "Evidence")
+    back_label, back_href = _evidence_back_target(origin)
     return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -1525,7 +1563,7 @@ def _evidence_viewer_html(content: str, title: str | None) -> str:
   iframe {{ border:0; width:100%; height:calc(100vh - 60px); background:transparent; }}
 </style></head>
 <body>
-  <div class="bar"><h1>{safe_title}</h1><a href="/meridian?workspace=plan">Back to Plan</a></div>
+  <div class="bar"><a href="{back_href}">&larr; {back_label}</a><h1>{safe_title}</h1></div>
   <div class="content">{framed}</div>
 </body></html>"""
 

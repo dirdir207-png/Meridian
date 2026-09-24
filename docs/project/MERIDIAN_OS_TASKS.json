@@ -2458,6 +2458,32 @@
         "css_lesson": "A first attempt rendered a SECOND 'Invoice - <subject>' anchor beside 'View bill'. The ticket is a named-area grid whose `facts` and `actions` share a row, and the long subject collapsed the facts column to 84px so the amounts ran under the action text. The concept's ticket carries one control in that row, so the duplicate was wrong as well as broken."
       },
       "notes": "Read-only: no write path, no authority change, no new provider call. The invoice subject is not rendered in the ticket because the action row is narrow; the control carries the destination and the ticket states that the bill email is attached."
+    },
+    {
+      "id": "OS-102",
+      "title": "Plan Rules and Crew tabs have no designed styling",
+      "status": "ready",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "owner_decided": false,
+      "authority": [
+        "owner, 2026-09-24: \"the rules and crew tab of the plan page have almost no styling. I do not believe there is a previous concept, so it is one you will have to design\""
+      ],
+      "why": "The owner reports the Rules and Crew tabs of Plan (the same tabs whose Bills surface is governed by design/observatory-drafts-2026-09-08/02-plan.png) as effectively unstyled. Tool rule 3 forbids invention, and D-004 makes the newest explicit governing visual record the authority -- but the owner states no concept exists for these two panes. That makes them the first surface in this lane where a NEW design is authorized rather than derived, and it is authorized by the owner directly.",
+      "scope": [
+        "Reachability and current state first: what the Rules and Crew tabs render today, which templates/partials and services feed them, and whether any concept, draft or capture speaks to them. Owner-stated absence of a concept is a claim to VERIFY against design/ before designing anything.",
+        "Then a design proposal for owner approval BEFORE implementation: composition, typography and evidence rules drawn from the governing Observatory language in design/observatory-drafts-2026-09-08/BUILD_SPEC.md (real HTML for every word, figure and control; money never cropped; decoration separate and pointer-events:none).",
+        "Non-goals: no new navigation, no financial behaviour, no authority change, no mutation, no invented data. Read-only surfaces throughout."
+      ],
+      "acceptance": [
+        "The absence of a governing concept is verified against design/ rather than assumed",
+        "A proposed design is presented for owner approval before any implementation",
+        "Implemented panes carry real HTML text and figures with provenance, at the governed viewports, in both themes",
+        "Guards cover the new composition, and no existing Bills/Plan behaviour regresses"
+      ],
+      "evidence": {
+        "status": "earmarked by the owner 2026-09-24; no design work started, nothing implemented"
+      }
     }
   ]
 }

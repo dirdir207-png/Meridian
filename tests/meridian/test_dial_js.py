@@ -4,6 +4,7 @@ These are static source-presence tests; the pure geometry helpers are also
 syntax-checked through the module import when a JS runtime is available in the
 environment (the browser and Node paths exercise them separately).
 """
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -83,9 +84,9 @@ def test_dial_js_pure_geometry_round_trips_with_node():
       if (civilDaysBetween('2026-09-08', '2026-09-08') !== 0) throw new Error('same-day mismatch');
       if (civilDaysBetween('2024-02-28', '2024-03-01') !== 2) throw new Error('leap-day mismatch');
       if (!close(dayToAngle(0, 14), -100)) throw new Error('arc start');
-      if (!close(dayToAngle(14, 14), 120)) throw new Error('arc end');
+      if (!close(dayToAngle(14, 14), 132)) throw new Error('arc end');
       if (angleToDay(dayToAngle(7, 14), 14) !== 7) throw new Error('angle->day round trip');
-      if (angleToDay(-100, 1) !== 0 || angleToDay(120, 1) !== 1) throw new Error('N=1 endpoints');
+      if (angleToDay(-100, 1) !== 0 || angleToDay(132, 1) !== 1) throw new Error('N=1 endpoints');
       if (addDays('2025-12-31', 1) !== '2026-01-01') throw new Error('year rollover');
     """
     result = subprocess.run(
@@ -152,10 +153,18 @@ def test_dial_js_funding_source_copy_declines_to_guess():
 
 def test_dial_js_reports_the_reservation_status_beside_the_source():
     js = _read("static/js/meridian/dial.js")
-    # The ticket keeps the funding/reserved row even when a source is named, so the
-    # unresolved amount is never implied to be known.
-    assert 'rowData.push(["Funding source", sourceValue])' in js
+    # RETARGETED 2026-09-24. This required a "Funding source" row beside the reserved figure, so
+    # the unresolved amount was never implied to be known. The owner has since made Today a
+    # snapshot -- "All of the other additional information can be found on plan, so we don't need it
+    # on today I feel" -- and the concept's ticket carries only Bill amount | Reserved, so the
+    # source row is Plan's detail. What must survive is the REASON: the ticket states where the bill
+    # stands, and never leaves the amount unqualified. So the status row is still required, and it
+    # is still reached when no figure can be stated.
     assert 'rowData.push(["Funding", fundingLabel(event.fundingStatus)])' in js
+    assert 'rowData.push(["Reserved", minorToDisplay(event.reserved)])' in js
+    assert 'rowData.push(["Funding source", sourceValue])' not in js, (
+        "the funding source is Plan's detail now, not part of Today's snapshot"
+    )
 
 
 def test_dial_js_keeps_drag_and_range_accessibility_contract():
@@ -288,10 +297,21 @@ def test_dial_markers_have_orbit_leader_lines():
 def test_dial_opens_on_today_while_preloading_the_next_event_evidence():
     js = _read("static/js/meridian/dial.js")
     assert "const initialEvent" in js
-    assert "selectedDate: model.today" in js
+    # RETARGETED 2026-09-24. This read `selectedDate: model.today` and
+    # `state.mode === "today"` as the centre's gate, i.e. "open on today, preload the next event's
+    # evidence". The owner has since reported what that produced -- "unless you are on the date of a
+    # bill, it says no event selected, lets have it default to the next nearest event, so something
+    # populates" -- while the TICKET already preloaded that event, so the dial and its own ticket
+    # disagreed. The selection is now one thing (date + event together, as tapping a day already
+    # set them), so opening on the nearest event moves the needle with it. The preload is kept and
+    # is asserted below.
+    assert "selectedDate: initialEvent ? initialEvent.date : model.today" in js
     assert "selectedEventId: initialEvent ? initialEvent.id : null" in js
     assert 'mode: "today"' in js
-    assert 'state.mode === "today"' in js
+    # The centre states the selected event in BOTH modes: the old `state.mode === "today" ? null`
+    # gate is exactly what left the opening screen empty.
+    assert "const selected = selectedEventForState(state);" in js
+    assert 'state.mode === "today" ? null' not in js
     # RETARGETED 2026-09-24. This asserted `'kicker.textContent = "Safe to spend"' in js`, i.e.
     # that the dial's CENTRE states the safe-to-spend figure. The owner has since asked for the
     # concept's arrangement -- "Safe-to-spend moved back outside the compass to match the
@@ -383,21 +403,89 @@ def test_dial_pointer_is_prominent_and_keeps_a_mint_selection_cue():
     as a needle with a bright rimmed tip, not as another engraved tick."""
     css = _read("static/css/meridian/dial.css")
     js = _read("static/js/meridian/dial.js")
-    assert "stroke: #a5d4bf; stroke-width: 7" in css
-    assert "stroke-linecap: round" in css
-    assert "r: 13px" in css
-    # The tip keeps a brass rim so it separates from the parchment ring beneath it.
-    assert "stroke: #c6aa71" in css
-    # The needle reaches further inward, so it reads as a pointer across the ring.
-    assert "positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 118, pointerAngle)" in js
+    # RETARGETED 2026-09-24: the pointer is now the concept's tapered mint wedge with a dark inner
+    # ring, not the former cream/brass stroked line and outer dot.
+    #
+    # The literal `fill: #a5d4bf` this used to pin was the raw mint, and the AUTHORITATIVE block at
+    # the end of the sheet now states `fill: var(--obs-mint)` so the stylus follows the theme token
+    # the way every other mint element does. Pinning the literal again would be the drift this test
+    # exists to catch: the deleted copy at the TOP of the sheet still said `#a5d4bf`, and the check
+    # below proves why that mattered -- a leftover `stroke: none` was silently overriding the
+    # needle's dark outline, so the outline looked absent while the assertion passed.
+    assert ".obs-dial-pointer-needle" in css
+    assert "fill: var(--obs-mint)" in css
+    assert "--obs-mint: #a5d4bf" in _read("static/css/meridian/observatory.css")
+    assert "const POINTER_TIP_RING_RADIUS" in js
+    assert "const POINTER_TIP_PUPIL_RADIUS" in js
+    assert "POINTER_TIP_HALF_WIDTH" in js
+    # ONE paint site: no second block may restate the stylus's paint, or the last one wins by order
+    # and the outline can vanish without any test noticing.
+    assert css.count("fill: var(--obs-mint)") == 3, (
+        "the stylus's three mint parts are painted in exactly one block"
+    )
+    assert "stroke: #0b1424" in css and "paint-order: stroke fill" in css
+    # Every rule whose SELECTOR could match the needle: exactly one may declare a `stroke`, because
+    # a later rule wins by order alone and can erase the outline silently.
+    needle_rules = []
+    for selector, block in re.findall(r"([^{}]*)\{([^{}]*)\}", css):
+        if not re.search(r"\.obs-dial-pointer", selector):
+            continue
+        if "needle" in selector and "stroke" in block:
+            needle_rules.append(selector.strip())
+    assert len(needle_rules) == 1, (
+        f"only the stylus block may declare a stroke on the needle; found {needle_rules}"
+    )
+    assert css.count("fill: var(--obs-mint)") == 3, (
+        "the stylus's three mint parts are painted in exactly one block"
+    )
+
+
+def test_dial_pointer_hand_is_a_visible_share_of_the_dial_radius():
+    """The owner's report was not "there is no pointer" but "the pointer is not visible".
+
+    Measured from the concept (06-interactive-observatory-vision.png, dial r=282 units): its wedge
+    runs from ~0.42 r to the ring. The first implementation started at 96 units -- 0.34 r -- and at
+    the governed phone size that painted an 18.1px sliver on the engraved sky, which the owner
+    correctly read as missing. This pins the painted LENGTH as a share of the radius rather than the
+    literal constants, so the number can be tuned without deleting the property being protected."""
+    js = _read("static/js/meridian/dial.js")
+    radius = float(re.search(r"const VIEWBOX = \{[^}]*?r:\s*(\d+(?:\.\d+)?)", js).group(1))
+
+    def constant(name):
+        match = re.search(rf"^const {re.escape(name)} = (\d+(?:\.\d+)?);", js, re.MULTILINE)
+        assert match, f"{name} must stay a module constant"
+        return float(match.group(1))
+
+    inner = constant("POINTER_INNER_UNITS")
+    tip = constant("POINTER_TIP_UNITS")
+    span = (tip - inner) / radius
+    assert 0.30 <= span <= 0.70, (
+        f"the needle spans {span:.0%} of the dial radius; the concept measures ~51% and a value "
+        "below 30% is the invisible sliver the owner reported"
+    )
+    # The rim numbers' INNER edge is the binding constraint, and it is measured rather than guessed:
+    # `placeDayLabels()` seats their centres at 243.7 units at the governed phone widths with a
+    # ~30-unit-tall box, so the numbers' own band begins around 229. The tip circle's far edge may
+    # reach into that band (it ends at 246 measured, and the browser test confirms no overlap), but it
+    # must not run past the number's CENTRE. At 250+ the circle straddled the whole ring and the wedge
+    # ran under a date -- which is how this bound was found.
+    numbers_centre = 244
+    assert inner + constant("POINTER_TIP_HALF_WIDTH") < numbers_centre - 60, (
+        "the needle base must sit well inside the number ring"
+    )
+    assert tip + constant("POINTER_TIP_RADIUS") <= numbers_centre, (
+        "the tip circle must not reach the day numbers' own band"
+    )
+    assert tip <= radius - 10, "the tip must stay inside the ring band"
 
 
 def test_dial_pointer_runs_stay_clear_of_the_centre_readout():
     """Lengthening the needle must not drive it under the selected amount text."""
     js = _read("static/js/meridian/dial.js")
-    assert "const pointerStart = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, 118, pointerAngle);" in js
-    # The centre readout is a separate HTML overlay; the SVG needle stays outside it.
-    assert "VIEWBOX.r - 84, pointerAngle" in js
+    # The centre readout is a separate HTML overlay; the wedge starts at the bounded inner radius
+    # and ends on the ring, so it stays clear without the old line literals.
+    assert "positionOnArc(VIEWBOX.cx, VIEWBOX.cy, POINTER_INNER_UNITS, pointerAngle)" in js
+    assert "positionOnArc(VIEWBOX.cx, VIEWBOX.cy, POINTER_TIP_UNITS, pointerAngle)" in js
 
 
 def test_dial_event_badges_weight_the_rim_with_brass_and_rivets():
@@ -469,6 +557,18 @@ def test_dial_connector_runs_never_target_a_row_the_rail_does_not_show():
     assert "renderConnectors(state, container)" in js
 
 
+def test_evidence_ticket_uses_dark_ink_on_parchment_in_every_theme():
+    """The ticket art is parchment in both themes, so ticket copy must use dark ink.
+
+    The generic shell ink is light in dark mode; relying on inherited color makes the
+    ticket text disappear against its parchment face, as in the owner's screenshot.
+    """
+    css = _read("static/css/meridian/dial.css")
+    assert ".obs-ticket-title" in css and "color: var(--obs-paper-ink);" in css
+    assert ".obs-ticket-row-value" in css and "color: var(--obs-paper-ink);" in css
+    assert "color-mix(in srgb, var(--obs-paper-ink)" in css
+
+
 def test_evidence_ticket_uses_the_supplied_shaped_asset():
     """Nuance: tickets use shaped silhouettes, layered hairline borders and subtle
     fibrous paper, with corners fixed as text reflows. The kit's parchment-ticket.png
@@ -521,7 +621,26 @@ def test_the_day_arc_starts_clear_of_the_dials_building_art():
         f"roofline begins at -110deg and the hand reaches r=198 there, inside the 150-182 "
         f"building edge. -100 is the measured-safe start."
     )
-    assert "const ARC_END = 120;" in js, "only the start moved; the sweep narrows to 220deg"
+    # RETARGETED 2026-09-24. This pinned `const ARC_END = 120;` as "the sweep narrows to 220deg".
+    # The owner then asked for the numbers to spread further round the wheel, and only the END could
+    # move -- the rotunda sits at the arc's beginning, which is what fixes ARC_START above. The
+    # invariant the pin was protecting is not the literal but the RELATIONSHIP: the end must stay on
+    # the far side of the dial from the building, so the sweep keeps growing away from the artwork
+    # rather than back into it.
+    match = re.search(r"const ARC_END = (-?\d+(?:\.\d+)?);", js)
+    assert match, "ARC_END must stay a plain literal so this guard can read it"
+    end = float(match.group(1))
+    assert end >= 120, (
+        f"ARC_END={end}deg would pull the ring of day numbers back in; the owner asked for them "
+        "spread further round the wheel, and 120 was the value they were looking at"
+    )
+    assert end - start <= 250, (
+        f"the sweep is {end - start}deg; past ~250 it reaches the arc's own start and the ring "
+        "would overlap itself at the top"
+    )
+    assert end <= 140, (
+        f"ARC_END={end}deg runs the arc into the lower-left, where the plate draws the roofline"
+    )
 
 
 def test_dial_js_states_the_reserved_amount_and_its_basis():
@@ -642,7 +761,12 @@ def test_dial_js_ticket_states_the_bill_level_basis():
     # column for AMOUNT / FUNDING SOURCE / RESERVED, and "Set aside for this bill" wrapped
     # onto a second line that collided with its own value at 420px (measured in
     # tests/browser/test_dial_reserved_amount.py, which pins that they cannot overlap).
-    assert 'rowData.push(["Set aside", `${figure} · ${fundingBasisNote(event)}`])' in js
+    # RETARGETED 2026-09-24, same instruction: the author of a stated figure ("· observed from
+    # Crew · Sep 8, 2026") is Plan's detail on a snapshot ticket, and the ticket's own source
+    # stamp still names the source and its observation time. The bill-level basis itself stays
+    # asserted, because the label is what tells the reader this figure is the bill's own statement
+    # rather than a computed reservation.
+    assert 'rowData.push(["Set aside", figure])' in js
     assert "fundingBasisNote(event)" in js
     # The unresolved row survives for the cases that are genuinely unknown.
     assert 'rowData.push(["Funding", fundingLabel(event.fundingStatus)])' in js
@@ -675,6 +799,6 @@ def test_the_ticket_prefers_the_bills_invoice_over_the_plan_page():
     assert "invoiceLink" not in js, (
         "no duplicate invoice anchor in the action row: one control, as the concept draws it"
     )
-    assert "Bill email attached." in js, (
-        "when an invoice is attached the ticket must not claim no evidence is attached"
+    assert "Bill email attached." not in js, (
+        "invoice provenance stays available through View bill without adding a second action-row line"
     )

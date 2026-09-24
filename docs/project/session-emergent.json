@@ -112,6 +112,13 @@
       "arose": "2026-09-24",
       "promoted_to": "OS-093",
       "decision_owed": true
+    },
+    {
+      "summary": "The Plan page Rules and Crew tabs are effectively unstyled and have no governing concept, so they need a NEW design rather than a fidelity pass",
+      "why": "Owner, 2026-09-24: \"the rules and crew tab of the plan page have almost no styling. I do not believe there is a previous concept, so it is one you will have to design.\" Every other visual task in this lane is a fidelity pass against a governing record (D-004). These two panes are the first surface where the owner has authorised a NEW composition, which changes the workflow: the design must be proposed and approved BEFORE implementation, and the owner's stated absence of a concept must be verified against design/ first rather than assumed. Read-only panes; no financial behaviour or authority is involved.",
+      "arose": "2026-09-24",
+      "promoted_to": "OS-102",
+      "decision_owed": "true"
     }
   ]
 }

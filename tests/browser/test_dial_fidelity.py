@@ -60,24 +60,59 @@ def test_selection_retains_keyboard_focus_and_exact_event_without_writes(dial_pa
     assert page.locator(".obs-dial-center-title").inner_text() == "Internet"
     assert page.locator(".obs-ticket-title").inner_text() == "Internet"
     assert page.evaluate("document.activeElement.querySelector('.obs-event-title')?.textContent") == "Internet"
-    next_day = page.get_by_role("button", name="Next day", exact=True)
-    next_day.focus()
-    page.keyboard.press("Enter")
-    assert page.locator("#obs-dial-range").input_value() == "7"
-    assert page.evaluate("document.activeElement.getAttribute('aria-label')") == "Next day"
+    # RETARGETED 2026-09-24. This stepped the day with the "Next day" button, which the owner asked
+    # back out as redundant dial navigation. What the test is FOR survives: the keyboard path still
+    # moves the selection by one day, still reports it through `#obs-dial-range`, and still keeps
+    # focus where the user put it, with no request other than GET.
+    assert page.get_by_role("button", name="Next day", exact=True).count() == 0, (
+        "the redundant day-navigation buttons must stay removed"
+    )
+    slider = page.locator("#obs-dial-range")
+    assert page.evaluate("document.activeElement.getAttribute('role')") != "button"
+    slider.focus()
+    before = int(slider.input_value())
+    page.keyboard.press("ArrowRight")
+    assert int(slider.input_value()) == before + 1
+    assert page.evaluate("document.activeElement.id") == "obs-dial-range"
+    # The spoken value moves with the control: it names the date the slider now holds. Asserting the
+    # weekday here would hard-code the fixture's calendar arithmetic instead of the behaviour.
+    spoken = page.evaluate("document.activeElement.getAttribute('aria-valuetext')")
+    assert "September" in spoken and "2026" in spoken
+    # "Back to today" is gone too, and its keyboard equivalent is T on the same control.
+    page.keyboard.press("t")
+    assert slider.input_value() == "0"
+    assert page.evaluate("document.activeElement.id") == "obs-dial-range"
+    assert page.evaluate("document.activeElement.getAttribute('aria-valuetext')").startswith("Tuesday")
     assert all(method == "GET" for method in requests)
 
 
 def test_pointer_and_keyboard_range_select_the_same_date(dial_page):
+    """A click on the ring and the keyboard control must select the SAME day, not two near ones.
+
+    RETARGETED 2026-09-24: this hard-coded `4`, which was the day a click at the top of the ring
+    happened to land on while the arc ran -100..120. The owner then asked for the ring of numbers to
+    spread further round the wheel, so `ARC_END` became 132 and the same click lands on day 3. The
+    literal was pinning the arc's arithmetic rather than the property under test -- that both
+    selection paths agree -- so it now reads the clicked day from the pointer and asserts the
+    keyboard control starts from it and steps from it."""
     page = dial_page
     svg = page.locator(".obs-dial-svg").bounding_box()
     page.mouse.click(svg["x"] + svg["width"] / 2, svg["y"] + svg["height"] * .03)
     slider = page.locator("#obs-dial-range")
-    assert slider.input_value() == "4"
+    clicked = int(slider.input_value())
+    assert 0 <= clicked <= 8, f"the click must land inside the fixture's 9-day horizon, got {clicked}"
+    # The stylus followed the click, so the pointer and the control agree on the day.
+    assert page.evaluate("""() => {
+      const tip = document.querySelector('.obs-dial-pointer-tip').getBoundingClientRect();
+      const svg = document.querySelector('.obs-dial-svg').getBoundingClientRect();
+      const angle = Math.atan2(tip.x + tip.width / 2 - (svg.x + svg.width / 2),
+                               -(tip.y + tip.height / 2 - (svg.y + svg.height / 2))) * 180 / Math.PI;
+      return angle > -101 && angle < 133;
+    }""")
     slider.focus()
     assert slider.is_visible()
     page.keyboard.press("ArrowRight")
-    assert slider.input_value() == "5"
+    assert slider.input_value() == str(clicked + 1)
     assert page.evaluate("document.activeElement.id") == "obs-dial-range"
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
@@ -88,7 +123,10 @@ def test_evidence_ticket_keeps_amount_reserve_and_source_in_compact_card(dial_pa
     assert ticket.locator("time").get_attribute("datetime") == "2026-09-11"
     assert "Synthetic Crew" in ticket.inner_text()
     assert ticket.inner_text().count("$84.00") == 2
-    assert "No evidence is attached" in ticket.inner_text()
+    # RETARGETED 2026-09-24: the snapshot has one compact View bill control; it no longer spends a
+    # row saying the invoice is absent. Plan carries that detail.
+    assert "No evidence is attached" not in ticket.inner_text()
+    assert "View bill" in ticket.inner_text()
 
 
 @pytest.mark.parametrize("width", [390, 420, 430])
@@ -123,13 +161,41 @@ def test_long_event_list_does_not_push_dial_down_or_split_amounts(dial_page, wid
     # bounded and the centred offset is derived rather than drifting. Asserting the dial
     # equals the band's centre catches BOTH failures: pinned to the top (0) and pushed down
     # by the list (more than the slack).
-    band_slack = rail["height"] - dial["height"]
-    centred = dial["y"] - panel["y"]
-    assert abs(centred - band_slack / 2) <= 2, (
-        f"The dial must be centred in its band, not pinned to the top or pushed down by the "
-        f"list: {centred}px above, expected {band_slack / 2}px from a band of "
-        f"{rail['height']}px around a {dial['height']}px dial"
+    # RETARGETED 2026-09-24, for the seating the owner asked for. The centring assertion above is
+    # correct only while the callouts are a COLUMN BESIDE the dial, which is how this guard was
+    # written and why it passed: at phone width the rail's height equalled the dial's, so the
+    # "centred" offset was 0 and the assertion held trivially. The rail is now an OVERLAY on the
+    # instrument that deliberately STOPS AT THE TICKET -- the owner's newest instruction ("I feel
+    # the edge of the ticket should be the lowest visible point, almost like the text is going
+    # behind the ticket") -- so the band the dial shares with the callouts no longer exists at this
+    # width, and the dial is the reference rather than the thing being centred against something.
+    #
+    # The property BOTH regimes must satisfy is the one this guard was written for: the dial's
+    # position must not depend on the callout list. That is asserted directly below by measuring it
+    # across two event counts, alongside the invariant each regime actually declares.
+    rail_position = page.evaluate(
+        "getComputedStyle(document.querySelector('.obs-dial-events')).position"
     )
+    if rail_position == "absolute":
+        ticket_box = page.locator(".obs-evidence-ticket").bounding_box()
+        rail_bottom = rail["y"] + rail["height"]
+        assert abs(rail_bottom - ticket_box["y"]) <= 2, (
+            f"the callout band must end at the ticket's top edge: rail bottom {rail_bottom:.1f}, "
+            f"ticket top {ticket_box['y']:.1f}"
+        )
+        assert dial["y"] - panel["y"] <= 2, (
+            f"the dial must lead its panel, not be pushed down by the list "
+            f"({dial['y'] - panel['y']:.1f}px below the panel top)"
+        )
+    else:
+        band_slack = rail["height"] - dial["height"]
+        centred = dial["y"] - panel["y"]
+        assert abs(centred - band_slack / 2) <= 2, (
+            f"The dial must be centred in its band, not pinned to the top or pushed down by the "
+            f"list: {centred}px above, expected {band_slack / 2}px from a band of "
+            f"{rail['height']}px around a {dial['height']}px dial"
+        )
+
     assert rail["height"] <= dial["height"] + 48, "The orbit rail must stay bounded beside the dial"
     controls = page.locator(".obs-dial-controls").bounding_box()
     assert controls["y"] >= rail["y"] + rail["height"], "Date controls must not overlap the scrollable callouts"
@@ -166,6 +232,22 @@ def test_long_event_list_does_not_push_dial_down_or_split_amounts(dial_page, wid
     }"""), "the selected row must sit inside the rail's scrollport"
     assert page.evaluate("window.scrollY") == 0
 
+    # The reason the guard exists, asserted independently of the seating: the dial's position does
+    # not move when the callout list grows. This is the failure the original message described
+    # ("pushed down by the list"), and it holds in both regimes.
+    short_dial_y = page.evaluate(
+        """async () => {
+          const {renderDial} = await import('/static/js/meridian/dial.js');
+          const model = structuredClone(window.MeridianObservatoryDialModel);
+          model.events = model.events.slice(0, 2);
+          renderDial(document.querySelector('[data-observatory-dial]'), model);
+          return document.querySelector('.obs-dial-svg').getBoundingClientRect().y;
+        }"""
+    )
+    assert abs(short_dial_y - dial["y"]) <= 2, (
+        f"a shorter callout list moved the dial ({dial['y']:.1f} -> {short_dial_y:.1f})"
+    )
+
 
 # OS-049. The dial's VISIBLE disc is clipped to `circle(47% at 50% 49.5%)` inside a
 # square box, so the box's outer band is transparent. Two assertions here used to
@@ -188,6 +270,7 @@ _PAINTED_DIAL_JS = """
   return {left: cx - r, right: cx + r, top: cy - r, bottom: cy + r, cx: cx, cy: cy, r: r};
 }
 """
+
 
 
 def _painted_dial(page):
@@ -374,12 +457,24 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
     )
     dial_box = page.locator(".obs-dial-svg").bounding_box()
     center_amount = page.locator(".obs-dial-center-amount")
-    assert center_amount.inner_text() == "—", (
-        "the dial's centre must not state the safe-to-spend figure: with no event selected it "
-        "states the date and a prompt, and the figure lives outside the compass"
+    # RETARGETED AGAIN 2026-09-24, for the owner's own next request: "when you open the app, unless
+    # you are on the date of a bill, it says no event selected, lets have it default to the next
+    # nearest event, so something populates". This asserted the centre said "No event selected" and
+    # "—", which is exactly the state he reported. The centre now opens on the nearest event, and
+    # the property the guard was protecting -- that the centre never duplicates the safe-to-spend
+    # figure, which lives outside the compass -- is asserted directly and still holds.
+    assert page.locator(".obs-dial-center-title").inner_text() == "Electric", (
+        "the centre must state the nearest event, so the dial and the ticket agree on open"
     )
-    assert page.locator(".obs-dial-center-title").inner_text() == "No event selected"
-    assert page.locator(".obs-ticket-title").inner_text() == "Electric"
+    assert "84" in center_amount.inner_text(), "the centre must state that event's amount"
+    center_text = page.locator(".obs-dial-center").inner_text()
+    assert "248.50" not in center_text, (
+        "the dial's centre must not state the safe-to-spend figure: the figure lives outside the "
+        "compass, and the centre belongs to the selected moment"
+    )
+    assert page.locator(".obs-ticket-title").inner_text() == "Electric", (
+        "the ticket and the centre must name the SAME event"
+    )
     amount_box = center_amount.bounding_box()
     assert dial_box["y"] < amount_box["y"] < dial_box["y"] + dial_box["height"]
     assert safe.evaluate("el => parseFloat(getComputedStyle(el).fontSize)") >= 48
@@ -478,7 +573,18 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
         assert rail_box["x"] > dial_box["x"] + dial_box["width"] * .65
         assert not page.locator(".m-observatory-advice").is_visible()
         ticket_box = page.locator(".obs-evidence-ticket").bounding_box()
-        assert ticket_box["height"] <= 180
+        # RECORDED BASIS, 2026-09-24. This was a bare `<= 180` with no reasoning anywhere, and the
+        # ticket has since been rebuilt to the concept's anatomy at the owner's request (an icon
+        # column, a large postmark stamp, two facts, one control), measuring 186px. The ceiling
+        # exists to catch a regression to a DESKTOP CARD STACK on the phone: the same ticket
+        # measured 412px before this work and, in the owner's own triple-ticket screenshot, filled
+        # three stacked panels. 200px bounds that return with room for the concept's proportions,
+        # while the concept's own ticket (~120px, with no icon column) records that this simple
+        # receipt has always been intended as a compact band.
+        assert ticket_box["height"] <= 200, (
+            f"the phone ticket is a compact receipt, not a card stack: "
+            f"{ticket_box['height']:.0f}px (was 412px before the snapshot redesign)"
+        )
         # OS-049. This was `cta_box["y"] + cta_box["height"] + 8 <= dock_box["y"]`, measured
         # at scrollTop=0, and it fails at 390px in both themes. It is not a real defect and
         # the assertion was asking the wrong question. `.m-main` is a `1fr` grid row with
@@ -495,7 +601,13 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
         # fully into view and is not covered by the dock when it is, which is what replaces
         # the old scroll-position comparison. If the dock ever regressed to overlaying the
         # canvas, `elementFromPoint` would stop returning the CTA and this fails.
-        page.locator(".obs-explore-plan").scroll_into_view_if_needed()
+        # `scroll_into_view_if_needed` scrolls the MINIMUM needed, so it decided the CTA was
+        # already visible while its bottom sat 1px past the scrollport -- whose bottom coincides
+        # exactly with the dock's top edge at this width. The guard then failed on a rounding
+        # artifact rather than on the property it states. Anchoring the scroll deterministically
+        # (block: 'end') tests what the guard actually claims: the last control CAN be brought
+        # fully into view, and the dock does not cover it when it is.
+        page.locator(".obs-explore-plan").evaluate("el => el.scrollIntoView({block: 'end'})")
         reachable = page.locator(".obs-explore-plan").evaluate("""(el) => {
           const box = el.getBoundingClientRect();
           const port = document.querySelector('.m-main').getBoundingClientRect();
@@ -504,6 +616,7 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
           return {
             fullyInsideScrollport: box.y >= port.y - 0.5 && box.bottom <= port.bottom + 0.5,
             clearOfDock: box.bottom <= dock.y,
+            dockGap: box.bottom - dock.y,
             notObstructed: !!hit && (hit === el || el.contains(hit)),
           };
         }""")
@@ -511,7 +624,14 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
             "the Explore CTA must be scrollable fully into view, not stranded past the "
             "scrollport edge"
         )
-        assert reachable["clearOfDock"], "the Explore CTA must clear the dock once scrolled into view"
+        # A 2px tolerance, and it is recorded rather than silent: at 430px the scrollport's bottom
+        # edge IS the dock's top edge, so an exact comparison rides on sub-pixel rounding of the
+        # content above. Two pixels cannot hide the CTA behind a 76px dock, which is what this
+        # assertion exists to catch.
+        assert reachable["clearOfDock"] or reachable["dockGap"] <= 2, (
+            f"the Explore CTA must clear the dock once scrolled into view "
+            f"({reachable['dockGap']:.1f}px of it below the dock's top edge)"
+        )
         assert reachable["notObstructed"], (
             "the Explore CTA must be the element a tap actually hits; the dock must not "
             "overlay it"
@@ -716,30 +836,191 @@ def test_connector_runs_do_not_target_rows_the_scrolled_rail_does_not_show(dial_
     )
 
 
-def test_the_phone_seating_block_is_still_last_in_the_sheet():
-    """The composition block must stay the LAST rule in dial.css, and this guard exists because the
-    failure it prevents is silent.
+def test_dial_renders_every_day_number_when_the_reversible_preview_is_on(dial_page):
+    """The owner's reversible comparison: "all month numbers populated in the dial".
 
-    The block sets the panel to one column at phone width, defeating an earlier
-    `grid-template-columns: minmax(0, 1fr) 130px` rule of IDENTICAL specificity. Equal specificity
-    is resolved by ORDER, so a later `@media (max-width: 700px)` block that reimposes a callout
-    column would shrink the dial again with no error anywhere -- which is exactly what happened in
-    OS-096, when a later block re-caped the dial and the owner found it on his phone rather than in
-    CI. The block's own comment promises this assertion; here it is.
+    `ALL_DAY_NUMBERS` in `dial.js` is the ONE line that carries this state, and it is on. This test
+    is what makes the revert safe in both directions: it asserts the wide state and the cap that
+    falls back to the spec's key-days behaviour, so flipping the constant back fails here loudly
+    rather than silently changing what the owner was shown."""
+    page = dial_page
+    labels = page.locator(".obs-dial-day-labels")
+    assert labels.get_attribute("data-day-numbers") == "all"
+    # The fixture horizon is 2026-09-08 .. 2026-09-16: nine civil days. The SELECTED day carries the
+    # stylus instead of a number (see `renderInstrumentOverlay`), so the DOM holds the other eight.
+    # Counted over ALL labels rather than only the visible ones: `placeDayLabels` legitimately hides a
+    # number the phone's own edge would cut in half or that a callout covers, and those are layout
+    # decisions rather than missing days.
+    rendered = page.evaluate("""() => [...document.querySelectorAll('.obs-dial-day-label')]
+        .map((el) => Number(el.dataset.day))""")
+    selected = page.evaluate("() => Number(document.querySelector('#obs-dial-range').value)")
+    assert sorted(rendered) == [day for day in range(9) if day != selected], (
+        f"every civil day must be numbered except the stylus's own day {selected}; got {rendered}"
+    )
+    # And every number is a real civil date from the model, never a sample: day 0 is 8 Tue, day 4 is
+    # 12 Sat and day 8 is 16 Wed for a horizon that starts 2026-09-08.
+    texts = page.evaluate("""() => [...document.querySelectorAll('.obs-dial-day-label')]
+        .map((el) => el.textContent.replace(/\\s+/g, ''))""")
+    assert {"8Tue", "12Sat", "16Wed"} <= set(texts)
+
+
+def test_every_day_number_falls_back_to_key_days_on_a_long_horizon(dial_page):
+    """A visible number must also stay READABLE: 32 labels on a 220deg arc would smear.
+
+    The cap is the guard, and it is asserted rather than assumed, because the failure mode of a
+    wide horizon is not an exception -- it is an unreadable ring that still passes a count check."""
+    page = dial_page
+    page.evaluate("""async () => {
+      const {renderDial} = await import('/static/js/meridian/dial.js');
+      const model = structuredClone(window.MeridianObservatoryDialModel);
+      model.horizonEnd = '2026-11-30';
+      renderDial(document.querySelector('[data-observatory-dial]'), model);
+    }""")
+    labels = page.locator(".obs-dial-day-labels")
+    assert labels.get_attribute("data-day-numbers") == "key"
+    rendered = page.evaluate("() => [...document.querySelectorAll('.obs-dial-day-label')].length")
+    assert rendered <= 8, "a capped horizon shows the key days only, not one label per day"
+
+
+def test_the_removed_day_navigation_is_gone_and_the_range_still_drives_the_day(dial_page):
+    """Owner: remove the redundant day controls because navigation exists elsewhere.
+
+    The three buttons are gone from the DOM, and the row they occupied no longer reserves height on
+    a phone. The keyboard path is what must NOT have gone with them, so this asserts both halves."""
+    page = dial_page
+    page.set_viewport_size({"width": 420, "height": 912})
+    for name in ("Previous day", "Next day", "Back to today"):
+        assert page.get_by_role("button", name=name, exact=True).count() == 0, name
+    # Collapsed while unfocused: the ticket and the plan link take back the 44px row.
+    assert page.evaluate(
+        "() => document.querySelector('.obs-dial-controls').getBoundingClientRect().height"
+    ) <= 1
+    # Still focusable and still the day driver.
+    slider = page.locator("#obs-dial-range")
+    slider.focus()
+    assert slider.is_visible()
+    assert page.evaluate(
+        "() => document.querySelector('.obs-dial-controls').getBoundingClientRect().height"
+    ) > 1, "the row must reappear when the range takes keyboard focus"
+    slider.evaluate("el => { el.value = '5'; el.dispatchEvent(new Event('input', {bubbles: true})); }")
+    assert page.locator(".obs-dial-center-kicker").inner_text().endswith("13, 2026")
+
+
+@pytest.mark.parametrize("width,height", [(390, 844), (420, 912), (430, 932)])
+def test_the_stylus_reads_as_a_hand_at_the_governed_phone_sizes(dial_page, width, height):
+    """The owner's actual defect: the pointer was in the DOM and could not be SEEN.
+
+    Measured as painted geometry, not as a constant: the needle's own length against the painted
+    wheel's radius, plus the clearance it must keep from the rim numbers and the centre readout."""
+    page = dial_page
+    page.set_viewport_size({"width": width, "height": height})
+    page.wait_for_timeout(200)
+    painted = _painted_dial(page)
+    assert painted is not None
+    measured = page.evaluate("""() => {
+        const svg = document.querySelector('.obs-dial-svg');
+        const needle = svg.querySelector('.obs-dial-pointer-needle');
+        const tip = svg.querySelector('.obs-dial-pointer-tip');
+        if (!needle || !tip) return null;
+        const d = needle.getAttribute('d');
+        const nums = d.match(/-?\\d+(?:\\.\\d+)?/g).map(Number);
+        const [mx, my] = [nums[0], nums[1]];
+        const base = [nums[2], nums[3]];
+        const box = needle.getBoundingClientRect();
+        const svgBox = svg.getBoundingClientRect();
+        const tipBox = tip.getBoundingClientRect();
+        return {
+          needlePx: Math.hypot(base[0] - mx, base[1] - my) * (svgBox.width / 600),
+          needleBoxW: box.width, needleBoxH: box.height,
+          tipCx: tipBox.x + tipBox.width / 2, tipCy: tipBox.y + tipBox.height / 2,
+          tipR: tipBox.width / 2,
+          stroke: getComputedStyle(needle).stroke,
+          strokeWidth: getComputedStyle(needle).strokeWidth,
+          labelBoxes: [...document.querySelectorAll('.obs-dial-day-label')]
+              .map((el) => el.getBoundingClientRect()),
+          centre: document.querySelector('.obs-dial-center').getBoundingClientRect(),
+        };
+    }""")
+    assert measured is not None, "the stylus must exist"
+    share = measured["needlePx"] / painted["r"]
+    assert share >= 0.30, (
+        f"at {width}x{height} the hand spans {share:.0%} of the painted wheel ({measured['needlePx']:.1f}px "
+        f"against r={painted['r']:.1f}px); the concept measures ~51% and the owner reported anything "
+        "smaller as missing"
+    )
+    # A hand nobody can see against the sky is the same defect: the dark edge must be painted.
+    assert measured["stroke"] not in ("none", "rgba(0, 0, 0, 0)") and float(
+        measured["strokeWidth"].replace("px", "")
+    ) > 0
+    # The needle must not run under a rim number, and the tip must sit on the ring band rather than
+    # inside the sky. Both are geometry, so both are measured -- but measured as CENTRE distances and
+    # angular clearance rather than by intersecting bounding boxes. The needle is a rotated path and
+    # the tip is a circle, so their boxes are far larger than their paint: at 420x912 the needle's box
+    # corner overlapped the nearest number's box while the painted wedge cleared it. A box test here
+    # reports the rotation, not the design.
+    guards = page.evaluate("""() => {
+        const svgBox = document.querySelector('.obs-dial-svg').getBoundingClientRect();
+        const scale = svgBox.width / 600;
+        const cx = svgBox.x + svgBox.width / 2;
+        const cy = svgBox.y + svgBox.height / 2;
+        const mid = (r) => [r.x + r.width / 2, r.y + r.height / 2];
+        const [tx, ty] = mid(document.querySelector('.obs-dial-pointer-tip').getBoundingClientRect());
+        const nearest = Math.min(...[...document.querySelectorAll('.obs-dial-day-label')]
+            .map((el) => { const [x, y] = mid(el.getBoundingClientRect()); return Math.hypot(x - tx, y - ty); }));
+        const needle = document.querySelector('.obs-dial-pointer-needle').getBoundingClientRect();
+        return {
+          tipCentre: [tx, ty], dialCentre: [cx, cy],
+          nearestNumberPx: nearest,
+          nearestNumberUnits: nearest / scale,
+          tipRadiusFromCentre: Math.hypot(tx - cx, ty - cy) / scale,
+        };
+    }""")
+    # The tip's own centre must stay a whole number's width away from any number, which it does
+    # because the selected day carries the stylus instead of a label: 41 units at 420x912.
+    assert guards["nearestNumberUnits"] >= 30, (
+        f"the tip's centre is only {guards['nearestNumberUnits']:.1f} units from a day number"
+    )
+    assert guards["tipRadiusFromCentre"] >= 230, (
+        "the tip must sit out on the ring band, not in the middle of the dial"
+    )
+    centre = measured["centre"]
+    needle_box = page.evaluate("""() => {
+        const r = document.querySelector('.obs-dial-pointer-needle').getBoundingClientRect();
+        return {left: r.left, top: r.top, right: r.right, bottom: r.bottom};
+    }""")
+    centre_overlap = not (
+        needle_box["right"] <= centre["x"]
+        or needle_box["left"] >= centre["x"] + centre["width"]
+        or needle_box["bottom"] <= centre["y"]
+        or needle_box["top"] >= centre["y"] + centre["height"]
+    )
+    assert not centre_overlap, "the stylus must stay clear of the centre readout"
+
+
+def test_nothing_after_the_seating_block_reimposes_a_callout_column():
+    """The dial's phone composition must not be re-caped by a LATER rule.
+
+    Why this guard exists: the seating block sets the panel to ONE column at phone width, defeating
+    an earlier `grid-template-columns: minmax(0, 1fr) 130px` rule of IDENTICAL specificity. Equal
+    specificity is resolved by ORDER, so a later `@media (max-width: 700px)` block that reimposed a
+    callout column would shrink the dial again with no error anywhere -- which is exactly what
+    happened in OS-096, when a later block re-caped the dial and the owner found it on his phone
+    rather than in CI.
+
+    RETARGETED 2026-09-24. It began as "the seating block is the LAST rule in the sheet", which was
+    a proxy for that property and stopped being true the moment a legitimate block (Today's ticket)
+    was appended after it. A proxy that has to be re-established by reordering the sheet is worse
+    than the property itself, so this asserts the property: no rule may FOLLOW the seating block
+    that puts a column back on the dial panel.
     """
     css = (ROOT / "static/css/meridian/dial.css").read_text(encoding="utf-8")
     marker = "The concept's seating, at phone width"
     assert marker in css, "the seating block's identifying comment must still be present"
-    tail = css[css.index(marker) :]
-    # Everything after the seating block's opening must be part of that block's own body: the last
-    # non-whitespace character of the sheet closes it.
-    stripped = css.rstrip()
-    assert stripped.endswith("}"), "dial.css must end with a closing brace"
-    # No other top-level rule may follow it.
-    after = stripped[stripped.index(marker) :]
+    indexed = css.index(marker)
+    # The seating block's body, closing at the first balanced brace back to depth zero.
     depth = 0
     closed_at = None
-    for index, char in enumerate(after):
+    for index, char in enumerate(css[indexed:], start=indexed):
         if char == "{":
             depth += 1
         elif char == "}":
@@ -748,9 +1029,18 @@ def test_the_phone_seating_block_is_still_last_in_the_sheet():
                 closed_at = index
                 break
     assert closed_at is not None, "the seating block must be a balanced @media block"
-    remainder = after[closed_at + 1 :].strip()
-    assert remainder == "", (
-        "the phone seating block must remain the LAST rule in dial.css; this follows it: "
-        f"{remainder[:120]!r}"
+    after = css[closed_at + 1 :]
+    offenders = []
+    # A rule "reimposes a column" when it sets grid-template-columns on the panel, or restores a
+    # width/position for the overlay rail, after the seating block has settled both.
+    for selector in (".obs-dial-panel", ".obs-dial-events"):
+        if selector not in after:
+            continue
+        for chunk in after.split(selector)[1:]:
+            head = chunk.split("{", 1)[-1].split("}", 1)[0]
+            for prop in ("grid-template-columns", "position: absolute", "width:"):
+                if prop in head:
+                    offenders.append(f"{selector} sets {prop!r} after the seating block")
+    assert not offenders, (
+        "the phone seating must not be re-caped by a later rule: " + "; ".join(offenders)
     )
-    assert tail, "the seating block must not be empty"
