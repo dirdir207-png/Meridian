@@ -66,6 +66,18 @@ would have caught the deleted `stroke: none` copy). Two stale assertions were re
 reasons recorded: the arc-end literal (now a relationship, not a number) and the paper-literal
 count, which had drifted to 11 while the test still said 8 — it is now a per-file allowance.
 
+**Capture evidence.** `artifacts/dial-pointer-2026-09-24-final/` is the governed set for this state,
+produced after all five changes by `scripts/capture_meridian_matrix.py` against the isolated synthetic
+preview (`http://127.0.0.1:8093`, `--fixture synthetic-today`, frozen clock `2026-09-08T13:42:00Z`,
+`--skip-login`) at commit `a6c8c2a`: **10 validated records**, the five governed viewport/DPR pairs in
+both themes, each carrying `full_page: true` and its `current_path`. The review view is
+`today-mobile-air-dark-review.png` beside it. In that capture the day numbers run from 10 THU at the
+top-left, past the rotunda, round to 16 WED at the bottom-right; the stylus is plainly visible
+pointing at FRI SEP 11; the evidence ticket sits directly above "Explore my plan" with no navigation
+row between them. `artifacts/dial-pointer-2026-09-24/` holds the earlier intermediates from this
+session, including the before/after pair for the Settings hourglass, and is historical rather than
+the acceptance artifact.
+
 **Not touched:** no route, service, migration, schema, provider call or action-pipeline change. No
 deployment.
 
