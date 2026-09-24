@@ -864,6 +864,10 @@ def dial():
             commitments.list_active(),
             as_of=as_of,
             paycheck=_paycheck_config(graph),
+            # The same evidence repository the Plan surface uses, so a bill's invoice is resolved by
+            # ONE matcher and Today's "View bill" opens the mail-ingested invoice rather than the
+            # Plan page (owner, 2026-09-24).
+            evidence_repository=EvidenceRepository(graph.db_path),
         )
     )
 

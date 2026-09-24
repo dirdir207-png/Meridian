@@ -337,12 +337,31 @@ def _reserve_figure(commitment, amount: float):
     return None, "unknown", "unknown", None, None, None
 
 
+def _invoice_for_bill(evidence_repository, bill_name: str) -> Optional[dict]:
+    """The mail invoice for a bill, or None. Best-effort, exactly like the Plan surface.
+
+    The matcher lives in `plan` because "what counts as this bill's invoice" must have ONE answer:
+    the owner asked Today's "View bill" to open "the mail ingested invoice we already have attached
+    to the same bill on plan". Imported lazily so the dial's read path does not hard-depend on the
+    plan service, and so a failure here costs an invoice link rather than the whole dial.
+    """
+    if evidence_repository is None or not bill_name:
+        return None
+    try:
+        from meridian.services.plan import bill_invoice_link
+
+        return bill_invoice_link(evidence_repository, bill_name)
+    except Exception:  # noqa: BLE001 - an invoice link is a nice-to-have, never a hard failure
+        return None
+
+
 def _commitment_events(
     commitments: Sequence[Commitment],
     as_of: date,
     horizon_end: date,
     funding_sources: Optional[dict[tuple[str, str], list]] = None,
     reserve_schedules: Optional[dict[tuple[str, str], object]] = None,
+    evidence_repository=None,
 ) -> list[dict]:
     sources = funding_sources if funding_sources is not None else {}
     reserves = reserve_schedules if reserve_schedules is not None else {}
@@ -358,6 +377,9 @@ def _commitment_events(
             recurrence = getattr(commitment, "recurrence", "") or ""
             if amount is None or anchor is None:
                 continue
+            # Resolved ONCE per bill, not per occurrence: the invoice is a property of the bill,
+            # and a weekly recurrence would otherwise run the mail matcher once per occurrence.
+            invoice = _invoice_for_bill(evidence_repository, commitment.name)
             funding_source, ambiguous_ids, funding_plan = _resolve_funding_source(
                 commitment, sources
             )
@@ -437,6 +459,10 @@ def _commitment_events(
                         ),
                         "observedAt": None,
                         "evidenceIds": [],
+                        # The mail-ingested invoice for THIS bill, resolved by the same matcher the
+                        # Plan surface uses, so the Today ticket's "View bill" opens the actual
+                        # invoice instead of the Plan page. None when the bill has no invoice mail.
+                        "invoice": invoice,
                         "detailHref": "/meridian?workspace=plan",
                     }
                 )
@@ -484,6 +510,9 @@ def _commitment_events(
                     ),
                     "observedAt": None,
                     "evidenceIds": [],
+                    # A goal has no invoice: nothing was billed. The field is present so every
+                    # event carries the same shape, which the JS model reads unconditionally.
+                    "invoice": None,
                     "detailHref": "/meridian?workspace=plan",
                 }
             )
@@ -545,6 +574,7 @@ def build_dial(
     as_of: date,
     paycheck=None,
     now: Optional[datetime] = None,
+    evidence_repository=None,
 ) -> dict:
     """Build the read-only Observatory dial model."""
     if commitments is None:
@@ -558,6 +588,7 @@ def build_dial(
         horizon_end,
         _funding_sources_by_reserve(graph),
         _reported_reserve_schedules(graph),
+        evidence_repository,
     )
     events.extend(_paycheck_events(paycheck, as_of, horizon_end))
     events.sort(key=lambda event: (event["date"], event["kind"], event["title"]))

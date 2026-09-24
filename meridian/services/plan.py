@@ -179,6 +179,23 @@ def _sender_host(sender: str | None) -> str:
     return raw.lower().strip()
 
 
+def bill_invoice_link(evidence_repository, bill_name: str) -> Optional[dict]:
+    """The ONE invoice a bill's evidence points at, or None.
+
+    This is the public face of `_bill_invoice_evidence`, and it exists because a SECOND surface
+    needs the same answer: the Today dial's evidence ticket. The owner asked for its "View bill"
+    control to open "the mail ingested invoice we already have attached to the same bill on plan",
+    and the only correct way to do that is to ask the same matcher rather than re-implement "what
+    counts as this bill's invoice" -- two implementations would drift, and the drift would show up
+    as Today opening a marketing email that Plan correctly refuses to call an invoice.
+
+    Returns the first match (the matcher already ranks bill/statement subjects first and refuses
+    anything that does not read as a bill), or None when the bill genuinely has no invoice mail.
+    """
+    matches = _bill_invoice_evidence(evidence_repository, bill_name, limit=1)
+    return matches[0] if matches else None
+
+
 def _bill_invoice_evidence(evidence_repository, bill_name: str, limit: int = 4) -> list[dict]:
     """Find mail evidence that looks like an invoice for a bill (e.g. "Verizon").
 
