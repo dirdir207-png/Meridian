@@ -58,8 +58,9 @@
       "why": "The app side is BUILT and tested (migration 026, meridian/calendar_context.py, scripts/calendar_context_ingest.py) and the connector is no longer orphaned: calendar now goes through Composio as its only adapter, by owner decision. What does NOT exist is the once-a-day trigger. The fetch needs a Composio call, which only the harness can make today; the app has no Composio client, and giving it a raw Composio credential is its own decision rather than a detail. Nothing may describe calendar as being polled until that is decided. Honest liveness already exists: the store reports the newest observed event and reads STALE rather than healthy when the feed stalls.",
       "arose": "2026-09-21",
       "promoted_to": "OS-067",
-      "decision_owed": "false",
-      "resolution": "ANSWERED 2026-09-25, owner: 'The harness runs it.' A daily harness-side job calls Composio and feeds Meridian, so the app keeps holding no Composio credential; the remaining piece is the harness-side invocation and honest liveness."
+      "decision_owed": false,
+      "resolution": "ANSWERED 2026-09-25, owner: 'The harness runs it.' A daily harness-side job calls Composio and feeds Meridian, so the app keeps holding no Composio credential; the remaining piece is the harness-side invocation and honest liveness.",
+      "resolved": "RESOLVED 2026-09-25 — the shape is chosen (D-028): a HARNESS-side daily fetch, not an app credential. OS-067 is accordingly `blocked` on a schedule rather than waiting for a decision."
     },
     {
       "summary": "A harness-mediated GMAIL ingestion service is still possible but NOT built",
@@ -86,7 +87,8 @@
       "arose": "2026-09-21",
       "promoted_to": "OS-076",
       "parked_in": "design/investigator-medallions-2026-09-21/IMPLEMENTATION.md",
-      "decision_owed": true
+      "decision_owed": false,
+      "resolved": "ANSWERED 2026-09-25 with a question back: what is needed to expand the premise and implement the actual vision. The answer is recorded as OS-076's prerequisites (the privacy boundary on what financial facts may reach a provider, two or three real questions, and a design direction from Astra) plus the four things that proceed without any of them."
     },
     {
       "summary": "Virgil's panel summons the soft keyboard on open and leaves a black screen on close",
@@ -142,8 +144,9 @@
       "why": "Owner, 2026-09-24: \"payday is the funding mechanism, so the payday and when it lands is the cadence, this isn't consistent. It still says no cadence detected in places. Funding the way the app describes separate from payday is per bill and doesn't need a separate setting or section.\" Verified at both layers: services/payday.py:87 builds `pattern` from recognized transactions only while Crew's plans ride in the same payload, and payday.js:54-64 renders the summary from `pattern` alone, so the card can say 'Not recognized' beside a Crew cadence the same page lists below; the card's own instruction ('Add or confirm your payday timing') has no control behind it, because /settings/payday is GET-only and no payday write exists anywhere; and Settings carries a two-mode copy of the four-mode per-commitment funding editor that Plan already ships against the same repository and propose route. The bidirectional machinery the owner points at is real for the funding plan (create/update/delete with readback verifiers).",
       "arose": "2026-09-24",
       "promoted_to": "OS-104",
-      "decision_owed": "false",
-      "resolution": "ANSWERED 2026-09-25, owner: 'Meridian writes them too.' Meridian gains write commands for FREQUENCY / DAY / IDENTIFICATION on the funding-plan pattern, as its own bounded slice with its own safety analysis."
+      "decision_owed": false,
+      "resolution": "ANSWERED 2026-09-25, owner: 'Meridian writes them too.' Meridian gains write commands for FREQUENCY / DAY / IDENTIFICATION on the funding-plan pattern, as its own bounded slice with its own safety analysis.",
+      "resolved": "RESOLVED 2026-09-25 — one cadence read from Crew's funding plan, with a bidirectional setup, and the machinery VERIFIED to exist (create/update paycheck funding plan with readback verification; plans persisted in crew_funding_plans). Now OS-104."
     },
     {
       "summary": "The dial's ticket still prints 'No event selected' beneath a line that already explains the same thing.",
@@ -157,8 +160,9 @@
       "summary": "Callout titles in the Today rail are 15px, because the owner-chosen 104px rail splits the word 'arrangement' at 16px.",
       "why": "OS-113's visual slice, 2026-09-25. At 16px the longest ordinary title word measures 106.1px in a 104px column, so `overflow-wrap: break-word` splits it and the browser guard `test_long_event_list_does_not_push_dial_down_or_split_amounts` fails at 390/420/430. At 15px the word measures 99.5px, rows are 14% shorter, and the rail is still 3px clear of the ring. The three alternatives were measured and each breaks a governed guard: rail back to 126px restores the 19px overlap he reported; shrinking the dial to 78vw gives 7 label pairs/136.9px2 against a 60px2 limit; shifting the instrument left breaks his own seating guards (`content_left - dial_box.x == 56`, `painted.left >= -48`). So if the owner wants 16px titles back, the FORM must change rather than a number.",
       "arose": "2026-09-25",
-      "decision_owed": true,
-      "parked_in": "Track D — Design and layout fidelity"
+      "decision_owed": false,
+      "parked_in": "Track D — Design and layout fidelity",
+      "resolved": "RESOLVED 2026-09-25 — keep 15px. It fits the 104px rail the owner chose, with 3px clear between the ring's right edge at 311 and the rail ink at 314."
     },
     {
       "summary": "Plan's write forms resolve Crew's opaque ids by parsing a snapshot FILE outside the repository.",
