@@ -1,5 +1,26 @@
 # Enhanced SimpleCrew — Current Status
 
+## 2026-09-25: the injected reserve is unwound, and the allocation history is recording on live money
+
+The owner reset the Bill Reserve. Verified read-only against the pre-unwind record: reserve **0** (was
+48077), Checking **0** (was -48077), every bill's `reservedAmount` **0.00**, and `nextFundingDate` **still
+2026-10-02** — the measurement window survived because the recreated income source's anchor moved from
+09-04 to 09-18 and both are 14 days apart, so the biweekly phase is unchanged.
+
+The delete-and-recreate is captured by our own data rather than by a note: three income sources exist in
+`crew_funding_plans`, the first two marked `absent_since` and the live one (`State Of New Hampshire`,
+1649.10, anchor 09-18) unmarked. Absent means absent, not deleted.
+
+**OS-114 item 2 is now deployed and proven on the owner's real state:** the dated allocation history
+records **44 rows across 4 captures**. Its emptiness was a process fact, not a code fact — the APP runs the
+sync loop (`run_preview.py` → `ensure_meridian_refresh()`) while `live_sync.py` only fetches the snapshot,
+and the app had been up since 15:44, before the ingest fix. Two operational facts are recorded with it:
+`run_preview.py` has **nothing supervising it**, so if it dies the preview stays down; and `setsid` does
+**not exist on macOS**, so start it with Python's `start_new_session=True`.
+
+**Open risk, unchanged by the unwind:** the `Allocation Probe*` bills still share `reservedBy 2026-09-30`
+with Eversource's real 210.00, and under the measured equal-deadline ordering the smaller probes outrank it.
+
 ## 2026-09-25: owner-authorized capacity experiment observed the complete current reserve cascade
 
 Five real internal top-ups, each followed by a complete settling read, filled the current Crew bills in

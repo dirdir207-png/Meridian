@@ -330,3 +330,51 @@ FIRST, verbatim, so the unwind can be proved rather than assumed.
   hand. On Crew's own numbers that obligation has no funding source inside the reserve before it is due.
   This is arithmetic stated for the owner, not advice — and it is the kind of thing Meridian exists to
   surface rather than discover late.
+
+---
+
+## POST-UNWIND verification — 2026-09-25, and the history is now live
+
+The owner reported the reset as done (*"Fixed I think"*). Verified read-only against both the live capture
+and our own database, against the PRE-UNWIND record above.
+
+| what | before | after |
+|---|---|---|
+| `totalReservedAmount` | 48077 ($480.77, INJECTED) | **0** ✔ |
+| Checking `clearedBalance` | -48077 | **0** ✔ |
+| every bill's `reservedAmount` | probes 512.00 + real 303.00 | **0.00 for all 11** ✔ |
+| `nextFundingDate` | 2026-10-02 | **2026-10-02 — UNCHANGED** ✔ |
+| income source | `…ZmY2YjQyMDct…` 1663.00, biweekly, anchor 2026-09-04 | `…NDk2N2IxYzMt…` **1649.10**, biweekly, anchor **2026-09-18** |
+| income source name | (none observed) | **State Of New Hampshire** |
+
+**The measurement window SURVIVED, and the reason is arithmetic rather than luck:** the anchor moved from
+2026-09-04 to 2026-09-18, and both are 14 days apart, so the biweekly phase is preserved — 09-04 → 09-18 →
+**10-02** ✔. Had the recreation anchored on the day it was made, the next funding would have slipped to
+10-09 and OS-058 would have been measuring a date that never arrived.
+
+**The discontinuity is recorded by our own data, not just by this note.** Three income sources exist in
+`crew_funding_plans`: the original (1663.00, anchor 09-04, `absent_since 22:06:43Z`), an intermediate
+(1649.10, anchor 09-18, `absent_since 22:11:43Z`), and the live one (1649.10, anchor 09-18,
+`absent_since NULL`). Absent means **absent**, not deleted ✔ — so a later reader sees a deliberate
+delete-and-recreate rather than a provider anomaly or a data loss. The plan's amount also changed, 1663.00
+→ 1649.10, which is an observation and not an inference.
+
+**DEPLOYED: the dated allocation history is now recording on live money.** The cause of its emptiness was
+that the app — not the snapshot bridge — runs the sync loop (`run_preview.py` calls
+`ensure_meridian_refresh()`, while `live_sync.py` only fetches the snapshot and never touches the database).
+The app had been up since 15:44, before the ingest fix, so no hook could fire. Restarted at 18:30, it now
+records **44 rows across 4 captures**, every bill reading `0.00` with `reported = 1` — a **RELEASE** (Crew
+stating zero), never to be confused with the `NULL`/`reported = 0` silence that C01 requires be kept
+distinct. OS-114 item 2 is therefore not merely built but proven on the owner's real state.
+
+**A hard-won operational fact, recorded because it cost a minute of downtime.** `run_preview.py` is a
+detached process with **nothing supervising it** (`launchd` reparents it, but no launchd job owns it), so
+if it dies the preview stays down. `setsid` **does not exist on macOS** — a launch written with it fails
+silently apart from one line in a log. Start it with Python instead:
+`subprocess.Popen([...], start_new_session=True)`, which is macOS's own route to a detached session.
+
+**Still standing, and now the main open risk:** the `Allocation Probe*` bills keep
+`reservedBy = 2026-09-30`, the same deadline as Eversource's real 210.00 obligation, and under the ordering
+the experiment measured (equal deadline → lower amount first) the probes of 2.00, 3.00, 5.00 and 200.00 all
+outrank it. Giving them a later deadline, or pausing them, stops a test fixture from competing with a real
+bill.
