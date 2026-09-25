@@ -1,9 +1,15 @@
 <section class="m-payday-settings" data-payday-root>
   <header class="m-settings-command m-payday-command">
     <div>
-      <p class="m-workspace-kicker">Settings · Payday &amp; Funding</p>
+      <p class="m-workspace-kicker">Settings · Payday</p>
       <h1>Your payday rhythm,<br>made useful.</h1>
-      <p>Review when income arrives and how Meridian will propose funding your commitments.</p>
+      {# OS-104: this pane used to say "how Meridian will propose funding your commitments" and carried
+         its own per-commitment funding editor. Payday and funding were two descriptions of one
+         mechanism: the paycheck that lands IS the cadence, and Crew holds that record. Funding a
+         particular bill is per bill, so it lives where the bill does -- Plan, which already ships the
+         editor with all four modes. #}
+      <p>Crew holds the paycheck that pays you. Meridian reads it, learns from your deposits, and
+        proposes what to fund after each one arrives.</p>
     </div>
     <span class="m-chip" data-payday-freshness data-state="unavailable">Loading</span>
   </header>
@@ -15,59 +21,37 @@
     <article>
       <p class="m-section-label">Cadence</p>
       <strong data-payday-pattern>—</strong>
-      <span data-pattern-confidence>Recognition unavailable</span>
+      {# ONE cadence, resolved by the service in the app's own precedence (Crew's paycheck, then the
+         observed pattern), with the source named here. This line replaces "Add or confirm your payday
+         timing", which asked for an action no control anywhere could perform. #}
+      <span data-cadence-source>Reading your paycheck…</span>
     </article>
     <article>
       <p class="m-section-label">Next payday</p>
       <strong data-next-payday>—</strong>
-      <span data-typical-income>Income unavailable</span>
+      <span data-typical-income>Reading your deposits…</span>
     </article>
     <article>
       <p class="m-section-label">Next proposal</p>
       <strong data-next-run-total>—</strong>
-      <span data-next-run-date>No run projected</span>
+      <span data-next-run-date>Nothing to propose yet</span>
     </article>
   </section>
 
   <div class="m-payday-layout">
-    <section class="m-payday-editor" aria-labelledby="payday-editor-title">
-      <p class="m-section-label">Schedule controls</p>
-      <h2 id="payday-editor-title">Fund the plan after payday</h2>
-      <p>Changes create a proposal for your approval. Meridian never moves money from this screen.</p>
-
-      <label class="m-payday-field">
-        <span>Commitment</span>
-        <select data-payday-commitment></select>
-      </label>
-      <label class="m-payday-field">
-        <span>Contribution method</span>
-        <select data-payday-kind>
-          <option value="fixed_per_paycheck">Fixed amount per paycheck</option>
-          <option value="percent_of_paycheck">Percentage of paycheck</option>
-        </select>
-      </label>
-      <label class="m-payday-field">
-        <span>Amount</span>
-        <input data-payday-amount type="number" min="0" step="0.01" inputmode="decimal">
-      </label>
-
-      <button class="m-primary-button" type="button" data-review-schedule>Review schedule change</button>
+    {# Crew's own funding plan: the record the owner calls his income source, addressed by Crew's plan
+       id -- never by the name, which the owner renames. Setting an amount here is a real Crew write and
+       Meridian reads Crew back before treating it as done. When Crew reports none this says so rather
+       than offering a control that cannot address anything. #}
+    <section class="m-payday-funding-plans" aria-labelledby="payday-funding-plans-title">
+      <h2 id="payday-funding-plans-title">Your payday in Crew</h2>
+      <p class="m-payday-note">
+        This is the paycheck that pays you, and the cadence above comes from it. Setting an amount here
+        changes it in Crew, and Meridian reads Crew back before treating the change as done.
+      </p>
+      <div class="m-funding-plans" data-funding-plans></div>
+      <p class="m-payday-status" data-funding-plan-status role="status" aria-live="polite"></p>
     </section>
-
-  {# Crew's own funding plan: the cadence that actually pays, as opposed to the Meridian-local
-     funding rule above, which only decides how an arriving paycheck is split. Setting an amount
-     here is a real Crew write, addressed by Crew's plan id -- never by the name, which the owner
-     renames. The plans come from the payload; when Crew reports none this says so rather than
-     offering a control that cannot address anything. #}
-  <section class="m-payday-funding-plans" aria-labelledby="payday-funding-plans-title">
-    <h2 id="payday-funding-plans-title">Your payday in Crew</h2>
-    <p class="m-payday-note">
-      Crew holds the funding plan that pays you. Setting an amount here changes it in Crew, and
-      Meridian reads Crew back before treating the change as done.
-    </p>
-    <div class="m-funding-plans" data-funding-plans></div>
-    <p class="m-payday-status" data-funding-plan-status role="status" aria-live="polite"></p>
-  </section>
 
     <aside class="m-payday-preview" aria-labelledby="payday-preview-title">
       <p class="m-section-label">Live preview</p>

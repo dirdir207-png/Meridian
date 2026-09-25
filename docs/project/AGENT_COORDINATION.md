@@ -121,6 +121,47 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-24 (twelfth pass) — OS-104 implemented: the Cadence card now reads the record that actually pays (`b`-side consolidation)
+
+**The owner's model was already the app's model in one place, and the screen he reads used the other one.** He
+said payday and funding "suggests overlap", that the payday and when it lands IS the cadence, and that per-bill
+funding "doesn't need a separate setting or section". `meridian/api.py:515` has preferred Crew's paycheck record
+since 2026-09-19 (*"per the owner's directive that the paycheck SHOULD be a crew record"*), but
+`services/payday.py` built its `pattern` from `recognize_payday(transactions)` alone and the Cadence card rendered
+from that — **which is why his screenshot could say "Not recognized" above a Crew cadence listed lower down.**
+
+**Implemented, at the layer that decides.** `resolve_cadence()` answers in the backend's own order — Crew's
+paycheck, then the observed pattern, then nothing — names its source, and reports when Crew holds several records
+with differing schedules rather than letting one figure stand in for all. The payload carries `cadence` (the
+resolved answer) *and* `pattern` (what Meridian has observed), because those are two different facts. The card
+reads the resolved value and its source label; the per-row `Crew cadence:` line is gone.
+
+**The duplication and the dead end both went.** The pane's own **two-mode** copy of the **four-mode**
+per-commitment funding editor Plan already ships against the same repository and the same propose route is
+removed — funding a bill is the bill's own business — and the hub row is renamed **Payday** ("The paycheck Crew
+pays you from") while **Funding schedules** keeps its pointer to Plan. The instruction *"Add or confirm your payday
+timing"* went with it: it asked for an action nothing in the product could perform (`/settings/payday` is GET-only,
+its only POST sets the learning floor, and no payday write exists). Five phrasings of two facts — *"Not
+recognized"*, *"Add or confirm your payday timing"*, *"Income unavailable"*, *"No run projected"*, *"not
+reported"* — collapsed to one each.
+
+**Verified** in the isolated preview at 420×912 DPR 3 in both themes in three payload states: the owner's own
+screenshot state reads *"Not recognized — No paycheck record in Crew and no deposit pattern yet. Set the paycheck
+in Crew, or let Meridian learn it from deposits."*; the Crew state reads *"Biweekly — Crew paycheck · State of NH
+PR Payment"*; the learned state reads *"Biweekly — Learned from your deposits · 92% confidence · 12 deposits"*.
+The removed controls are absent in every state, `docOverflow` 0, no console errors. 16 new tests in
+`tests/meridian/test_payday_cadence_resolution.py`; the old `test_settings_payday.py` guard was **rewritten rather
+than deleted** (its old assertion pinned the removed editor) so it now holds something stronger: the write goes
+through the pipeline with explicit `owner_direct` provenance, reports whether the router executed it or parked it
+for approval, is read back from Crew, and is never retried — plus the anti-duplication rule that keeps a second
+per-bill editor out of this pane.
+
+**Not changed:** which mechanism funds anything, any route, action, repository, migration, provider call or
+authority boundary. The one write that remains (the Crew paycheck amount) is untouched and still verified by
+readback. **Still owed:** the owner's decision on whether Meridian should also write FREQUENCY / DAY /
+IDENTIFICATION — Crew's other paycheck sections, which his screenshot shows and Meridian neither reads in full nor
+writes at all. That would be a new capability, so it is not implemented.
+
 ### 2026-09-24 (eleventh pass) — The fourth Accounts trait: the concept's three emblems, derived where they exist and drawn where they do not (`OS-103` closed)
 
 **The trait that was not guessed at is now built, on the owner's pick.** *"More diverse icons"* changed a glyph

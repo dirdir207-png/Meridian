@@ -24,6 +24,49 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Payday: one cadence, resolved where the app already decides it (2026-09-24, OS-104)
+
+Owner: *"payday and funding is unnecessarily complex and suggests overlap, payday is the funding mechanism, so
+the payday and when it lands is the cadence, this isn't consistent. It still says no cadence detected in
+places."* Verified, then fixed at the point where the two answers diverged rather than in the copy.
+
+**The divergence.** `meridian/api.py:515` has preferred Crew's paycheck record since 2026-09-19 (*"per the
+owner's directive that the paycheck SHOULD be a crew record"*), but `services/payday.py` built its `pattern` from
+`recognize_payday(transactions)` alone and `payday.js` rendered the Cadence card from that — so the card could say
+**"Not recognized"** on a page that listed a Crew cadence lower down.
+
+**Fixed in the service, not in the card.** `resolve_cadence()` now answers the question in the same order the
+backend already used (Crew's paycheck → the observed pattern → nothing), names its source, and reports when Crew
+holds several records with differing schedules instead of letting one figure stand in for all of them. The payload
+carries `cadence` (the resolved answer) *and* `pattern` (what Meridian has observed), because those are different
+facts. The card reads the resolved value; the plan rows no longer print a second "Crew cadence:" line.
+
+**Three payload states, rendered at 420×912 DPR 3 in both themes** (`artifacts/payday-funding-os104-2026-09-24/`):
+
+| state | Cadence | source line | next payday | next proposal |
+|---|---|---|---|---|
+| **A** — the owner's own screenshot state (no Crew plan, no pattern) | *Not recognized* | *No paycheck record in Crew and no deposit pattern yet. Set the paycheck in Crew, or let Meridian learn it from deposits.* | — · *Not projected from your deposits yet* | — · *Nothing to propose yet* |
+| **B** — Crew holds the paycheck | *Biweekly* | *Crew paycheck · State of NH PR Payment* | — (no observed pattern yet) | — |
+| **C** — learned only | *Biweekly* | *Learned from your deposits · 92% confidence · 12 deposits* | September 16 · $1,660.00 typical income | $780.00 · September 16 · proposal only |
+
+![State A: the owner's screenshot state, now honest and actionable](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/payday-funding-os104-2026-09-24/review/payday-A-nothing.jpg)
+
+![State B: the Cadence card reads Crew's own paycheck](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/payday-funding-os104-2026-09-24/review/payday-B-crew.jpg)
+
+**The dead end is gone with the duplication.** The card used to instruct *"Add or confirm your payday timing"*
+while `/settings/payday` was GET-only, the pane's only POST set the learning floor, and no payday write existed
+anywhere in the repository. The pane also carried a **two-mode** copy of the **four-mode** per-commitment funding
+editor Plan already ships against the same repository and the same propose route. That editor is removed — the
+skill lives where the commitment lives — and `settings_hub.py` now names this row **Payday** ("The paycheck Crew
+pays you from") while **Funding schedules** keeps its pointer to Plan. Removed controls verified absent in all
+three states (`data-review-schedule`, `data-payday-commitment`: both gone); `docOverflow` 0; no console errors.
+
+**Not changed:** which mechanism funds anything, any route, action, repository, migration or provider call, and
+the one write that remains — the Crew paycheck amount — which still goes through `/api/actions/mutate` with
+`owner_direct` provenance, reports whether the router executed it or parked it for approval, and is read back
+from Crew before being treated as confirmed. **Still owed:** the owner's decision on whether Meridian should also
+write FREQUENCY / DAY / IDENTIFICATION (Crew's other paycheck sections), which would be a new capability.
+
 ## Accounts — the emblems the concept draws on its three named accounts (2026-09-24, OS-103 trait 2)
 
 Owner, 2026-09-24, choosing between two glyph systems: **"The concept's three emblems."** That choice is also

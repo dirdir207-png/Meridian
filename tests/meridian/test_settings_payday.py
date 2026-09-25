@@ -15,15 +15,54 @@ def test_settings_template_includes_payday_workspace_and_script():
     assert "static/js/meridian/payday.js" in settings
 
 
-def test_payday_ui_is_explicitly_an_approval_gated_proposal():
+def test_payday_ui_writes_only_through_the_pipeline_and_says_so():
+    """OS-104 rewrote this guard, and it is stronger than the one it replaced.
+
+    The pane used to carry its own per-commitment funding editor, which created a funding
+    PROPOSAL. That editor is gone (Plan owns per-bill funding, with all four modes), so the
+    old assertion -- "Meridian never moves money from this screen" -- no longer described the
+    surface: the one remaining write is the Crew paycheck amount, and a fully-specified owner
+    edit there is ROUTED by the pipeline, which may execute it directly. What must hold now is
+    that the write goes through the pipeline with explicit owner provenance, that the surface
+    reports which routing happened instead of assuming success, and that an uncertain mutation
+    is never repeated.
+    """
     html = _read("templates/meridian/partials/payday-funding.html")
     js = _read("static/js/meridian/payday.js")
-    assert "Meridian never moves money from this screen" in html
-    assert "proposal" in html.lower()
-    # The payday editor creates a funding proposal; it never calls the direct
-    # mutation helper used for owner-directed Crew writes.
-    assert "meridianPropose" in js
+
+    # The pipeline, with provenance stated at the call site rather than hidden in a helper.
+    assert 'fetch("/api/actions/mutate"' in js
+    assert 'provenance: "owner_direct"' in js
     assert "meridianMutate" not in js
+    # The outcome is reported, not assumed: direct execution and pending approval both surface.
+    assert "routing_direct" in js
+    assert "Pending Actions" in js
+    assert "reads Crew back" in js
+    # Never retried.
+    for forbidden in ("retry", "setTimeout", "while ("):
+        assert forbidden not in js, forbidden
+    # And the surface is honest about what happens next, in the owner's words rather than ours.
+    assert "reads Crew back" in js.replace("\n", " ")
+    assert "proposal until you explicitly approve it" in html
+
+
+def test_payday_pane_does_not_re_duplicate_per_bill_funding():
+    """The owner, 2026-09-24: "Funding the way the app describes separate from payday is per
+    bill and doesn't need a separate setting or section." Plan already ships the four-mode
+    per-commitment editor against the same repository and the same propose route, so this pane
+    must not grow a second one -- and it must say where that control lives."""
+    html = _read("templates/meridian/partials/payday-funding.html")
+    js = _read("static/js/meridian/payday.js")
+    # The two-mode copy's controls are gone.
+    for gone in ("data-payday-commitment", "data-payday-kind", "data-payday-amount",
+                 "data-review-schedule"):
+        assert gone not in html, gone
+        assert gone not in js, gone
+    # And this pane no longer proposes funding rules; Plan does, through its own editor.
+    assert "funding-rules/propose" not in js
+    # The funding pointer in the hub still exists, so the capability stayed reachable.
+    hub = _read("meridian/settings_hub.py")
+    assert '"Funding schedules"' in hub and '"Manage in Plan"' in hub
 
 
 def test_payday_settings_styles_exist():

@@ -1,4 +1,4 @@
-import { freshnessText, meridianFetch, meridianPropose } from "./api.js";
+import { freshnessText, meridianFetch } from "./api.js";
 import { formatCurrency } from "./format.js";
 
 const root = document.querySelector("[data-payday-root]");
@@ -49,19 +49,40 @@ function renderLearning(learning) {
   }
 }
 
+function cadenceSourceText(cadence) {
+  /* Where the cadence came from, said plainly. Before OS-104 the card reported the observed
+     pattern alone, so a Crew-held paycheck left it reading "Not recognized" while the same page
+     listed that paycheck's cadence further down. When Crew holds more than one record the label
+     names the one it used and admits the others: a single figure must not silently stand in for
+     several. */
+  if (!cadence || !cadence.value) {
+    return "No paycheck record in Crew and no deposit pattern yet. Set the paycheck in Crew, or let Meridian learn it from deposits.";
+  }
+  if (cadence.source === "crew") {
+    const named = cadence.plan_name ? ` · ${cadence.plan_name}` : "";
+    const others =
+      cadence.distinct_cadences > 1
+        ? ` (one of ${cadence.distinct_cadences} records)`
+        : "";
+    return `${cadence.source_label}${named}${others}`;
+  }
+  return `${cadence.source_label} · ${Math.round((cadence.confidence || 0) * 100)}% confidence · ${
+    cadence.deposits || 0
+  } deposits`;
+}
+
 function render(payload) {
   currentPayload = payload;
   const pattern = payload.pattern;
-  root.querySelector("[data-payday-pattern]").textContent = pattern
-    ? titleCase(pattern.cadence)
+  const cadence = payload.cadence || { value: null };
+  root.querySelector("[data-payday-pattern]").textContent = cadence.value
+    ? titleCase(cadence.value)
     : "Not recognized";
-  root.querySelector("[data-pattern-confidence]").textContent = pattern
-    ? `${Math.round(pattern.confidence * 100)}% confidence · ${pattern.evidence_count} deposits`
-    : "Add or confirm your payday timing";
+  root.querySelector("[data-cadence-source]").textContent = cadenceSourceText(cadence);
   root.querySelector("[data-next-payday]").textContent = humanDate(pattern?.next_date);
   root.querySelector("[data-typical-income]").textContent = pattern
     ? `${formatCurrency(pattern.typical_amount, "USD")} typical income`
-    : "Income unavailable";
+    : "Not projected from your deposits yet";
 
   const nextRun = payload.next_run;
   root.querySelector("[data-next-run-total]").textContent = nextRun
@@ -69,27 +90,17 @@ function render(payload) {
     : "—";
   root.querySelector("[data-next-run-date]").textContent = nextRun
     ? `${humanDate(nextRun.date)} · proposal only`
-    : "No run projected";
+    : "Nothing to propose yet";
 
   const freshness = freshnessText(payload.data_freshness);
   const freshnessNode = root.querySelector("[data-payday-freshness]");
   freshnessNode.dataset.state = freshness.state;
   freshnessNode.textContent = freshness.label;
 
-  const commitment = root.querySelector("[data-payday-commitment]");
-  commitment.replaceChildren();
-  for (const rule of payload.rules || []) {
-    const option = document.createElement("option");
-    option.value = rule.commitment_id;
-    option.dataset.ruleId = rule.id;
-    option.dataset.kind = rule.kind;
-    option.dataset.amount = rule.amount ?? "";
-    option.textContent = rule.commitment;
-    commitment.append(option);
-  }
-  const firstRule = payload.rules?.[0];
-  root.querySelector("[data-payday-kind]").value = firstRule?.kind || "fixed_per_paycheck";
-  root.querySelector("[data-payday-amount]").value = firstRule?.amount ?? "";
+  /* OS-104 removed this pane's own per-commitment funding editor: it was a two-mode copy of the
+     four-mode editor Plan already ships against the same repository and the same propose route, and
+     funding a particular bill is per bill. The rules still ride in the payload -- the projection
+     below uses them -- and nothing about funding behaviour changed. */
 
   const contributions = root.querySelector("[data-payday-contributions]");
   contributions.replaceChildren();
@@ -111,33 +122,6 @@ function render(payload) {
   }
 
   renderLearning(payload.learning);
-}
-
-async function proposeSchedule() {
-  const status = root.querySelector("[data-payday-status]");
-  const commitment = root.querySelector("[data-payday-commitment]");
-  const selected = commitment.selectedOptions[0];
-  if (!selected || !currentPayload) {
-    status.textContent = "Choose a commitment before continuing.";
-    return;
-  }
-  const button = root.querySelector("[data-review-schedule]");
-  button.disabled = true;
-  try {
-    await meridianPropose("/api/meridian/funding-rules/propose", {
-      commitment_id: Number(selected.value),
-      rule_id: selected.dataset.ruleId ? Number(selected.dataset.ruleId) : null,
-      rule: {
-        kind: root.querySelector("[data-payday-kind]").value,
-        amount: Number(root.querySelector("[data-payday-amount]").value),
-      },
-    });
-    status.textContent = "Proposal created for your approval. No money moved.";
-  } catch (error) {
-    status.textContent = `${error.message} ${error.recoveryAction || ""}`.trim();
-  } finally {
-    button.disabled = false;
-  }
 }
 
 async function setLearningFloor(floor) {
@@ -206,11 +190,11 @@ function renderFundingPlans(payload) {
     identity.className = "m-funding-plan-identity";
     const name = document.createElement("strong");
     name.textContent = plan.name || "Unnamed plan";
-    const cadence = document.createElement("small");
-    cadence.textContent = plan.cadence
-      ? `Crew cadence: ${plan.cadence}`
-      : "Crew cadence: not reported";
-    identity.append(name, cadence);
+    /* No per-row cadence line any more. The summary card owns the cadence, resolved in the app's
+       own precedence and naming the record it came from; two cadence displays from two sources was
+       the inconsistency the owner reported (OS-104). This row says which record it is and what it
+       pays, which is what its control needs. */
+    identity.append(name);
 
     const input = document.createElement("input");
     input.type = "text";
@@ -300,7 +284,6 @@ async function load() {
   }
 }
 
-root?.querySelector("[data-review-schedule]")?.addEventListener("click", proposeSchedule);
 root?.querySelector("[data-learning-floor-set]")?.addEventListener("click", () => {
   const input = root.querySelector("[data-learning-floor-input]");
   const value = input?.value || "";

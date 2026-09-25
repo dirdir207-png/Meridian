@@ -57,7 +57,12 @@ CONCEPT_ROWS = (
 #: draws neither row.
 ADDED_ROWS = {
     "Trials & renewals": "connections",
-    "Payday & funding": "preferences",
+    # Owner's authority 2026-09-21; RENAMED to "Payday" on 2026-09-24 (OS-104), when the pane it
+    # opens stopped carrying its own two-mode per-bill funding editor. The row now names the one
+    # thing the pane is -- the paycheck Crew holds and the cadence Meridian reads from it -- and
+    # funding keeps its own pointer row to Plan, so the rename removed a promise the pane no
+    # longer made, not a capability.
+    "Payday": "preferences",
 }
 
 

@@ -168,11 +168,21 @@ SETTINGS_HUB = (
                 # (templates/meridian/partials/connections.html:16). A row here does not
                 # duplicate the Plan journey -- Funding schedules still points there -- it
                 # names the payday surface that already exists and had no way in.
+                #
+                # RENAMED 2026-09-24 (OS-104), on the owner's report that "payday and funding is
+                # unnecessarily complex and suggests overlap ... Funding the way the app
+                # describes separate from payday is per bill and doesn't need a separate setting
+                # or section". The row said "Payday & funding" while the pane it opens carried a
+                # second, two-mode copy of Plan's per-bill funding editor. That copy is gone --
+                # funding a particular bill is the bill's own business and Plan owns that editor
+                # with all four modes -- so this row now names the one thing the pane actually
+                # is: the paycheck Crew holds and the cadence Meridian reads from it. Funding
+                # keeps its own pointer row above, so nothing became unreachable.
                 "key": "payday-funding",
                 "icon": "cash-stack",
                 "tint": "apricot",
-                "label": "Payday & funding",
-                "detail": "Your payday rhythm and what Meridian funds",
+                "label": "Payday",
+                "detail": "The paycheck Crew pays you from",
                 "href": "/meridian/settings?section=payday",
                 "section": "payday",
             },

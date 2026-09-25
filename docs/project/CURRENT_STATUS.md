@@ -1,5 +1,45 @@
 # Enhanced SimpleCrew — Current Status
 
+## Payday: one cadence, read from the record that actually pays (2026-09-24, OS-104, base `dbaafb3`)
+
+Owner: *"payday and funding is unnecessarily complex and suggests overlap, payday is the funding mechanism, so the
+payday and when it lands is the cadence, this isn't consistent. It still says no cadence detected in places.
+Funding the way the app describes separate from payday is per bill and doesn't need a separate setting or
+section."* Then, with a screenshot of Crew's own **Edit paycheck** screen: *"Crew has 5 sections. We have all the
+machinery for bidirectionality."* Every claim verified.
+
+**The app agreed with him in one place and contradicted him in another.** `meridian/api.py:515` has preferred
+Crew's paycheck record since 2026-09-19 (*"per the owner's directive that the paycheck SHOULD be a crew record"*),
+but `services/payday.py` built its observed `pattern` from `recognize_payday(transactions)` alone and the Cadence
+card rendered from that -- **so the card could say "Not recognized" on a page that listed a Crew cadence lower
+down**, which is exactly the screenshot he sent.
+
+**Fixed where the answer is decided, not in the copy.** `resolve_cadence()` answers in the backend's own order
+(Crew's paycheck, then the observed pattern, then nothing), names its source, and reports when Crew holds several
+records with differing schedules rather than letting one figure stand in for all of them. The payload carries
+`cadence` (the resolved answer) and `pattern` (what Meridian has observed) as the two different facts they are. The
+card reads the resolved value; the plan rows stopped printing a second *"Crew cadence:"* line.
+
+**The duplication is gone.** The pane carried a **two-mode** copy of the **four-mode** per-commitment funding
+editor Plan already ships against the same repository and the same propose route. It is removed -- funding a
+particular bill is the bill's own business -- and the hub row is renamed **Payday** ("The paycheck Crew pays you
+from") while **Funding schedules** keeps its pointer to Plan. The instruction *"Add or confirm your payday
+timing"* is gone too: it asked for an action nothing in the product could perform (`/settings/payday` is GET-only,
+its only POST sets the learning floor, and no payday write exists anywhere). Five phrasings of two facts collapsed
+to one each.
+
+**Verified** in the isolated preview at 420x912 DPR 3 in both themes, in three payload states: the owner's own
+screenshot state now reads *"Not recognized -- No paycheck record in Crew and no deposit pattern yet. Set the
+paycheck in Crew, or let Meridian learn it from deposits."*; the Crew state reads *"Biweekly -- Crew paycheck -
+State of NH PR Payment"*; the learned state reads *"Biweekly -- Learned from your deposits - 92% confidence - 12
+deposits"*. The removed controls are absent in every state, `docOverflow` 0, no console errors. 16 new tests in
+`tests/meridian/test_payday_cadence_resolution.py` pin the precedence and the honesty; the rewritten
+`tests/meridian/test_settings_payday.py` guard now pins the pipeline write, its reported routing, no retry, and
+the anti-duplication rule. **Nothing about funding behaviour changed** -- no mechanism, route, action, repository,
+migration or provider call -- and the one remaining write still goes through the action pipeline with
+`owner_direct` provenance and a Crew readback. **Owed:** whether Meridian should also write FREQUENCY / DAY /
+IDENTIFICATION, Crew's other paycheck sections; that would be a new capability and is not implemented.
+
 ## Accounts: the concept's own three emblems, on the three accounts it names (2026-09-24, OS-103 trait 2, base `8bc3c16`)
 
 The fourth trait — *"more diverse icons"* — was **not guessed at**; it was measured, then put to the owner as a

@@ -50,6 +50,61 @@ def build_learning_window(graph, transactions=None) -> dict[str, object]:
     }
 
 
+def resolve_cadence(pattern, funding_plans) -> dict[str, object]:
+    """THE cadence, resolved in the order the rest of the app already uses.
+
+    `meridian/api.py::_paycheck_config` has answered this question the same way since 2026-09-19: Crew's
+    funding plan outranks every other leg, on the owner's directive that the paycheck "SHOULD be a crew
+    record", and `meridian/providers/base.py::FundingPlanCandidate` calls that record the owner's "income
+    source / Funding Cadence". This settings payload reported only the OBSERVED pattern instead, so the
+    Cadence card could read "Not recognized" beside a Crew cadence listed lower on the same page
+    (owner-reported 2026-09-24: "payday is the funding mechanism, so the payday and when it lands is the
+    cadence, this isn't consistent").
+
+    One resolver, one answer, and the source is named so the card can say where the figure came from
+    rather than implying the app does not know. When Crew reports more than one distinct cadence the
+    card names the record it used and says how many others exist -- a single figure must not silently
+    stand in for several.
+    """
+    crew = [
+        plan
+        for plan in funding_plans
+        if isinstance(plan, dict) and plan.get("cadence")
+    ]
+    if crew:
+        governing = crew[0]
+        distinct = {str(plan["cadence"]) for plan in crew}
+        return {
+            "value": governing["cadence"],
+            "source": "crew",
+            "source_label": "Crew paycheck",
+            "plan_id": governing.get("id"),
+            "plan_name": governing.get("name"),
+            "other_records": len(crew) - 1,
+            "distinct_cadences": len(distinct),
+            "conflict": len(distinct) > 1,
+        }
+    if pattern is not None:
+        return {
+            "value": pattern.cadence,
+            "source": "observed",
+            "source_label": "Learned from your deposits",
+            "confidence": pattern.confidence,
+            "deposits": len(pattern.evidence_ids),
+            "other_records": 0,
+            "distinct_cadences": 1,
+            "conflict": False,
+        }
+    return {
+        "value": None,
+        "source": None,
+        "source_label": None,
+        "other_records": 0,
+        "distinct_cadences": 0,
+        "conflict": False,
+    }
+
+
 def build_payday_settings(graph, commitments, rules, *, as_of: date) -> dict[str, object]:
     transactions, _cursor = graph.list_transactions(limit=200)
 
@@ -124,6 +179,10 @@ def build_payday_settings(graph, commitments, rules, *, as_of: date) -> dict[str
         }
     return {
         "state": "current" if pattern is not None else "unavailable",
+        # ONE cadence for the surface, resolved in the app's own precedence rather than from the
+        # observed pattern alone (OS-104). The observed pattern is still reported separately below,
+        # because "what Crew says" and "what Meridian has seen" are different facts and both matter.
+        "cadence": resolve_cadence(pattern, funding_plans),
         "pattern": (
             {
                 "cadence": pattern.cadence,
