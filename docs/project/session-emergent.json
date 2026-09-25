@@ -57,7 +57,8 @@
       "why": "The app side is BUILT and tested (migration 026, meridian/calendar_context.py, scripts/calendar_context_ingest.py) and the connector is no longer orphaned: calendar now goes through Composio as its only adapter, by owner decision. What does NOT exist is the once-a-day trigger. The fetch needs a Composio call, which only the harness can make today; the app has no Composio client, and giving it a raw Composio credential is its own decision rather than a detail. Nothing may describe calendar as being polled until that is decided. Honest liveness already exists: the store reports the newest observed event and reads STALE rather than healthy when the feed stalls.",
       "arose": "2026-09-21",
       "promoted_to": "OS-067",
-      "decision_owed": true
+      "decision_owed": "false",
+      "resolution": "ANSWERED 2026-09-25, owner: 'The harness runs it.' A daily harness-side job calls Composio and feeds Meridian, so the app keeps holding no Composio credential; the remaining piece is the harness-side invocation and honest liveness."
     },
     {
       "summary": "A harness-mediated GMAIL ingestion service is still possible but NOT built",
@@ -104,35 +105,40 @@
       "why": "Two defects confirmed by reading the code, reported together by the owner from his phone ('it says no evidence is attached to this event and has a view bill link, the link just brings you to the plan page'). Every bill event's `detailHref` is the literal `/meridian?workspace=plan` (`meridian/services/dial.py:440`, and the same literal at :487 and :534), so the control labelled 'View bill' (`dial.js:1125`) delivers a workspace landing page rather than the bill; and `evidenceIds` is a hard-coded empty list (`dial.py:439`, :486), so `dial.js:1118` states 'No evidence is attached to this event' for a bill even where Plan already holds invoice evidence for it. The destination is a product decision rather than a bug fix: a deep link that focuses the bill, an in-place sheet, or leaving Plan as the landing page and rewording the control so it stops promising a bill -- the last is legitimate and free, and choosing it is the owner's call.",
       "arose": "2026-09-24",
       "promoted_to": "OS-093",
-      "decision_owed": true
+      "decision_owed": "false",
+      "resolution": "RESOLVED 2026-09-25 as SUPERSEDED by OS-101 (8ccba32): View bill resolves the bill's mail-ingested invoice, and the owner confirmed from the app that it populates."
     },
     {
       "summary": "The reported 'double ticket' layout problem on Today's Eversource bill was NOT reproduced, so it is recorded rather than fixed",
       "why": "The owner reported it in the same message as OS-093: 'the double ticket eversource bill looks messy where the text is placed, overlapping with the line between the two tickets'. A synthetic model shaped like the reported case -- an Eversource bill with a stated funding schedule (the long '$29.89/event, Crew's own estimate, due Sep 20 for Veterans Home' note), no evidence attached, a detailHref, plus a coexisting 'Eversource Payment Arrangement' bill in the same horizon -- measured ZERO text-box overlaps, ZERO nodes escaping the ticket's own border box, and exactly ONE `.obs-evidence-ticket` on the page, at 420x912 and 1440x900 (tmp/probe_today_ticket.py). The first fixture attempt used wrong field names (`perEventAmount`/`dueDate` instead of `contribution`/`deadline`) and rendered none of the long text, so it was re-measured rather than reported. Not reproducing a defect is not evidence that it is absent, and guessing at a visual defect is how a fix lands on the wrong element -- so this half needs the owner's screenshot, or the date and bill he had selected.",
       "arose": "2026-09-24",
       "promoted_to": "OS-093",
-      "decision_owed": true
+      "decision_owed": "false",
+      "resolution": "RESOLVED 2026-09-25 as SUPERSEDED by OS-101 (8ccba32): View bill resolves the bill's mail-ingested invoice, and the owner confirmed from the app that it populates."
     },
     {
       "summary": "The Plan page Rules and Crew tabs are effectively unstyled and have no governing concept, so they need a NEW design rather than a fidelity pass",
       "why": "Owner, 2026-09-24: \"the rules and crew tab of the plan page have almost no styling. I do not believe there is a previous concept, so it is one you will have to design.\" Every other visual task in this lane is a fidelity pass against a governing record (D-004). These two panes are the first surface where the owner has authorised a NEW composition, which changes the workflow: the design must be proposed and approved BEFORE implementation, and the owner's stated absence of a concept must be verified against design/ first rather than assumed. Read-only panes; no financial behaviour or authority is involved.",
       "arose": "2026-09-24",
       "promoted_to": "OS-102",
-      "decision_owed": "true"
+      "decision_owed": "false",
+      "resolution": "RESOLVED 2026-09-24: the owner approved both panes as proposed and the slice shipped (8c63d1a). Rules are stated from Crew's own formula, Crew is grouped by purpose with each deferred capability inside its group, and editing a rule stays parked as its own write slice."
     },
     {
       "summary": "The owner named four Accounts aesthetic traits; three are measured fidelity deltas, and the fourth changes the glyph system and owes a decision",
       "why": "Owner, 2026-09-24: \"Accounts aesthetic -- larger ticket, more diverse icons, no outer box on accounts, connected dotted line flowing account-to-account on the left.\" Three of the four are differences between the app and the governing concept 04, so they are measurable and were fixed by measurement. \"More diverse icons\" is not a delta: the concept draws three emblems for three purpose BUCKETS, the payload keys a glyph on the financial ROLE (`_role(\"pocket\")` resolves to `other`), and the delivered design/investigator-medallions-2026-09-21/ artwork states its own boundary -- \"do not use artwork as an account-type classifier\", and place the Wi-Fi mark only where the mapping is deliberately accepted. Two forks, different artwork, one needing the owner's acceptance, so the owner picks before anything is drawn.",
       "arose": "2026-09-24",
       "promoted_to": "OS-103",
-      "decision_owed": "true"
+      "decision_owed": "false",
+      "resolution": "RESOLVED 2026-09-24: the owner chose the concept's three emblems (fork B) and the slice shipped (af6f475) -- the two delivered masters derived to their visible disc, the star drawn in-repo, the disc at the concept's 52px, keyed to the three account names exactly."
     },
     {
       "summary": "Payday and funding are one mechanism described twice: the Settings Cadence card reads the learned pattern while the rest of the app prefers Crew's paycheck record, and there is no way to set a payday at all",
       "why": "Owner, 2026-09-24: \"payday is the funding mechanism, so the payday and when it lands is the cadence, this isn't consistent. It still says no cadence detected in places. Funding the way the app describes separate from payday is per bill and doesn't need a separate setting or section.\" Verified at both layers: services/payday.py:87 builds `pattern` from recognized transactions only while Crew's plans ride in the same payload, and payday.js:54-64 renders the summary from `pattern` alone, so the card can say 'Not recognized' beside a Crew cadence the same page lists below; the card's own instruction ('Add or confirm your payday timing') has no control behind it, because /settings/payday is GET-only and no payday write exists anywhere; and Settings carries a two-mode copy of the four-mode per-commitment funding editor that Plan already ships against the same repository and propose route. The bidirectional machinery the owner points at is real for the funding plan (create/update/delete with readback verifiers).",
       "arose": "2026-09-24",
       "promoted_to": "OS-104",
-      "decision_owed": "true"
+      "decision_owed": "false",
+      "resolution": "ANSWERED 2026-09-25, owner: 'Meridian writes them too.' Meridian gains write commands for FREQUENCY / DAY / IDENTIFICATION on the funding-plan pattern, as its own bounded slice with its own safety analysis."
     }
   ]
 }
