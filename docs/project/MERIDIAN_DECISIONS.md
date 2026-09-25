@@ -791,3 +791,32 @@ What he remembers of their materials is real, and it is **not live payday data**
 `tests/meridian/services/test_payday.py` and `tests/browser/test_payday_settings.py`. So it is UI evidence
 and pinned test expectations about payday — referenceable and searchable, exactly as he said, while our own
 `meridian/services/payday.py` does exist.
+
+## D-030 — Option sets must not default to the status quo; evaluate, propose, and be accountable (owner, 2026-09-25)
+
+**Owner, verbatim:** *"I dont want obvious states just reported, several of your questions suggested just
+maintaining the status quo. Review the 22 features in the roadmap, we want to work toward proactive and
+reactive culpable intelligence, things should be evaluated not just regurgitated, perhaps more of the agents
+in the roadmap need to be built. I dont want to lose site either."*
+
+**He is right, and the failure is mechanical, so the fix is a rule.** My option sets drifted to options that
+PRESERVE the current behaviour — "alert only", "leave them", "keep it a command", "not now", "stay silent".
+Each was defensible alone; together they made the product's own direction the least likely answer. Three
+rules follow for every future option set:
+
+1. **The status quo is never the recommended option** unless the owner's own record explicitly chose it and
+   nothing has changed since. "Do nothing yet" may appear as an option; it may not be the default, and it
+   must carry the cost of waiting as its description rather than an absence of action.
+2. **Every option set must contain at least one option that EVALUATES rather than REPORTS** — one that forms
+   a judgement about whether the state is right, harmful, explainable or actionable — because that is the
+   difference the owner is drawing. Where such an option does not yet exist, it is the option to build.
+3. **Proactive and reactive culpable intelligence is the target**: proactive, in that Meridian raises what
+   nobody asked about; reactive, in that it answers a challenge about anything; culpable, in that every claim
+   carries its evidence, its confidence and its limits, and can be questioned. Reporting a state truthfully
+   is the floor, not the product.
+
+**Authority is unchanged by this**, and saying so is part of being culpable: an intelligence evaluates and
+proposes; only the constrained executor mutates financial state, the approval gate stays, and better
+reasoning widens no authority. The agent inventory work already underway exists to find which of the
+roadmap's named agents must be built to make this real, rather than assumed to be built because a module
+exists.
