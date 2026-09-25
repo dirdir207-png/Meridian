@@ -694,6 +694,19 @@ negative-then-backfill **shape** is ordinary product behaviour.
   are two views of one movement; deriving one from the other double-counts it. This is the second time
   this pair has bitten: the rule adds the reserve into the total AND subtracts it as a set-aside, which
   is self-consistent only while the mirror is counted too.
+* **This is a DOCUMENTED, user-visible feature, not an edge case** (owner, verbatim: *"Thats why you can
+  have automatic top up, it fills the bill reserve completely, but leaves pockets negative, it explains
+  this directly in the crew app"*). Crew's own automatic top-up fills the Bill Reserve **completely** and
+  leaves the pockets negative; the app says so. So a persistently negative figure is a *supported* state,
+  and a surface that shows it must explain it rather than look broken. That is a display question for the
+  owner, not a rule to invent here.
+* **D-015's "AUTOMATIC TOP-UPS = off" is NOT contradicted.** That recorded a *setting* as read on
+  2026-09-19; the 2026-09-25 experiment **called the top-up operation directly**, five times. The setting
+  and the operation are different things, which is why both records can be true.
+* **Meridian cannot currently see that setting, and that is a real gap.** The live snapshot exposes no
+  top-up / early-funding / source-pocket field at all (checked 2026-09-25), so Meridian can observe the
+  *effect* of a top-up but not the configuration that produces it, and cannot tell an owner why his own
+  figure moves. Earmarked in the ledger rather than built here.
 * **Keep artificial amounts out of the observation stores.** A reserve figure an experiment injected is
   NOT an observation of the owner's money. When the injected 480.77 is unwound the shape may remain
   ordinary, but the amount must never enter history as `data_mode='actual'` — which is why the ingest

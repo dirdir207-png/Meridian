@@ -2858,6 +2858,16 @@
         "item_1_retrospective_result_2026_09_25": "DELIVERED and recorded in docs/project/OS058_FUNDING_EVENT_MEASUREMENT.md. Crew's `bills` array is a SORT keyed on (daysOverdue desc, reservedBy asc), matching exactly on both held captures -- so 'Rent is first' was a fact about Rent's deadline, not about Rent. 'Credit the overdue bill' is REFUTED: on 2026-09-04 no bill was overdue (the capture's daysOverdue is None for all five, a field demonstrably populated when a bill IS overdue) yet the bucket was non-zero and credited entirely to Rent. And CREW_FUNDING_MATH_2026-09-19.md's refutation of nearest-due-first is CORRECTED: it compared Rent's rolled-forward DUE date (10-16) against Eversource/Xfinity's 09-30, when Rent's own `reservedBy` was 09-16 -- already 3 days past, i.e. sooner. Stated in terms of the field Crew funds against, the rule survives: the credited bill is the one with the soonest `reservedBy`. Fresh prediction for 10-02: the soonest reservedBy is now Eversource and Xfinity (both 09-30), so the next non-zero credit should go to one of those, and Rent being credited again refutes the rule -- which now separates it from 'credit the largest bill'."
       },
       "open_remainder": "HONEST STATUS OF THE HISTORY BUILT 2026-09-25: it RECORDS and can be READ (store + `parts_equal_whole`), but no surface displays it yet, and that is deliberate rather than an oversight -- the first consumer is OS-058's 09-30/10-02 measurement, which is exactly why the recording had to start before those events. Showing the rotation (which bill holds the bucket, and how it moved) is a FORM decision that belongs to the owner. Still also open: the owner's choice of the other two OS-114 gaps (autopilot rules, family/card inventory), and item 3, a LABELLED simulation of the 10-02 event, which must never be presented as OS-058's measurement."
+    },
+    {
+      "id": "OS-115",
+      "title": "Observe the Bill Reserve's own funding SETTINGS, not just their effect",
+      "status": "ready",
+      "priority": "medium",
+      "phase": "track-C-funding-math",
+      "detail": "The owner explained the negative-pocket state directly: Crew's automatic top-up fills the Bill Reserve completely and leaves the pockets negative, and the Crew app says so (`It explains this directly in the crew app`). Meridian can see the EFFECT -- reserve 480.77 with checking -480.77 -- but the live snapshot exposes NO top-up / early-funding / source-pocket / surplus-pocket field, so Meridian cannot see the configuration that produces the effect, cannot tell the owner which mechanism moved his money, and cannot distinguish a manual API top-up (what the 2026-09-25 experiment did five times) from the automatic feature. D-015 recorded the settings as a manual read on 2026-09-19; that read is not reproducible from our own data. Earmarked rather than chased, per the owner's preference for finishing in-flight work first.",
+      "limits": "Read-only. Do not infer a setting from an effect, and do not treat a missing field as 'off' -- an unobserved setting is unknown, which is the whole point of the item. No provider mutation and no proposal to change the owner's Crew configuration.",
+      "handoff": "docs/project/MERIDIAN_DECISIONS.md (D-027); docs/project/CREW_FUNDING_MATH_2026-09-19.md"
     }
   ]
 }
