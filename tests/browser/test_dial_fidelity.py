@@ -450,6 +450,70 @@ def test_day_labels_never_overlap_each_other(dial_page, width, height):
         )
 
 
+@pytest.mark.parametrize("width", [390, 420, 430])
+def test_the_day_numbers_do_not_move_when_the_selection_changes(dial_page, width):
+    """The ring of numbers must sit at ONE radius, whatever happens to be selected.
+
+    Owner, 2026-09-25, from his phone: *"The numbers do move based on event, but I think you had
+    already caught that... Some events move the numbers so that they are hugging the inner rail, and
+    some the opposite."* He was right, and the cause was not the arithmetic but a missing call.
+
+    `update()` -- the in-place path taken when the selection changes -- replaces the overlay, and
+    `renderInstrumentOverlay` builds each label at the pre-measurement **SEED** inset
+    (`VIEWBOX.r - DAY_LABEL_MAX_INSET_UNITS`). Only `placeDayLabels` moves it to the measured radius,
+    and `update()` did not call it, while the full `renderDial` path did. So the radius you saw
+    depended on which code path your selection happened to take: logged on the shipped build,
+    `placeDayLabels` never bailed and always measured width 353 / inset ~44 units / radius 140.11px,
+    while the rendered radius was **125.84px** -- exactly the seed at that wrap, i.e. 13.5px inside.
+
+    So this asserts the invariant directly rather than the mechanism: walk the selection across the
+    whole horizon and require the radius to hold. It also requires the radius to be INSIDE the seed,
+    which is what distinguishes "placed" from "left where it was built".
+    """
+    page = dial_page
+    page.set_viewport_size({"width": width, "height": 844})
+    page.wait_for_timeout(200)
+    measured = page.evaluate("""async () => {
+      const measure = () => {
+        const labels = [...document.querySelectorAll('.obs-dial-day-label')];
+        const svg = document.querySelector('.obs-dial-svg').getBoundingClientRect();
+        const cx = svg.left + svg.width / 2, cy = svg.top + svg.height / 2;
+        const dists = labels.map((el) => {
+          const r = el.getBoundingClientRect();
+          return Math.hypot((r.left + r.right) / 2 - cx, (r.top + r.bottom) / 2 - cy);
+        }).sort((a, b) => a - b);
+        return dists.length ? dists[Math.floor(dists.length / 2)] : null;
+      };
+      // The seed the labels are built at, in the same pixels, so "was it placed?" is checkable.
+      const wrapWidth = document.querySelector('.obs-dial-svg-wrap').clientWidth;
+      const seed = (282 - 68) * (wrapWidth / 600);
+      const slider = document.querySelector('#obs-dial-range');
+      const max = Number(slider.max);
+      const radii = [];
+      for (let day = 0; day <= max; day += 1) {
+        slider.value = String(day);
+        slider.dispatchEvent(new Event('input', {bubbles: true}));
+        slider.dispatchEvent(new Event('change', {bubbles: true}));
+        await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+        radii.push(measure());
+      }
+      return {radii, seed};
+    }""")
+    radii = [r for r in measured["radii"] if r is not None]
+    assert len(radii) >= 5, f"the horizon must offer several selections to walk, got {radii}"
+    spread = max(radii) - min(radii)
+    assert spread <= 2, (
+        f"the day numbers moved {spread:.1f}px across the horizon's selections "
+        f"(radii {[round(r, 1) for r in radii]}, seed {measured['seed']:.1f}px): the ring must hold "
+        f"one radius whatever is selected"
+    )
+    assert min(radii) > measured["seed"] + 1, (
+        f"the numbers are sitting at the pre-measurement seed ({measured['seed']:.1f}px, which is "
+        f"FURTHER IN than a placed ring; measured {[round(r, 1) for r in radii]}), i.e. "
+        f"`placeDayLabels` did not run for this render"
+    )
+
+
 @pytest.mark.parametrize("width,height", [(390, 844), (430, 932), (1024, 768), (1440, 900)])
 @pytest.mark.parametrize("theme", ["light", "dark"])
 def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height, theme):

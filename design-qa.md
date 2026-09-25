@@ -1774,6 +1774,44 @@ The source-level twin of that guard (`test_mobile_callout_column_fits_ordinary_w
 with both measurements in its docstring, since a unit test has no font metrics and can only pin the
 pair the arithmetic depends on; the browser guard is the executable proof that the pair still fits.
 
+### The fifth pass: the numbers moved with the selection
+
+Owner, from his phone: *"The numbers do move based on event, but I think you had already caught that
+and were working on it ... Some events move the numbers so that they are hugging the inner rail, and
+some the opposite."* He was right, and the cause was a missing call rather than the arithmetic.
+
+There are **two render paths**. `renderDial` builds the panel and calls `redraw()`, which places the
+callout rows, the connector runs and the day labels. `update()` — the in-place path taken when the
+SELECTION changes — replaces the overlay, and `renderInstrumentOverlay` builds every label at the
+pre-measurement **seed** inset (`VIEWBOX.r - DAY_LABEL_MAX_INSET_UNITS`). Only `placeDayLabels` moves
+a label to the measured radius, and `update()` did not call it. So which radius the numbers sat at
+depended on which path a given selection happened to take. **That is the whole defect.**
+
+Traced rather than guessed: an instrumented copy logged every `placeDayLabels` call while the
+selection walked the horizon. It never bailed — always `width 353, inset ~44 units, radius 140.11px` —
+while the rendered radius was **125.84px**, which is exactly the seed at that wrap (`282 − 68` units).
+No placement call followed the rebuild, and forcing a real size change (which the ResizeObserver sees)
+snapped the numbers to 139.39px, confirming a missed placement rather than a different measurement.
+
+| | before | after |
+|---|---|---|
+| median radius after a selection change | **125.84px** — the seed | **140.03px** |
+| radius across the horizon's selections | 125.84 → 139.39 (**13.5px of travel**) | 139.39 → 140.03 (0.64px) |
+
+The 0.64px that remains is real and expected: the radius is sized by the widest label PRESENT, so a
+selection that changes which labels exist moves it by a fraction of a pixel. The 13.5px was the bug.
+
+**Guard:** `test_the_day_numbers_do_not_move_when_the_selection_changes` walks the whole horizon at
+390/420/430, requires the radius to hold within 2px, and separately requires it to be *outside* the
+seed — which is what distinguishes a placed ring from one left where it was built. **It was verified
+to fail (3/3) with the call removed**, so it is a guard and not a description. Note that it steps the
+selection TWICE: the first step goes through the full `renderDial` path, which places the labels
+correctly, and every existing browser test renders exactly once — which is why the bug survived them.
+
+Captures: `19-numbers-before.png` and `19-numbers-after.png`, same frame, the only difference being
+whether `update()` places the labels; `16-final-dial-{theme}.png` is regenerated from the shipped
+build.
+
 Captures: `artifacts/os111-implementation-2026-09-25/16-final-dial-{theme}.png` and
 `16-final-top-{theme}.png` (shipped, both themes), `options/15-arc-end-*.png` (the arc sweep, 132
 through 210), `options/14-clearance-*.png` (the four rail options he chose between),

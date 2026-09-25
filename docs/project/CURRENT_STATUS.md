@@ -1,5 +1,39 @@
 # Enhanced SimpleCrew — Current Status
 
+## 2026-09-25 (latest): the dial's numbers moved when the selection changed — fixed and guarded
+
+Owner, from his phone: *"The numbers do move based on event, but I think you had already caught that
+and were working on it ... Some events move the numbers so that they are hugging the inner rail, and
+some the opposite."* He was right. **Two render paths, and only one of them placed the labels.**
+
+`renderDial` builds the panel and calls `redraw()` — callout rows, connector runs and day labels.
+`update()`, the in-place path taken when the **selection** changes, replaces the overlay; and
+`renderInstrumentOverlay` builds every label at the pre-measurement **seed** inset
+(`VIEWBOX.r - DAY_LABEL_MAX_INSET_UNITS`). Only `placeDayLabels` moves a label to the measured radius,
+and `update()` never called it. Which radius you saw therefore depended on which path a given
+selection happened to take — hence "some events ... and some the opposite".
+
+Traced, not guessed: an instrumented copy logged every `placeDayLabels` call while the selection
+walked the horizon; it never bailed and always measured `width 353, inset ~44 units, radius 140.11px`,
+while the rendered radius was **125.84px** — exactly the seed at that wrap (`282 − 68` units). Forcing
+a real size change (which the ResizeObserver sees) snapped the numbers to 139.39px, which proved a
+missed placement rather than a different measurement.
+
+| | before | after |
+|---|---|---|
+| median radius after a selection change | **125.84px** (the seed) | **140.03px** |
+| radius across the horizon's selections | 125.84 → 139.39 (**13.5px of travel**) | 139.39 → 140.03 (0.64px) |
+
+The 0.64px that remains is expected — the radius is sized by the widest label *present*, so a
+selection that changes which labels exist moves it by a fraction of a pixel.
+
+`test_the_day_numbers_do_not_move_when_the_selection_changes` now walks the whole horizon at
+390/420/430 and requires the radius to hold within 2px, plus that it sits *outside* the seed (which is
+what distinguishes a placed ring from one left where it was built). **It fails 3/3 with the call
+removed**, so it is a real guard. It steps the selection twice on purpose: the first step goes through
+the full `renderDial` path, which places correctly, and every existing browser test renders once —
+which is how the defect survived them. Full record: `design-qa.md`, 2026-09-25 (later).
+
 ## 2026-09-25 (latest): three overlaps the owner reported — fixed, measured, and guarded
 
 Owner, reviewing the shipped app: *"there is a little overlap with the numbers and weekdays on the

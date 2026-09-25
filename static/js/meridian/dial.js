@@ -1689,6 +1689,22 @@ function update(state, container, rangeValue) {
   // both be recomputed -- rows first, because a run ends at the row's box.
   placeCalloutRows(state, container);
   renderConnectors(state, container);
+  // THE DAY LABELS ARE PART OF THIS UPDATE, and forgetting them here was a real defect rather than a
+  // tidy-up. `renderInstrumentOverlay` above REPLACES the labels, and a freshly built label is placed
+  // at the pre-measurement SEED inset, `VIEWBOX.r - DAY_LABEL_MAX_INSET_UNITS`; only `placeDayLabels`
+  // moves it to the measured radius.
+  //
+  // Owner, 2026-09-25, reporting it from his phone: "The numbers do move based on event ... Some
+  // events move the numbers so that they are hugging the inner rail, and some the opposite." Traced
+  // on the shipped build by logging every `placeDayLabels` call while the selection walked the
+  // horizon: it never bailed and always measured width 353 / inset ~44 units / radius 140.11px -- and
+  // the rendered radius was nevertheless **125.84px**, which is exactly the seed (282 - 68 units at
+  // that wrap). No placement call followed the re-render, because this function did not make one, so
+  // the whole ring of numbers sat 13.5px inside its proper radius. Which radius you saw depended on
+  // whether that selection happened to go through the full `renderDial` path (which does call
+  // `redraw`), i.e. on the SELECTION and not on the data -- hence "some events ... and some the
+  // opposite".
+  placeDayLabels(state, panel.querySelector(".obs-dial-svg-wrap"));
 
   // Keep the selected row in view, AFTER the arc seating. It used to run where the rail was
   // replaced, which was correct while the rows were a stacked column: their order was their layout,
@@ -1866,11 +1882,32 @@ export function renderDial(container, inputModel) {
   const redraw = () => {
     placeCalloutRows(state, container);
     renderConnectors(state, container);
-    placeDayLabels(state, svgWrap);
+    return placeDayLabels(state, svgWrap);
   };
   // Runs AFTER the panel is in the document, which is the first moment the wrap has a
   // measurable width; the labels were seeded with a conservative inset at build time.
-  redraw();
+  //
+  // A FAILED PLACEMENT IS RETRIED, because leaving it on the seed MOVES THE WHOLE RING OF NUMBERS.
+  // Owner, 2026-09-25: "The numbers do move based on event ... Some events move the numbers so that
+  // they are hugging the inner rail, and some the opposite." Measured on the shipped build by walking
+  // the selection across the horizon: the same dial measured a median label radius of **139.39px**
+  // once a placement landed and **125.84px** when none did -- and 125.84 is exactly the seed,
+  // `VIEWBOX.r - DAY_LABEL_MAX_INSET_UNITS` = 282 - 68 units at this wrap. So the ring sat 13.5px
+  // inside its proper radius depending only on the TIMING of the re-render, not on the data.
+  // `placeDayLabels` returns the labels it placed, and an empty array is its signature for "could not
+  // measure yet" (the wrap's clientWidth is 0 in that window), so a failed attempt is retried on the
+  // next frames rather than being left where the seed put it. Bounded, so a dial that is hidden
+  // outright -- the Plan and Accounts workspaces keep Today's section in the DOM -- stops after a few
+  // frames and is picked up by the ResizeObserver below when it becomes visible.
+  const redrawUntilPlaced = (attempt = 0) => {
+    const placed = redraw();
+    if (placed && placed.length) return;
+    if (attempt >= 5) return;
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => redrawUntilPlaced(attempt + 1));
+    }
+  };
+  redrawUntilPlaced();
   const resizeObserver =
     typeof ResizeObserver !== "undefined" ? new ResizeObserver(redraw) : null;
   if (resizeObserver) resizeObserver.observe(panel);
