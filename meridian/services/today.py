@@ -378,8 +378,14 @@ def build_today(
     *,
     now: Optional[datetime] = None,
     paycheck=None,
+    spend_selection=None,
 ) -> dict[str, object]:
-    """Build a conservative Today summary from normalized repository records."""
+    """Build a conservative Today summary from normalized repository records.
+
+    ``spend_selection`` is the newest OBSERVED Crew spend-pocket selection (OS-113), or ``None``
+    when no snapshot has been recorded. It decides which pocket the figure treats as spendable, and
+    the basis it used travels out in the breakdown so the panel can state which one that was.
+    """
     accounts = repository.list_accounts()
     # "Next expected income" from the owner's paycheck config (funding source),
     # if set. Falls back to nothing when no paycheck is configured.
@@ -451,7 +457,7 @@ def build_today(
     # spendable and each one is named as set aside -- visible and conservative, rather than
     # silently counting an earmarked pocket as free cash.
     bill_reserves = repository.list_bill_reserves()
-    spend = safe_to_spend(accounts, bill_reserves)
+    spend = safe_to_spend(accounts, bill_reserves, spend_selection=spend_selection)
     # "Committed" (known obligations) is independent of the figure: it is the unfunded
     # bill/commitment total Meridian is tracking toward, published as an observed input so the card
     # is never dead. It is NOT a subtraction any more -- the breakdown in spend_breakdown is what

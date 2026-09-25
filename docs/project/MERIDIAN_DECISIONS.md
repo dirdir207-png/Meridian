@@ -545,3 +545,59 @@ provider write, no deployment, no authority change: this is read-only arithmetic
 builds BOTH payloads from one seeded database and asserts they state the same figure, so the two
 workspaces cannot drift apart again. Rendered at 420x912 DPR 3 in both themes: the owner's example
 `800.00`, his D-019 case `100.00`, an overdrawn pocket `-83.14`, the map `-120.00` with no breakage.
+
+---
+
+## D-025 — Which pocket the owner spends from is Crew's own SELECTION, not an English name (owner, 2026-09-25)
+
+**The decision.** The pocket that Safe to Spend leaves spendable is identified by Crew's own
+`userSpendConfig.selectedSpendSubaccount`, matched to an account by **Crew's id**. The existing
+two-name allow-list stays, demoted to an **explicit, named fallback**: a figure that falls back must
+say it fell back. Both halves were put to the owner before any file was touched, because OS-113's own
+limit forbids shipping the migration without explicit approval, and he chose "make the selection
+authoritative" with "keep the two-name allow-list as a named fallback".
+
+**Why the name had to go, in evidence rather than in principle.** The mechanism is not merely
+inelegant; it is measurably ambiguous in the owner's own reads:
+
+| database | what the allow-list matches | what that means |
+|---|---|---|
+| `gate.db` | `'Safe to Spend'` (active) **and** `'Free to Spend'` (inactive since 2026-09-17) | a list-order match can land on a retired pocket |
+| `savings_data.db` | **two ACTIVE pockets both named `'Free to Spend'`** (`Subaccount:99adf76a…`, `Subaccount:edc8cb88…`) | no name-based rule can tell them apart at all |
+
+And the answer was already being fetched and thrown away. `readback_selected_spend_pocket()` reads the
+setting with the right semantics (unobserved / none / one / ambiguous) and was used only for write
+verification. Run over the owner's real 2026-09-04 capture it returns exactly one id,
+`Subaccount:edc8cb88-f234-4321-8a3b-d2790e981a7a`, which is byte-identical to
+`financial_accounts.external_id` for the pocket named `'Safe to Spend'` in `gate.db` and
+`'Free to Spend'` in `savings_data.db` — the rename itself, and proof that an id-keyed rule survives
+one.
+
+**What changes.** `meridian/services/spend_pocket.py::resolve_spend_pocket()` answers the question in
+one place and reports its basis: `crew_selection`, `name`, or `none`, with a status recording
+`selected` / `selected_unmatched` / `selected_inactive` / `none` / `ambiguous` / `unobserved`.
+`safe_to_spend` publishes both in its breakdown, so Today's panel and Plan's map can state which
+mechanism produced the figure. The selection is observed at ingest (migration **030**,
+`crew_spend_selection_observations`) and dated: newest row wins, and an observation carries its
+snapshot, capture time, freshness and confidence.
+
+**Two call sites are FIXED rather than changed, because they were wrong about the pocket.**
+`dial.py:89` called `find_spend_pocket(accounts)` with no active filter, so with a retired
+`'Free to Spend'` row present its figure depended on row order; `plan.py:97` took the **last** name
+match. Both now go through the resolver, and the Plan id map refuses to choose when several active
+names match — a blank id routes the write safely instead of writing to a pocket chosen by list order.
+
+**What is deliberately NOT done.** An unobserved facet writes **no row**, never a row saying `none`:
+`resolution_for_observed(None)` returns `None` and the store writes nothing, so a failed read cannot
+become the claim that the owner has no spend pocket (the C01 rule, applied to this setting). The
+name allow-list is not pattern-matched and not extended by inference; it is still a short explicit
+list, and a new name remains a deliberate one-line edit. The browser's badge/emblem use of the list
+(`accounts.js:78`) is left alone in this slice and recorded as OS-113's remainder with a trigger,
+because it publishes no figure and the Accounts payload is the honest place to send the resolution.
+
+**Verified.** Whole `tests/` tree 2098 passed, 102 skipped (only the HANDOFF-staleness guard, which a
+clean-tree regeneration satisfies); ruff clean over `app.py meridian/ scripts/ tests/`;
+`git diff --check` clean. New: store (9 tests), the real `sync_provider` ingest (8), the resolver (10,
+including the two-identically-named-active-pockets case), four `_crew_ids` cases, and the agreement
+test that moves Today **and** Plan to `160.00` together when a selection names a pocket the name rule
+would have set aside — while the unobserved case stays at `100.00` on the name rule with basis `none`.

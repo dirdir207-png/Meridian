@@ -107,6 +107,15 @@ def test_today_reports_cash_inputs_and_stale_graph_without_a_forecast(repository
             ),
             "spend_pocket": None,
             "reserve": 0.0,
+            # RESTATED 2026-09-25 (OS-113). The breakdown now says WHICH MECHANISM identified the
+            # spend pocket and what the snapshot said, because a figure resting on Crew's own
+            # selected pocket and one resting on an English name are different claims. This fixture
+            # has no observation recorded AND no pocket carrying a spend-pocket name, so neither
+            # mechanism named one: the basis is "none" rather than "name", and the status records
+            # that no snapshot was observed. When the name fallback DOES answer, the basis reads
+            # "name" -- see tests/meridian/services/test_spend_pocket_resolution.py.
+            "spend_pocket_basis": "none",
+            "selection_status": "unobserved",
         },
         "inputs": {
             "available_cash": {

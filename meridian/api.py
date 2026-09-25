@@ -39,6 +39,7 @@ from meridian.services.connections import build_connections, get_connection_deta
 from meridian.services.dial import build_dial
 from meridian.services.plan import build_plan
 from meridian.services.today import build_today, data_freshness
+from meridian.spend_selection import SpendSelectionStore
 from meridian.trials import TrialRepository
 
 meridian_api = Blueprint("meridian_api", __name__)
@@ -94,6 +95,25 @@ def _evidence_payload(repository, link):
         "expires_at": item.expires_at,
         "content_url": f"/api/meridian/evidence/{item.id}/content",
     }
+
+
+def _spend_selection(graph):
+    """The newest OBSERVED Crew spend-pocket selection, or ``None`` when none was recorded.
+
+    OS-113: which pocket the owner actually spends from decides what the money figures MEAN, so the
+    resolver prefers Crew's own answer and only falls back to the explicit name allow-list. Passing
+    ``None`` here is meaningful rather than neutral — the figure then says its basis is the name list
+    and its status is ``unobserved``, instead of silently resting on a different mechanism than the
+    read before it.
+
+    A database that predates migration 030, or an unreadable row, degrades to ``None`` (the honest
+    "not observed") rather than blanking a page: this is provenance, and losing it must not cost the
+    owner Today. Nothing here writes, and no balance is read.
+    """
+    try:
+        return SpendSelectionStore(graph.db_path).latest(provider="crew")
+    except Exception:  # noqa: BLE001 - provenance must not be able to blank a paid-for surface
+        return None
 
 
 def _plan_repositories():
@@ -297,7 +317,7 @@ def plan():
             "Use today's date or omit as_of.",
             400,
         )
-    return jsonify(build_plan(graph, commitments, rules, as_of=as_of, last_paid_by_id=_last_paid_by_id(graph, commitments), paycheck=_paycheck_config(graph), evidence_repository=EvidenceRepository(graph.db_path)))
+    return jsonify(build_plan(graph, commitments, rules, as_of=as_of, last_paid_by_id=_last_paid_by_id(graph, commitments), paycheck=_paycheck_config(graph), evidence_repository=EvidenceRepository(graph.db_path), spend_selection=_spend_selection(graph)))
 
 
 def _scenario_changes_from_payload(payload):
@@ -387,6 +407,7 @@ def plan_scenario_preview():
         last_paid_by_id=_last_paid_by_id(graph, commitments),
         paycheck=_paycheck_config(graph),
         evidence_repository=EvidenceRepository(graph.db_path),
+        spend_selection=_spend_selection(graph),
     )
     forecast = plan.get("forecast") or {}
     available = bool(forecast.get("available"))
@@ -834,7 +855,8 @@ def funding_rules():
 @_safe_read
 def today():
     graph, commitments, rules = _plan_repositories()
-    return jsonify(build_today(graph, commitments, rules, paycheck=_paycheck_config(graph)))
+    return jsonify(build_today(graph, commitments, rules, paycheck=_paycheck_config(graph),
+                               spend_selection=_spend_selection(graph)))
 
 
 @meridian_api.get("/dial")
@@ -868,6 +890,7 @@ def dial():
             # ONE matcher and Today's "View bill" opens the mail-ingested invoice rather than the
             # Plan page (owner, 2026-09-24).
             evidence_repository=EvidenceRepository(graph.db_path),
+            spend_selection=_spend_selection(graph),
         )
     )
 
@@ -899,6 +922,7 @@ def weather():
         commitments.list_active(),
         as_of=as_of,
         paycheck=_paycheck_config(graph),
+        spend_selection=_spend_selection(graph),
     )
     return jsonify(build_financial_weather(dial).to_dict())
 

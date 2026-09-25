@@ -19,6 +19,43 @@ _HORIZON_DAYS = 30
 _CREW_SNAPSHOT_PATH = None
 
 
+def _selected_spend_subaccount(data) -> Optional[str]:
+    """Crew's own selected spend pocket, read from the same snapshot (OS-113).
+
+    Crew publishes the setting as ``userSpendConfig.selectedSpendSubaccount`` per user, repeated on
+    every card. A CHILD's config is theirs, so ``isChild`` entries are skipped — the same rule the
+    provider adapter applies in ``readback_selected_spend_pocket()``.
+
+    Returns the id only when EXACTLY ONE distinct value was observed: ``None`` covers both "the
+    snapshot did not say" and "the observations disagreed", and neither may be resolved by picking
+    one, which is what makes this different from the name match it replaces.
+    """
+    found: set[str] = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            pairs = []
+            if isinstance(node.get("userSpendConfig"), dict):
+                pairs.append((node.get("isChild"), node["userSpendConfig"]))
+            user = node.get("user")
+            if isinstance(user, dict) and isinstance(user.get("userSpendConfig"), dict):
+                pairs.append((user.get("isChild"), user["userSpendConfig"]))
+            for is_child, config in pairs:
+                if is_child:
+                    continue
+                selection = config.get("selectedSpendSubaccount")
+                if isinstance(selection, dict) and selection.get("id"):
+                    found.add(str(selection["id"]))
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+
+    walk(data)
+    return found.pop() if len(found) == 1 else None
+
+
 def _crew_ids() -> Optional[dict]:
     """Extract the Crew opaque GraphQL ids (account + spend subaccounts) for the UI.
 
@@ -83,6 +120,15 @@ def _crew_ids() -> Optional[dict]:
         result["user_id"] = user_id
     subaccounts = []
     seen_sub = set()
+    # Crew's OWN selection, read from the same snapshot (OS-113). The setting is per-user and rides
+    # on the parent user's `userSpendConfig`; a child's own config is theirs, so `isChild` entries
+    # are skipped -- the rule the provider adapter already applies in
+    # `readback_selected_spend_pocket()`. This function used to answer the question by matching an
+    # English name and taking the LAST match, which is ambiguous in the owner's own data: his read
+    # holds two ACTIVE pockets BOTH named "Free to Spend", and no name-based rule can tell them
+    # apart. The selection can, because it carries the id.
+    selected_id = _selected_spend_subaccount(data)
+    named_matches = []
     if accounts:
         for acc in accounts:
             name = (acc.get("displayName") or acc.get("name") or "").strip().lower()
@@ -94,10 +140,32 @@ def _crew_ids() -> Optional[dict]:
                 if name == "checking" and (sname or "").strip().lower() == "checking":
                     result["checking_subaccount_id"] = sid
                 if is_spend_pocket_name(sname):
-                    result["free_to_spend_subaccount_id"] = sid
+                    named_matches.append((sid, sub))
                 if sid and sid not in seen_sub:
                     seen_sub.add(sid)
                     subaccounts.append({"id": sid, "name": sname or "Pocket"})
+    if selected_id:
+        # Crew's selection is authoritative, and it is also exposed under the name the write forms
+        # already read (`free_to_spend_subaccount_id`) so no surface needs to change in this slice.
+        result["spend_pocket_subaccount_id"] = selected_id
+        result["free_to_spend_subaccount_id"] = selected_id
+        result["spend_pocket_basis"] = "crew_selection"
+    else:
+        # FALLBACK, and made deterministic: only an ACTIVATED name match may answer, and when more
+        # than one does the id is left UNSET rather than taken from whichever row came last. The
+        # write forms treat a blank id as "route this safely" instead of writing to a pocket chosen
+        # by list order.
+        active = [sid for sid, sub in named_matches
+                  if str(sub.get("status") or "").upper() in ("", "ACTIVATED")
+                  and not sub.get("isDeleted")]
+        if len(active) == 1:
+            result["free_to_spend_subaccount_id"] = active[0]
+            result["spend_pocket_basis"] = "name"
+        elif active:
+            # Several retired-or-not candidates all carrying a spend-pocket name: refuse to choose.
+            result["spend_pocket_basis"] = "ambiguous"
+        else:
+            result["spend_pocket_basis"] = "none"
     if subaccounts:
         result["subaccounts"] = subaccounts
     # Autopilot rules (id + name) so the UI can edit/delete existing rules.
@@ -321,6 +389,7 @@ def build_plan(
     paycheck=None,
     evidence_repository=None,
     absent_limit: int = 50,
+    spend_selection=None,
 ) -> dict:
     """Compose the canonical Plan view model from local planning data.
 
@@ -464,7 +533,9 @@ def build_plan(
     # per-bill views below still carry them, and the timeline still projects against the funding
     # model's own cash events.
     unfunded = max(_ZERO, total_target - total_funded)
-    spend = safe_to_spend(accounts.values(), graph_repository.list_bill_reserves())
+    spend = safe_to_spend(
+        accounts.values(), graph_repository.list_bill_reserves(), spend_selection=spend_selection
+    )
     if spend is not None:
         cash_total = _money(spend.total)
         bills_total = _money(max(0.0, spend.reserve))

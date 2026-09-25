@@ -1,5 +1,37 @@
 # Enhanced SimpleCrew — Current Status
 
+## 2026-09-25 (latest): OS-113 delivered — the spend pocket is Crew's own selection, with the name as a NAMED fallback
+
+`meridian/services/spend_pocket.py::resolve_spend_pocket()` now answers "which pocket does the owner
+spend from" in one place, preferring Crew's own `userSpendConfig.selectedSpendSubaccount` matched by
+**Crew's id**, and falling back to the explicit two-name allow-list only while SAYING that it fell
+back. `safe_to_spend` publishes `spend_pocket_basis` and `selection_status` in its breakdown, so
+Today's panel and Plan's map can state which mechanism produced the figure.
+
+**Why the name had to go, measured rather than argued.** `gate.db` matches the allow-list twice
+(`'Safe to Spend'` active, `'Free to Spend'` inactive since 2026-09-17); `savings_data.db` matches
+**two ACTIVE pockets both named `'Free to Spend'`** that no name rule can tell apart. And the answer
+was already arriving and being discarded: run over the owner's real 2026-09-04 capture,
+`readback_selected_spend_pocket()` returns exactly one id —
+`Subaccount:edc8cb88-f234-4321-8a3b-d2790e981a7a` — which is byte-identical to the stored
+`external_id` for `'Safe to Spend'` today and `'Free to Spend'` before his rename. That is the rename
+itself, and proof that an id-keyed rule survives it.
+
+**Delivered:** migration **030** (`crew_spend_selection_observations` — append-only,
+provenance-bearing, one row per capture), the store (`meridian/spend_selection.py`), the ingest hook
+in `sync_provider` (which uses the existing, already-correct provider readback), and the resolver
+threaded through Today, Plan (its rule *and* its `_crew_ids` map) and the dial. Two call sites were
+**wrong** rather than merely different: `dial.py:89` had no active filter, and `plan.py:97` took the
+last name match — either could pick a retired pocket by row order. Both now go through the resolver,
+and the Plan id map refuses to choose when several active names match.
+
+**An unobserved facet writes no row at all** — never a stored `none` — so a failed read cannot become
+the claim that he has no spend pocket (the C01 rule, applied here). Owner decisions taken before the
+first edit: the selection is **authoritative**, and the two-name list stays as a **named fallback**.
+Full reasoning in D-025. The browser's badge/emblem use of the name list is unchanged and recorded as
+a remainder with a trigger. Next: **OS-114** — cannibalize the ChatGPT-side captures facet by facet
+against what our database actually stores.
+
 ## 2026-09-25 (latest): the dial's numbers moved when the selection changed — fixed and guarded
 
 Owner, from his phone: *"The numbers do move based on event, but I think you had already caught that

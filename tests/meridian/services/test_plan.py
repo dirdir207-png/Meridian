@@ -361,6 +361,93 @@ def test_crew_ids_extracts_autopilot_rules(tmp_path, monkeypatch):
     ]
 
 
+def _snapshot_file(tmp_path, payload_text):
+    path = tmp_path / "snapshot.txt"
+    path.write_text(payload_text, encoding="utf-8")
+    return path
+
+
+def test_crew_ids_prefers_crews_own_selection_over_the_pocket_name(tmp_path, monkeypatch):
+    """OS-113: the write forms must point at the pocket Crew says is selected, by ID.
+
+    This payload is the owner's real shape, reduced: two ACTIVE pockets whose names BOTH match the
+    allow-list (his read carries exactly that, which is why no name rule can choose), plus the parent
+    user's own ``userSpendConfig.selectedSpendSubaccount``. The selection must win, and the basis the
+    payload reports must say so.
+    """
+    from meridian.services import plan as plan_mod
+    snapshot = (
+        "{'mode': 'read-only', 'source': 'crew', 'data': {'pockets': {'data': "
+        "{'currentUser': {'accounts': [{'displayName': 'Checking', 'id': 'Acct:checking', "
+        "'subaccounts': ["
+        "{'displayName': 'Free to Spend', 'id': 'Sub:twin', 'status': 'ACTIVATED'}, "
+        "{'id': 'Sub:selected', 'displayName': 'Free to Spend', 'status': 'ACTIVATED'}], "
+        "'userSpendConfig': {'selectedSpendSubaccount': {'id': 'Sub:selected', "
+        "'displayName': 'Free to Spend'}}}]}}}}}"
+    )
+    monkeypatch.setattr(plan_mod, "_CREW_SNAPSHOT_PATH", str(_snapshot_file(tmp_path, snapshot)))
+    ids = plan_mod._crew_ids()
+    assert ids["spend_pocket_subaccount_id"] == "Sub:selected"
+    assert ids["free_to_spend_subaccount_id"] == "Sub:selected"
+    assert ids["spend_pocket_basis"] == "crew_selection"
+
+
+def test_crew_ids_refuses_to_choose_between_two_active_pockets_by_name(tmp_path, monkeypatch):
+    """With no selection observed, two ACTIVE name matches must NOT be resolved by row order.
+
+    This is the savings_data.db situation that made the mechanism ambiguous: two active pockets, both
+    named "Free to Spend". The old code took the LAST one; the id is now left unset so a write form
+    routes safely instead of writing to a pocket chosen by list order.
+    """
+    from meridian.services import plan as plan_mod
+    snapshot = (
+        "{'mode': 'read-only', 'source': 'crew', 'data': {'pockets': {'data': "
+        "{'currentUser': {'accounts': [{'displayName': 'Checking', 'id': 'Acct:checking', "
+        "'subaccounts': ["
+        "{'displayName': 'Free to Spend', 'id': 'Sub:first', 'status': 'ACTIVATED'}, "
+        "{'displayName': 'Free to Spend', 'id': 'Sub:second', 'status': 'ACTIVATED'}]}]}}}}}"
+    )
+    monkeypatch.setattr(plan_mod, "_CREW_SNAPSHOT_PATH", str(_snapshot_file(tmp_path, snapshot)))
+    ids = plan_mod._crew_ids()
+    assert "free_to_spend_subaccount_id" not in ids
+    assert ids["spend_pocket_basis"] == "ambiguous"
+
+
+def test_crew_ids_ignores_a_childs_own_spend_config(tmp_path, monkeypatch):
+    """A child's spend config is theirs; the signed-in parent's selection is the one that counts."""
+    from meridian.services import plan as plan_mod
+    snapshot = (
+        "{'mode': 'read-only', 'source': 'crew', 'data': {'virtual_cards': {'data': "
+        "{'currentUser': {'family': {'children': [{'displayName': 'Ada', "
+        "'isChild': True, 'userSpendConfig': {'selectedSpendSubaccount': {'id': 'Sub:child'}}}], "
+        "'parents': [{'displayName': 'Stephen', "
+        "'userSpendConfig': {'selectedSpendSubaccount': {'id': 'Sub:parent'}}}]}}}, "
+        "'pockets': {'data': {'currentUser': {'accounts': [{'displayName': 'Checking', "
+        "'id': 'Acct:checking', 'subaccounts': [{'displayName': 'Safe to Spend', "
+        "'id': 'Sub:parent', 'status': 'ACTIVATED'}]}]}}}}}}"
+    )
+    monkeypatch.setattr(plan_mod, "_CREW_SNAPSHOT_PATH", str(_snapshot_file(tmp_path, snapshot)))
+    ids = plan_mod._crew_ids()
+    assert ids["free_to_spend_subaccount_id"] == "Sub:parent", (
+        "the child's own selection must not answer for the signed-in parent"
+    )
+    assert ids["spend_pocket_basis"] == "crew_selection"
+
+
+def test_crew_ids_falls_back_to_a_single_active_name_match(tmp_path, monkeypatch):
+    from meridian.services import plan as plan_mod
+    snapshot = (
+        "{'mode': 'read-only', 'source': 'crew', 'data': {'pockets': {'data': "
+        "{'currentUser': {'accounts': [{'displayName': 'Checking', 'id': 'Acct:c', "
+        "'subaccounts': [{'displayName': 'Safe to Spend', 'id': 'Sub:only', "
+        "'status': 'ACTIVATED'}]}]}}}}}"
+    )
+    monkeypatch.setattr(plan_mod, "_CREW_SNAPSHOT_PATH", str(_snapshot_file(tmp_path, snapshot)))
+    ids = plan_mod._crew_ids()
+    assert ids["free_to_spend_subaccount_id"] == "Sub:only"
+    assert ids["spend_pocket_basis"] == "name"
+
+
 def test_crew_ids_exposes_all_subaccounts(tmp_path, monkeypatch):
     from meridian.services import plan as plan_mod
     snapshot = (

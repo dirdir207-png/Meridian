@@ -37,6 +37,11 @@ _LATER_MIGRATIONS = [
     "027_ai_run_records.sql",
     "028_allow_negative_bill_reserve.sql",
     "029_crew_pocket_goals.sql",
+    # 030 records which pocket Crew ITSELF selected as the spend pocket, with its own snapshot,
+    # timestamp and freshness (OS-113). Its behaviour is covered by
+    # tests/meridian/test_spend_selection_store.py; here it only has to apply in order, exactly once,
+    # and stay append-only like every row above it.
+    "030_crew_spend_selection.sql",
 ]
 
 
@@ -157,6 +162,7 @@ def test_migrations_are_idempotent_and_preserve_legacy_rows(tmp_path):
         ("027", "027_ai_run_records.sql"),
         ("028", "028_allow_negative_bill_reserve.sql"),
         ("029", "029_crew_pocket_goals.sql"),
+        ("030", "030_crew_spend_selection.sql"),
     ]
     assert legacy_row == ("2026-08-26", 1234.56)
     assert {

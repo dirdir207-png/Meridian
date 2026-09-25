@@ -20,7 +20,7 @@ from meridian.services.reserves import (
     reserve_deficit,
     spendable_after_reserve_deficit,
 )
-from meridian.services.spend_pocket import find_spend_pocket
+from meridian.services.spend_pocket import resolve_spend_pocket
 from meridian.services.today import data_freshness
 
 # Currency exponents used to convert the dollar-valued normalized model to
@@ -75,7 +75,7 @@ def _next_occurrence(anchor: date, recurrence: str, as_of: date) -> date:
     return next_occurrence(anchor, recurrence, as_of)
 
 
-def _available_to_spend(graph):
+def _available_to_spend(graph, spend_selection=None):
     """Crew's discretionary 'Free to Spend' pocket, adjusted for a negative reserve.
 
     CORRECTED 2026-09-21 (owner-reported): this previously returned the pocket balance directly,
@@ -84,9 +84,16 @@ def _available_to_spend(graph):
     balance alone OVERSTATES what is free to spend. Today and the dial must agree on this, so both
     call the same rule in ``meridian/services/reserves.py`` rather than each doing its own
     arithmetic -- they had already drifted into two copies of ``_spend_source_account``.
+
+    CORRECTED 2026-09-25 (OS-113): the pocket is now identified by the shared resolver, which
+    prefers Crew's OWN selection and only then the name allow-list. This call used to be
+    ``find_spend_pocket(accounts)`` -- the raw list, with NO active filter -- so with the owner's
+    real data, where a retired pocket and the live one both match the allow-list, the dial's figure
+    depended on row order. The resolver answers by id when a selection has been observed, and by
+    active+unambiguous name otherwise, so the dial and Today cannot disagree about the pocket.
     """
     accounts = graph.list_accounts()
-    spend = find_spend_pocket(accounts)
+    spend = resolve_spend_pocket(accounts, selection=spend_selection).account
     try:
         deficit = reserve_deficit(graph.list_bill_reserves())
     except Exception:  # noqa: BLE001 - an unreadable reserve must not blank the dial
@@ -571,6 +578,7 @@ def build_dial(
     paycheck=None,
     now: Optional[datetime] = None,
     evidence_repository=None,
+    spend_selection=None,
 ) -> dict:
     """Build the read-only Observatory dial model."""
     if commitments is None:
@@ -600,7 +608,7 @@ def build_dial(
         "timezone": "local",
         "today": as_of.isoformat(),
         "horizonEnd": horizon_end.isoformat(),
-        "availableToSpend": _available_to_spend(graph),
+        "availableToSpend": _available_to_spend(graph, spend_selection),
         "freshness": freshness.get("status", "unavailable"),
         "observedAt": freshness.get("last_updated_at"),
         "events": events,

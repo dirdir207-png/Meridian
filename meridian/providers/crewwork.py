@@ -344,6 +344,17 @@ class CrewWorkSnapshotAdapter:
                     cards.append(card)
         return cards
 
+    def readback_capture_time(self) -> Optional[str]:
+        """When this snapshot was captured, or ``None`` when it did not say.
+
+        Used to IDENTIFY an observation (OS-113): one capture is one observation, so re-ingesting the
+        same capture records nothing new rather than manufacturing a second, competing spend-pocket
+        selection. ``None`` is passed through rather than substituted, because a fabricated capture
+        time would look like an observation that was actually made.
+        """
+        value = self._snapshot.get("captured_at")
+        return str(value) if value else None
+
     def readback_selected_spend_pocket(self) -> Optional[tuple]:
         """The signed-in user's selected spend pocket, as observed, or None.
 

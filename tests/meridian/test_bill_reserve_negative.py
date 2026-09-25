@@ -130,6 +130,7 @@ def test_the_rebuild_preserves_every_row_value_and_id(tmp_path, monkeypatch):
     assert applied == [
         "028_allow_negative_bill_reserve.sql",
         "029_crew_pocket_goals.sql",
+        "030_crew_spend_selection.sql",
     ]
 
     after = sorted(

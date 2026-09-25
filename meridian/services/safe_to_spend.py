@@ -77,7 +77,12 @@ from dataclasses import dataclass
 from typing import Any, Iterable, Optional, Sequence
 
 from meridian.services.reserves import observed_reserve_total
-from meridian.services.spend_pocket import find_spend_pocket
+from meridian.services.spend_pocket import (
+    BASIS_NONE,
+    STATUS_UNOBSERVED,
+    find_spend_pocket,
+    resolve_spend_pocket,
+)
 
 #: Account types that hold money the owner HAS. "fallback" is deliberately excluded: the Crew
 #: adapter creates a synthetic parent row with ``balance = 0.0`` purely so that account-level
@@ -137,6 +142,11 @@ class SafeToSpend:
     amount: float
     spend_pocket: Optional[str]
     accounts_counted: int
+    #: Which mechanism identified the spend pocket, and what the snapshot said (OS-113). Published
+    #: rather than implied: a figure that rests on Crew's own selection and one that rests on an
+    #: English name are not the same claim, and falling back is only honest if it is visible.
+    spend_pocket_basis: str = BASIS_NONE
+    selection_status: str = STATUS_UNOBSERVED
 
     @property
     def is_negative(self) -> bool:
@@ -213,6 +223,8 @@ class SafeToSpend:
             "explanation": self.explanation(),
             # Basis, stated as data rather than inferred from the line labels.
             "spend_pocket": self.spend_pocket,
+            "spend_pocket_basis": self.spend_pocket_basis,
+            "selection_status": self.selection_status,
             "reserve": round(self.reserve, 2),
         }
 
@@ -289,15 +301,23 @@ def safe_to_spend(
     reserves: Iterable[Any] = (),
     *,
     currency: Optional[str] = None,
+    spend_selection: Optional[Any] = None,
 ) -> Optional[SafeToSpend]:
     """The one rule. ``None`` only when there is no money at all to reason about.
 
     ``currency`` defaults to the spend pocket's own currency, which is what Today published
     before this rule existed; accounts in other currencies are excluded rather than summed, and
     the caller keeps reporting them separately so nothing is silently dropped.
+
+    ``spend_selection`` is the newest OBSERVED Crew selection
+    (:class:`meridian.spend_selection.SpendSelection`), or ``None`` when no snapshot has been
+    recorded. It decides which pocket is spendable — Crew's own answer when it is usable, the
+    explicit name allow-list otherwise — and the resolution's basis travels with the result so a
+    surface can say which one it used (OS-113, owner-approved 2026-09-25).
     """
     accounts = list(accounts or ())
-    spend = spend_pocket_account(accounts)
+    resolution = resolve_spend_pocket(accounts, selection=spend_selection)
+    spend = resolution.account
     if currency is None:
         currency = (getattr(spend, "currency", None) or "USD") if spend is not None else "USD"
 
@@ -317,6 +337,8 @@ def safe_to_spend(
         amount=amount,
         spend_pocket=(str(getattr(spend, "name", "") or "") if spend is not None else None),
         accounts_counted=len(money),
+        spend_pocket_basis=resolution.basis,
+        selection_status=resolution.selection_status,
     )
 
 

@@ -280,3 +280,54 @@ def test_a_rename_cannot_split_the_two_workspaces(db):
     # Unknown name, so the pocket is set aside on both sides: 160 - 60 = 100.
     assert _assert_one_number(today, plan) == Decimal("100.00")
     assert today["safe_to_spend"]["breakdown"]["spend_pocket"] is None
+
+
+def test_crews_own_selection_names_the_spendable_pocket_on_both_workspaces(db):
+    """OS-113's acceptance: an OBSERVED selection decides the pocket, by ID, on both surfaces.
+
+    The pocket here is called "Pocket 7", which no allow-list contains, so the name rule sets it
+    aside (100.00). Crew's own observed selection says it IS the pocket the owner spends from, and it
+    is matched by the id Crew gave — so both workspaces must move to 160.00 TOGETHER, and each must
+    report which basis it used. That combination is the whole point: the selection is authoritative,
+    and a figure never hides which mechanism produced it.
+    """
+    from meridian.services.plan import build_plan
+    from meridian.services.today import build_today
+    from meridian.spend_selection import SpendSelectionStore
+
+    graph, commitments, rules, _ = _seed(
+        db,
+        [
+            {"external_id": "checking", "name": "Checking", "account_type": "checking",
+             "balance": 100.0},
+            {"external_id": "sub-7", "name": "Pocket 7", "account_type": "pocket", "balance": 60.0},
+        ],
+    )
+    store = SpendSelectionStore(db)
+    store.record(
+        provider="crew", connection_external_id="crew-household", snapshot_id="capture-1",
+        observed=("sub-7",), observed_at="2026-09-25T09:00:00Z",
+    )
+    selection = store.latest()
+    assert selection is not None and selection.selected_external_id == "sub-7"
+
+    today = build_today(graph, commitments, rules, now=datetime.now(timezone.utc),
+                        spend_selection=selection)
+    plan = build_plan(graph, commitments, rules, as_of=date(2026, 9, 25),
+                      spend_selection=selection)
+
+    # Nothing is set aside any more, because Crew says that pocket is the one he spends from.
+    assert _assert_one_number(today, plan) == Decimal("160.00")
+    breakdown = today["safe_to_spend"]["breakdown"]
+    assert breakdown["spend_pocket"] == "Pocket 7"
+    assert breakdown["spend_pocket_basis"] == "crew_selection"
+    assert breakdown["selection_status"] == "selected"
+
+    # The same data with NO observation stays on the name rule, and says so: the unknown-named pocket
+    # is set aside, and the basis is not silently reported as a selection.
+    unobserved_today, unobserved_plan = _both(graph, commitments, rules)
+    assert _assert_one_number(unobserved_today, unobserved_plan) == Decimal("100.00")
+    unobserved = unobserved_today["safe_to_spend"]["breakdown"]
+    assert unobserved["spend_pocket"] is None
+    assert unobserved["spend_pocket_basis"] == "none"
+    assert unobserved["selection_status"] == "unobserved"

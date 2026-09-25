@@ -1,6 +1,7 @@
 """Idempotent synchronization of provider snapshots into Meridian."""
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 from .ai.classifier import classify_with_ai_fallback
 from .classify import AssignmentRule, ClassificationInput, classify_deterministic
@@ -13,6 +14,12 @@ from .commitments import (
 )
 from .providers.base import ProviderAdapter
 from .reconcile import reconcile
+from .spend_selection import SpendSelectionStore
+
+
+def _now_iso() -> str:
+    """The observation time, used only when a capture carries no timestamp of its own."""
+    return datetime.now(timezone.utc).isoformat()
 
 
 @dataclass(frozen=True)
@@ -22,6 +29,58 @@ class SyncReport:
     accounts_synced: int
     transactions_synced: int
     errors: int
+
+
+def _record_spend_selection(adapter, repository, snapshot) -> None:
+    """Record WHICH pocket Crew says the owner spends from, as this snapshot observed it (OS-113).
+
+    This is the ingest half of OS-113. Crew publishes the setting as
+    ``userSpendConfig.selectedSpendSubaccount`` per user, repeated on every card, and the connector
+    has always fetched that facet while Meridian discarded it. Recording it here is what lets the
+    read path answer "which pocket is spendable" by Crew's own id instead of an English name — a
+    name that is measurably ambiguous in the owner's real data (two ACTIVE pockets both called
+    "Free to Spend" in one readable database).
+
+    Three deliberate behaviours, each of which is a rule rather than a detail:
+
+    * **An adapter that cannot answer records NOTHING.** Only Crew exposes
+      ``readback_selected_spend_pocket``; other providers are skipped, and their absence is not a
+      claim that the owner has no spend pocket.
+    * **An unobserved facet records nothing.** The provider method returns ``None`` for "I did not
+      see that facet", and ``SpendSelectionStore.record`` maps that to no row at all, so a failed
+      read can never be stored as "no selection" (the C01 unreported-is-not-zero rule).
+    * **A failure here never fails the sync.** The money that was reconciled is the point of the
+      run; losing a provenance row must not cost the owner the accounts, so any error is swallowed
+      — and, because nothing is recorded, the read path goes on saying "unobserved" rather than
+      inventing an answer.
+    """
+    reader = getattr(adapter, "readback_selected_spend_pocket", None)
+    if not callable(reader):
+        return
+    try:
+        observed = reader()
+        captured_at = None
+        capture_time = getattr(adapter, "readback_capture_time", None)
+        if callable(capture_time):
+            captured_at = capture_time()
+        store = SpendSelectionStore(repository.db_path)
+        store.record(
+            provider=adapter.provider_name,
+            connection_external_id=adapter.connection_external_id,
+            # The CAPTURE identifies the observation, so re-syncing one capture cannot manufacture a
+            # second selection; a capture that carries no timestamp falls back to this run's own
+            # identity, which is still unique per attempt.
+            snapshot_id=(f"{adapter.provider_name}:{captured_at}" if captured_at
+                         else f"{adapter.provider_name}:sync-run:{getattr(snapshot, 'snapshot_id', '') or id(snapshot)}"),
+            observed=observed,
+            observed_at=captured_at or _now_iso(),
+            freshness="fresh" if getattr(snapshot, "is_complete", False) else "partial",
+            assumptions=(
+                "read from the cards facet; the parent user's own config, children excluded",
+            ),
+        )
+    except Exception:  # noqa: BLE001 - provenance must never fail a sync
+        return
 
 
 def sync_provider(adapter: ProviderAdapter, repository, *, ai_classifier=None) -> SyncReport:
@@ -43,6 +102,7 @@ def sync_provider(adapter: ProviderAdapter, repository, *, ai_classifier=None) -
         )
         return SyncReport(adapter.provider_name, "failed", 0, 0, 1)
     accounts_by_external_id = {}
+    _record_spend_selection(adapter, repository, snapshot)
     user_rules = tuple(
         AssignmentRule(
             id=f"user:{rule.id}",
