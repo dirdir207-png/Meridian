@@ -121,6 +121,39 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-24 (ninth pass) — OS-102: the owner said there was no concept for the Plan panes; the record says half of one exists
+
+**The verification the ledger demanded came back against the premise, and that is the whole value of doing it
+first.** The owner: *"the rules and crew tab of the plan page have almost no styling. I do not believe there is a
+previous concept, so it is one you will have to design."* Checked all nine `design/*/` directories, their READMEs
+and handoffs, and the asset manifests: **no DRAWN concept exists** for either pane (02-plan.png draws the Plan
+tab; the 09-18 extension's `concepts/` holds only review, settings, timeline and virgil; nothing else mentions
+them). But **a governing PROSE specification does exist and is binding** — `BUILD_SPEC.md` §8 states both panes'
+requirements verbatim (Rules: grouped rules with readable trigger → condition → effect, schedule and paused
+state, edit prefilled; Crew: controls organized by purpose — bills, pockets, cards — not raw GraphQL names, and
+"no 'deferred' item next to a working duplicate control"), and `AGENTS.md` assigns everything the 09-18 set does
+not cover to the 09-08 set, naming `plan` explicitly. So the content requirements and the honesty rules are
+already governed; the job is **composition and styling against a binding checklist**, not invention — a smaller
+and safer task than the instruction implied.
+
+**Measured, not read.** Rules pane: `renderRules()` renders a name, a `Paused` badge and a `Delete` button —
+no trigger, condition, effect, schedule or edit. Two defects in the empty case: `[data-rules-empty]` is a CHILD
+of `[data-rules-list]` and `renderRules` calls `list.replaceChildren()`, so with zero rules the note is made
+visible and detached in the same pass — **observed**: `noteInDom: false`, pane height **0px**, i.e. a blank pane
+that cannot be told apart from a broken one; and (reasoned from source, explicitly NOT observed) a second pass
+would evaluate `empty.hidden` on `null`. Crew pane: `.m-plan-parity` and `.m-parity-list` have **no styling in
+any stylesheet**, and the 7 forms sit in one flat sequence (Create pocket, Create bill, Top up reserve, Manage
+autopilot rule, Set active spend pocket, Delete pocket, Create virtual card), so §8's purpose grouping is not met.
+
+**The Rules pane's central requirement is reachable with no backend change:** `meridian/services/plan.py:119`
+already sends each rule's `formula` (the real Crew AutopilotRule payload — triggers, sixteen-supported action
+types, optional conditions, often a description) and the renderer discards it.
+
+Proposal written to `docs/project/PLAN_PANES_DESIGN_PROPOSAL_2026-09-24.md` and put to the owner, with the
+ledger updating only its `evidence` — **status stays `ready`, `owner_decided` stays false, and no code was
+written for either pane.** Edit-a-rule is proposed as an explicit NON-GOAL of the styling slice because it is a
+new WRITE control and belongs in its own bounded slice with its own authority review.
+
 ### 2026-09-24 (eighth pass) — The Accounts aesthetic: three traits measured, the fourth asked about, and a gate that could not run at all (`OS-103`)
 
 **The owner named four traits; three of them are differences between the app and a governing record, so they

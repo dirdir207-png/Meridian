@@ -734,7 +734,8 @@
         "docs/project/HANDOFF.md",
         "docs/project/session-emergent.json",
         "docs/project/agent-claims.json",
-        "design-qa.md"
+        "design-qa.md",
+        "docs/project/PLAN_PANES_DESIGN_PROPOSAL_2026-09-24.md"
       ],
       "base_sha": "56390c911bea1f4a61717c40d05b602ee1ad4159",
       "since": "2026-09-24T00:00:00-04:00",
