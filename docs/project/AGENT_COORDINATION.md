@@ -23,6 +23,7 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Agent | Files claimed | Since | Status |
 |---|---|---|---|
+| Constitutional Builder (OS-103: the Accounts aesthetic, measured) | `static/css/meridian/accounts.css`, `static/js/meridian/accounts.js`, `static/css/meridian/observatory.css`, `tests/meridian/test_accounts_rail.py`, `tests/meridian/test_accounts_size.py` (new), `tests/meridian/test_accounts_ticket.py`, `design-qa.md`, `docs/project/{MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json,HANDOFF.md}` | 2026-09-24 | **active**. The owner's four-named Accounts aesthetic ("larger ticket, more diverse icons, no outer box on accounts, connected dotted line flowing account-to-account on the left"), measured against `design/observatory-drafts-2026-09-08/04-accounts.png` before anything was drawn. Three traits are fidelity deltas and are built here: the ticket's painted face, the card around the rows, and the cord's tinting. The fourth changes the glyph SYSTEM, so it is verified and proposed, not implemented. Presentation only: no route, data, financial, provider or authority change. |
 | Constitutional Builder (dial ticket contrast + invoice-note spacing follow-up) | `static/css/meridian/dial.css`, `static/js/meridian/dial.js`, `tests/meridian/test_dial_js.py`, `tests/browser/test_dial_fidelity.py`, `docs/project/{CURRENT_STATUS,AGENT_COORDINATION}.md` | 2026-09-24 | **released** with the row below at the 2026-09-24 (seventh pass) commit: the parchment ticket ink correction and the removal of the redundant `"Bill email attached."` line shipped together with the pointer/controls work, because both touch `dial.js` and `dial.css` and could not be separated at file level. |
 | Constitutional Builder (Today control/pointer and Settings ornament follow-up) | `static/js/meridian/dial.js`, `static/css/meridian/dial.css`, `static/css/meridian/settings.css`, `tests/meridian/test_dial_js.py`, `tests/browser/test_dial_fidelity.py`, `meridian/api.py`, `meridian/services/dial.py`, `templates/meridian/partials/today.html`, `tests/meridian/services/test_dial.py`, `tests/browser/test_dial_reserved_amount.py`, `tests/meridian/test_plan_view_switch_contrast.py`, `docs/project/{CURRENT_STATUS,AGENT_COORDINATION,MERIDIAN_OS_TASKS,session-emergent}.json`, `docs/project/MERIDIAN_OS_TASKS.json` | 2026-09-24 | **released** at the 2026-09-24 (seventh pass) commit. Owner-requested read-only visual work: the stylus becomes a visible instrument hand, the duplicate day-navigation buttons are removed (the keyboard range path and `T` survive), every day number can be shown from ONE revertible constant, the arc spreads to +132°, and the decorative Settings hourglass moves to the upper-right corner and grows to 132px. No financial authority, provider, route or action-pipeline change. |
 | Constitutional Builder (OS-078: negative reserve vs Safe to Spend) | `meridian/services/reserves.py` (new), `meridian/services/today.py`, `meridian/services/dial.py`, `tests/meridian/services/test_reserve_deficit.py` (new), `tests/meridian/services/test_today.py`, `docs/project/{MERIDIAN_DECISIONS.md,MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json}` | 2026-09-21 | **active**. Owner-reported correctness fix to a headline figure; display only, no route or schema change. |
@@ -119,6 +120,51 @@ would have reverted three commits had it been applied. This file is the channel.
 | Constitutional Builder (OS-089: Plan mobile concept alignment) | `static/js/meridian/plan.js`, `static/css/meridian/plan.css`, `templates/meridian/partials/plan.html`, `scripts/preview_observatory_dial.py` (synthetic fixture only), `tests/meridian/test_plan_row_disclosure.py`, `tests/meridian/test_plan_funding_label.py`, `tests/browser/test_plan.py`, `design-qa.md`, `docs/project/{MERIDIAN_OS_TASKS.json,MERIDIAN_DECISIONS.md,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json,PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md,HANDOFF.md}` | 2026-09-23 | **released at this commit**. NOTE: the before/after captures live in the UNTRACKED scratch tree `artifacts/plan-mobile-concept-alignment-2026-09-23/`, per this repo's convention that nothing under `artifacts/` is committed; `design-qa.md` references them by path. Owner-directed 2026-09-23 slice per `docs/project/PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md`: one-line bill rows, the facts/progress/evidence/NEXT move into the existing disclosure, the section becomes `Upcoming bills` with matching `aria-label`s, the `BILL` tag is removed, the add control stretches full width, and September coverage moves below the controls. **Presentation and copy only: no route, data, financial, authority, migration or provider change.** The medallion material is applied from the kit's existing brass ring (`medallion-frame.png`, already tracked and indexed), so no Runway generation occurs in this slice without a separately stated spend. |
 
 ## Log (append only — newest first)
+
+### 2026-09-24 (eighth pass) — The Accounts aesthetic: three traits measured, the fourth asked about, and a gate that could not run at all (`OS-103`)
+
+**The owner named four traits; three of them are differences between the app and a governing record, so they
+were measured before anything moved.** Concept 04 was read with PIL (its ticket's painted face is **379.6 x
+183.2** CSS at the governed 420-wide viewport) and the running page was measured in the isolated preview at
+420/430/390, DPR 3, both themes. At `56390c9` the ticket's box was already the full 388px content column, so
+"larger ticket" was entirely an interior problem: its painted face was **357.3 x 134.3** — 73% of the concept's
+height — because the engraving was clamped to a 92px box. The engraving now takes `clamp(124px, 40%, 200px)`
+(136px at 420) and the interior `12px 4px`, which lands the painted face at **356.7 x 179.7 (98.1%)** with the
+figure at the concept's own scale (~186 CSS of ink for the owner's `$2,485.07` against the concept's ~182). The
+card around the rows is gone in both themes, and the cord now carries one gradient per adjacent pair from each
+row's tint to the next, confirmed from rendered pixels rather than from the source. **Two traps are now guarded:**
+the cord's ink is an SVG *attribute*, and a CSS `stroke` declaration outranks a presentation attribute — so a
+`stroke` left on `.m-account-connector` silently flattens every segment back to one colour; and a money figure has
+no break opportunity, so a figure that does not fit **spills past the ticket's edge** rather than wrapping, which
+is what the ledger did at 390px before the engraving became the element that yields.
+
+**The fourth trait was NOT implemented, and that is the point of this entry.** "More diverse icons" changes a
+glyph *system*: the concept draws three emblems for three purpose buckets, the payload keys a glyph on the
+financial ROLE (`_role("pocket")` resolves to `other`), and the delivered
+`design/investigator-medallions-2026-09-21/` artwork states its own boundary — "do not use artwork as an
+account-type classifier", and place the Wi-Fi mark only where the mapping is deliberately accepted. Two forks,
+different artwork, one needing the owner's acceptance: the owner picks. Recorded in `OS-103` and in
+`session-emergent.json`. **Also recorded and deliberately not fixed:** the row separator's brass star sits at the
+row's vertical centre while the dotted rule it is meant to tip is the row's `border-bottom`, so on a 125.5px
+mobile row it floats ~30px above its rule; the owner named the *cord*, not the separator.
+
+**A documented gate could not run at all, and it was not this slice's doing.** `docs/project/agent-claims.json`
+had accumulated **five entries under the single agent id `constitutional-builder`**, and
+`scripts/check_guardrails.py` validates *every* claim before it checks anything, so it died with
+`CONFIG duplicate claim for agent 'constitutional-builder'` for **any** agent — the declared-scope step that
+`HANDOFF_OS-053` documents as "run it and expect OK" was unpassable. The file's own lifecycle (one claim per
+agent, updated in place with an incremented generation — `builder-trackd` is generation 2 under one claim_id)
+says the five were superseded, so they were consolidated into one `constitutional-builder` claim at generation 6,
+whose note names each superseded claim_id. **No declared scope was lost:** their file lists and verification notes
+are in this table's rows and in the file's own git history, and every one of them was released with its commit.
+The checker now reports `OK — 13 scope pattern(s)`.
+
+Verified: full suite **1944 passed / 96 skipped / 1 failed** — the one failure is
+`tests/test_generate_handoff.py::test_untracked_artifacts_do_not_make_the_handoff_claim_a_dirty_tree`, which
+asserts the *committed* HANDOFF agrees with the working tree and therefore cannot pass while this slice is
+uncommitted; it is green after the follow-up commit below. `ruff check app.py meridian/ scripts/ tests/` clean;
+`check_guardrails.py --agent constitutional-builder` OK; `git diff --check` clean. Presentation only: no route,
+data, financial, provider, migration or authority change.
 
 ### 2026-09-24 (seventh pass) — The pointer "missing" three times was 18px wide, and two derived estimates passed colliding geometry
 

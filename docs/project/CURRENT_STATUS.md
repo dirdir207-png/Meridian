@@ -1,5 +1,73 @@
 # Enhanced SimpleCrew — Current Status
 
+## Accounts: the ticket grew, the card went, the cord took the rows' colours — and the fourth trait was not guessed at (2026-09-24, OS-103, base `56390c9`)
+
+Owner: *"Accounts aesthetic — larger ticket, more diverse icons, no outer box on accounts, connected dotted line
+flowing account-to-account on the left."* Four traits on one surface. **Three are differences between the governing
+concept and what the app draws, so they were measured and fixed by measurement; the fourth changes a glyph SYSTEM and
+is proposed instead.** Presentation only: no route, data, financial, provider, migration or authority change, and the
+connector layer stays decorative and inert (`pointer-events: none`, clipped, `aria-hidden`, `z-index: 0`).
+
+**Measured before anything moved.** Concept 04 is 853x1844 drawn for a 420-wide phone (0.4924 concept px to CSS px);
+its ticket's painted face is **379.6 x 183.2 CSS**, its engraving **~132 x 132**, its figure **~40px of serif with
+~182 CSS of ink**, and its cord tinted ALONG its length. The app at `56390c9` measured the same way in the isolated
+preview at 420x912 DPR 3: ticket box 388x164 with a painted face of **357.3 x 134.3** — **73% of the concept's
+height** — an engraving clamped to a 92px box, a 32px figure, and one cord path in `rgba(238,228,207,0.26)`.
+
+**1. The ticket.** Its box was already the full 388px content column, so the whole difference was interior: the
+engraving goes from a 92px box to `clamp(124px, 40%, 200px)` (136px at 420) and the interior padding becomes
+`12px 4px`, which carries the box to 200px and the painted face to **356.7 x 179.7 — 98.1% of the concept's height**.
+The figure takes the concept's scale (`clamp(2rem, 9.5vw, 3.4rem)` = 39.9px at 420) and renders **~186 CSS of ink**
+for the owner's own nine-character `$2,485.07` against the concept's ~182. It is `nowrap` with the engraving as the
+element that yields (`flex: 0 1 auto; min-width: 88px`), because a money figure has no break opportunity: a figure
+that does not fit does not wrap, it **spills past the ticket's own edge**, which is what the ledger did at the 390px
+`mobile-small` viewport before this. `docOverflow` is 0 at 390/420/430 in both themes.
+
+**The 6% width shortfall is the frame's, and it is recorded rather than chased.** The painted face sits ~31px inside
+the box on each side because the supplied `parchment-ticket.png` carries its own transparent margin (43 of its 80px
+left slice) plus the scalloped-edge shading. Matching the concept's 379.6 would need a **~5px** nine-slice border,
+which is not the frame the kit draws, so the height was taken to the concept's and the width left at 356.7.
+
+**2. No outer box.** Concept 04 draws the rows directly on the night canvas. `.m-account-list-sheet` loses its border,
+fill, radius, shadow and padding in both themes; it survives only as the positioned box the connector layer hangs off
+and the width authority for the rows, and it leaves the light theme's enumerated blue-box list — or the box rule
+would paint the fill straight back on.
+
+**Removing the card is what forced the light theme's re-inking, and the contrasts are why.** While the rows sat on a
+`--m-surface` box they inherited the 2026-09-23 blue-box treatment, and every accent was drawn against indigo. On the
+parchment page the concept's brass reads **2.03:1** — below the 3:1 a non-text rule needs to be seen at all — so the
+dotted separator and its star take `#8a6a33` (**4.56:1**), the same hue family as the ticket's own label ink; the group
+heading's hairline moves from `#e3ded4` (**1.13:1**, invisible once the indigo card is gone) to
+`rgba(32,38,59,0.3)` (**1.83:1**); and the medallion disc takes `--obs-bg`, because `--m-surface` resolves to `#ffffff`
+in the light theme where brass on white is **1.90:1** (on the concept's indigo it is **7.62:1**). The dark theme is
+unchanged.
+
+**3. The cord.** Concept 04 tints it along its length, and the renderer now emits **one gradient per adjacent pair**,
+from the upper row's tint to the lower row's, with the gradient axis running node to node. Verified from rendered
+pixels rather than from the source: down the bow's flank the dashes interpolate `(193,169,226)` -> `(188,176,220)` ->
+`(183,183,214)` -> `(179,189,209)` -> `(174,197,202)` -> `(172,201,199)` -> `(165,212,191)`, i.e. `#c1a9e2` to
+`#a5d4bf`. A guard now pins the trap that would undo it: the ink is an SVG **attribute**, and a CSS `stroke`
+declaration outranks a presentation attribute, so a `stroke` left on `.m-account-connector` silently flattens every
+segment back to one colour.
+
+**4. "More diverse icons" is verified and PROPOSED, not implemented.** The concept draws three distinct emblems for
+three purpose buckets (compass rose, Wi-Fi mark, star) — but the payload keys a glyph on the financial **role**, and
+`_role("pocket")` resolves to `other`, so the bucket identity the concept's emblems name is not in the data. The
+delivered `design/investigator-medallions-2026-09-21/` artwork also states its own boundary: *"do not use artwork as an
+account-type classifier"*, and place the Wi-Fi mark only "where that visual mapping is deliberately accepted". With
+two forks that produce different artwork, one of which needs the owner's acceptance, the owner picks; the ledger entry
+carries both.
+
+**Also recorded, not fixed:** the row separator's brass star sits at the row's vertical centre (`top: 50%; right: 0`)
+while the dotted rule it is meant to tip is the row's own `border-bottom`, so on a 125.5px-tall mobile row it floats
+~30px above its rule. Concept 04 tips the rule itself, at both ends. It is a measured defect against OS-103 and is
+**outside** what the owner named.
+
+Evidence: `design-qa.md` (measurement table and contrasts), `tests/meridian/test_accounts_size.py` (the interior
+arithmetic, the de-boxing, the parchment re-inks), `tests/meridian/test_accounts_rail.py` (per-segment tints, the
+gradient trap), captures in the untracked
+`artifacts/accounts-aesthetic-2026-09-24/` (concept beside current, both themes, 390/420/430).
+
 ## The stylus is an instrument hand, the duplicate day controls are gone, every day can be numbered, and the hourglass moved to the corner (2026-09-24)
 
 Five owner requests on Today's dial and Settings' Trials pane, all read-only and visual. No route,

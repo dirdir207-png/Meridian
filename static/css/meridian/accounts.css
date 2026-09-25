@@ -85,7 +85,14 @@
   display: flex;
   align-items: center;
   gap: var(--m-space-4);
-  padding: var(--m-space-4);
+  /* Vertical padding is what buys the height, and it is derived from a measurement rather than
+     chosen. Measured in the browser at 420 CSS: the painted parchment face is the ticket's box
+     minus ~15px vertically and ~31px horizontally (the nine-slice's own transparent margins plus
+     the shading the parchment probe rejects), so a 200px box paints ~185px of face against the
+     concept's 183.2. With a 136px engraving that fixes the padding at (200 - 136 - 40) / 2 = 12.
+     Horizontal padding drops to 4px for the reason the concept has almost none: its text begins
+     ~23px in from the ticket's edge, which here is the 20px nine-slice border plus this padding. */
+  padding: 12px 4px;
   border: 20px solid transparent;
   border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 fill / 20px round;
   border-radius: 0;
@@ -158,8 +165,23 @@ html[data-theme="dark"] .m-accounts-summary .m-accounts-ticket {
 }
 
 .m-accounts-ticket-art {
-  flex: 0 0 auto;
-  width: clamp(92px, 28%, 188px);
+  /* Concept 04's engraving measures ~132 x 132 CSS, i.e. ~35% of the ticket's painted width. A
+     92px box (the old `clamp(92px, 28%, 188px)` floor at 420) painted only ~83 x 78 of drawing,
+     because the supplied PNG carries its own transparent margin -- the drawing fills 89.8% x
+     85.8% of its canvas. The floor is the term that binds at every phone width (40% of a 340px
+     content box is 136), so this is what the engraving actually takes on the owner's device, and
+     it lands at ~122 x 117 of painted ink against the concept's 132 x 132.
+
+     `flex: 0 1 auto` with a floor, not `0 0 auto`: the engraving is the thing that yields when the
+     row is tight. A money figure has no break opportunity, so a figure that does not fit does not
+     wrap -- it spills past the ticket's own edge, which is what the ledger used to do at the 390px
+     `mobile-small` viewport (the figure needs ~149px and only 178px was left beside a fixed 92px
+     engraving once the old 16px padding and 20px frame are counted). Now the engraving gives the
+     figure its width first, down to a floor of 88px, and only past that floor could the figure
+     spill. */
+  flex: 0 1 auto;
+  min-width: 88px;
+  width: clamp(124px, 40%, 200px);
   aspect-ratio: 1;
   background: url("/static/img/meridian/observatory/accounts-ticket-building.png") center / contain no-repeat;
 }
@@ -180,6 +202,19 @@ html[data-theme="dark"] .m-accounts-summary .m-accounts-ticket {
 .m-accounts-ticket .m-accounts-figure,
 .m-accounts-ticket .m-accounts-figure[data-signal] {
   color: #20263b;
+}
+
+/* The figure is this row's fixed point: a money figure has no break opportunity of its own, so
+   it must never be the element that gives way -- `nowrap` says so explicitly, and the art's
+   flex-shrink above is what actually makes room. Concept 04's figure measures ~40px of serif with
+   ~182px of ink in a 379.6px face (48% of it); at 420 CSS this rule renders ~186px of ink for the
+   owner's own nine-character `$2,485.07`, and the engraving beside it is left the 136px it asks
+   for rather than shrunk, so growing the ticket costs the figure nothing and the figure grows
+   with it. The `vw` term is what keeps that true at every phone width: 9.5vw is 37.1px at the
+   390px `mobile-small` viewport, where the engraving takes its 124px floor. */
+.m-accounts-summary .m-accounts-ticket .m-accounts-figure {
+  font-size: clamp(2rem, 9.5vw, 3.4rem);
+  white-space: nowrap;
 }
 
 .m-accounts-ticket .m-accounts-figure-note {
@@ -237,15 +272,17 @@ html[data-theme="dark"] .m-accounts-summary .m-accounts-ticket {
   gap: var(--m-space-6);
 }
 
-/* Account structure sheet (white rounded card) */
+/* Account structure sheet. Concept 04 draws the account rows DIRECTLY on the night canvas: the
+   medallions, the dotted brass separators and the bow sit on the page colour, with no card
+   around them. The sheet therefore carries no chrome at all -- no border, no fill, no radius, no
+   shadow, no padding -- and exists only as the positioned box the connector layer hangs off
+   (`.m-account-list-sheet { position: relative }` below) and as the width authority for the
+   rows. Removing the fill is also what lets the rows use the page's own ink scale again: while
+   the rows sat on a `--m-surface` card they inherited the box's tokens, and in the light theme
+   the 2026-09-23 blue-box treatment painted that card indigo. */
 .m-account-list-sheet {
   width: 100%;
   min-width: 0;
-  padding: var(--m-space-3) var(--m-space-5);
-  border: 1px solid var(--m-border);
-  border-radius: var(--m-radius-lg);
-  background: var(--m-surface);
-  box-shadow: var(--m-elevation-1);
 }
 
 .m-account-group {
@@ -380,11 +417,14 @@ html[data-theme="dark"] .m-accounts-summary .m-accounts-ticket {
   z-index: 0;
 }
 
-/* The bow is a slack cord, drawn thinner and dimmer than the medallion ring it links so
-   the nodes stay the brightest marks on the rail. */
+/* The bow is a slack cord, drawn thinner than the medallion ring it links so the nodes stay the
+   brightest marks on the rail. NO `stroke` IS DECLARED HERE, deliberately: each segment's ink is
+   a gradient REFERENCE that the renderer sets as an attribute, and a CSS declaration outranks a
+   presentation attribute -- so a `stroke` here would silently flatten every segment back to one
+   colour, which is exactly the defect this slice exists to fix. Concept 04 tints the cord along
+   its length (lilac at the first node, mint as it arrives at the second, apricot to the third). */
 .m-account-connector {
   fill: none;
-  stroke: var(--m-border-strong);
   stroke-width: 1.25;
   stroke-dasharray: 3 4;
   stroke-linecap: round;
@@ -437,6 +477,43 @@ html[data-theme="dark"] .m-accounts-summary .m-accounts-ticket {
   -webkit-mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
   mask: url("/static/img/meridian/observatory/kit-2026-09-18/icons/star.svg") center / contain no-repeat;
   pointer-events: none;
+}
+
+/* ---------- The rows on PARCHMENT (light theme), now that no card carries them ---------- */
+
+/* These exist because the card went away. While the rows sat on a `--m-surface` box they
+   inherited the 2026-09-23 blue-box treatment in the light theme -- an indigo fill with the ink
+   scale flipped inside it -- and every accent above was drawn against that indigo. With the rows
+   on the parchment page the accents have to be re-inked, and the reason is measurable rather
+   than aesthetic: on `--m-canvas` #f6f4ef the concept's brass `#c6aa71` reads 2.03:1, which is
+   below the 3:1 that a non-text rule needs to be seen at all. `#8a6a33` is the same hue family,
+   reads 4.56:1 on the same parchment, and is the ink the ticket already uses for its own label
+   (`#7a5a2e`, 5.74:1) -- so the page keeps one brass vocabulary, re-inked for the page colour.
+   The dark theme needs none of this: brass on the night canvas is 7.62:1. */
+html[data-theme="light"] .obs-shell .m-account-row {
+  border-bottom-color: #8a6a33;
+}
+
+html[data-theme="light"] .obs-shell .m-account-row::before {
+  background: #8a6a33;
+}
+
+/* The group heading's hairline is the app's structural rule, not the concept's dotted brass,
+   so it takes an ink rather than the brass family. `--m-border` is #e3ded4 on this page, which
+   is 1.13:1 against parchment -- the hairline only existed because it was drawn on an indigo
+   card. rgba(32, 38, 59, 0.3) reads 1.83:1, which is fainter than the rule's own emphasis
+   deserves and still firmly visible; `--m-ink` at 30% is what it is. */
+html[data-theme="light"] .obs-shell .m-account-list {
+  border-top-color: rgba(32, 38, 59, 0.3);
+}
+
+/* The medallion disc. In the dark theme `--m-surface` IS the dark disc the owner asked for on
+   2026-09-23 (dark disc, brass glyph). In the light theme it resolves to #ffffff, and brass on
+   white is 1.90:1 -- a white disc with an invisible glyph once the indigo card is gone. The
+   concept's own disc is the night indigo, so the light theme takes `--obs-bg` #141b32, which
+   puts the brass glyph back at 7.62:1 and keeps the two themes one construction. */
+html[data-theme="light"] .obs-shell .m-account-icon {
+  background: var(--obs-bg);
 }
 
 .m-account-history {
@@ -713,9 +790,5 @@ html[data-theme="dark"] .m-accounts-summary .m-accounts-ticket {
   .m-section-heading-row .m-button {
     width: 100%;
     text-align: center;
-  }
-
-  .m-account-list-sheet {
-    padding: var(--m-space-2) var(--m-space-4);
   }
 }

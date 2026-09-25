@@ -60,6 +60,8 @@ const TINT_COLORS = {
 
 /* ---------- Connector geometry (concept 04) ---------- */
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
 /* Concept 04 does not thread its account rows on a straight rail. The dashed line is a
    BOW: it leaves one row's node, curves left into the gutter, and returns to the next
    row's node, so the medallions read as one constellation strung on a slack cord. The
@@ -76,6 +78,13 @@ const TINT_COLORS = {
    node rather than one continuous path, so a row that leaves the list cannot drag the
    curve through a row it no longer touches.
 
+   Each segment also carries the TWO tints it runs between, because the concept tints the
+   cord ALONG its length: the dashes leaving a row's node are that row's colour and they
+   arrive at the next node as that row's colour. Read off concept 04 -- lilac dashes leave
+   the lilac node and turn mint as they reach the mint node, and apricot dashes leave the
+   mint node and turn orange at the third. Rendering that needs the pair, not just the path
+   string, so the geometry reports both.
+
    `rows` are the node-carrying rows in visual order, each measured to its centre in
    list-relative coordinates. */
 export function connectorGeometry(rows, options = {}) {
@@ -84,8 +93,11 @@ export function connectorGeometry(rows, options = {}) {
   if (!Array.isArray(rows) || rows.length < 2) return null;
 
   const centres = rows.map((row) => row.centerY);
+  const tintOf = (row) =>
+    Object.prototype.hasOwnProperty.call(TINT_COLORS, row.tint) ? row.tint : "slate";
   const minX = nodeX - bow;
   const segments = [];
+  const links = [];
   for (let index = 0; index < rows.length; index += 1) {
     // Upward curve to the row above, bulging left across that gap.
     if (index > 0) {
@@ -105,14 +117,30 @@ export function connectorGeometry(rows, options = {}) {
       );
     }
   }
+  // One paintable entry per ADJACENT PAIR, in visual order. The list above draws each pair
+  // from both ends (so a hidden row drops out of the chain); painting the pair twice would
+  // double a translucent stroke's alpha, so the paint list is its own list.
+  for (let index = 0; index < rows.length - 1; index += 1) {
+    const midY = (centres[index] + centres[index + 1]) / 2;
+    links.push({
+      d: `M${nodeX} ${centres[index].toFixed(1)}`
+        + ` Q${minX.toFixed(1)} ${midY.toFixed(1)} ${nodeX} ${centres[index + 1].toFixed(1)}`,
+      fromTint: tintOf(rows[index]),
+      toTint: tintOf(rows[index + 1]),
+      fromY: centres[index],
+      toY: centres[index + 1],
+    });
+  }
 
   return {
     d: segments.join(" "),
     nodes: rows.map((row) => ({
       x: nodeX,
       y: row.centerY,
-      tint: Object.prototype.hasOwnProperty.call(TINT_COLORS, row.tint) ? row.tint : "slate",
+      tint: tintOf(row),
     })),
+    links,
+    nodeX,
   };
 }
 
@@ -153,7 +181,7 @@ function renderConnectors(sheet) {
     return;
   }
   if (!layer) {
-    layer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    layer = document.createElementNS(SVG_NS, "svg");
     layer.setAttribute("class", "m-account-connectors");
     layer.setAttribute("aria-hidden", "true");
     layer.setAttribute("focusable", "false");
@@ -161,12 +189,42 @@ function renderConnectors(sheet) {
   }
   while (layer.firstChild) layer.removeChild(layer.firstChild);
 
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("class", "m-account-connector");
-  path.setAttribute("d", geometry.d);
-  layer.append(path);
+  // One gradient per adjacent pair, painted along the segment's own vertical run: the colour
+  // leaving a row is that row's, and it arrives as the next row's. The stops are the same
+  // values as the row's node and medallion, so a segment can never disagree with the two
+  // things it joins.
+  const defs = document.createElementNS(SVG_NS, "defs");
+  layer.append(defs);
+  geometry.links.forEach((link, index) => {
+    const gradientId = `m-account-connector-tint-${index}`;
+    const gradient = document.createElementNS(SVG_NS, "linearGradient");
+    gradient.setAttribute("id", gradientId);
+    gradient.setAttribute("gradientUnits", "userSpaceOnUse");
+    gradient.setAttribute("x1", String(geometry.nodeX));
+    gradient.setAttribute("y1", link.fromY.toFixed(1));
+    gradient.setAttribute("x2", String(geometry.nodeX));
+    gradient.setAttribute("y2", link.toY.toFixed(1));
+    for (const [offset, tint] of [[0, link.fromTint], [1, link.toTint]]) {
+      const stop = document.createElementNS(SVG_NS, "stop");
+      stop.setAttribute("offset", String(offset));
+      stop.setAttribute("stop-color", TINT_COLORS[tint] || TINT_COLORS.slate);
+      gradient.append(stop);
+    }
+    defs.append(gradient);
+
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("class", "m-account-connector");
+    path.setAttribute("data-from-tint", link.fromTint);
+    path.setAttribute("data-to-tint", link.toTint);
+    path.setAttribute("d", link.d);
+    // The segment's ink is a REFERENCE, so it has to arrive as an attribute -- and the
+    // stylesheet must not also declare `stroke` on this class, because a CSS declaration
+    // outranks a presentation attribute and would flatten every segment back to one colour.
+    path.setAttribute("stroke", `url(#${gradientId})`);
+    layer.append(path);
+  });
   for (const node of geometry.nodes) {
-    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    const circle = document.createElementNS(SVG_NS, "circle");
     circle.setAttribute("class", "m-account-connector-node");
     circle.setAttribute("data-tint", node.tint);
     circle.setAttribute("cx", node.x.toFixed(1));

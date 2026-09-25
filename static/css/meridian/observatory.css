@@ -799,7 +799,10 @@ html[data-theme="light"] .obs-shell .obs-plan-scenario,
 html[data-theme="light"] .obs-shell .obs-panel,
 html[data-theme="light"] .obs-shell .m-review-card,
 html[data-theme="light"] .obs-shell .m-account-activity,
-html[data-theme="light"] .obs-shell .m-account-list-sheet,
+/* `.m-account-list-sheet` LEFT THIS LIST on 2026-09-24 with OS-103: the owner's "no outer box on
+   accounts" removed the card itself, so there is no box left to paint. The rows now sit on the
+   parchment page and take the page's own ink; the accents that only worked on indigo are
+   re-inked for parchment in accounts.css, beside the rules they override. */
 html[data-theme="light"] .obs-shell .m-connection-health,
 html[data-theme="light"] .obs-shell .m-settings-row,
 html[data-theme="light"] .obs-shell .m-settings-inspector,

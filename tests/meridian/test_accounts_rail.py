@@ -147,6 +147,57 @@ def test_geometry_gives_one_node_per_row_and_takes_the_bow_depth():
     assert result["xs"] == [9, 9, 9, 9], result["xs"]
 
 
+def test_each_segment_carries_the_two_tints_it_runs_between():
+    """Concept 04 tints the cord ALONG its length, and that is what separates a constellation
+    from a stray border: lilac dashes leave the lilac node and arrive mint at the mint node.
+    Confirmed from rendered pixels on 2026-09-24, not from the source: down the bow's left flank
+    the dashes interpolate (193,169,226) -> (165,212,191), i.e. exactly #c1a9e2 -> #a5d4bf."""
+    out = _run_geometry("""
+      const { connectorGeometry } = await import('./static/js/meridian/accounts.js');
+      const rows = [
+        { centerY: 30, tint: 'lilac' },
+        { centerY: 90, tint: 'mint' },
+        { centerY: 150, tint: 'apricot' },
+      ];
+      const g = connectorGeometry(rows);
+      const odd = connectorGeometry([{ centerY: 0, tint: 'nope' }, { centerY: 10, tint: 'lilac' }]);
+      console.log(JSON.stringify({
+        links: g.links.length,
+        pairs: g.links.map((l) => [l.fromTint, l.toTint]),
+        ys: g.links.map((l) => [l.fromY, l.toY]),
+        nodeX: g.nodeX,
+        badTint: odd.links.map((l) => l.fromTint),
+      }));
+    """)
+    result = json.loads(out)
+    assert result["links"] == 2, "one paintable segment per ADJACENT pair"
+    assert result["pairs"] == [["lilac", "mint"], ["mint", "apricot"]]
+    assert result["ys"] == [[30, 90], [90, 150]], "the gradient axis runs node to node"
+    assert result["nodeX"] == 21
+    # An unknown tint falls back exactly as a NODE's does, so a segment and the two nodes it
+    # joins can never disagree about what colour a row is.
+    assert result["badTint"] == ["slate"]
+
+
+def test_segments_reference_a_gradient_and_the_stylesheet_does_not_flatten_it():
+    """The segment's ink is a presentation ATTRIBUTE, and a CSS `stroke` declaration outranks one.
+    A `stroke` left on `.m-account-connector` would silently paint every segment a single colour
+    -- the exact defect this slice exists to fix -- so its ABSENCE is the property under guard,
+    and the declarations that do belong there are pinned so the block cannot simply be emptied."""
+    js = _read("static/js/meridian/accounts.js")
+    css = _read("static/css/meridian/accounts.css")
+    assert 'path.setAttribute("stroke", `url(#${gradientId})`)' in js
+    assert 'stop.setAttribute("stop-color", TINT_COLORS[tint] || TINT_COLORS.slate)' in js
+    assert 'gradient.setAttribute("gradientUnits", "userSpaceOnUse")' in js
+    block = css.split("\n.m-account-connector {")[1].split("}")[0]
+    assert "stroke:" not in block, (
+        "a CSS stroke declaration beats the gradient attribute and flattens the cord"
+    )
+    assert "fill: none" in block
+    assert "stroke-width: 1.25" in block
+    assert "stroke-dasharray: 3 4" in block
+
+
 def test_geometry_uses_the_stylesheet_node_radius_match():
     """The generated node radius is a literal in JS; the stylesheet's node rules must not
     contradict it by re-introducing a stroke that changes its apparent size."""

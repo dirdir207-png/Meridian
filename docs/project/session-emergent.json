@@ -119,6 +119,13 @@
       "arose": "2026-09-24",
       "promoted_to": "OS-102",
       "decision_owed": "true"
+    },
+    {
+      "summary": "The owner named four Accounts aesthetic traits; three are measured fidelity deltas, and the fourth changes the glyph system and owes a decision",
+      "why": "Owner, 2026-09-24: \"Accounts aesthetic -- larger ticket, more diverse icons, no outer box on accounts, connected dotted line flowing account-to-account on the left.\" Three of the four are differences between the app and the governing concept 04, so they are measurable and were fixed by measurement. \"More diverse icons\" is not a delta: the concept draws three emblems for three purpose BUCKETS, the payload keys a glyph on the financial ROLE (`_role(\"pocket\")` resolves to `other`), and the delivered design/investigator-medallions-2026-09-21/ artwork states its own boundary -- \"do not use artwork as an account-type classifier\", and place the Wi-Fi mark only where the mapping is deliberately accepted. Two forks, different artwork, one needing the owner's acceptance, so the owner picks before anything is drawn.",
+      "arose": "2026-09-24",
+      "promoted_to": "OS-103",
+      "decision_owed": "true"
     }
   ]
 }

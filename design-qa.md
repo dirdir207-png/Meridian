@@ -24,6 +24,63 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Accounts — the four named aesthetic traits, measured before anything moved (2026-09-24, OS-103, base `56390c9`)
+
+Owner: *"Accounts aesthetic — larger ticket, more diverse icons, no outer box on accounts, connected dotted line
+flowing account-to-account on the left."* Every trait was read off `design/observatory-drafts-2026-09-08/04-accounts.png`
+with PIL (853x1844 at a 420-wide phone, so 0.4924 concept px to CSS px) and then read off the running page in the
+isolated synthetic preview at 420x912 DPR 3, in both themes. Nothing was drawn from memory.
+
+| trait | concept 04 | at `56390c9` | after this slice |
+|---|---|---|---|
+| ticket **painted face** | 379.6 x 183.2 CSS | 357.3 x **134.3** (73% of the concept's height) | 356.7 x **179.7** (98.1%) |
+| engraving (painted ink) | ~132 x 132 | ~83 x 78 (92px box; the supplied PNG's drawing fills 89.8%) | ~122 x 117 (136px box) |
+| figure | ~40px serif, ~182 CSS of ink | 32px, ~149 CSS for the owner's `$2,485.07` | 39.9px, ~186 CSS |
+| outer box | none — rows drawn on the canvas | bordered, surface-filled, shadowed card, indigo in the light theme | none, in either theme |
+| cord | tinted **along its length**, lilac -> mint -> apricot | one path at `rgba(238,228,207,0.26)` | one gradient per segment, stops `#c1a9e2` -> `#a5d4bf` |
+
+**The width shortfall is the frame's, and it is recorded rather than chased.** The ticket's box is *already* the full
+388px content column, so "larger ticket" was entirely an interior problem. The painted face sits ~31px inside that box
+on each side because the supplied `parchment-ticket.png` carries its own transparent margin (43 of its 80px left
+slice) plus the scalloped-edge shading. Matching the concept's 379.6 would need a ~5px nine-slice border, which is not
+the frame the kit draws, so the width stays at 356.7 and the *height* was taken to the concept's instead.
+
+![Accounts, concept 04 beside the current page in both themes](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/accounts-aesthetic-2026-09-24/review/accounts-aesthetic-first-screen.jpg)
+
+![The ticket and the first rows, concept beside dark](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/accounts-aesthetic-2026-09-24/review/accounts-ticket-and-rows.jpg)
+
+**Removing the card is what forced the light theme's re-inking, and the numbers are why.** While the rows sat on a
+`--m-surface` box they inherited the 2026-09-23 blue-box treatment — an indigo fill with the ink scale flipped inside
+it — and every accent was drawn against indigo. On the parchment page the concept's brass `#c6aa71` reads **2.03:1**,
+below the 3:1 a non-text rule needs to be seen at all, so the dotted separator and its star take `#8a6a33` (**4.56:1**
+on the same parchment, the same hue family as the ticket's own label ink). The group heading's hairline moves from
+`#e3ded4` (**1.13:1**, invisible once the indigo card is gone) to `rgba(32,38,59,0.3)` (**1.83:1**). The medallion disc
+takes `--obs-bg` in the light theme, because `--m-surface` resolves to `#ffffff` there and brass on white is **1.90:1**;
+on the concept's own indigo it is **7.62:1**. The dark theme needed none of this — brass on the night canvas is already
+7.62:1 — and its rules are unchanged.
+
+![The rows on canvas in the light and dark themes, concept for reference](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/accounts-aesthetic-2026-09-24/review/accounts-rows-light-and-dark.jpg)
+
+**The cord's tint was verified from rendered pixels, not from the source.** Sampling the bow's left flank in the DPR-3
+capture (device x 135-175, below the ticket) gives `(193,169,226)` at the node, then `(188,176,220)`, `(183,183,214)`,
+`(179,189,209)`, `(174,197,202)`, `(172,201,199)` and finally `(165,212,191)` at the next node — an even interpolation
+from lilac to mint, which is what concept 04 draws (lilac dashes leaving the lilac node, mint arriving at the mint
+node). One trap is now guarded: the ink arrives as an SVG *attribute*, and a CSS `stroke` declaration outranks a
+presentation attribute, so a `stroke` left on `.m-account-connector` would silently flatten every segment back to one
+colour.
+
+![The cord, concept beside current](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/accounts-aesthetic-2026-09-24/review/accounts-cord-closeup.jpg)
+
+**Not done here, and named rather than quietly left.** (1) *More diverse icons* changes the glyph **system**, and the
+concept draws three emblems for three purpose buckets the payload does not carry (`pocket` accounts currently resolve
+to the `other` role), while the delivered `design/investigator-medallions-2026-09-21/` artwork states its own boundary:
+"do not use artwork as an account-type classifier" and "only place it where that visual mapping is deliberately
+accepted". It is verified and proposed for the owner's pick, not guessed at. (2) The row separator's brass star still
+sits at the row's vertical centre (`top: 50%; right: 0`) while the dotted rule it is meant to tip is drawn by the row's
+own `border-bottom`, so on a 125.5px-tall mobile row the star floats ~30px above its rule. Concept 04 tips the rule
+itself, at both ends. That is a measured defect, recorded against OS-103, and deliberately **not** fixed inside this
+slice because the owner named the *cord* and not the separator.
+
 ## Today — the dial states Crew's per-event funding estimate (2026-09-20, OS-056 + OS-056b, base `5a88cc6`)
 
 ![Today iPhone Air dark, the per-event Crew estimate on the Internet row](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/dial-schedule-review-2026-09-20/dial-reserved-420x912-dark.jpg)
