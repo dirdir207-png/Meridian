@@ -301,28 +301,37 @@ def test_the_breakdown_explains_the_figure_and_adds_up(tmp_path):
     breakdown = build_today(repository)["safe_to_spend"]["breakdown"]
 
     assert breakdown["result"] == pytest.approx(100.00)
+    # RESTATED 2026-09-25 (OS-111, owner-decided). The old shape was two lines --
+    # "Available balance" and a negative "Bill reserve" adjustment. Under the one rule the
+    # overdraft is INSIDE the total instead of being a second subtraction (the reserve is entered
+    # into the account's total signed), so there is exactly one line and its amount already
+    # reflects the overdraft. The arithmetic assertions below are unchanged, and the honesty
+    # requirement is met in prose rather than by an adjustment row: the panel must still say why
+    # the total reads 100.00 rather than 424.90, because a figure that changed silently is as
+    # opaque as the bug this replaced.
     labels = [line["label"] for line in breakdown["lines"]]
-    # RESTATED 2026-09-25 for the owner's decided wording. The first line now names the BASIS
-    # ("Available balance") rather than the pocket, and the subtraction is named after the pocket
-    # it came from with the SIGN carrying the minus rather than a "Less ... " verb -- his words:
-    # "I would go with Available Balance, and then - with each pocket name and their balance and -
-    # Bill Reserve." The arithmetic assertions below are unchanged and still what makes this test
-    # mean anything.
-    assert labels == ["Available balance", "Bill reserve"]
+    assert labels == ["Total balance"]
+    assert breakdown["lines"][0]["amount"] == pytest.approx(100.00)
     # The stated lines must actually produce the stated result, or the explanation is decoration.
     assert sum(line["amount"] for line in breakdown["lines"]) == pytest.approx(
         breakdown["result"]
     )
-    assert "reserve is negative" in breakdown["explanation"]
+    assert "overdrawn by $324.90" in breakdown["explanation"]
+    assert "already inside the total" in breakdown["explanation"]
     assert breakdown["currency"] == "USD"
-    # The adjustment is shown as a negative line, so the reader sees a subtraction rather than
-    # being told one happened.
-    assert breakdown["lines"][1]["amount"] < 0
 
 
-def test_the_breakdown_says_nothing_was_subtracted_when_there_is_no_deficit(tmp_path):
-    """It must not imply a subtraction that did not happen -- an explanation that describes
-    arithmetic the calculation never performed is worse than none."""
+def test_a_funded_reserve_is_set_aside_rather_than_hidden(tmp_path):
+    """A reserve that HOLDS money is money the owner has, and money that is set aside.
+
+    RESTATED 2026-09-25 (OS-111, owner-decided) from "the breakdown says nothing was subtracted
+    when there is no deficit". That assertion is now false by design: the reserve holds 500.00, so
+    the panel names it. The honesty requirement it protected is preserved and asserted instead --
+    the subtraction shown is a REAL one (the reserve's own money, which the total counts first),
+    and the figure is unchanged by it, so the panel can never imply a subtraction that did not
+    happen. The result is the same 424.90 either way, which is what makes this a guard rather than
+    a restatement.
+    """
     from meridian.services.today import build_today
 
     repository = _connected_repository(tmp_path)
@@ -330,10 +339,12 @@ def test_the_breakdown_says_nothing_was_subtracted_when_there_is_no_deficit(tmp_
 
     breakdown = build_today(repository)["safe_to_spend"]["breakdown"]
 
-    assert [line["label"] for line in breakdown["lines"]] == ["Available balance"]
+    assert [line["label"] for line in breakdown["lines"]] == ["Total balance", "Bill reserve"]
     assert breakdown["result"] == pytest.approx(424.90)
-    assert "nothing is subtracted" in breakdown["explanation"]
-    # No adjustment line, so the breakdown cannot show a subtraction that did not happen.
+    # The reserve's money is counted in the total and then set aside, so it nets to zero: the
+    # owner's figure does not move because a bill reserve happens to be funded.
+    assert breakdown["lines"][0]["amount"] == pytest.approx(924.90)
+    assert breakdown["lines"][1]["amount"] == pytest.approx(-500.00)
     assert sum(line["amount"] for line in breakdown["lines"]) == pytest.approx(
         breakdown["result"]
     )

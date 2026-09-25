@@ -1,5 +1,66 @@
 # Enhanced SimpleCrew — Current Status
 
+## 2026-09-25 (late): OS-111 — one money rule for Today and Plan (code landed, docs pending)
+
+**Owner decisions taken before any edit, 2026-09-25:** (1) the single rule is **pocket accounting** —
+*everything you have, minus every pocket you set aside*; (2) **no clamp anywhere**, so `plan.py`'s
+`max(_ZERO, ...)` is removed and D-019 rule 2 stands; (3) the base line is labelled for what it is
+(**"Total balance"**), each subtraction carrying its own pocket's name; (4) Plan's negative-Available
+caption reads *"nothing remains flexible — $120 more is set aside than you have"*, with the verb
+pluralised.
+
+**The recommendation first put to the owner was WRONG and was withdrawn before building.** The
+ledger's premise — "Plan already implements the owner's rule" — is false in three measured ways, each
+verified against the artifacts rather than the record:
+
+- `plan.py:448-455` built its base from cash/checking/savings only, while `crewwork.py:540` types
+  every non-primary Crew pocket as `"pocket"`; the sets are disjoint, so Plan subtracted goal-pocket
+  money from a base that never contained it, while its own comment claimed the opposite. The repo's
+  own fixture proves it: `tests/meridian/services/test_plan.py:236-255` could only sum to 1500.00
+  because the 250.00 pocket sat outside the base.
+- Plan's bill term is arithmetically `Σ target` (the funding part cancels exactly), so it subtracted
+  every bill's full amount, funded or not.
+- Plan could not see D-019's overdraft at all: a negative reserve exists only in
+  `crew_bill_reserves.total_reserved_amount`, while `commitments.funded_amount` is still `CHECK >= 0`.
+  Dropping the deficit would have overstated in exactly the case D-019 exists for.
+
+Applying it as recommended would have moved the owner's headline to `0.00` while the pocket he spends
+from held `15.45`. **The reserve is held at account level, outside every pocket** (D-015's arithmetic:
+`1097.10` reserve + `345.28` across the four subaccounts = the owner's live total to the cent), so the
+rule enters it into the total **signed** — which is what subsumes D-019's deficit: his 424.90 against
+a -324.90 reserve is 100.00 from ONE term instead of two, with no double-count possible.
+
+**Implemented.** New `meridian/services/safe_to_spend.py` is the one place the rule lives; `today.py`
+and `plan.py` both adapt to it (`plan.py`'s clamp is gone, and its three stations are now the same
+partition: Bills = the reserve, Goals = every other set-aside pocket, Available = the shared figure).
+`reserves.py` gained the signed `observed_reserve_total` and records what OS-111 superseded.
+`plan.js`'s caption no longer floors the figure in prose.
+
+**Verified.** Whole `tests/` tree: **2060 passed, 102 skipped**, with the single failure being
+`tests/test_generate_handoff.py` — the HANDOFF-staleness guard, which requires the committed handoff to
+match a clean tree and is regenerated as the last step of a slice. `ruff check app.py meridian/
+scripts/ tests/` clean; `git diff --check` clean. Rendered at 420x912 DPR 3 in both themes against the
+isolated preview with payloads computed by the real rule: the owner's worked example reads
+`Total balance $1,000.00 / Emergency Fund -$100.00 / Bill reserve -$100.00 / Safe to spend $800.00`;
+his D-019 case reads **$100.00** and states the overdraft; a genuinely overdrawn pocket reads
+**-$83.14** rather than a clamped zero; the map draws `Available -$120.00` with no layout breakage.
+New acceptance test `tests/meridian/test_safe_to_spend_agreement.py` builds BOTH payloads from one
+seeded database and asserts they state the same figure, so they cannot drift apart again.
+
+**Still to do (this is a deliberate stopping point, not a completion claim):** D-024 in
+MERIDIAN_DECISIONS.md (with D-019 rule 1 and D-023 pt 8's unfunded consequence superseded
+EXPLICITLY), the OS-111 ledger entry, the `design-qa.md` entry, a refreshed caption capture showing
+the chosen wording in the shipped file, and the final HANDOFF regeneration.
+
+**Also repaired, disclosed in the commit:** `docs/project/agent-claims.json` carried TWO claims under
+the agent id `constitutional-builder`, so `scripts/check_guardrails.py --agent constitutional-builder`
+died with `CONFIG duplicate claim` at HEAD `b184fa7` — for ANY agent. It entered in the prior
+session's `a14ae9a` (`git log -S`), and `tests/test_check_guardrails.py` cannot see it because it runs
+only against synthetic repositories. The two released claims are consolidated into one generation-8
+claim naming both superseded ids; the checker now exits 0. Note also that the checker must be run with
+`.venv/bin/python` (it requires >= 3.11 and flask; the system python3.9 fails with a misleading
+"interpreter is 3.9" plus "cannot import flask").
+
 ## 2026-09-25 (evening): the Assets section rebuilt to the owner's own corrections, and the stylus finished
 
 Three defects the owner photographed on his phone, each measured before and after rather than

@@ -8,11 +8,8 @@ from meridian.beacon import forecast
 from meridian.cadence import next_occurrence
 from meridian.commitments import CommitmentType
 from meridian.repository import FinancialRepository, ProviderConnectionFreshness
-from meridian.services.reserves import (
-    reserve_deficit,
-    spendable_after_reserve_deficit,
-)
-from meridian.services.spend_pocket import find_spend_pocket
+from meridian.services.reserves import reserve_deficit
+from meridian.services.safe_to_spend import safe_to_spend
 
 _STALE_AFTER = timedelta(hours=24)
 _CASH_ACCOUNT_TYPES = frozenset({"cash", "checking", "savings"})
@@ -433,47 +430,47 @@ def build_today(
     setup = _setup_summary(breakdown, rules_configured=rule_repository is not None)
     next_run = _next_run_hint(rule_repository, as_of=None)
 
-    # Safe-to-spend is the discretionary money available to spend now. Crew
-    # tracks this as the "Free to Spend" pocket; use its available (cleared)
-    # balance directly so safe-to-spend matches Free to Spend. (Crew has
-    # already separated bill/obligation money into other pockets, so no further
-    # subtraction.) Otherwise fall back to cash-type available balances.
+    # OS-111, owner-decided 2026-09-25: ONE money rule for the whole product, so Today and Plan
+    # cannot publish two different "money you can spend" numbers again.
     #
-    # CORRECTED 2026-09-21 (owner-reported): the "no further subtraction" rule above holds only
-    # while the reserve is at or above zero. A NEGATIVE reserve is an overdraft whose deficit has
-    # not yet been moved out of the spendable pocket, so the pocket overstates what is genuinely
-    # free by exactly that deficit -- the owner saw 424.90 where the true figure was 100.00
-    # (reserve -324.90). The deficit is subtracted and reported as an input. See D-019 and
-    # meridian/services/reserves.py.
-    spend_source = find_spend_pocket(accounts)
-    # "Committed" (known obligations) is independent of which account is the
-    # spend source: it is the unfunded bill/commitment total Meridian is tracking
-    # toward. Always surface it so the card is never dead.
+    # The rule (meridian/services/safe_to_spend.py) is the owner's: everything you have, minus
+    # every pocket you have set aside. It replaces TWO things that used to live here --
+    #   * the "Free to Spend pocket balance" base, and
+    #   * D-019's reserve-deficit subtraction.
+    # The reserve is now entered into the account's total SIGNED rather than subtracted as a
+    # deficit, which is what makes D-019's case fall out of one term instead of two: Crew holds
+    # the reserve at account level, outside every pocket (D-015's arithmetic), so a -324.90
+    # reserve lowers the total by exactly the amount the old deficit term removed. Subtracting
+    # both would double-count it. Nothing is clamped, so a real overdraft still reports negative
+    # (D-019 rule 2).
+    #
+    # The one name-keyed question left is "which pocket is the spend pocket", and it stays in
+    # meridian/services/spend_pocket.py: identifying the pocket by Crew's own selectedSpendSubaccount
+    # is OS-113's work, and Today still needs it because pocket accounting has to exempt the pocket
+    # the owner actually spends from. When it cannot be identified, NO pocket is treated as
+    # spendable and each one is named as set aside -- visible and conservative, rather than
+    # silently counting an earmarked pocket as free cash.
+    bill_reserves = repository.list_bill_reserves()
+    spend = safe_to_spend(accounts, bill_reserves)
+    # "Committed" (known obligations) is independent of the figure: it is the unfunded
+    # bill/commitment total Meridian is tracking toward, published as an observed input so the card
+    # is never dead. It is NOT a subtraction any more -- the breakdown in spend_breakdown is what
+    # explains the figure, and it uses pockets, not obligation targets.
     known_obligations = (
         _unfunded_bill_total(commitment_repository) if commitment_repository else None
     )
-    deficit = reserve_deficit(repository.list_bill_reserves())
-    if spend_source is not None and spend_source.available_balance is not None:
-        # The LINE label names the BASIS, not the pocket (owner, 2026-09-25: "I would go with
-        # Available Balance"). The prose below uses the same label, so the breakdown reads
-        # "Available balance holds 424.90, but the bill reserve is negative by 324.90..."
-        line_label = "Available balance"
-        source_currency = spend_source.currency or "USD"
-        source_available = _currency_total(
-            [(source_currency, spend_source.available_balance)]
-        )["by_currency"].get(source_currency, 0.0)
-        safe_amount = spendable_after_reserve_deficit(source_available, deficit)
+    deficit = reserve_deficit(bill_reserves)
+    if spend is not None:
+        safe_amount = spend.amount
         safe_status = "available"
+        spend_breakdown = spend.as_payload()
     else:
-        # DELIBERATELY NOT relabelled "Available balance". This branch means the spend pocket was
-        # NOT identified, so the figure has a different BASIS -- the sum of the cash, checking and
-        # savings accounts. Giving it the same label as the pocket case would make a silent basis
-        # change look like an ordinary figure. See meridian/services/spend_pocket.py.
-        line_label = "Cash accounts"
-        source_currency = "USD"
-        source_available = available_cash["by_currency"].get("USD", 0.0)
-        safe_amount = spendable_after_reserve_deficit(source_available, deficit)
-        safe_status = "available" if source_available else "unavailable"
+        # Nothing to reason about: no account in the figured currency holds money at all. A zero
+        # would claim an observation the read did not make, so the figure is absent and the status
+        # says unavailable (the surface already renders that state, and disables the disclosure).
+        safe_amount = None
+        safe_status = "unavailable"
+        spend_breakdown = None
 
     # The breakdown is built HERE, by the server, rather than left for the client to derive. The
     # surface must be able to say how the number was reached -- that is the whole point of the
@@ -485,29 +482,9 @@ def build_today(
     # clobbered it, so the top-level key came back holding the safe-to-spend lines and
     # test_breakdown_reports_bills_and_goals failed with a KeyError on 'bills_total'. Caught by
     # the full suite; a run of only the new tests would have passed.
-    spend_breakdown = {
-        "currency": source_currency,
-        "lines": [{"label": line_label, "amount": round(source_available, 2)}],
-        "result_label": "Safe to spend",
-        "result": round(safe_amount, 2),
-    }
-    if deficit.is_present:
-        spend_breakdown["lines"].append(
-            {
-                "label": "Bill reserve",
-                "amount": round(-deficit.amount, 2),
-            }
-        )
-        spend_breakdown["explanation"] = (
-            f"{line_label} holds {source_available:,.2f}, but the bill reserve is negative by "
-            f"{deficit.amount:,.2f}. That deficit has not been moved out of the spendable pocket "
-            "yet, so it is subtracted: what is genuinely free is the difference."
-        )
-    else:
-        spend_breakdown["explanation"] = (
-            f"{line_label} is the discretionary balance Meridian reads directly. No reserve "
-            "overdraft was observed, so nothing is subtracted."
-        )
+    #
+    # The breakdown is now assembled by the rule module and published verbatim; the client still
+    # does no arithmetic (OS-079 acceptance 3).
 
     return {
         "total_cash": total_cash,

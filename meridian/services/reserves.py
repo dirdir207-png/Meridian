@@ -32,6 +32,16 @@ stays wrong. That is a hole, not a fix.
 
 ``total_reserved_amount`` is ``None`` when the read did not report it, which is not evidence of a
 deficit, so an unreported reserve contributes nothing.
+
+**SUPERSEDED IN PART — OS-111, 2026-09-25 (owner-decided).** The two rules above still govern the
+DIAL, which computes ``availableToSpend`` from the spend pocket and this deficit, and they still
+hold as principles. What OS-111 replaced is the *mechanism* on Safe to Spend and on Plan's
+Available: those enter the reserve into the account's total **signed**
+(``observed_reserve_total``) instead of subtracting a deficit from a base that never contained the
+reserve. Rule 1 was a workaround for that base, exactly as OS-111's reconciliation recorded; rule 2
+stands unchanged, and it is why the shared figure is never clamped. A reserve that HOLDS money now
+nets to zero inside the total and is reported as its own set-aside line, so it is never
+double-counted.
 """
 
 from __future__ import annotations
@@ -94,6 +104,31 @@ def reserve_deficit(reserves: Iterable[Any], *, currency: str = "USD") -> Reserv
     return ReserveDeficit(amount=total, reserves=count, currency=currency)
 
 
+def observed_reserve_total(reserves: Iterable[Any], *, currency: str = "USD") -> float:
+    """The reserve's own money, SIGNED — what Crew is holding for bills.
+
+    OS-111's rule enters this into the account's total, because Crew holds the reserve at account
+    level rather than inside a pocket (D-015's arithmetic: reserve ``1097.10`` + ``345.28`` across
+    the four subaccounts = the owner's live total to the cent). A positive reserve is therefore
+    money the owner HAS and money that is SET ASIDE — it nets to zero against the figure and is
+    reported as its own line. A negative one is an overdraft that lowers the total directly, which
+    is the same arithmetic D-019's deficit term performed, without a second term that could
+    double-count it.
+
+    A reserve whose total was never reported contributes nothing (D-019's ``None`` rule: silence
+    is not a number), and reserves in another currency are left out rather than converted.
+    """
+    total = 0.0
+    for record in reserves or ():
+        amount = getattr(record, "total_reserved_amount", None)
+        if amount is None:
+            continue
+        if (getattr(record, "currency", None) or "USD") != currency:
+            continue
+        total += float(amount)
+    return round(total, 2)
+
+
 def spendable_after_reserve_deficit(available: float, deficit: ReserveDeficit) -> float:
     """The genuinely free figure. Not clamped: an overdraft shows as a negative number."""
     return available - deficit.amount
@@ -101,6 +136,7 @@ def spendable_after_reserve_deficit(available: float, deficit: ReserveDeficit) -
 
 __all__ = [
     "ReserveDeficit",
+    "observed_reserve_total",
     "reserve_deficit",
     "spendable_after_reserve_deficit",
 ]

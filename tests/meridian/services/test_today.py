@@ -79,18 +79,34 @@ def test_today_reports_cash_inputs_and_stale_graph_without_a_forecast(repository
     # cannot appear on this payload without this test being updated deliberately. Updated
     # 2026-09-21 for the reserve-overdraft adjustment (`breakdown` plus the `reserve_deficit*`
     # inputs) -- a documented addition, not drift. See D-019.
+    #
+    # RESTATED 2026-09-25 (OS-111, owner-decided). Three things moved, and each is the decided
+    # rule rather than drift:
+    #   * the FIGURE is the whole account total less what is set aside, not one pocket's cleared
+    #     balance, so 380.00 (checking available 80 + savings balance 300) becomes 400.00
+    #     (checking balance 100 + savings balance 300). The owner chose the base label
+    #     "Total balance" for exactly this reason: the arithmetic follows BALANCE, which is the
+    #     account's total, while `available_balance` is the cleared figure banks print beside it;
+    #   * the base line's label is "Total balance" in every case, including when no spend pocket
+    #     is identified. OS-079 kept a second label ("Cash accounts") there because that branch
+    #     had a different BASIS; under the one rule the basis is the same quantity, and which
+    #     pockets count is carried by the lines instead. The inputs dict is UNCHANGED, which is
+    #     what this exact-dict assertion still guards;
+    #   * the breakdown gained the two basis fields the surfaces read (`spend_pocket`, `reserve`).
     assert result["safe_to_spend"] == {
-        "amount": 380.0,
+        "amount": 400.0,
         "status": "available",
         "breakdown": {
             "currency": "USD",
-            "lines": [{"label": "Cash accounts", "amount": 380.0}],
+            "lines": [{"label": "Total balance", "amount": 400.0}],
             "result_label": "Safe to spend",
-            "result": 380.0,
+            "result": 400.0,
             "explanation": (
-                "Cash accounts is the discretionary balance Meridian reads directly. No reserve "
-                "overdraft was observed, so nothing is subtracted."
+                "Total balance is every dollar Meridian can see in this currency. Nothing is set "
+                "aside, so nothing is subtracted. The rest is safe to spend."
             ),
+            "spend_pocket": None,
+            "reserve": 0.0,
         },
         "inputs": {
             "available_cash": {
@@ -359,8 +375,16 @@ def test_breakdown_reports_bills_and_goals(tmp_path):
 
 
 def test_today_safe_to_spend_matches_free_to_spend_pocket(repository):
-    """Safe-to-spend should reflect the 'Free to Spend' pocket's available
-    (cleared) balance, not the primary holding Checking pocket."""
+    """The identified spend pocket is the pocket that is EXEMPT from the set-aside subtraction.
+
+    RESTATED 2026-09-25 (OS-111, owner-decided). The old intent was "the figure IS the pocket's
+    cleared balance". Under the one rule the figure is "everything you have, minus every pocket
+    you set aside", so the pocket's role changed rather than disappeared: it is identified
+    (`meridian/services/spend_pocket.py`) and therefore NOT subtracted, while the Checking
+    balance — which is money the owner holds and has not set aside — now counts. That is why
+    71.61 became 571.61 (Checking 500.00 + Free to Spend 71.61), and the pockets' exemption is
+    asserted directly below so the guard still bites on a rename.
+    """
     run = repository.begin_sync_run(
         provider="crew",
         connection_external_id="crew-household",
@@ -395,7 +419,13 @@ def test_today_safe_to_spend_matches_free_to_spend_pocket(repository):
     result = build_today(repository, now=datetime.now(timezone.utc))
 
     assert result["safe_to_spend"]["status"] == "available"
-    assert result["safe_to_spend"]["amount"] == 71.61
+    assert result["safe_to_spend"]["amount"] == 571.61
+    # The pocket is named as the spend pocket and draws no set-aside line: it is the pocket the
+    # owner spends from, so its money is the figure rather than a subtraction.
+    assert result["safe_to_spend"]["breakdown"]["spend_pocket"] == "Free to Spend"
+    assert [line["label"] for line in result["safe_to_spend"]["breakdown"]["lines"]] == [
+        "Total balance"
+    ]
 
 
 def test_today_still_finds_the_pocket_after_the_owner_renames_it(repository):
@@ -407,6 +437,14 @@ def test_today_still_finds_the_pocket_after_the_owner_renames_it(repository):
     pass by luck: the AMOUNT must be the renamed pocket's cleared balance rather than the
     checking fallback, and the breakdown's own first line must name the pocket rather than
     'Cash accounts'. The second is what makes a future rename visible instead of silent.
+
+    RESTATED 2026-09-25 (OS-111, owner-decided), and the guard's MEANING changed rather than
+    weakened. The figure is no longer the pocket's balance, so "the amount equals the pocket"
+    would no longer prove anything. What it must prove now is that the renamed pocket is still
+    the pocket that is exempt: the figure must be the SAME 571.61 as the un-renamed case above,
+    and the pocket must draw no set-aside line. Under the one rule a rename that defeated the
+    lookup would make today's 571.61 become 500.00 (the pocket listed as set aside), so the
+    failure is still visible, and it is now conservative as well.
     """
     run = repository.begin_sync_run(
         provider="crew",
@@ -440,14 +478,14 @@ def test_today_still_finds_the_pocket_after_the_owner_renames_it(repository):
 
     result = build_today(repository, now=datetime.now(timezone.utc))
 
-    assert result["safe_to_spend"]["amount"] == 71.61, (
-        "the renamed pocket was not found, so Safe to Spend fell through to the Cash accounts "
-        "basis and silently reported a different number"
+    assert result["safe_to_spend"]["amount"] == 571.61, (
+        "the renamed pocket was not found, so its money was listed as set aside and Safe to "
+        "Spend reported a different number"
     )
-    # The label is the BASIS, not the pocket (owner's decided wording, 2026-09-25). The fallback
-    # branch says "Cash accounts" precisely so a basis change stays visible rather than silent,
-    # which is why asserting this exact string is a real guard and not a cosmetic one.
-    assert result["safe_to_spend"]["breakdown"]["lines"][0]["label"] == "Available balance"
+    assert result["safe_to_spend"]["breakdown"]["spend_pocket"] == "Safe to Spend"
+    # The base line names the BASIS, not the pocket (owner's decided wording, 2026-09-25), and it
+    # is the same label the un-renamed case produces: a rename changes nothing about the basis.
+    assert result["safe_to_spend"]["breakdown"]["lines"][0]["label"] == "Total balance"
 
 
 def test_beacon_signal_notes_negative_safe_to_spend():

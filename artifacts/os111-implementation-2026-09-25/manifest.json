@@ -1,0 +1,213 @@
+{
+  "url_note": "isolated synthetic preview; never live financial data",
+  "commit": "b184fa79e5a9708a8701b0d130a644239ae1f5bf",
+  "viewport": {
+    "width": 420,
+    "height": 912
+  },
+  "dpr": 3,
+  "shots": [
+    {
+      "kind": "today-panel",
+      "case": "01-owners-example-800",
+      "caption": "the owner's worked example: total 1000, bill reserve 100, emergency fund 100",
+      "theme": "dark",
+      "panel": "open",
+      "figure": "$800.00",
+      "file": "01-owners-example-800-dark.png",
+      "amount": 800.0,
+      "labels": [
+        "Total balance",
+        "Emergency Fund",
+        "Bill reserve"
+      ]
+    },
+    {
+      "kind": "today-panel",
+      "case": "02-overdraft-100",
+      "caption": "his D-019 case: 424.90 in the pocket against a -324.90 reserve",
+      "theme": "dark",
+      "panel": "open",
+      "figure": "$100.00",
+      "file": "02-overdraft-100-dark.png",
+      "amount": 100.0,
+      "labels": [
+        "Total balance"
+      ]
+    },
+    {
+      "kind": "today-panel",
+      "case": "03-nothing-set-aside",
+      "caption": "no pockets at all, so nothing is set aside",
+      "theme": "dark",
+      "panel": "open",
+      "figure": "$300.00",
+      "file": "03-nothing-set-aside-dark.png",
+      "amount": 300.0,
+      "labels": [
+        "Total balance"
+      ]
+    },
+    {
+      "kind": "today-panel",
+      "case": "04-negative-figure",
+      "caption": "a genuinely overdrawn pocket: the figure is negative and says so (no clamp)",
+      "theme": "dark",
+      "panel": "open",
+      "figure": "-$83.14",
+      "file": "04-negative-figure-dark.png",
+      "amount": -83.14,
+      "labels": [
+        "Total balance"
+      ]
+    },
+    {
+      "kind": "plan-caption",
+      "option": "shipped",
+      "caption": "AS SHIPPED \u2014 the clamp in prose",
+      "theme": "dark",
+      "text": "1 rule allocate $1,660; $0 remains flexible.",
+      "file": "05-caption-option-shipped-dark.png",
+      "available": -120.0
+    },
+    {
+      "kind": "plan-caption",
+      "option": "A",
+      "caption": "literal negative",
+      "theme": "dark",
+      "text": "1 rule allocate $1,660; -$120 remains flexible.",
+      "file": "05-caption-option-A-dark.png",
+      "available": -120.0
+    },
+    {
+      "kind": "plan-caption",
+      "option": "B",
+      "caption": "nothing flexible, with the amount set aside in excess",
+      "theme": "dark",
+      "text": "1 rule allocate $1,660; nothing remains flexible \u2014 $120 more is set aside than you have.",
+      "file": "05-caption-option-B-dark.png",
+      "available": -120.0
+    },
+    {
+      "kind": "plan-caption",
+      "option": "C",
+      "caption": "short of what you have set aside",
+      "theme": "dark",
+      "text": "1 rule allocate $1,660; you are $120 short of what you have set aside.",
+      "file": "05-caption-option-C-dark.png",
+      "available": -120.0
+    },
+    {
+      "kind": "plan-map",
+      "theme": "dark",
+      "medallions": [
+        "Bills | $0.00",
+        "Goals | $320.00",
+        "Available | -$120.00"
+      ],
+      "file": "06-plan-map-negative-dark.png",
+      "available": -120.0
+    },
+    {
+      "kind": "today-panel",
+      "case": "01-owners-example-800",
+      "caption": "the owner's worked example: total 1000, bill reserve 100, emergency fund 100",
+      "theme": "light",
+      "panel": "open",
+      "figure": "$800.00",
+      "file": "01-owners-example-800-light.png",
+      "amount": 800.0,
+      "labels": [
+        "Total balance",
+        "Emergency Fund",
+        "Bill reserve"
+      ]
+    },
+    {
+      "kind": "today-panel",
+      "case": "02-overdraft-100",
+      "caption": "his D-019 case: 424.90 in the pocket against a -324.90 reserve",
+      "theme": "light",
+      "panel": "open",
+      "figure": "$100.00",
+      "file": "02-overdraft-100-light.png",
+      "amount": 100.0,
+      "labels": [
+        "Total balance"
+      ]
+    },
+    {
+      "kind": "today-panel",
+      "case": "03-nothing-set-aside",
+      "caption": "no pockets at all, so nothing is set aside",
+      "theme": "light",
+      "panel": "open",
+      "figure": "$300.00",
+      "file": "03-nothing-set-aside-light.png",
+      "amount": 300.0,
+      "labels": [
+        "Total balance"
+      ]
+    },
+    {
+      "kind": "today-panel",
+      "case": "04-negative-figure",
+      "caption": "a genuinely overdrawn pocket: the figure is negative and says so (no clamp)",
+      "theme": "light",
+      "panel": "open",
+      "figure": "-$83.14",
+      "file": "04-negative-figure-light.png",
+      "amount": -83.14,
+      "labels": [
+        "Total balance"
+      ]
+    },
+    {
+      "kind": "plan-caption",
+      "option": "shipped",
+      "caption": "AS SHIPPED \u2014 the clamp in prose",
+      "theme": "light",
+      "text": "1 rule allocate $1,660; $0 remains flexible.",
+      "file": "05-caption-option-shipped-light.png",
+      "available": -120.0
+    },
+    {
+      "kind": "plan-caption",
+      "option": "A",
+      "caption": "literal negative",
+      "theme": "light",
+      "text": "1 rule allocate $1,660; -$120 remains flexible.",
+      "file": "05-caption-option-A-light.png",
+      "available": -120.0
+    },
+    {
+      "kind": "plan-caption",
+      "option": "B",
+      "caption": "nothing flexible, with the amount set aside in excess",
+      "theme": "light",
+      "text": "1 rule allocate $1,660; nothing remains flexible \u2014 $120 more is set aside than you have.",
+      "file": "05-caption-option-B-light.png",
+      "available": -120.0
+    },
+    {
+      "kind": "plan-caption",
+      "option": "C",
+      "caption": "short of what you have set aside",
+      "theme": "light",
+      "text": "1 rule allocate $1,660; you are $120 short of what you have set aside.",
+      "file": "05-caption-option-C-light.png",
+      "available": -120.0
+    },
+    {
+      "kind": "plan-map",
+      "theme": "light",
+      "medallions": [
+        "Bills | $0.00",
+        "Goals | $320.00",
+        "Available | -$120.00"
+      ],
+      "file": "06-plan-map-negative-light.png",
+      "available": -120.0
+    }
+  ]
+}

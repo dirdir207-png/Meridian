@@ -9,6 +9,7 @@ from meridian.beacon import forecast
 from meridian.cadence import next_occurrence
 from meridian.funding import project_funding
 from meridian.funding_repo import FundingRuleRepository
+from meridian.services.safe_to_spend import safe_to_spend
 from meridian.services.spend_pocket import is_spend_pocket_name
 
 _HORIZON_DAYS = 30
@@ -445,44 +446,37 @@ def build_plan(
     shortfalls.sort(key=lambda item: (item["date"], -item["amount"]))
     first_shortfall = shortfalls[0] if shortfalls else None
 
-    cash_total = sum(
-        (
-            _money(account.balance)
-            for account in accounts.values()
-            if account.is_active and account.account_type in ("cash", "checking", "savings")
-        ),
-        _ZERO,
-    )
-    committed = sum(
-        (
-            min(_money(view["funded"]), _money(view["target"]))
-            for view in commitment_views
-            if view["type"] != "buffer"
-        ),
-        _ZERO,
-    )
+    # OS-111, owner-decided 2026-09-25: the allocation and Today's headline come from ONE rule,
+    # in meridian/services/safe_to_spend.py, so the two workspaces cannot publish two different
+    # "money you can spend" numbers again.
+    #
+    # What this replaced, and why it was not a refactor. This block used to partition
+    # `cash_total` -- the sum of the cash/checking/savings accounts -- less `bill_purpose`
+    # (committed + unfunded, which cancels to Σ target: every bill's full amount, funded or not)
+    # less the balances of goal pockets. `cash_total` EXCLUDED pockets (crewwork.py types every
+    # non-primary Crew pocket as "pocket"), so the station subtracted pocket money from a base
+    # that never contained it, and its own comment claimed the opposite. The three stations also
+    # no longer answer the same question: Bills is now what the owner has SET ASIDE for bills,
+    # Goals what is set aside in every other pocket, and Available what is left -- which is
+    # exactly the figure Today publishes.
+    #
+    # The obligation figures are NOT lost: `unfunded`, `coverage_ratio`, `first_shortfall` and the
+    # per-bill views below still carry them, and the timeline still projects against the funding
+    # model's own cash events.
     unfunded = max(_ZERO, total_target - total_funded)
-    # Crew goals are pocket targets, so their current balances are already inside
-    # cash_total. When goal metadata is observed, keep the Goals station separate
-    # from bill obligations and re-derive the residual instead of appending cash.
-    goal_pockets = [
-        account
-        for account in accounts.values()
-        if account.is_active
-        and account.account_type == "pocket"
-        and account.goal_target is not None
-        and _money(account.goal_target) > _ZERO
-    ]
-    goals_total = sum((_money(account.balance) for account in goal_pockets), _ZERO)
-    bill_purpose = committed + unfunded
-    if goal_pockets:
-        # Crew's provider goal pockets are distinct from the bill obligations. Their
-        # balances are already in cash_total, so subtract them once as a purpose.
-        available = max(_ZERO, cash_total - bill_purpose - goals_total)
+    spend = safe_to_spend(accounts.values(), graph_repository.list_bill_reserves())
+    if spend is not None:
+        cash_total = _money(spend.total)
+        bills_total = _money(max(0.0, spend.reserve))
+        goals_total = _money(spend.set_aside_total())
+        available = _money(spend.amount)
     else:
-        # Legacy/local planning records have no provider goal metadata; retain the
-        # established commitment partition rather than guessing that a pocket is a goal.
-        available = max(_ZERO, cash_total - bill_purpose)
+        # No account in the figured currency holds money at all. Three zeros state that honestly;
+        # a fabricated partition would not.
+        cash_total = _ZERO
+        bills_total = _ZERO
+        goals_total = _ZERO
+        available = _ZERO
 
     coverage_ratio = float(min(_money("1"), total_funded / total_target)) if total_target > _ZERO else 0.0
     if commitments:
@@ -534,7 +528,7 @@ def build_plan(
         "allocation": {
             "cash_total": float(cash_total),
             "segments": [
-                {"label": "Bills", "amount": float(committed + unfunded)},
+                {"label": "Bills", "amount": float(bills_total)},
                 {"label": "Goals", "amount": float(goals_total)},
                 {"label": "Available", "amount": float(available)},
             ],

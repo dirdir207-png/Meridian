@@ -187,9 +187,18 @@ function renderFundingCard(root, plan, activeRuleCount) {
   const caption = root.querySelector("[data-funding-caption]");
   if (next) {
     if (activeRuleCount > 0) {
+      // The second clause IS the figure OS-111 unified with Today's Safe to Spend, so it may not
+      // be floored: `Math.max(0, available)` printed "$0 remains flexible" beside a medallion
+      // showing a negative -- the prose contradicting the map. The negative branch says what a
+      // negative Available means, i.e. more is set aside than exists, rather than calling a
+      // shortfall "flexible". Wording chosen by the owner, 2026-09-25. The verb pluralises with
+      // the noun, which the original did not ("1 rule allocate ...").
       caption.textContent =
-        `${activeRuleCount} rule${activeRuleCount === 1 ? "" : "s"} allocate ${moneyWhole(next.amount)}; ` +
-        `${moneyWhole(Math.max(0, available))} remains flexible.`;
+        `${activeRuleCount} rule${activeRuleCount === 1 ? "" : "s"} ` +
+        `allocate${activeRuleCount === 1 ? "s" : ""} ${moneyWhole(next.amount)}; ` +
+        (available < 0
+          ? `nothing remains flexible — ${moneyWhole(-available)} more is set aside than you have.`
+          : `${moneyWhole(available)} remains flexible.`);
     } else {
       caption.textContent = `${moneyWhole(next.amount)} expected ${formatLongDate(next.date)}; no funding rules yet.`;
     }

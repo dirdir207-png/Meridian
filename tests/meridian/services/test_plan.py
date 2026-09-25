@@ -234,6 +234,17 @@ def test_plan_reports_first_projected_shortfall(env):
 
 
 def test_plan_allocation_segments_reconcile(env):
+    """The three stations partition the account's total, and Available is the shared figure.
+
+    RESTATED 2026-09-25 (OS-111, owner-decided), and this test was the PROOF that the old
+    partition was built on a false premise. It used to assert that checking 1500.00 alone was the
+    base while a 250.00 Vacation pocket was ALSO subtracted from it -- which could only sum to
+    1500.00 because the pocket sat outside the base (`crewwork.py:540` types every non-primary
+    pocket as "pocket", and the old base summed cash/checking/savings only). Under the one rule
+    the base is the account's total (1750.00 = checking 1500.00 + the pocket's 250.00) and the
+    pocket is subtracted once, as a station. The property this test exists to protect is
+    unchanged: the stations partition the base, so nothing is counted or subtracted twice.
+    """
     graph, commitments, rules = env
     _synced_checking(graph, balance=1500.0)
     pocket = _pocket(graph, "vac-1", "Vacation", 250.0, goal_target=1000.0)
@@ -248,11 +259,16 @@ def test_plan_allocation_segments_reconcile(env):
     plan = build_plan(graph, commitments, rules, as_of=date(2026, 9, 1))
     segments = plan["allocation"]["segments"]
     total = sum(Decimal(str(segment["amount"])) for segment in segments)
-    assert total == Decimal("1500.00")
+    # The base the stations must add up to is the account's total, published alongside them.
+    assert total == Decimal(str(plan["allocation"]["cash_total"]))
+    assert total == Decimal("1750.0")
     by_label = {segment["label"]: Decimal(str(segment["amount"])) for segment in segments}
-    assert by_label["Bills"] == Decimal("1000.00")
+    # No reserve was observed, so no money is set aside for bills.
+    assert by_label["Bills"] == Decimal("0.0")
+    # The Vacation pocket holds 250.00 and no spend pocket was identified, so it is set aside.
     assert by_label["Goals"] == Decimal("250.00")
-    assert by_label["Available"] == Decimal("250.00")
+    # The owner's figure: everything (1750.00) less what is set aside (250.00).
+    assert by_label["Available"] == Decimal("1500.0")
 
 
 def test_plan_labels_stale_freshness(env):
