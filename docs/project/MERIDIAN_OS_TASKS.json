@@ -2934,7 +2934,10 @@
       "owner_question": "Migrate these routes onto the governed pipeline, fence them, or accept them as documented risk? Migration gains provenance routing, readback verification and the no-retry bound; fencing stops the exposure fastest but removes UI functions until migration; accepting keeps the exposure and must be said out loud.",
       "dependencies": [
         "D-031"
-      ]
+      ],
+      "evidence": {
+        "ratchet_finding_2026_09_25": "A guard written from the harness lane's lesson that 'a control off the code path is decoration' found 16 routes nobody had listed, on its first run and in under a second: /api/lunchflow/*, /api/manual-cc/*, /api/simplefin/* and /api/splitwise/*. Verified before believing it — `app.create_pocket` is defined once and reaches Crew with `get_crew_headers()` plus a raw `mutation CreateSubaccount`, so these connector features mutate Crew through the same ungoverned helpers. The total is therefore 25 routes, not 9. They predate the Meridian branch (b5aa020, 2026-01-15): inherited application code the governed pipeline never absorbed, which is why no Meridian-era guard noticed them. The ratchet now declares all 25, so the set cannot grow silently in either direction."
+      }
     },
     {
       "id": "OS-120",
@@ -2944,6 +2947,23 @@
       "phase": "track-C-V3",
       "detail": "(1) `top_up_crew_reserve` is the ONLY registered action with no verifier (`CWA:686`, `no_verify` at `:661`); the reason recorded in write-coverage.json:54-57 says the provider exposes no billReserveId, but migration 023 added `commitments.bill_reserve_id` the same day and `CW:179/212` now emit it, so the identity a verifier needs exists. (2) `update_crew_bill_reserve_settings`'s verifier compares only BILL fields — name, amount, reservedAmount (`CWA:68,87-89`) — read from commitment_candidates, and never reads the `billReserve.settings` it just wrote, so a settings-only change that silently failed is undetectable. Its parameter is also named `billReserveId` while carrying a bill id (`meridian/api.py:1731`; tests pass `\"Bill:1\"`).",
       "limits": "Strengthening verification only. This must not widen what any action may do, must not add a retry, and must not change the action registry's membership. A verifier that cannot resolve an object must keep returning None (unresolved), never a fabricated success — absence-as-proof is for deletions only."
+    },
+    {
+      "id": "OS-121",
+      "title": "C4 — executor completeness: prove by construction that every provider-mutating path goes through the pipeline",
+      "status": "in_progress",
+      "priority": "high",
+      "phase": "track-C-V3",
+      "detail": "The roadmap recorded concept 7's completeness as unproven and — like I.4 before OS-118 — C4 carried no ledger id at all, so nothing could be checked against it. Written by the ratchet of 2026-09-25: `tests/test_governed_write_routes.py` parses every POST route in app.py, follows calls transitively, and asserts the set of routes that reach a raw Crew mutation equals a declared list. It found 25 such routes (16 of them previously unlisted), so completeness does not merely lack proof: it is DISPROVEN, and the count is now pinned.",
+      "evidence": {
+        "instrument": "tests/test_governed_write_routes.py",
+        "found_2026_09_25": "25 routes reach a raw Crew mutation without meridian/write_routing.py or the executor",
+        "why_it_is_a_ratchet_not_a_fix": "It cannot fail today and it fails on growth in either direction: a new ungoverned mutating route breaks it, and fixing a declared one breaks it until the declaration is updated. That is the form the harness lane recommended — give the gate a floor, design the falsifier, and make the debt visible where it is incurred."
+      },
+      "limits": "The ratchet asserts a property of ROUTES, not of behaviour, and it is a static AST scan within app.py: it cannot see a mutation reached through an import, a dynamic dispatch or a template. It also asserts nothing about which of the 25 should be migrated, fenced or accepted — that is the owner's shape decision in OS-119. Passing this test is not evidence that writes are governed; only the count is evidence that they are not.",
+      "dependencies": [
+        "OS-119"
+      ]
     }
   ]
 }

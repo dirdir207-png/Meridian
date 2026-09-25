@@ -5672,3 +5672,35 @@ display. Two goals quantities must not share one name.
 
 Also recorded: `total_cash` at `today.py:395` is already the same base Plan calls `cash_total`, so the
 base needs no new query — the work is in the SUBTRACTION terms, not the base.
+
+## 2026-09-25 — drift verdict, and the first guard built from the harness lane's lessons
+
+**How badly had the project drifted?** The honest answer separates three things that were being conflated.
+
+**Architecture and safety: not materially drifted.** The governed pipeline is real (17 action types, 16 with
+readback verifiers, `retry_allowed: False` on every failure path), provenance routing exists and is tested,
+absence is distinguished from emptiness throughout the observation stores (migration 031 makes "Crew stated 0.00"
+and "Crew said nothing" different rows), migrations are forward-only with frozen checksums, and 2,049 tests pass.
+That is the hardest part of the product and it held.
+
+**Visibility and measurement: seriously drifted.** The 22 concepts were authoritative and unreachable at the same
+time — named by the roadmap's §0 as an active authority while the only document holding them was one the roadmap
+supersedes; the trajectory carries 12 of 22, is partial on 3 and has no carrier at all for 7, including the
+digital twin (1) and causal memory (17), which are precisely the "culpable intelligence" the owner named; the
+evaluation harness that would make the intelligence measurable (I.4) did not exist and had no task id; three of
+the five named council roles exist only as permission entries; and C4's executor completeness was recorded as
+unproven with no task id either.
+
+**Seams between features: this is where the real damage was.** The drift infrastructure joins documents to
+documents and code to tests, but almost nothing joined CODE TO THE CONSTITUTION. The proof is the ratchet below:
+one test, written in minutes, found that **25 POST routes in app.py reach a raw Crew mutation without the router
+or the executor** — 16 more than a careful human audit had found — all of them connector features
+(LunchFlow, SimpleFIN, Splitwise, manual cards) calling the same raw helpers, all of them predating the Meridian
+branch (b5aa020, 2026-01-15). No guard had ever asserted the property the constitution depends on.
+
+**The lesson taken from the harness lane, and demonstrated here within the hour:** a measurement system's
+credibility comes from the independence of its checks, not the sophistication of its instrument. The audit was a
+person reading code carefully; the ratchet was a different instrument with different assumptions, and it found
+2.5x as much. `tests/test_governed_write_routes.py` is now a ratchet: it cannot fail today, and it fails on
+growth in either direction, so the declared debt cannot rot into a lie. Recorded as `OS-121` (C4), with the
+finding carried in `OS-119` for the owner's shape decision.

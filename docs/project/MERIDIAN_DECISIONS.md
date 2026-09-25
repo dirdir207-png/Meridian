@@ -887,3 +887,32 @@ uncertain writes stay unknown until readback, nothing auto-retries, and design a
 — so a new surface is built to be shown and judged, never to be declared final by the lane that built it. Where a step
 genuinely needs the owner's facts or a design decision, the rule is to build everything up to that line and say
 precisely where the line is.
+
+## D-033 — New work must be cross-referenced against the roadmap and marked, never left as an unnamed arrival (owner, 2026-09-25)
+
+**Owner, verbatim:** *"any time we appear to be building something new due to my interruptions, or wire features,
+please cross reference the roadmap and see if it was already planned and if so mark it done or in progress."*
+
+The failure this prevents is specific and has happened repeatedly: an interruption or a mid-session finding sends
+the work somewhere new, the work gets built, and **nothing joins it back to the trajectory** — so the roadmap
+understates what exists and the ledger keeps describing a world that ended hours earlier. That is how `OS-049`,
+`OS-060`, `OS-072`, `OS-074` and `OS-080` came to be recorded as forthcoming or complete when they were neither.
+
+**The rule.** Whenever work appears that was not in the plan — because the owner redirected, or a finding forced
+it — cross-reference the roadmap and the ledger FIRST, and then:
+
+1. **If it was already planned:** mark that item `in_progress` or `done` with the artifact as evidence, in the same
+   change. Do not create a parallel task for something the trajectory already named.
+2. **If it was planned but has no id:** create the id and name it in the roadmap, because naming it is what makes
+   the gap checkable — the pattern that closed `OS-072` for I.1 and `OS-118` for I.4.
+3. **If it was not planned at all:** say so plainly and attach it to the concept it advances, or state why it
+   advances none. New work that cannot name a concept is either a fix (name the defect) or drift (name that too).
+
+**Applied immediately, as the rule requires.**
+
+| work built on 2026-09-25 | roadmap / ledger home | marking |
+|---|---|---|
+| the write-route ratchet | **C4 — executor completeness.** The roadmap recorded concept 7's completeness as unproven and, like I.4, C4 had **no ledger id at all** | created **`OS-121`**, `in_progress`; the ratchet is its instrument |
+| the 22-concept spine and its wiring | roadmap §0.4 named *"the 22-concept mapping"* as an active authority while no document was reachable | that row now points at a real document; the mapping is **delivered** |
+| the capability matrix | the substrate/inventory work behind `OS-059` and `OS-115` | recorded as their evidence, not as a new artifact to maintain separately |
+| the concept-coverage corrections | `CONCEPT_COVERAGE.md`, test-enforced | rows corrected in place; **no new authority created** |
