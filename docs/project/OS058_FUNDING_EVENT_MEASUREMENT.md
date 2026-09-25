@@ -73,3 +73,59 @@ Then compare per-bill `funded_amount` deltas against each bill's `reserved_by`, 
 reserve-level figures against the account balances in the same record. The numbers are already stored
 by the 15-second refresh, so no new tooling and no code change is needed — and **no value may be
 derived** to fill a gap in the series.
+
+---
+
+## Retrospective, 2026-09-25 — what the held artifacts already settle (item 1 of the agreed order)
+
+Run before the 10-02 event, from artifacts already held: the 2026-09-04 capture (bills facet, which
+carries Crew's own `reservedAmount`, `reservedBy`, `daysOverdue`, `dayOfMonth`, `status` per bill), the
+2026-09-19 record in `CREW_FUNDING_MATH_2026-09-19.md`, and a live capture at 2026-09-25T19:42Z.
+
+**Three dates, side by side:**
+
+| date | bucket | credited bill | that bill's `reservedBy` | `daysOverdue` across bills |
+|---|---|---|---|---|
+| 2026-09-04 | 71098¢ ($710.98) | **Rent** (all of it) | 2026-09-16 (tied soonest with VPA) | `None` for every bill |
+| 2026-09-19 | 109710¢ ($1,097.10) | **Rent** (all of it) | 2026-09-16 — **3 days past** | Rent 3, others not |
+| 2026-09-25 | 0¢ | none (bucket empty) | — | VPA 9, Verizon 3, others none |
+
+**1. Crew's `bills` array is a SORT, not a fixed list — and the key is now proven.** Order matches
+`(daysOverdue desc, reservedBy asc)` on BOTH dates, exactly: on 09-04 every bill was un-overdue, so the
+order is pure `reservedBy` ascending (Rent 09-16, VPA 09-16, Eversource 09-20, Verizon 09-22, Xfinity
+09-28); on 09-25 the two overdue bills lead (VPA 9, Verizon 3) and the rest follow by `reservedBy`
+(Eversource 09-30, Xfinity 09-30, Rent 10-16). Consequence: "Rent is first in the array" was never a
+fact about Rent, it was a fact about Rent's *deadline* — which is why it changed when the deadlines did.
+
+**2. "The credit goes to the overdue bill" is REFUTED.** On 2026-09-04 no bill was overdue — the capture's
+`daysOverdue` is `None` for all five, and that field is demonstrably populated when a bill IS overdue
+(it reads VPA 9 and Verizon 3 on 09-25, from the same facet) — yet the bucket was non-zero and credited
+entirely to Rent. So the credit does not require an overdue bill.
+
+**3. A CORRECTION to `CREW_FUNDING_MATH_2026-09-19.md`.** That document refuted nearest-due-first with
+"Rent (due 2026-10-16) holds everything while Eversource and Xfinity (due 2026-09-30, sooner) hold
+nothing". But 10-16 was Rent's due date having already rolled forward, while Crew's own `reservedBy` for
+Rent at that read was **2026-09-16 — already 3 days past**, i.e. SOONER than Eversource/Xfinity's
+09-30. Stated in terms of the field Crew actually uses, the rule survives instead of being refuted:
+
+> **The credited bill is the one with the soonest `reservedBy`** — the next reservation whose deadline is
+> nearest, whether or not it has passed.
+
+It fits all three dates: 09-04 Rent (09-16, tied with VPA, larger bill wins or array order decides),
+09-19 Rent (09-16, past), and 09-25 nothing to credit (bucket empty). The original refutation compared
+the wrong field: a due date that had rotated, not the deadline Crew funds against.
+
+**4. The prediction this yields for the 10-02 measurement, sharpened.** Today the soonest `reservedBy`
+belongs to **Eversource and Xfinity (both 2026-09-30, Eversource first in array order)** — so if the rule
+above holds, the next non-zero credit goes to ONE of those two, and **Rent being credited again would
+refute it**. "Credit the largest bill" predicts Rent, so the two readings are freshly distinguishable —
+whereas before this retrospective they could not be told apart at all.
+
+**5. Left OPEN, per the task's bounds (no smoothing):**
+* The `reservedBy` of Eversource and Xfinity was `2026-09-20` and `2026-09-28` on 09-04 but `2026-09-30`
+  for both on 09-25. Either the field rolls, or their day-of-month changed, or the 09-19 document
+  conflated `dayOfMonth` with `reservedBy`. The artifacts do not settle it.
+* No transaction in the stored set mentions Rent (0 rows match), and the 08-12..08-22 window contains no
+  Rent-sized outflow — so the reserve going 1097.10 → 0 between 09-20 and 09-25 is *consistent with*
+  Rent's occurrence being settled (its `reservedBy` rolled forward to 10-16), but the money movement is
+  not visible in synced transactions. Whether the reserve paid it, or it was swept elsewhere, is open.
