@@ -255,3 +255,38 @@ a polluted state in which part of the owner's real paycheck will backfill an inj
 
 **Deployment held for the same reason:** the OS-114 ingest fix is committed but the live sync bridge has
 NOT been restarted, so no artificial allocation has entered the history as `data_mode='actual'`.
+
+---
+
+## The VPA test — the one criterion that settles the tie-break question, and both lanes now agree on it
+
+The parallel lane answered the open contradiction directly, and its correction is accepted here:
+
+> *"That is the correct correction. … 'lower amount wins' is not a universal Crew rule. It may describe
+> only a settled capacity cascade. Your mid-cascade hypothesis is plausible: VPA may have already been
+> funded and released before that capture, leaving Rent holding the current reserve."*
+
+**The criterion, stated so a future reader can apply it mechanically:** the OS-114 history settles this
+if and only if it carries **consecutive observations around the transition** — specifically, whether VPA
+**ever held an amount and then released it** while Rent stayed funded. If VPA reads zero in **every**
+dated observation, the amount tie-break does not describe the natural state and is falsified for it.
+
+**Why the history as built can meet it.** One row is written per bill per capture, and the live bridge
+syncs roughly every 15 seconds, so a hold-then-release transition necessarily produces consecutive rows
+rather than a single overwritten value — which is precisely what the old mutable column could never show.
+The relevant distinction is already expressible: `reserved_amount = 0.00` with
+`reserved_amount_reported = 1` is a **release** (Crew stating zero), while `NULL` with the flag false is
+**silence** (Crew not saying). Only the first tests the hypothesis, and conflating them would answer the
+question with the wrong fact.
+
+**What that test is waiting on — the only thing blocking it.** Recording is deliberately held while the
+live reserve contains the **injected** 480.77 and the probe bills: evaluating "did VPA hold and release"
+against a state where artificial money and six probe bills compete for the same bucket would answer a
+different question. Both lanes reached the same operational conclusion independently, so it is recorded
+once here:
+
+> **Unwind the experiment before 2026-09-30, or label the 10-02 measurement as CONTAMINATED.**
+
+That is an owner decision, because both paths are provider mutations. Nothing else is outstanding from
+this lane's side: the ingest fix is committed and waiting, the evidence is verified and committed, and the
+retrospective, history, and simulation are delivered.
