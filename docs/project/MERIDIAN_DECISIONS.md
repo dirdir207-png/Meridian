@@ -820,3 +820,40 @@ proposes; only the constrained executor mutates financial state, the approval ga
 reasoning widens no authority. The agent inventory work already underway exists to find which of the
 roadmap's named agents must be built to make this real, rather than assumed to be built because a module
 exists.
+
+## D-031 — There are TWO Crew write surfaces, and one of them bypasses the constitution (found 2026-09-25)
+
+**Found by the read/write audit, then re-verified in this lane.** The governed pipeline is real and complete:
+17 registered action types, 16 with readback verifiers, name allow-listed, every failure path
+`retry_allowed: False`, and routing by provenance. **A second write surface exists in `app.py` and is reachable
+from shipped UI: direct Crew GraphQL with live credentials, with no router, no proposal, no readback
+verification and no retry guard.** `POST /api/move-money` (`app.py:5794` → `move_money` `app.py:2395`) fires
+`initiateTransfer` as a raw mutation; the same shape covers create/delete bill, create/delete pocket,
+set-card-spend, and autopilot rule create/update/delete (`app.py:5844/5837/5807/5800/5541/5179/5039/5141`).
+Their callers are shipped front-end code (`static/js/ui/modals.js:152,289,306,416`, `static/js/api/cards.js:228`,
+`goals.js:199`, `expenses.js:89`, `templates/partials/views/account.html:1055,1091,1155`), and the only guard is
+`@login_required` — authentication, not governance. No feature flag gates them.
+
+**Why this is a constitutional matter rather than a code smell.** The constitution says only the constrained
+executor mutates financial state, that writes go proposal → approval → execution → provider verification, that
+uncertain writes are unknown until readback, and that financial mutations are never auto-retried. Surface B
+skips all four. It also re-enables a capability the pipeline retired deliberately: `update_virtual_card` was
+removed from `ActionStore.allowed_types` (`app.py:1219-1223`) for lack of a connector write op, yet
+`updateVirtualDebitCard` still executes through `/api/set-card-spend` (`app.py:2995`). And rule **editing**
+exists only there, because `edit_autopilot_rule` has a command spec but no action type, executor or verifier.
+
+**Two further facts recorded with it, both verified.** `POST /api/actions/mutate` defaults provenance to
+`owner_direct` (`app.py:4226`), so a caller that omits it executes immediately — the opposite of the router's
+stated intent that an ambiguous plan cannot travel the direct path. And `top_up_crew_reserve` is the one
+registered action with **no** verifier (`CWA:686`, `no_verify` `:661`) whose recorded reason is stale: it says
+no `billReserveId` is exposed, while migration 023 added `commitments.bill_reserve_id` the same day.
+
+**Authority position, stated because it would be easy to overstep.** An owner editing his own app SHOULD
+execute rather than propose (D-020) — Surface B is not wrong for existing, and it is not wrong because it
+writes. It is wrong because it writes unverified and unrecorded. **This record changes no behaviour**: no route
+was disabled, no verifier added, nothing fenced. Migrating it, fencing it, or documenting it as accepted risk
+is the owner's decision, and it is `OS-119`.
+
+**Non-negotiables for whichever shape is chosen:** no expansion of authority, no auto-retry, and no route may
+acquire a write the pipeline cannot verify. If a route is migrated, it gains the pipeline's guarantees — it
+does not get a shortcut around them because it is "only the owner's own click".

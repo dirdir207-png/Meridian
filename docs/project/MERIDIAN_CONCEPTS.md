@@ -54,7 +54,7 @@ still being checked and must not be quoted as verified.
 | 3 | Explicit confidence, uncertainty, assumptions, and provenance | Foundational now | I1 | **Verified present in the observation stores** (`freshness`, `confidence`, `data_mode`, `snapshot_id`, `assumptions_json`), and the schema now enforces the strongest form of it in one place: migration 031 distinguishes a RELEASE (0.00, reported) from SILENCE (NULL, not reported), so an unstated figure can never be read as zero. **But the audit found the binding half unwired**: `evidence_in_scope()` has no production caller, `RolePermissions.tools` is consulted only at import as a classification check and never at execution, and `Budget` is declared per role and enforced nowhere, so no token or second ceiling reaches the provider. Recorded as a decision owed |
 | 4 | Living financial constitution | Requires explicit owner policy | C8 | Audit (`policy.py` exists, no application callers) |
 | 5 | Policy evaluator | Requires explicit owner policy | C8 | Audit (`write_routing.py` is the named decision point) |
-| 6 | Specialized financial agents | Foundational later | I1, I3 | **AUDITED 2026-09-25: 2 of the 5 roadmap roles are built.** BUILT: Investorigator (`meridian/ai/investigator.py:60`) and Skeptic (`meridian/ai/skeptic.py:72`), both on the shared `EvidenceBoundRole`, wired through `scripts/investigate.py --council`, tested (15 + 18 tests). NOT BUILT, permission entry only (`envelope.py:355-394`): **Forecaster**, **Guardian**, **Teacher** — and the Forecaster matters most, because its single `PROPOSE` tool, `propose_funding`, points at `meridian/funding_proposals.py:22`, a function that ALREADY EXISTS: the tool is built and the role is not. The Guardian's fail-closed obligation is live and defaulted on in the council but has **no subject** (`council.py:26-27`). Jev is NOT built and is **on hold** by the owner's own decision (`MERIDIAN_ROADMAP.md:310-311`). Virgil exists as a prompt with live routes (`crew/advisor.py:218-232`, `app.py:1456-1478`) but is **outside the envelope**: no permissions entry, no run record, no citation validation |
+| 6 | Specialized financial agents | Foundational later | I1, I3 | **AUDITED 2026-09-25: 2 of the 5 roadmap roles are built.** BUILT: Investigator (`meridian/ai/investigator.py:60`) and Skeptic (`meridian/ai/skeptic.py:72`), both on the shared `EvidenceBoundRole`, wired through `scripts/investigate.py --council`, tested (15 + 18 tests). NOT BUILT, permission entry only (`envelope.py:355-394`): **Forecaster**, **Guardian**, **Teacher** — and the Forecaster matters most, because its single `PROPOSE` tool, `propose_funding`, points at `meridian/funding_proposals.py:22`, a function that ALREADY EXISTS: the tool is built and the role is not. The Guardian's fail-closed obligation is live and defaulted on in the council but has **no subject** (`council.py:26-27`). Jev is NOT built and is **on hold** by the owner's own decision (`MERIDIAN_ROADMAP.md:310-311`). Virgil exists as a prompt with live routes (`crew/advisor.py:218-232`, `app.py:1456-1478`) but is **outside the envelope**: no permissions entry, no run record, no citation validation |
 | 7 | A single constrained executor | Foundational now | C4 | **Verified**: `meridian/crew_write_actions.py` routes every write through a constrained executor with readback verification, `meridian/write_routing.py` decides owner-direct vs proposal, and absence is distinguished from success. The executor also refuses to retry an uncertain write (`meridian/crew_write.py` reports `retry_allowed: False`), which is the OS-056-style bound the concept needs. Open: whether the ENVELOPE's declared limits should be enforced at execution |
 | 8 | Proactive financial weather and alerts | Foundational later | C6 | Audit — this is the owner's stated priority, and the suppression lifecycle is the blocker named in V4 |
 | 9 | Balance forensics and anomaly investigation | Safe read-only prototype | C7 probe | Audit — read-only, so a legitimate early prototype |
@@ -88,6 +88,21 @@ regurgitated, perhaps more of the agents in the roadmap need to be built."* In c
 | **Culpable** | 3 (confidence, uncertainty, assumptions, provenance), 4 (living constitution), 5 (policy evaluator) — every claim owns its evidence, its limits and the rule it answers to |
 | **More agents** | 6 (specialized financial agents) — the roadmap's own named set, of which the Investigator and Skeptic exist |
 | **Bounded** | 7 (single constrained executor) and 22 (bounded autonomous CFO, refused) — evaluating never widens authority |
+
+## This document is NOT the coverage matrix — `CONCEPT_COVERAGE.md` is
+
+Caught by the audit, and worth stating plainly because it is the same failure this document exists to fix:
+**`docs/project/CONCEPT_COVERAGE.md` already existed**, with a `#|Concept|Slice|State|Evidence|Gate` table for
+all 22 concepts, enforced by `tests/test_concept_coverage.py` (which fails if a concept is dropped, renamed, or
+left without a slice). This file's own "State today" column therefore risked becoming a second, competing
+source of truth — two documents answering one question, which is exactly how the concepts were lost the first
+time, and it is the same two-documents-one-word trap as "concept" meaning both a product concept and a design
+concept.
+
+So the division of labour is now explicit: **this file is the vision inventory** — what the concepts are, their
+authoritative wording, the classification the prompt requires, and how they are used. **`CONCEPT_COVERAGE.md`
+is the state matrix**, the enforced one, and its State/Evidence columns are the authority on what is built.
+Where this file once recorded state, it defers.
 
 ## How this document is kept in view
 

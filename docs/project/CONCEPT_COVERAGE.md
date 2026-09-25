@@ -33,17 +33,17 @@ of a caller, which was measured by scanning imports across 108 production files.
 
 | # | Concept | Slice | State | Evidence | Gate |
 |---|---|---|---|---|---|
-| 1 | financial digital twin | C2 | `built-unwired` | `observations.py` imported by `meridian/api.py`; **`append_snapshot`/`record_provider_snapshot` have zero callers** | — |
+| 1 | financial digital twin | C2 | `built-unwired` | CONFIRMED AGAIN 2026-09-25: `record_provider_snapshot` (`meridian/observations.py:185`) still has zero callers; migration 019's `financial_observations` has readers (`meridian/api.py:272,283,297`) and no writer. Whether it holds rows is unverified | — |
 | 2 | 7-, 30-, 90-, and 365-day projections | C5 | `built-wired` | `scenarios`, `beacon` imported by `meridian/api.py`, `app.py`, `services/plan.py`; horizon coverage unverified `[U]` | — |
-| 3 | explicit confidence, uncertainty, assumptions, and provenance | I1 | `substrate-only` | `evidence` wired for storage; **no `meridian/ai/contracts.py`** — no role envelope to carry the fields | — |
+| 3 | explicit confidence, uncertainty, assumptions, and provenance | I1 | `built-wired` | **FALSIFIED ROW, corrected 2026-09-25.** The envelope EXISTS: `meridian/ai/envelope.py` (typed `EnvelopeTask`/`Claim`/`EnvelopeResult`/`RunRecord`, per-role permissions, import-time refusal of any provider-write grant) and two roles run on it — Investigator (`meridian/ai/investigator.py:60`) and Skeptic (`meridian/ai/skeptic.py:72`). Rediscovered gap, from the same audit: the binding half is declared and UNWIRED — `evidence_in_scope()` has no production caller, `RolePermissions.tools` is consulted only at import, and `Budget` is enforced nowhere. Recorded as a decision owed | — |
 | 4 | living financial constitution | C8 | `built-unwired` | `meridian/policy.py` has no importer; versioning absent | owner policy |
 | 5 | policy evaluator | C8 | `built-unwired` | confirmed: no `policy` import in `app.py`, `meridian/api.py`, `write_routing.py` | owner policy |
-| 6 | specialized financial agents | I1–I3 | `substrate-only` | `meridian/ai/` present (`classifier`, `advisor` wired); no role runner, no council | — |
-| 7 | a single constrained executor | C4 | `built-wired` | `actions` ← `app.py`, `write_routing.py`; `executors` ← `app.py`. Completeness unproven; `mutations` has no importer | — |
+| 6 | specialized financial agents | I1–I3 | `substrate-only` | **FALSIFIED ROW, corrected 2026-09-25: 2 of the 5 roadmap roles are BUILT.** Investigator (`meridian/ai/investigator.py:60`, 15 tests) and Skeptic (`meridian/ai/skeptic.py:72`, 18 tests), both on `EvidenceBoundRole`, wired through `scripts/investigate.py --council`. Forecaster, Guardian and Teacher exist ONLY as permission entries (`envelope.py:355-394`) — the Forecaster's single propose-tool points at `meridian/funding_proposals.py:22`, which ALREADY EXISTS. Jev is not built and is on hold (`MERIDIAN_ROADMAP.md:310-311`). Virgil has a prompt and live routes but no permissions entry, no run record and no citation validation | — |
+| 7 | a single constrained executor | C4 | `built-wired` | **2026-09-25: completeness FAILS.** The pipeline is real — 17 registered types, 16 with readback verifiers, `retry_allowed: False` on every failure path — but a SECOND write surface in `app.py` bypasses it: direct Crew GraphQL with live credentials, no router, no proposal, no readback, no retry guard, reachable from shipped UI (`static/js/ui/modals.js:152,289,306,416`), guarded only by `@login_required`. See D-031 and `CREW_CAPABILITY_MATRIX.md`. Also: `POST /api/actions/mutate` defaults provenance to `owner_direct`, and `top_up_crew_reserve` is the one registered action with no verifier | owner decision, `OS-119` |
 | 8 | proactive financial weather and alerts | C6 | `built-wired` | `proactive` ← `meridian/api.py`; no lifecycle/dedupe verification, no delivery channel | channel |
 | 9 | balance forensics and anomaly investigation | C7 | `substrate-only` | `evidence` wired; `reconcile` ← `meridian/sync.py`; no read-only forensics surface | — |
-| 10 | continuously repaired budgets | C3 | `built-wired` | `funding`, `funding_repo`, `commitments` wired; **`funding_proposals` has no importer** | reserve policy |
-| 11 | paycheck landing workflows | C3 / D2 | `built-wired` | `paycheck`, `payday`, `services/payday` wired; `payday-funding.html` 2675B with **no JS** | — |
+| 10 | continuously repaired budgets | C3 | `built-wired` | **2026-09-25:** commitments, `funded_amount`, reserve observations and the 031 dated per-bill allocation history all persist and are verified by readback on the write path. The REPAIR path itself — re-evaluating a budget and acting on the difference — is unaudited and unassigned | — |
+| 11 | paycheck landing workflows | C3 | `built-wired` | **2026-09-25:** `meridian/services/payday.py` plus `crew_funding_plans` (three rows observed: two absent, one live) with a BIDIRECTIONAL write path — `create/update/delete_paycheck_funding_plan` all registered with readback verifiers (`CWA:674,678,682`) — and the deployed refresh loop persists them (`meridian/live.py:100-117`). The unification of payday with funding is `OS-104` | — |
 | 12 | scenario simulation and counterfactual learning | C5 | `built-wired` | `scenarios` ← `meridian/api.py`; no proof of actual-state isolation | — |
 | 13 | refunds and subscription lifecycle management | C7 | `built-wired` | `meridian/cancellation/` 15 modules, 9 endpoints, 19 passing tests; UI 484B partial + 969B JS | retention, credentials |
 | 14 | bureaucracy and negotiation preparation | C7 | `built-wired` | `brief`, `escalation` ← `meridian/api.py`; **no UI surface at all**; `context` has no importer | — |
@@ -74,3 +74,36 @@ caller, and both were measured by scanning imports across production files rathe
 of a module. When a slice lands, its row changes state in the same commit — a row that moves to `built-visible` or
 `accepted` must cite the artifact that proves it, and `accepted` requires the owner's acceptance, never an agent's
 assertion.
+
+---
+
+## Roadmap carriers — measured 2026-09-25
+
+This matrix answers *which slice owns a concept*. The owner asked a different question — whether the trajectory
+itself still carries the concepts — and the answer is **no, not all of them**. Read against
+`MERIDIAN_ROADMAP.md`: **12 carried, 3 partial, 7 absent.**
+
+**Carried (12):** 3 (Track I.1), 4 (V6), 6 (Track I.2/I.3), 7 (V3), 8 (V4, the strongest carrier in the
+document), 10 (I.5), 11 (V2), 13 (V5), 15 (V7), 16 (V7), 18 (V7), 21 (Track D).
+
+**Partial (3):** 5 (policy appears only as constitution authority; the roadmap never names a policy evaluator),
+9 (only via V5's word "investigate"; `forensics` and `anomaly` appear nowhere), 20 (only as "Builder proposals";
+`skill` and `sandbox` appear nowhere).
+
+**Absent from the roadmap entirely (7):** **1** financial digital twin, **2** projections (and `horizon`,
+`365` appear nowhere), **12** scenario simulation (every `simulat*` hit is guardrail text, not a capability),
+**14** bureaucracy/negotiation, **17** causal financial memory, **19** connector self-diagnosis, **22** bounded
+autonomous CFO.
+
+Two ironies worth keeping: concepts **1, 3 and 17** — the digital twin, provenance, and causal memory — are
+precisely the "culpable intelligence" the owner named, and 1 and 17 have no roadmap carrier at all. And
+`MERIDIAN_ROADMAP.md` uses the word "concept" 13 times, every one of them meaning a **design** concept, never a
+product concept: two meanings, one word, and only one of them was in the index.
+
+**Five concepts have no slice id anywhere** — 17, 18, 19, 20, 22 — confirmed independently by the
+implementation plan's own table (`:39-60`) and by this matrix's Slice column. Concept 14 is internally
+inconsistent in that plan: assigned in the slice heading (`:135`), unassigned in the table (`:53`).
+
+**And the implementation plan itself is an orphan**: `MERIDIAN_IMPLEMENTATION_PLAN.md` is referenced by no
+governing document — not `AGENTS.md`, not the handoff, not the doc index, not the roadmap — and carries no
+supersession record either. Its only substantive reference is `MERIDIAN_CONCEPTS.md`.

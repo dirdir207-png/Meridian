@@ -2923,6 +2923,27 @@
         "OS-074"
       ],
       "handoff": "docs/project/MERIDIAN_ROADMAP.md (Track I, I.4); docs/project/MERIDIAN_CONCEPTS.md (concept 3)"
+    },
+    {
+      "id": "OS-119",
+      "title": "Bring the ungoverned Crew write surface under the constitution (or fence it deliberately)",
+      "status": "blocked",
+      "priority": "high",
+      "phase": "track-C-V3",
+      "blocked_reason": "Waiting on an owner decision about SHAPE, not on work: whether the legacy routes are migrated onto meridian/write_routing.py + the executor, fenced behind an explicit owner-only mode, or accepted as documented risk. The finding is recorded and verified (D-031); the code is untouched. This is not waiting on the owner to perform anything — nothing here needs him to act, only to choose.",
+      "owner_question": "Migrate these routes onto the governed pipeline, fence them, or accept them as documented risk? Migration gains provenance routing, readback verification and the no-retry bound; fencing stops the exposure fastest but removes UI functions until migration; accepting keeps the exposure and must be said out loud.",
+      "dependencies": [
+        "D-031"
+      ]
+    },
+    {
+      "id": "OS-120",
+      "title": "Close the two verification gaps in the reserve write path: the unverified top-up, and a settings verifier that checks bill fields",
+      "status": "ready",
+      "priority": "high",
+      "phase": "track-C-V3",
+      "detail": "(1) `top_up_crew_reserve` is the ONLY registered action with no verifier (`CWA:686`, `no_verify` at `:661`); the reason recorded in write-coverage.json:54-57 says the provider exposes no billReserveId, but migration 023 added `commitments.bill_reserve_id` the same day and `CW:179/212` now emit it, so the identity a verifier needs exists. (2) `update_crew_bill_reserve_settings`'s verifier compares only BILL fields — name, amount, reservedAmount (`CWA:68,87-89`) — read from commitment_candidates, and never reads the `billReserve.settings` it just wrote, so a settings-only change that silently failed is undetectable. Its parameter is also named `billReserveId` while carrying a bill id (`meridian/api.py:1731`; tests pass `\"Bill:1\"`).",
+      "limits": "Strengthening verification only. This must not widen what any action may do, must not add a retry, and must not change the action registry's membership. A verifier that cannot resolve an object must keep returning None (unresolved), never a fabricated success — absence-as-proof is for deletions only."
     }
   ]
 }
