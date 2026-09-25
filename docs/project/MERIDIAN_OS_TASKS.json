@@ -2525,6 +2525,37 @@
         "measurement": "Concept 04 (853x1844, 420/853 = 0.4924 to the governed 420-wide viewport), read with PIL rather than by eye: ticket painted face x 48..818 over 401 rows, 379.6 x 183.2 CSS; engraving ~132x132 CSS; figure glyphs ~40px of serif with ~182 CSS of ink; medallion ring ~52 CSS outer diameter; cord bowed ~11-12 CSS left of the nodes and tinted along its length, nodes ~7 CSS. App at HEAD before the change: ticket box 388x164, painted face 357.3x134.3, engraving box 92x92, figure 32px, medallion 46px, one cord path at rgba(238,228,207,0.26). After: painted face 356.7x179.7 (dark theme; the light measurement reads 361.3 because the light ticket keeps the dotted inset the dark one suppresses), figure ~186 CSS of ink for `$2,485.07`, docOverflow 0 at 390/420/430 in both themes.",
         "method": "DOM geometry and painted-face figures read from the isolated synthetic preview (scripts/preview_observatory_dial.py, port 8093) at 420x912/430x932/390x844, DPR 3, in both themes, with Playwright run from a FILE with stdin closed (a stdin heredoc makes Playwright hang in this environment). Probes in the untracked tmp/ tree: accounts_dom_probe.py, accounts_verify.py, accounts_verify_long.py, accounts_cord_pixels.py, accounts_compare.py."
       }
+    },
+    {
+      "id": "OS-104",
+      "title": "Payday and funding are one mechanism described twice: one cadence, no separate funding section",
+      "status": "ready",
+      "priority": "high",
+      "phase": "information-architecture",
+      "owner_decided": true,
+      "authority": [
+        "owner, 2026-09-24: \"payday and funding is unnecessarily complex and suggests overlap, payday is the funding mechanism, so the payday and when it lands is the cadence, this isn't consistent. It still says no cadence detected in places. Funding the way the app describes separate from payday is per bill and doesn't need a separate setting or section.\"",
+        "owner, 2026-09-24, with a screenshot of Crew's own Edit paycheck screen (FREQUENCY, DAY, Identification, DATE, PAST MATCHING ACTIVITY): \"Crew has 5 sections. We have all the machinery for bidirectionality.\""
+      ],
+      "why": "The backend answered 'what is the cadence?' on 2026-09-19: meridian/api.py:515-535 makes Crew's funding plan outrank every other leg, on the owner's directive that the paycheck 'SHOULD be a crew record', and meridian/providers/base.py:79-92 calls that record the owner's 'income source / Funding Cadence'. The Settings pane does not. meridian/services/payday.py:87 builds `pattern` from recognize_payday(transactions) alone while Crew's plans ride in the same payload, and static/js/meridian/payday.js:54-64 renders the summary from `pattern` only -- so the Cadence card can say 'Not recognized' on a page that lists a Crew cadence further down. The same pane instructs 'Add or confirm your payday timing' with no control that can do it (/settings/payday is GET-only; the only POST sets the learning floor; a repository-wide search finds no payday write), and carries a two-mode copy of the four-mode per-commitment funding editor Plan already ships against the same repository and the same propose route.",
+      "scope": [
+        "One cadence, one card, resolved in the BACKEND's own precedence (Crew's paycheck record, then the observed pattern, then nothing), with the source named on the card; the plan rows stop printing a second 'Crew cadence:' line.",
+        "The per-bill funding editor leaves Settings; Plan keeps the four-mode editor it already has. 'Funding' stops being a settings subject, per the owner's instruction. No mechanism, route, action, repository or proposal changes.",
+        "One unavailable phrase per fact, replacing five phrasings of two facts ('Not recognized', 'Add or confirm your payday timing', 'Income unavailable', 'No run projected', 'not reported', 'no payday cadence to set').",
+        "The dead-end instruction is replaced by one that is true about where the paycheck lives and what Meridian does with it.",
+        "Non-goals: no change to which mechanism funds anything, no new write capability, no provider-call change, no migration, no authority change."
+      ],
+      "acceptance": [
+        "The Cadence card can never read 'Not recognized' while a Crew cadence is present in the same payload, and the source of the cadence shown is named on the card",
+        "Settings offers exactly one funding surface fewer than today: the per-bill editor is gone from the pane and Plan's four-mode editor is untouched",
+        "The copy that asked for an action the product cannot perform is gone, and no replacement copy promises a capability that does not exist",
+        "Guards pin the precedence (a payload with a Crew plan and no learned pattern renders the Crew cadence) and the removed duplication"
+      ],
+      "evidence": {
+        "status": "findings verified against the source 2026-09-24; correction proposed and not implemented",
+        "findings": "docs/project/PAYDAY_FUNDING_FINDINGS_2026-09-24.md -- the four defects with file:line evidence, the verified extent of the existing bidirectional machinery (create/update/delete_crew_paycheck_funding_plan with readback verifiers at meridian/crew_write_actions.py:674-684), and the proposed correction.",
+        "decision_owed": "Where FREQUENCY, DAY and IDENTIFICATION are edited: Crew owns them and Meridian only reads (no new authority, shippable now), or Meridian grows write commands for them on the funding-plan pattern (a NEW capability that needs explicit owner authorisation and its own bounded slice with its own safety analysis), or both (read now, write later). Meridian today reads only part of that record and writes none of those fields."
+      }
     }
   ]
 }

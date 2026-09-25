@@ -121,6 +121,40 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-24 (tenth pass) — OS-104: the app already agrees with the owner about payday; the screen he reads does not
+
+**The owner's observation was checked line by line and every part of it holds.** He said payday and funding
+"suggests overlap", that "payday is the funding mechanism, so the payday and when it lands is the cadence", that
+"it still says no cadence detected in places", and that per-bill funding "doesn't need a separate setting or
+section"; then sent Crew's own **Edit paycheck** screen (FREQUENCY `Every two weeks`, DAY `Every other Friday`,
+Identification — *"Deposits matching these conditions will fund your Autopilot plan"*, DATE window, PAST MATCHING
+ACTIVITY) with *"Crew has 5 sections. We have all the machinery for bidirectionality."*
+
+**The record already agrees with him, and has since 2026-09-19.** `api.py:515-535` makes Crew's funding plan
+outrank every other leg *"per the owner's directive that the paycheck SHOULD be a crew record"*, and
+`providers/base.py:79-92` calls that record the owner's *"income source / Funding Cadence"*. The Settings pane
+answers the same question differently: `services/payday.py:87` builds `pattern` from
+`recognize_payday(transactions)` alone while Crew's plans ride in the same payload, and `payday.js:54-64`
+renders the summary from `pattern` only — **so the Cadence card can read "Not recognized" on a page that lists a
+Crew cadence further down, which is exactly the screenshot he sent.** Three more defects came out of the same
+pass: the card's own instruction *"Add or confirm your payday timing"* has no control behind it anywhere
+(`/settings/payday` is GET-only, the only POST sets the learning floor, and a repository-wide search finds no
+payday write — the screen asks for something the product cannot do); Settings carries a **two-mode** copy of the
+**four-mode** per-commitment funding editor Plan already ships against the same repository and the same propose
+route; and the hub names funding twice (`settings_hub.py:142` and `:171`).
+
+**His "all the machinery" claim is verified, and its extent is now on record:** `crew_write_actions.py:674-684`
+already registers `create` / `update` / `delete_crew_paycheck_funding_plan`, each with a readback verifier. What
+is NOT covered is the rest of the paycheck his screenshot shows — FREQUENCY, DAY, IDENTIFICATION, the DATE
+window — which Meridian reads only in part and writes not at all.
+
+Findings and the proposed correction are in `docs/project/PAYDAY_FUNDING_FINDINGS_2026-09-24.md`; the ledger
+entry is `OS-104` (status `ready`, `owner_decided` true for the consolidation, because removing the duplicate
+section is his own instruction). **The one decision the correction cannot make for itself is where FREQUENCY,
+DAY and IDENTIFICATION are edited** — Crew owns them and Meridian only reads (no new authority, shippable now),
+or Meridian grows write commands for them (a NEW capability: same pattern as the funding-plan actions, but the
+authority boundary moves and it needs its own bounded slice). Nothing was implemented.
+
 ### 2026-09-24 (ninth pass) — OS-102: the owner said there was no concept for the Plan panes; the record says half of one exists
 
 **The verification the ledger demanded came back against the premise, and that is the whole value of doing it

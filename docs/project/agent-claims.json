@@ -719,8 +719,8 @@
     {
       "agent": "constitutional-builder",
       "claim_id": "accounts-aesthetic-measured-20260924",
-      "description": "OS-103: the owner's four-named Accounts aesthetic, measured against design/observatory-drafts-2026-09-08/04-accounts.png before anything is drawn. Three of the four are measured fidelity deltas and are implemented in this slice: the summary ticket's PAINTED face is smaller than the concept's (357.3x134.3 CSS against 379.6x183.2 at the governed 420-wide viewport, because the supplied nine-slice carries its own transparent margins and the interior is sized for a 92px engraving), the account rows sit inside a bordered, shadowed, surface-filled card the concept does not draw, and the left cord is one muted cream where the concept's is tinted along its length from one row's tint to the next. The fourth trait (more diverse icons) changes the glyph system rather than following the concept, so it is verified and PROPOSED for the owner rather than implemented here. Presentation only: no route, data, financial, authority, migration or provider change; the connector layer stays decorative and inert.",
-      "generation": 6,
+      "description": "OS-103 (the owner's four named Accounts aesthetic traits) + OS-102 (the Plan Rules and Crew panes). Slice 1 shipped the three measured traits at 8bc3c16. Slice 2 is the owner's pick for trait 2 -- the concept's three emblems (compass / Wi-Fi / star) on the three buckets concept 04 names -- which the medallion handoff permits only where 'that visual mapping is deliberately accepted'; the owner accepted it on 2026-09-24. Slice 3 is OS-102, approved as proposed. Presentation only throughout: no route, data, financial, authority, migration or provider change.",
+      "generation": 7,
       "files": [
         "static/css/meridian/accounts.css",
         "static/js/meridian/accounts.js",
@@ -735,7 +735,15 @@
         "docs/project/session-emergent.json",
         "docs/project/agent-claims.json",
         "design-qa.md",
-        "docs/project/PLAN_PANES_DESIGN_PROPOSAL_2026-09-24.md"
+        "docs/project/PLAN_PANES_DESIGN_PROPOSAL_2026-09-24.md",
+        "static/img/meridian/observatory/ASSET_MANIFEST.md",
+        "static/img/meridian/observatory/accounts/**",
+        "scripts/build_account_medallions.py",
+        "tests/meridian/test_accounts_medallion.py",
+        "tests/meridian/test_plan_panes.py",
+        "static/css/meridian/plan.css",
+        "static/js/meridian/plan.js",
+        "docs/project/PAYDAY_FUNDING_FINDINGS_2026-09-24.md"
       ],
       "base_sha": "56390c911bea1f4a61717c40d05b602ee1ad4159",
       "since": "2026-09-24T00:00:00-04:00",

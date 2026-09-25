@@ -126,6 +126,13 @@
       "arose": "2026-09-24",
       "promoted_to": "OS-103",
       "decision_owed": "true"
+    },
+    {
+      "summary": "Payday and funding are one mechanism described twice: the Settings Cadence card reads the learned pattern while the rest of the app prefers Crew's paycheck record, and there is no way to set a payday at all",
+      "why": "Owner, 2026-09-24: \"payday is the funding mechanism, so the payday and when it lands is the cadence, this isn't consistent. It still says no cadence detected in places. Funding the way the app describes separate from payday is per bill and doesn't need a separate setting or section.\" Verified at both layers: services/payday.py:87 builds `pattern` from recognized transactions only while Crew's plans ride in the same payload, and payday.js:54-64 renders the summary from `pattern` alone, so the card can say 'Not recognized' beside a Crew cadence the same page lists below; the card's own instruction ('Add or confirm your payday timing') has no control behind it, because /settings/payday is GET-only and no payday write exists anywhere; and Settings carries a two-mode copy of the four-mode per-commitment funding editor that Plan already ships against the same repository and propose route. The bidirectional machinery the owner points at is real for the funding plan (create/update/delete with readback verifiers).",
+      "arose": "2026-09-24",
+      "promoted_to": "OS-104",
+      "decision_owed": "true"
     }
   ]
 }
