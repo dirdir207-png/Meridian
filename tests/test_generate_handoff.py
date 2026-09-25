@@ -76,10 +76,20 @@ def test_check_reports_current_for_the_committed_state():
 
 
 def test_a_mutated_governing_doc_makes_the_handoff_stale(tmp_path, monkeypatch, capsys):
-    """Falsification: change the ledger, and the handoff must declare itself stale."""
+    """Falsification: change the ledger, and the handoff must show the change.
+
+    RETARGETED 2026-09-25. This mutated `tasks[0]` and asserted its title appeared in the handoff.
+    That held only while `tasks[0]` happened to be unfinished: the handoff lists OPEN work only
+    (`open_tasks`), and the ledger reconciliation of 2026-09-25 closed `tasks[0]` (OS-001, the old
+    umbrella), so the mutation stopped being visible -- the test failed for a fixture assumption, not
+    because the property broke. It now mutates a task the generator actually prints, and asserts that
+    such a task exists, so the falsification cannot silently degrade into a no-op.
+    """
     ledger = json.loads(gen.LEDGER.read_text(encoding="utf-8"))
     fake = tmp_path / "MERIDIAN_OS_TASKS.json"
-    ledger["tasks"][0]["title"] = "mutated for the staleness test"
+    open_tasks = [t for t in ledger["tasks"] if t.get("status") not in gen.FINISHED]
+    assert open_tasks, "the ledger has no unfinished task for this falsification to mutate"
+    open_tasks[0]["title"] = "mutated for the staleness test"
     fake.write_text(json.dumps(ledger, indent=2), encoding="utf-8")
 
     monkeypatch.setattr(gen, "LEDGER", fake)
