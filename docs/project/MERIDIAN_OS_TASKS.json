@@ -2912,7 +2912,7 @@
     {
       "id": "OS-118",
       "title": "I.4 — the evaluation harness: measured usefulness, refusal correctness, citation accuracy, cost per useful proposal",
-      "status": "open",
+      "status": "in_progress",
       "priority": "high",
       "phase": "track-I-evaluation",
       "detail": "The roadmap names I.4 as the step that makes the intelligence measurable — 'Measured usefulness on a real journey, refusal correctness when evidence is missing, citation accuracy, cost per useful proposal' (MERIDIAN_ROADMAP.md:360-362) — and until 2026-09-25 no task id existed for it, unlike I.1 (OS-072), I.2 (OS-073), I.3 (OS-074) and I.5 (OS-063). The drift is the one the roadmap's own protocol describes: naming the id is what makes a gap checkable. An audit on 2026-09-25 verified that NO evaluation artifact exists in any form — no file matching `*eval*` anywhere in the tree, no ledger entry, no slice. Correctness IS tested per role (adversarial unit tests for the Investigator and the council, plus the citation and refusal contract), but measured usefulness, refusal correctness on a real journey, citation accuracy and cost per useful proposal have no artifact at all. This is the difference between an intelligence that is CORRECT and one that is PROVEN USEFUL, and the owner's stated target — proactive, reactive, CULPABLE intelligence — needs the second.",
@@ -2922,7 +2922,12 @@
         "OS-073",
         "OS-074"
       ],
-      "handoff": "docs/project/MERIDIAN_ROADMAP.md (Track I, I.4); docs/project/MERIDIAN_CONCEPTS.md (concept 3)"
+      "handoff": "docs/project/MERIDIAN_ROADMAP.md (Track I, I.4); docs/project/MERIDIAN_CONCEPTS.md (concept 3)",
+      "evidence": {
+        "first_version_2026_09_25": "meridian/ai/evaluation.py + scripts/evaluate_roles.py + 13 tests. Reads ai_run_records (027) read-only and reports outcome distribution, refusal rate, citation presence, durations, provider and prompt version, plus contradictions: an `ok` outcome with no cited evidence, an outcome outside the enum, a run that ended before it started, an unparseable timestamp. Every anomaly class has a falsifier test, and `test_a_broken_run_actually_reaches_the_detector` fails if the detector silently stops working.",
+        "the_floor": "MIN_RUNS_FOR_A_ROLE_VERDICT = 5, deliberately a scale rather than a minimum: below it the report says 'insufficient data ... not evidence of health'. Against the live preview database it prints NOT MEASURED, because there are 0 runs — an empty result set is the absence of data, not the absence of failures.",
+        "what_it_refuses_to_claim": "Usefulness. Run records hold no claim text and no model output by design, so whether a run helped the owner cannot be read from this table; the tool says so instead of substituting a proxy. It also writes nothing, asserted by a test that greps its own source for INSERT/UPDATE/DELETE/commit, and no score it prints may gate an approval (OS-056)."
+      }
     },
     {
       "id": "OS-119",
