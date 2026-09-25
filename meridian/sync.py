@@ -58,7 +58,16 @@ def _record_spend_selection(adapter, repository, snapshot) -> None:
     if not callable(reader):
         return
     try:
-        observed = reader()
+        # Read BOTH card surfaces for the ingest (owner's clarification, 2026-09-25: Crew's "spend
+        # pocket" is the pocket the PHYSICAL card drops from, so a physical card that disagreed with
+        # the virtual ones must be visible as a disagreement rather than silently ignored). The
+        # narrower default stays for write verification, which only asks whether the surface it wrote
+        # to changed.
+        try:
+            observed = reader(include_physical_cards=True)
+        except TypeError:
+            # An adapter whose signature predates the flag: still an observation, just narrower.
+            observed = reader()
         captured_at = None
         capture_time = getattr(adapter, "readback_capture_time", None)
         if callable(capture_time):

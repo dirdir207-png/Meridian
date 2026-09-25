@@ -344,6 +344,44 @@ class CrewWorkSnapshotAdapter:
                     cards.append(card)
         return cards
 
+    def readback_physical_cards(self) -> Optional[list]:
+        """The physical cards this snapshot observed, or None if unobserved.
+
+        Added 2026-09-25 for the owner's own clarification of what the setting MEANS: *"the spend
+        pocket in crew refers to what pocket the physical card drops from."* Crew carries the same
+        per-user ``userSpendConfig.selectedSpendSubaccount`` on the physical card
+        (``currentUser.family.parents[i].activePhysicalDebitCard.user`` — verified in the owner's real
+        capture, where it names the same pocket as all three virtual cards), and until now we read
+        only the virtual facet. So a physical card whose selection DIFFERED would have been invisible
+        to the figure rather than reported as a disagreement.
+
+        Card objects are collected by shape rather than by field name on purpose: the facet exposes
+        them under several keys (activePhysicalDebitCard, issuingPhysicalCard, …), and what makes an
+        object a card here is that it carries a user with a spend config. Child members are included
+        so the caller's own child-skipping rule stays in ONE place.
+        """
+        payload = self._facet_payload("physical_cards")
+        if payload is None:
+            return None
+        family = _as_dict(_as_dict(payload.get("currentUser")).get("family"))
+        cards = []
+        seen = set()
+        for group in ("children", "parents"):
+            for member in _as_list(family.get(group)):
+                for value in _as_dict(member).values():
+                    for card in ([value] if isinstance(value, dict) else _as_list(value)):
+                        if not isinstance(card, dict):
+                            continue
+                        if "user" not in card and "userSpendConfig" not in card:
+                            continue
+                        card_id = str(card.get("id") or "")
+                        if card_id and card_id in seen:
+                            continue
+                        if card_id:
+                            seen.add(card_id)
+                        cards.append(card)
+        return cards
+
     def readback_capture_time(self) -> Optional[str]:
         """When this snapshot was captured, or ``None`` when it did not say.
 
@@ -355,10 +393,10 @@ class CrewWorkSnapshotAdapter:
         value = self._snapshot.get("captured_at")
         return str(value) if value else None
 
-    def readback_selected_spend_pocket(self) -> Optional[tuple]:
+    def readback_selected_spend_pocket(self, *, include_physical_cards: bool = False) -> Optional[tuple]:
         """The signed-in user's selected spend pocket, as observed, or None.
 
-        The selection is carried on every virtual card as
+        The selection is carried on every card as
         ``user.userSpendConfig.selectedSpendSubaccount`` (live-verified). It is a
         per-user setting repeated per card, so this returns the DISTINCT observed
         ids and lets the caller refuse to guess:
@@ -370,20 +408,36 @@ class CrewWorkSnapshotAdapter:
 
         Cards belonging to a child are skipped: ``SetSpendSubaccount`` sets the
         signed-in user's selection, and a child's own spend config is theirs.
+
+        ``include_physical_cards`` decides WHICH SURFACE the caller is asking about, and defaults to
+        the virtual facet alone for a reason worth keeping (owner's clarification, 2026-09-25): the
+        setting means the pocket the PHYSICAL card spends from, so the money figure must include the
+        physical card — a divergence between card types is exactly the case the figure must not miss,
+        and it is recorded as ``ambiguous`` rather than resolved. Write VERIFICATION asks the narrower
+        question — "did the write I just made take effect on the surface it writes to?" — and reading
+        a second surface there could report a failure while the physical card merely lags behind, so
+        it keeps the default. Pass True from the ingest that feeds the read path.
         """
-        cards = self.readback_virtual_cards()
-        if cards is None:
-            return None
         observed = set()
-        for card in cards:
-            user = _as_dict(card.get("user"))
-            if user.get("isChild"):
+        witnessed = False
+        card_groups = [self.readback_virtual_cards()]
+        if include_physical_cards:
+            card_groups.append(self.readback_physical_cards())
+        for cards in card_groups:
+            if cards is None:
                 continue
-            config = _as_dict(user.get("userSpendConfig"))
-            selection = _as_dict(config.get("selectedSpendSubaccount"))
-            selected_id = str(selection.get("id") or "")
-            if selected_id:
-                observed.add(selected_id)
+            witnessed = True
+            for card in cards:
+                user = _as_dict(card.get("user"))
+                if user.get("isChild"):
+                    continue
+                config = _as_dict(user.get("userSpendConfig"))
+                selection = _as_dict(config.get("selectedSpendSubaccount"))
+                selected_id = str(selection.get("id") or "")
+                if selected_id:
+                    observed.add(selected_id)
+        if not witnessed:
+            return None
         return tuple(sorted(observed))
 
     def readback_autopilot_rules(self) -> Optional[list]:

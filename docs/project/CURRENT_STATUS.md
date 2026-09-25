@@ -1,5 +1,22 @@
 # Enhanced SimpleCrew — Current Status
 
+## 2026-09-25: OS-113 amended — Crew's "spend pocket" is the PHYSICAL card's funding pocket
+
+Owner: *"The spend pocket in crew refers to what pocket the physical card drops from … it still always
+[coincides] with free to spend."* That is a narrower and more useful meaning than "the discretionary
+pocket" — it is exactly the question the figure has to answer — and it exposed a blind spot in what the
+slice first shipped: the selection also rides the **`physical_cards`** facet
+(`currentUser.family.parents[i].activePhysicalDebitCard.user`), and `readback_selected_spend_pocket()`
+read only `virtual_cards`.
+
+Both surfaces agree today (the same `Subaccount:edc8cb88…` on the physical card and all three virtual
+cards, verified in his own capture), so nothing was wrong yet — but a physical card pointing at a
+*different* pocket would have been **invisible to the figure instead of reported as a disagreement**.
+Closed by reading both surfaces at ingest (`include_physical_cards=True`), with a divergence recorded as
+`ambiguous` rather than resolved. Write verification keeps the narrower default deliberately: reading a
+second surface there could fail a write whose target merely lags, and a false failure on a money path is
+worse than a narrower question. Amendment recorded in D-025; five new tests pin all of it.
+
 ## 2026-09-25: OS-114 discovery — nothing was lost, and four captured facets are never ingested
 
 Owner: *"ChatGPT captured all internal crew data, was something lost?"* Answered from artifacts, not

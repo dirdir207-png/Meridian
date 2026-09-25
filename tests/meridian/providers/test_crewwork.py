@@ -252,7 +252,8 @@ def test_adapter_emits_live_bills_as_commitment_candidates():
 # distinction that matters is unobserved (None) vs observed-empty ([]).
 
 
-def _facets(cards=None, rules=None, complete=True, with_cards=True, with_rules=True):
+def _facets(cards=None, rules=None, complete=True, with_cards=True, with_rules=True,
+            physical=None, with_physical=False):
     data = {}
     if with_cards:
         data["virtual_cards"] = {
@@ -263,6 +264,21 @@ def _facets(cards=None, rules=None, complete=True, with_cards=True, with_rules=T
                             {"id": "user:1", "virtualDebitCards": cards or []}
                         ],
                         "parents": [],
+                    }
+                }
+            }
+        }
+    if with_physical:
+        # The real shape, from the owner's own capture: the physical card hangs off the PARENT with
+        # the same `user.userSpendConfig` the virtual cards carry.
+        data["physical_cards"] = {
+            "data": {
+                "currentUser": {
+                    "family": {
+                        "children": [],
+                        "parents": [
+                            {"id": "user:2", "activePhysicalDebitCard": physical}
+                        ],
                     }
                 }
             }
@@ -372,6 +388,68 @@ def test_selected_spend_pocket_ignores_a_childs_own_configuration():
     )
 
     assert adapter.readback_selected_spend_pocket() == ("Sub:parent",)
+
+
+def test_the_ingest_view_reads_the_physical_card_the_pocket_actually_spends_from():
+    """Owner's clarification, 2026-09-25: Crew's 'spend pocket' is what the PHYSICAL card drops from.
+
+    His real capture carries the same selection on the physical card and on all three virtual cards.
+    Reading only the virtual facet would therefore have agreed by luck; this pins that the physical
+    card is read when the ingest asks for it.
+    """
+    adapter = CrewWorkSnapshotAdapter(
+        _facets(cards=[_spend_card("Sub:spend", card_id="v:1")],
+                physical=_spend_card("Sub:spend", card_id="p:1"), with_physical=True)
+    )
+
+    assert adapter.readback_selected_spend_pocket(include_physical_cards=True) == ("Sub:spend",)
+    assert adapter.readback_physical_cards() is not None
+    assert [card["id"] for card in adapter.readback_physical_cards()] == ["p:1"]
+
+
+def test_a_physical_card_that_DIFFERS_is_reported_rather_than_ignored():
+    """The case the money figure must never miss: the card he actually swipes points elsewhere.
+
+    It is reported as a disagreement, not resolved — the caller then falls back to the named rule and
+    says so, instead of publishing a figure built from the wrong pocket.
+    """
+    adapter = CrewWorkSnapshotAdapter(
+        _facets(cards=[_spend_card("Sub:virtual", card_id="v:1")],
+                physical=_spend_card("Sub:physical", card_id="p:1"), with_physical=True)
+    )
+
+    # The narrow (write-verification) view stays on the surface the write touched.
+    assert adapter.readback_selected_spend_pocket() == ("Sub:virtual",)
+    # The ingest view sees both surfaces and refuses to pick.
+    assert adapter.readback_selected_spend_pocket(include_physical_cards=True) == (
+        "Sub:physical", "Sub:virtual",
+    )
+
+
+def test_a_physical_card_is_collected_by_shape_rather_than_by_field_name():
+    """The facet exposes cards under several keys; what makes one a card is its user's spend config."""
+    adapter = CrewWorkSnapshotAdapter(
+        _facets(cards=[_spend_card("Sub:spend", card_id="v:1")], with_physical=True,
+                physical=_spend_card("Sub:spend", card_id="p:1"))
+    )
+    payload = adapter._snapshot
+    parents = payload["data"]["physical_cards"]["data"]["currentUser"]["family"]["parents"]
+    parents[0]["issuingPhysicalCard"] = parents[0].pop("activePhysicalDebitCard")
+
+    assert adapter.readback_selected_spend_pocket(include_physical_cards=True) == ("Sub:spend",)
+
+
+def test_an_unobserved_physical_facet_does_not_erase_the_virtual_observation():
+    adapter = CrewWorkSnapshotAdapter(_facets(cards=[_spend_card("Sub:spend")]))
+
+    assert adapter.readback_physical_cards() is None
+    assert adapter.readback_selected_spend_pocket(include_physical_cards=True) == ("Sub:spend",)
+
+
+def test_both_card_facets_unobserved_is_still_unobserved():
+    adapter = CrewWorkSnapshotAdapter(_facets(with_cards=False))
+
+    assert adapter.readback_selected_spend_pocket(include_physical_cards=True) is None
 
 
 # --- C4: fundingPlans and reassignmentRules (connector fields added bd7d8b1) ---

@@ -601,3 +601,27 @@ clean-tree regeneration satisfies); ruff clean over `app.py meridian/ scripts/ t
 including the two-identically-named-active-pockets case), four `_crew_ids` cases, and the agreement
 test that moves Today **and** Plan to `160.00` together when a selection names a pocket the name rule
 would have set aside — while the unobserved case stays at `100.00` on the name rule with basis `none`.
+
+**Amended 2026-09-25, by the owner's own clarification — what the setting MEANS, and the blind spot it
+exposed.** Owner: *"The spend pocket in crew refers to what pocket the physical card drops from … it
+still always [coincides] with free to spend."* Two consequences, both acted on:
+
+1. **The meaning is narrower and more useful than "the discretionary pocket":** Crew's spend pocket is
+   the funding source of the PHYSICAL card, per user, repeated on every card. That is exactly the
+   question Safe to Spend has to answer — which pocket does the money he actually swipes leave — and it
+   is why matching by Crew's id rather than by name is the right mechanism.
+2. **It exposed a real blind spot in what D-025 shipped.** The selection also rides the
+   `physical_cards` facet (`currentUser.family.parents[i].activePhysicalDebitCard.user`), verified in
+   his capture, and `readback_selected_spend_pocket()` read only `virtual_cards`. With both surfaces
+   agreeing today (they do — the same `Subaccount:edc8cb88…` on the physical card and all three virtual
+   cards) nothing was wrong yet, but a physical card pointing at a *different* pocket would have been
+   **invisible to the figure instead of reported as a disagreement.** Closed by reading both surfaces
+   at ingest: `readback_selected_spend_pocket(include_physical_cards=True)`.
+
+The flag exists, and defaults to False, because the two callers ask different questions. The money
+figure must include the physical card, since a divergence is precisely what it must not miss, and it
+records one as `ambiguous` rather than resolving it. Write VERIFICATION asks only "did the write I just
+made take effect on the surface it writes to" — reading a second surface there could report a failure
+while the physical card merely lags behind a write that succeeded, and a false verification failure on
+a money path is worse than a narrower question. Both behaviours are pinned by tests in
+`tests/meridian/providers/test_crewwork.py`.
