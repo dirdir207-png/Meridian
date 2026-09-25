@@ -501,7 +501,16 @@ Track C (V1 ─► V2 ─► V3 ─► V4 ─► V5 ─► V6 ─► V7)   V8 ga
 - **The dial is already connected to live data** `[E]` - the earlier instruction not to wire it is stale. Because
   the model no longer drifts, the priority argument that used to follow from that defect is spent; the live cost
   now is *inconsistent consumption* of the model across surfaces.
-- **Next move (revised 2026-09-20):** this line used to ask for the shared dated-event model first. That was
+- **RECONCILED 2026-09-25 — the three items this line used to name are DONE.** `OS-049` (browser-suite
+  baseline) is `done`, `OS-072` (Track I.1, the envelope and its permissions) is `complete`, and `OS-060`
+  (reserve-versus-amount gap display, called "the next product slice" here) is `done`. This paragraph is
+  left in place below as the record of that reasoning, but a reader must not treat its next move as
+  current: at 2026-09-25 the open items are `OS-038` (Track D's remaining concept-vs-current gaps, which is
+  design work and therefore owner-gated), the first evidence-backed role on Track I, `OS-074` (council
+  mechanics, `in_progress`), `OS-058` (calendar-bound to the 2026-10-02 event), and `OS-067`, which is the
+  one item the roadmap itself says must close BEFORE new Track C work opens. Nothing here chooses between
+  them; the choice is the owner's (§8).
+- **Next move (revised 2026-09-20, SUPERSEDED as above):** this line used to ask for the shared dated-event model first. That was
   delivered, so the sequence starts one step later: close Track D's remainder (`OS-038` design gaps, `OS-049`
   browser baseline), then build **Track I.1** — the envelope *and its permissions*, with a test per role proving
   it cannot reach a provider write path — then one useful, evidence-backed role (I.2). **I.1 is recorded as

@@ -148,8 +148,9 @@
       "summary": "The dial's ticket still prints 'No event selected' beneath a line that already explains the same thing.",
       "why": "Owner, 2026-09-25, then WITHDRAWN in the same session ('please disregard my two previous messages'). Recorded so it is neither acted on as approval nor lost: the ticket's own prose already says no event is selected, so the label is redundant, and on the narrow phone viewport it also overlaps. Removing it touches the dial ticket template and its browser tests; the owner's withdrawal means anyone acting on this is acting on a request he cancelled.",
       "arose": "2026-09-25",
-      "decision_owed": true,
-      "parked_in": "Track D — Design and layout fidelity"
+      "decision_owed": false,
+      "parked_in": "Track D — Design and layout fidelity",
+      "resolved": "WITHDRAWN BY THE OWNER 2026-09-25: he asked to disregard the message that raised it. Recorded as withdrawn so no later session removes a label he never asked to remove."
     },
     {
       "summary": "Callout titles in the Today rail are 15px, because the owner-chosen 104px rail splits the word 'arrangement' at 16px.",
@@ -176,8 +177,9 @@
       "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
       "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
       "arose": "2026-09-25",
-      "decision_owed": true,
-      "parked_in": "3. Memory and context — what lives where"
+      "decision_owed": false,
+      "parked_in": "3. Memory and context — what lives where",
+      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
     }
   ]
 }
