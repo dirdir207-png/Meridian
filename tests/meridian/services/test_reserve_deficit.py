@@ -302,7 +302,13 @@ def test_the_breakdown_explains_the_figure_and_adds_up(tmp_path):
 
     assert breakdown["result"] == pytest.approx(100.00)
     labels = [line["label"] for line in breakdown["lines"]]
-    assert labels == ["Free to Spend", "Less Autopilot reserve overdraft"]
+    # RESTATED 2026-09-25 for the owner's decided wording. The first line now names the BASIS
+    # ("Available balance") rather than the pocket, and the subtraction is named after the pocket
+    # it came from with the SIGN carrying the minus rather than a "Less ... " verb -- his words:
+    # "I would go with Available Balance, and then - with each pocket name and their balance and -
+    # Bill Reserve." The arithmetic assertions below are unchanged and still what makes this test
+    # mean anything.
+    assert labels == ["Available balance", "Bill reserve"]
     # The stated lines must actually produce the stated result, or the explanation is decoration.
     assert sum(line["amount"] for line in breakdown["lines"]) == pytest.approx(
         breakdown["result"]
@@ -324,7 +330,7 @@ def test_the_breakdown_says_nothing_was_subtracted_when_there_is_no_deficit(tmp_
 
     breakdown = build_today(repository)["safe_to_spend"]["breakdown"]
 
-    assert [line["label"] for line in breakdown["lines"]] == ["Free to Spend"]
+    assert [line["label"] for line in breakdown["lines"]] == ["Available balance"]
     assert breakdown["result"] == pytest.approx(424.90)
     assert "nothing is subtracted" in breakdown["explanation"]
     # No adjustment line, so the breakdown cannot show a subtraction that did not happen.

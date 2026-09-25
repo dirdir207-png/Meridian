@@ -1,0 +1,52 @@
+<!doctype html><html lang="en" data-theme="dark"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meridian — synthetic Safe-to-Spend explanation</title>
+<!-- Isolated fixture for OS-079: the REAL stylesheets and the REAL today.js module, driven from a
+     synthetic /api/meridian/today payload. No app, no credentials, no bank calls, no server.
+
+     The markup below mirrors templates/meridian/partials/today.html's header strip. A fixture that
+     mirrors markup can drift from it, so tests/meridian/test_today_safe_to_spend_explanation.py
+     asserts the hooks this file depends on are present in the real partial. -->
+<link rel="stylesheet" href="/static/css/meridian/tokens.css"><link rel="stylesheet" href="/static/css/meridian/shell.css"><link rel="stylesheet" href="/static/css/meridian/workspaces.css"><link rel="stylesheet" href="/static/css/meridian/today.css"><link rel="stylesheet" href="/static/css/meridian/observatory.css"><link rel="stylesheet" href="/static/css/meridian/dial.css">
+<style>
+  body { margin: 0; background: var(--m-canvas); color: var(--m-ink); font-family: var(--m-font-sans); }
+  main { max-width: 420px; margin: 0 auto; padding: 16px; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+</style>
+<main>
+<div class="m-today" data-today-root>
+  <div class="m-today-layout"><div class="m-today-primary">
+    <div class="m-observatory-overview">
+      <dl class="m-observatory-safe m-sts" data-today-safe>
+        <dt class="m-sts-label">
+          <button class="m-sts-explain" type="button" data-sts-explain aria-expanded="false" aria-controls="m-sts-explanation">
+            <span class="m-sts-explain-label" data-sts-label>Safe to spend</span>
+            <span class="m-sts-explain-mark" aria-hidden="true">&#10022;</span>
+          </button>
+        </dt>
+        <dd class="m-sts-figure-block">
+          <span class="m-sts-figure" data-sts-figure aria-live="polite">&mdash;</span>
+          <span class="m-sts-change" data-sts-change hidden></span>
+          <span class="m-sts-note" data-sts-note hidden></span>
+        </dd>
+        <dd class="m-observatory-safe-horizon" data-sts-horizon>Horizon unavailable</dd>
+        <dd class="m-observatory-safe-observed" data-sts-observed></dd>
+        <dd class="m-sts-chip-row"><span class="m-chip" data-freshness data-state="unavailable"></span></dd>
+        <dd class="m-sts-explanation" id="m-sts-explanation" data-sts-explanation hidden></dd>
+      </dl>
+      <aside class="m-observatory-note"><p class="obs-today-orbit" data-editorial-headline></p></aside>
+    </div>
+    <p class="m-inline-error" data-today-error role="alert" hidden></p>
+    <!-- render() dereferences these without a null guard, so the fixture must carry them even
+         though this file is only about the Safe-to-Spend strip. The contract test asserts the
+         hooks this fixture depends on are present in the REAL partial, so the two cannot drift. -->
+    <div data-today-inputs></div>
+    <p data-today-reason hidden></p>
+    <ul data-upcoming-list></ul>
+    <p data-upcoming-empty hidden></p>
+  </div></div>
+</div>
+</main>
+<script type="module">
+  import "/static/js/meridian/today.js";
+  window.MeridianToday.loadToday();
+</script>
+</html>

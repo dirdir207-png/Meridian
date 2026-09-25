@@ -172,6 +172,164 @@ html[data-theme="light"] .obs-today-orbit-heading {
   font-weight: 500;
 }
 
+/* ---------- Safe-to-Spend explanation (OS-079) ---------- */
+
+/* Form B, chosen by the owner 2026-09-25. The figure block is the CONTROL: a real <button> so
+   it is focusable and keyboard-openable without inventing a control the governing concept does
+   not draw. It sits inside the <dt> because a <dl> cannot contain a <button>, and grows its hit
+   area over the figure with an inset ::after rather than wrapping the list. */
+.m-sts-explain {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+  position: relative;
+}
+
+.m-sts-explain::after {
+  content: "";
+  position: absolute;
+  inset: -6px -14px -66px -6px;
+}
+
+.m-sts-explain:focus-visible {
+  outline: 2px solid var(--obs-brass);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* No breakdown to disclose: the label stays readable and the affordance goes away, rather than
+   a control that looks live and does nothing. */
+.m-sts-explain:disabled {
+  cursor: default;
+  color: inherit;
+}
+
+/* The engraved mark, form B. Brass and no fill, and the same four-pointed sparkle activity.css
+   already draws on its day dividers, so the system keeps one mark. */
+.m-sts-explain-mark {
+  font-size: 0.85em;
+  line-height: 1;
+  color: var(--obs-brass);
+  transform: translateY(-1px);
+}
+
+/* The disclosure cue: a brass hairline under the label while it is open. */
+.m-sts-explain-label {
+  position: relative;
+}
+
+.m-sts-explain-label::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: var(--obs-brass);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.m-sts-explain[aria-expanded="true"] .m-sts-explain-label::after {
+  transform: scaleX(1);
+}
+
+/* The panel. Hairlines and engraving, NEVER a fill -- the owner's 2026-09-18 ruling. The rules
+   are brass rather than --m-border, which measures 1.14:1 on parchment (#e3ded4 on #f4ecdf) and
+   would therefore separate nothing; brass is the app's established decorative rule, as at
+   activity.css:128, dial.css:427 and plan.css:1423. */
+.m-sts-explanation {
+  position: relative;
+  margin: var(--m-space-3) 0 0;
+  padding: var(--m-space-3) 0 var(--m-space-1);
+  border-top: 1px solid var(--obs-brass);
+  border-bottom: 1px solid var(--obs-brass);
+}
+
+/* The engraving that sits ON the top hairline, so the rule reads as drawn rather than as a box. */
+.m-sts-explanation::before {
+  content: "\2726";
+  position: absolute;
+  top: -0.62em;
+  left: 0;
+  padding-right: 6px;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--obs-brass);
+  background: var(--m-canvas);
+}
+
+.m-sts-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.m-sts-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--m-space-3);
+  padding: 2px 0;
+}
+
+.m-sts-line-label {
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-sm);
+  color: var(--m-ink-muted);
+}
+
+.m-sts-line-amount {
+  font-family: var(--m-font-serif);
+  font-variant-numeric: tabular-nums;
+  color: var(--m-ink);
+  white-space: nowrap;
+}
+
+/* The result closes the arithmetic. Deliberately NOT the small-caps heading treatment: reusing
+   the strip's own label style made the panel read as a second heading with the same words. */
+.m-sts-line--result {
+  margin-top: var(--m-space-2);
+  padding-top: var(--m-space-2);
+  border-top: 1px solid var(--obs-brass);
+}
+
+.m-sts-line--result .m-sts-line-label {
+  color: var(--m-ink);
+  font-weight: 600;
+}
+
+/* The result carries the FIGURE's signal, never a fixed colour, so a negative Safe to Spend
+   cannot read as healthy money. */
+.m-sts-explanation[data-signal="positive"] .m-sts-line--result .m-sts-line-amount {
+  color: var(--m-healthy);
+}
+
+.m-sts-explanation[data-signal="negative"] .m-sts-line--result .m-sts-line-amount {
+  color: var(--m-risk);
+}
+
+.m-sts-explanation[data-signal="zero"] .m-sts-line--result .m-sts-line-amount {
+  color: var(--m-ink-faint);
+}
+
+.m-sts-explain-note {
+  margin: var(--m-space-3) 0 0;
+  font-family: var(--m-font-sans);
+  font-size: var(--m-text-xs);
+  line-height: 1.5;
+  color: var(--m-ink-muted);
+}
+
 /* ---------- Forecast chart ---------- */
 
 .m-forecast-wrap {

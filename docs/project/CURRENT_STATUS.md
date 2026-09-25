@@ -5236,3 +5236,73 @@ read live by `crewwork.py:347 readback_selected_spend_pocket()` (which refuses t
 `app.py:2591`. Nothing persists it, and the repository's pattern for a provider fact is an
 observation table (019, 024) — so the durable fix is one migration, which is a one-way door and
 therefore needs the owner's explicit approval. `spend_pocket.py` is the seam it fills in behind.
+
+## Safe to Spend now says how it was reached — 2026-09-25
+
+OS-079, form B, the owner's own choice from three rendered options. The figure block on Today is now
+the control: hovering or focusing it opens a reconciliation, clicking pins it open, Escape closes and
+returns focus. It copies the pattern he pointed at in Crew — a small mark beside the label — but the
+mark is brass engraving on the app's existing vocabulary, never a tinted chip.
+
+```
+SAFE TO SPEND ✦
+$800.00
+Available until September 16
+Crew · observed Sep 25, 9:42 AM
+✦ ───────────────────────────────
+Available balance     $1,000.00
+Bill reserve           -$100.00
+Emergency fund         -$100.00
+───────────────────────────────
+Safe to spend            $800.00
+Everything you have set aside is subtracted. The rest is safe to spend.
+```
+
+**The record's own premise was stale and was corrected before building.** Its 2026-09-21 progress note
+put the affordance on the DIAL CENTRE. OS-098 (`1543c5e`, owner direction 2026-09-24) had already
+moved Safe-to-Spend OUT of the compass into the header strip and inverted guards so the centre can
+never say "Safe to spend" — so the note described a surface that no longer shows the figure. The
+correction was favourable: `today.js` already held `payload.safe_to_spend.breakdown` at the render
+site, so this stayed presentation-only — no new route, no server arithmetic, **no client arithmetic**.
+
+The owner decided the wording in two rounds. Base line names the BASIS ("Available balance"), each
+subtraction is named after its own pocket with the SIGN carrying the minus rather than a "Less … "
+verb, a pocket holding zero draws no row, and the footer states the rule rather than listing pockets.
+His reason for insisting on completeness is worth keeping: *"If my total balance is 1000 and my bill
+reserve is 100, and I have an emergency fund of 100, my safe to spend isn't 900, it's 800."* The
+emergency fund is a line **because it was subtracted** — a tooltip whose lines do not add up is worse
+than no tooltip.
+
+**Completeness is a data guarantee, not a wording one.** The panel renders the server's lines as sent.
+The guard for that is deliberately hostile: one test payload's lines sum to 800.00 while its stated
+result is 799.99, and the panel must show **799.99**. A client that re-derived the figure would fail.
+The submission line labels the figure in the same `data-signal` as the headline, so a negative Safe to
+Spend can never render in the healthy ink.
+
+Two smaller honesty details, both because the label is load-bearing:
+- the fallback branch keeps `"Cash accounts"` rather than taking the new wording, since it means the
+  spend pocket was NOT identified and the figure has a different BASIS. Giving it the same label would
+  dress a silent basis change up as an ordinary figure — the defect OS-113 exists to remove;
+- the panel is separated by **brass** hairlines, not `--m-border`, which measures 1.14:1 on parchment
+  (`#e3ded4` on `#f4ecdc`) and separates nothing. That value is already recorded as a trap at line 233
+  of this file.
+
+Verified: 9 new browser tests (real `today.css` + real `today.js` driven through an isolated fixture at
+420×912 DPR 3, no app or credentials) and 8 contract tests pinning the same hooks in the REAL partial
+so the fixture cannot drift. **Proved to bite**: commenting out the render call turns 7 of the 9
+browser tests red. Full suite 2033 passed, 102 skipped, the only failure being HANDOFF needing its
+regenerate. Ruff clean; `git diff --check` clean. Captures in
+`artifacts/os079-implementation-2026-09-25/`.
+
+**Three pre-existing assertions were restated rather than quietly taken**, each with its reason
+recorded in place: `test_dial_js`'s label closing tag (`</dt>` → `</span>`, because the label moved
+inside the button) and two label lists in `test_reserve_deficit.py` for the decided wording. Separately,
+the Accounts emblem guard **forbade fuzzy resolution and forbade an `includes(` in that resolver**, so
+rather than edit it the rename was resolved through a separate exact-keyed map and the guard passes
+**unmodified**.
+
+Also corrected this session: Today's governing concept is recorded in `design/README.md` as
+`06-interactive-observatory-vision.png` (owner-confirmed), superseding `01-today.png` and
+`00-selected-direction.png`, which draw the figure inside the dial. The 09-08 folder is **a set of
+choices, not a specification** — a lesson bought by checking only two of its files and concluding the
+app was wrong until the owner corrected it.

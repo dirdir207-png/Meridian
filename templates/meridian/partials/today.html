@@ -25,7 +25,23 @@
          -- the concept's upper-right -- rather than overflowing a clipped parent at the left. #}
       <div class="m-observatory-overview">
       <dl class="m-observatory-safe m-sts" data-today-safe>
-        <dt class="m-sts-label" data-sts-label>Safe to spend</dt>
+        {# OS-079 form B, owner-chosen 2026-09-25. The figure block is the CONTROL -- a real
+           <button>, so it is focusable and keyboard-openable without inventing a control the
+           governing concept does not draw -- plus the engraved mark, which is the "B" part.
+           A <dl> cannot contain a <button>, so the button wraps the label inside the <dt> and
+           grows its hit area over the figure with an inset ::after (today.css). #}
+        <dt class="m-sts-label">
+          <button
+            class="m-sts-explain"
+            type="button"
+            data-sts-explain
+            aria-expanded="false"
+            aria-controls="m-sts-explanation"
+          >
+            <span class="m-sts-explain-label" data-sts-label>Safe to spend</span>
+            <span class="m-sts-explain-mark" aria-hidden="true">&#10022;</span>
+          </button>
+        </dt>
         <dd class="m-sts-figure-block">
           <span class="m-sts-figure" data-sts-figure aria-live="polite">—</span>
           <span class="m-sts-change" data-sts-change hidden></span>
@@ -37,6 +53,14 @@
         <dd class="m-sts-chip-row">
           <span class="m-chip" data-freshness data-state="unavailable"></span>
         </dd>
+
+        {# OS-079: how the figure was reached. Built ENTIRELY from the server's own
+           `safe_to_spend.breakdown` -- the client performs no arithmetic, because a client that
+           re-derives the number can drift from the server that computed it, which is how this
+           figure went wrong in the first place (D-019). Last in the <dl> on purpose: the
+           headline keeps the concept's reading order (label, figure, horizon, source) and the
+           breakdown is a footnote to it. #}
+        <dd class="m-sts-explanation" id="m-sts-explanation" data-sts-explanation hidden></dd>
       </dl>
       <aside class="m-observatory-note">
         <div class="m-observatory-moon" aria-hidden="true"></div>

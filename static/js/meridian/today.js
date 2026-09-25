@@ -274,6 +274,103 @@ function renderEvidenceLinks(container, evidence) {
    is re-targeted at a gap either -- it is a fact to state, and it clears when the
    bill is paid. The line stays HIDDEN unless a gap was actually observed, so a
    missing or unobserved reserve can never render as a shortfall. */
+/* OS-079: how Safe to Spend was reached. Every line comes from the SERVER's own
+   `safe_to_spend.breakdown`; the client formats and lays it out and performs NO arithmetic,
+   because a client that re-derives the number can drift from the server that computed it --
+   which is how this figure went wrong in the first place (D-019).
+
+   It is a real disclosure, not a hover-only tooltip: hover OR keyboard focus opens it, click
+   pins it open, Escape closes and returns focus. Hovering is deliberately not the only way in.
+
+   Form B (owner-chosen 2026-09-25): the figure block is the control, built on a real <button>
+   so it is focusable natively, plus the engraved mark drawn by the template. */
+function renderSafeToSpendExplanation(root, sts) {
+  const toggle = root.querySelector("[data-sts-explain]");
+  const panel = root.querySelector("[data-sts-explanation]");
+  const breakdown = (sts && sts.breakdown) || null;
+
+  if (!toggle || !panel || !breakdown || !Array.isArray(breakdown.lines)) {
+    // No breakdown means there is nothing to disclose, so the control must not pretend there
+    // is. The label stays visible (the button wraps it); only the affordance goes away.
+    if (toggle) {
+      toggle.disabled = true;
+      toggle.removeAttribute("aria-expanded");
+      toggle.removeAttribute("aria-controls");
+      const mark = toggle.querySelector(".m-sts-explain-mark");
+      if (mark) mark.hidden = true;
+    }
+    return;
+  }
+
+  const currency = breakdown.currency || sts.currency;
+  const row = (label, amount, extraClass) => {
+    const item = document.createElement("li");
+    item.className = extraClass ? `m-sts-line ${extraClass}` : "m-sts-line";
+    const name = document.createElement("span");
+    name.className = "m-sts-line-label";
+    name.textContent = label;
+    const value = document.createElement("span");
+    value.className = "m-sts-line-amount";
+    value.textContent = formatCurrency(amount, currency);
+    item.append(name, value);
+    return item;
+  };
+
+  const list = document.createElement("ul");
+  list.className = "m-sts-lines";
+  // A line holding exactly zero is omitted: a "$0.00" row is noise, not information (owner,
+  // 2026-09-25). The result row is drawn unconditionally, so the panel is never empty and the
+  // reader always sees what the lines add up to.
+  breakdown.lines
+    .filter((entry) => Number(entry.amount) !== 0)
+    .forEach((entry) => list.append(row(entry.label, entry.amount)));
+  list.append(
+    row(breakdown.result_label || "Safe to spend", breakdown.result, "m-sts-line--result"),
+  );
+  panel.replaceChildren(list);
+
+  // The result row carries the SAME signal as the headline figure rather than a fixed colour,
+  // so a negative Safe to Spend can never render as healthy money. Set unconditionally: it is
+  // about the figure, not about whether the server sent prose.
+  const signal = root.querySelector("[data-sts-figure]");
+  panel.dataset.signal = (signal && signal.dataset.signal) || "zero";
+
+  if (breakdown.explanation) {
+    const prose = document.createElement("p");
+    prose.className = "m-sts-explain-note";
+    prose.textContent = breakdown.explanation;
+    panel.append(prose);
+  }
+
+  let pinned = false;
+  const setOpen = (open) => {
+    panel.hidden = !open;
+    toggle.setAttribute("aria-expanded", String(open));
+  };
+  toggle.addEventListener("mouseenter", () => setOpen(true));
+  toggle.addEventListener("focus", () => setOpen(true));
+  toggle.addEventListener("click", () => {
+    pinned = !pinned;
+    setOpen(pinned);
+  });
+  toggle.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      pinned = false;
+      setOpen(false);
+      toggle.focus();
+    }
+  });
+  // Leaving the block closes it only when the reader has not pinned it open, so a deliberate
+  // open survives the pointer moving away.
+  const strip = toggle.closest("[data-today-safe]") || root;
+  strip.addEventListener("mouseleave", () => {
+    if (!pinned) setOpen(false);
+  });
+  toggle.addEventListener("blur", () => {
+    if (!pinned) setOpen(false);
+  });
+}
+
 function renderReserveExposure(root, payload) {
   const node = root.querySelector("[data-reserve-exposure]");
   if (!node) {
@@ -382,6 +479,8 @@ function render(root, payload) {
     change.hidden = true;
     change.textContent = "";
   }
+
+  renderSafeToSpendExplanation(root, sts);
 
   renderForecast(root, forecast);
   renderOptionalText(

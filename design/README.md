@@ -15,3 +15,17 @@ The Observatory direction combines midnight blue, parchment, brass details, and 
 | [Observatory moon](observatory-moon-2026-09-24/) | Not a new drawing: the derivation record for Today's existing moon engraving, whose SHIPPED asset was opaque on a flat `#101a28` field that does not match the page's `#161c34` navy, so it read as a block of a different blue (owner-reported 2026-09-24). Holds the original opaque master, the colour-distance alpha derivation and the keying tool's own report. The record any future change to this asset must start from. |
 
 These are design studies, not screenshots of a released product. **The newest explicit governing record takes precedence over historical screenshots and intermediate captures (D-004), so establish which record governs a surface before doing visual work on it.** The table is chronological, not a ranking, and it is checked: every record in this tree must be named here, because an index that omits the newest records answers D-004's question wrongly rather than declining to answer it.
+
+## Which record governs which surface
+
+Named here because the 09-08 folder is **a set of choices, not a specification** — it holds several
+mutually exclusive drafts of the same screen, so "the 09-08 concepts" cannot be cited as an
+authority without saying WHICH file.
+
+| Surface | Governs | Supersedes, and why |
+|---|---|---|
+| **Today** | [`06-interactive-observatory-vision.png`](observatory-drafts-2026-09-08/06-interactive-observatory-vision.png) — owner-confirmed 2026-09-25 | `01-today.png` and `00-selected-direction.png`, which draw the Safe-to-Spend figure INSIDE the dial's centre. The owner selected 01 first, then judged 06 vastly superior and changed course: 06 puts the figure **outside** the compass in the header strip and lets the **dial centre state the selected event** (the concept reads `FRI, SEP 11 / Electric / $84 / Reserved`). Only 06 matches the shipped instrument, and OS-098 (`1543c5e`, owner direction 2026-09-24) is the change that made the app match it. |
+
+Recorded after a real mis-read: this session's first pass at OS-079 checked only `00` and `01`,
+concluded the app was wrong, and had to be corrected by the owner. A folder of alternatives is not
+an authority; the governing FILE is.

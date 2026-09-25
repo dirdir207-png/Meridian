@@ -345,7 +345,11 @@ def test_today_command_copy_matches_observatory_direction():
     html = _read("templates/meridian/partials/today.html")
     # The owner selected the concept with prominent spendable/horizon first;
     # the workspace's accessible Today heading remains in the shell template.
-    assert 'data-sts-label>Safe to spend</dt>' in html
+    # RESTATED 2026-09-25 for OS-079: the label now sits inside the disclosure <button>, so its
+    # closing tag is </span> rather than </dt>. The intent is unchanged -- the strip still opens
+    # with the owner's "Safe to spend" wording -- and the button is what makes the explanation
+    # keyboard-reachable, so the label had to move inside it.
+    assert 'data-sts-label>Safe to spend</span>' in html
     assert "data-sts-horizon" in html
     assert 'class="obs-today-orbit" data-editorial-headline' in html
     assert html.index("data-today-safe") < html.index("data-observatory-dial-wrap")

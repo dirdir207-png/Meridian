@@ -454,7 +454,10 @@ def build_today(
     )
     deficit = reserve_deficit(repository.list_bill_reserves())
     if spend_source is not None and spend_source.available_balance is not None:
-        source_label = getattr(spend_source, "name", None) or "Free to Spend"
+        # The LINE label names the BASIS, not the pocket (owner, 2026-09-25: "I would go with
+        # Available Balance"). The prose below uses the same label, so the breakdown reads
+        # "Available balance holds 424.90, but the bill reserve is negative by 324.90..."
+        line_label = "Available balance"
         source_currency = spend_source.currency or "USD"
         source_available = _currency_total(
             [(source_currency, spend_source.available_balance)]
@@ -462,7 +465,11 @@ def build_today(
         safe_amount = spendable_after_reserve_deficit(source_available, deficit)
         safe_status = "available"
     else:
-        source_label = "Cash accounts"
+        # DELIBERATELY NOT relabelled "Available balance". This branch means the spend pocket was
+        # NOT identified, so the figure has a different BASIS -- the sum of the cash, checking and
+        # savings accounts. Giving it the same label as the pocket case would make a silent basis
+        # change look like an ordinary figure. See meridian/services/spend_pocket.py.
+        line_label = "Cash accounts"
         source_currency = "USD"
         source_available = available_cash["by_currency"].get("USD", 0.0)
         safe_amount = spendable_after_reserve_deficit(source_available, deficit)
@@ -480,25 +487,25 @@ def build_today(
     # the full suite; a run of only the new tests would have passed.
     spend_breakdown = {
         "currency": source_currency,
-        "lines": [{"label": source_label, "amount": round(source_available, 2)}],
+        "lines": [{"label": line_label, "amount": round(source_available, 2)}],
         "result_label": "Safe to spend",
         "result": round(safe_amount, 2),
     }
     if deficit.is_present:
         spend_breakdown["lines"].append(
             {
-                "label": "Less Autopilot reserve overdraft",
+                "label": "Bill reserve",
                 "amount": round(-deficit.amount, 2),
             }
         )
         spend_breakdown["explanation"] = (
-            f"{source_label} holds {source_available:,.2f}, but the bill reserve is negative by "
+            f"{line_label} holds {source_available:,.2f}, but the bill reserve is negative by "
             f"{deficit.amount:,.2f}. That deficit has not been moved out of the spendable pocket "
             "yet, so it is subtracted: what is genuinely free is the difference."
         )
     else:
         spend_breakdown["explanation"] = (
-            f"{source_label} is the discretionary balance Meridian reads directly. No reserve "
+            f"{line_label} is the discretionary balance Meridian reads directly. No reserve "
             "overdraft was observed, so nothing is subtracted."
         )
 

@@ -444,7 +444,10 @@ def test_today_still_finds_the_pocket_after_the_owner_renames_it(repository):
         "the renamed pocket was not found, so Safe to Spend fell through to the Cash accounts "
         "basis and silently reported a different number"
     )
-    assert result["safe_to_spend"]["breakdown"]["lines"][0]["label"] == "Safe to Spend"
+    # The label is the BASIS, not the pocket (owner's decided wording, 2026-09-25). The fallback
+    # branch says "Cash accounts" precisely so a basis change stays visible rather than silent,
+    # which is why asserting this exact string is a real guard and not a cosmetic one.
+    assert result["safe_to_spend"]["breakdown"]["lines"][0]["label"] == "Available balance"
 
 
 def test_beacon_signal_notes_negative_safe_to_spend():
