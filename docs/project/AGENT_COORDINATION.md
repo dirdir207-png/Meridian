@@ -121,6 +121,49 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-24 (thirteenth pass) — OS-102 implemented: the Rules pane was drawing nothing, and the reason was a parser that could not read Crew (`OS-102` complete)
+
+**The owner's premise was half wrong and his complaint was entirely right.** There is no concept *drawing* for the
+Plan panes, but `design/observatory-drafts-2026-09-08/BUILD_SPEC.md` §8 governs both in prose and is binding. He
+approved the proposal, and the implementation found the real cause of "we should see the rules":
+
+**`ruleActionsSummary` read `action.type`.** A real Crew formula is `actions: [{roundUpTransfer: {…}}]` — the action
+NAME is the key of a single-key object and there is no `type` field anywhere — so `key` resolved to `""`, the label
+lookup missed, and **every genuine rule rendered an empty card body**. On top of that, with zero rules the pane
+measured **0px**: the empty note was a CHILD of `[data-rules-list]`, which `renderRules` clears with
+`replaceChildren()`, so the renderer destroyed its own empty state (observed: `childElementCount: 0`, note absent
+from the DOM). Both are fixed, and the note is now a sibling the renderer only toggles.
+
+**What a card says**, measured in the running preview at 420×912 DPR 3 in both themes with real formula shapes
+served through the render path: `WHEN cash moves in or out` · `THEN round each purchase up to the nearest $1.00 and
+move the change into Free to Spend` (the destination id resolved from the payload rather than guessed);
+`IF Crew's debit cards match holds`; rules grouped under **MONEY MOVEMENT** and **NOTIFICATIONS**, with a single
+group rendering no heading; a provenance line — *"3 rules read from Crew · observation time unavailable"*; and the
+empty pane measuring **68px** instead of 0.
+
+**The statement builder is executed, not grepped.** It lives in a pure module (`static/js/meridian/rule-statement.js`)
+so `tests/meridian/test_rule_statement_js.py` runs it under Node and asserts the sentences — which caught two real
+bugs during the build (absent conditions reported as unrecognised; a nested condition producing "only when only for
+the Teal card"). Three honesty rules are pinned there: an unresolvable Crew id is **described, never printed**;
+`roundToNearest` is money because the repo proves its unit (default 100, docstring "Round up transactions to the
+nearest dollar") while **every other amount is labelled "in Crew's own units" rather than converted on a guess**;
+and **a webhook URL is never rendered** — host only, path withheld, since a webhook path routinely carries a secret
+and this text gets screenshotted and shared. A rule Meridian cannot fully explain sets `data-rule-explained="false"`,
+names the terms it cannot read, and offers Crew's own formula underneath.
+
+**Crew's seven forms are four groups** — Pockets (3), Bills & reserves (2), Rules (1 + 3 deferred), Cards (1 + 1
+deferred) — with each deferred capability inside its own group instead of in a list beside the forms, which is what
+the BUILD_SPEC requires and what makes a gap visible where the missing control would be. The forms were moved by
+script and never retyped, and a guard proves the set is unchanged (7, no duplicates), because a dropped form would
+be a silently removed capability. The parity contract's hooks survive deliberately: exactly one `[data-crew-parity]`
+and all four `data-parity-deferred` markers as plain list text inside their groups, both asserted by the browser
+suite that fails closed on drift.
+
+**Parked, not forgotten:** editing an existing rule still has no control, which is why `edit_autopilot_rule` remains
+on the parity list inside the Rules group. That is its own write slice, exactly as the approved proposal said.
+Presentation only throughout: no route, data, action, financial, provider, migration or authority change, and the
+rule Delete control still goes through the action pipeline with `owner_direct` provenance.
+
 ### 2026-09-24 (twelfth pass) — OS-104 implemented: the Cadence card now reads the record that actually pays (`b`-side consolidation)
 
 **The owner's model was already the app's model in one place, and the screen he reads used the other one.** He

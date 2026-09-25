@@ -24,6 +24,51 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Plan's two panes: rules stated in words, Crew grouped by purpose (2026-09-24, OS-102)
+
+Owner: *"I think we should see the rules... there is no concept for the plan panes"* — and half a concept existed: no
+drawing, but `design/observatory-drafts-2026-09-08/BUILD_SPEC.md` §8 governs both panes in prose and is binding.
+Approved as proposed: statements built from Crew's own `formula`, Crew regrouped by what each action acts on, and
+**Edit-a-rule parked as its own write slice**.
+
+**The rules pane was rendering nothing, and the reason was a parser bug.** `ruleActionsSummary` read `action.type`,
+but a real Crew formula is `actions: [{roundUpTransfer: {…}}]` — the action NAME is the key and there is no `type`
+field — so every genuine rule drew an **empty card body**. Measured at HEAD: a rule's card was a name, a Delete
+button and nothing else.
+
+| state | before | after |
+|---|---|---|
+| zero rules (the owner's blank pane) | pane **0px**, empty note destroyed (`childElementCount: 0`, note absent from the DOM) because it was a CHILD of the list `renderRules` clears | pane **68px**, note visible |
+| one real rule | name + Delete, no body | `WHEN cash moves in or out` / `THEN round each purchase up to the nearest $1.00 and move the change into Free to Spend` |
+| three rules of two purposes | one flat column | `MONEY MOVEMENT` and `NOTIFICATIONS` headings; pane 521.4px |
+| a rule Crew does not fully describe | indistinguishable from an explained one | `data-rule-explained="false"`, *"Meridian cannot fully explain this rule yet: the trigger SOMETHING_NEW_ENTIRELY; the action type inventedAction."*, plus Crew's own formula in a `<details>` |
+
+![The rules pane: statements, groups, and the provenance line](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/plan-panes-os102-2026-09-24/review/rules-explained.jpg)
+
+![A rule Meridian cannot explain says so and shows Crew's own formula](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/plan-panes-os102-2026-09-24/review/rules-partial.jpg)
+
+**The statement builder is executed, not grepped.** It lives in `static/js/meridian/rule-statement.js` — pure, no
+DOM — so `tests/meridian/test_rule_statement_js.py` runs it under Node and asserts the sentences. That is what
+caught two real bugs during the build: absent conditions were being reported as *unrecognised*, and a nested
+condition produced "only when only for the Teal card". Three honesty rules are pinned there: an unresolvable Crew id
+is **described, never printed**; `roundToNearest` is formatted as money because the repo proves its unit (default
+100 with the docstring "Round up transactions to the nearest dollar") while **every other amount is labelled "in
+Crew's own units"** rather than converted on a guess; and **a webhook URL is never rendered** — only its host, with
+the rest withheld, because a webhook path routinely carries a secret and this text can be screenshotted or shared.
+
+**Crew's seven forms are now four groups**, with each deferred capability inside its own group instead of in a list
+beside them — the BUILD_SPEC forbids a "deferred" item next to a working duplicate control, so the honest gaps sit
+where the missing control would be: Pockets (3 forms), Bills & reserves (2), Rules (1 + 3 deferred), Cards (1 + 1
+deferred). The forms were moved by script, never retyped, and a guard proves the set is unchanged (7, no
+duplicates) because a dropped form would be a silently removed capability.
+
+![Crew actions grouped by what they act on](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/plan-panes-os102-2026-09-24/review/crew-grouped.jpg)
+
+Measured in the running page at 420×912 DPR 3 in both themes: `docOverflow` 0, and the only console errors are the
+preview's own 404/501 limits (`preview_observatory_dial.py` has no `do_POST` and does not serve every route) —
+verified as harness limits earlier, not application defects. **Parked, not forgotten:** editing an existing rule
+still has no control, which is why `edit_autopilot_rule` remains on the parity list inside the Rules group.
+
 ## Payday: one cadence, resolved where the app already decides it (2026-09-24, OS-104)
 
 Owner: *"payday and funding is unnecessarily complex and suggests overlap, payday is the funding mechanism, so

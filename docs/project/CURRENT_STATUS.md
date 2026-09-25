@@ -1,5 +1,53 @@
 # Enhanced SimpleCrew — Current Status
 
+## Plan's two panes: rules stated in words, Crew grouped by purpose (2026-09-24, OS-102, base `431612a`)
+
+Owner: *"I think we should see the rules"* -- and the premise that there was no concept for the Plan panes was
+half wrong: there is no drawing, but `design/observatory-drafts-2026-09-08/BUILD_SPEC.md` section 8 governs both
+panes in prose and is binding. Approved as proposed, and implemented: rules as statements from Crew's own
+`formula`, Crew actions regrouped by what each one acts on, and **editing a rule parked as its own write slice**.
+
+**The rules pane was drawing nothing, and the cause was a parser bug.** `ruleActionsSummary` read `action.type`,
+but a real Crew formula is `actions: [{roundUpTransfer: {...}}]` -- the action NAME is the key, and there is no
+`type` field -- so every genuine rule rendered an EMPTY body. And with zero rules the pane measured **0px**: the
+empty note was a CHILD of the list `renderRules` clears with `replaceChildren()`, so the renderer destroyed its own
+empty state and the pane went blank (observed: `childElementCount: 0`, note absent from the DOM). Both fixed, and
+the note is now a sibling the renderer cannot delete.
+
+**What a card says now**, measured in the running page at 420x912 DPR 3 in both themes, with the concept's own
+formula shapes served through the real render path: `WHEN cash moves in or out` / `THEN round each purchase up to
+the nearest $1.00 and move the change into Free to Spend` (the destination id resolved from the payload, not
+guessed); `IF Crew's debit cards match holds` (an unresolvable Crew id is described, never printed); rules grouped
+under `MONEY MOVEMENT` and `NOTIFICATIONS`, with a single group rendering no heading; the provenance line
+"3 rules read from Crew - observation time unavailable"; and the pane measuring 68px when there are no rules
+instead of 0px.
+
+**What it refuses to say.** The statement builder lives in its own pure module (`rule-statement.js`) so
+`tests/meridian/test_rule_statement_js.py` EXECUTES it under Node rather than grepping it -- which caught two real
+bugs while building: absent conditions were reported as unrecognised, and a nested condition produced "only when
+only for the Teal card". Three honesty rules are pinned there: `roundToNearest` is formatted as money because the
+repo proves its unit (default 100, docstring "Round up transactions to the nearest dollar"), **every other amount
+is labelled "in Crew's own units" rather than converted on a guess**, and a **webhook URL is never rendered** --
+host only, path withheld, because a webhook path routinely carries a secret and this text gets screenshotted and
+shared. A rule Meridian cannot fully explain sets `data-rule-explained="false"`, names the terms it does not read
+and offers Crew's own formula underneath.
+
+**Crew's seven forms are four groups**: Pockets (create, set spend, delete), Bills & reserves (create, top up),
+Rules (manage + 3 deferred), Cards (create + 1 deferred). Each deferred capability now sits inside its own group
+rather than in a list beside the forms -- the BUILD_SPEC forbids a "deferred" item next to a working duplicate
+control, so a gap appears where the missing control would be. The forms were moved by script, never retyped, and a
+guard proves the set is unchanged (7, no duplicates) because a dropped form would be a silently removed capability.
+The parity contract's hooks are preserved deliberately: exactly one `[data-crew-parity]` element and all four
+`data-parity-deferred` markers as plain list text inside their groups, both asserted by the browser suite that
+fails closed on drift.
+
+Guards: 8 executed tests in `tests/meridian/test_rule_statement_js.py` and 9 structural ones in
+`tests/meridian/test_plan_panes_os102.py` (the empty note outliving the renderer, the provenance line, the removed
+parser that could not read Crew, the disclosure, the grouping, the withheld URL, the regrouped parity set), plus two
+browser cases in `tests/browser/test_plan.py` that drive both panes against served payloads. Presentation only: no
+route, data, action, financial, provider, migration or authority change, and the rule Delete control still goes
+through the action pipeline with `owner_direct` provenance exactly as before.
+
 ## Payday: one cadence, read from the record that actually pays (2026-09-24, OS-104, base `dbaafb3`)
 
 Owner: *"payday and funding is unnecessarily complex and suggests overlap, payday is the funding mechanism, so the

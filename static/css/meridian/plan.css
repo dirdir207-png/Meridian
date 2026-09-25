@@ -1319,6 +1319,31 @@
   margin-top: var(--m-space-4);
 }
 
+/* OS-102: the forms are grouped by what they act on (pockets / bills & reserves / rules / cards), and
+   each group's deferred capabilities sit inside it rather than in a separate list. Auto-fill keeps a
+   single group's forms side by side on a wide screen and stacked on a phone. */
+.m-action-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--m-space-3);
+  align-items: start;
+}
+
+.m-action-group-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.m-action-group .m-parity-list {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
 .m-action-form {
   display: flex;
   flex-direction: column;
@@ -1440,11 +1465,34 @@
   display: none;
 }
 
-/* Crew-style modular rule card (name + pause + delete + a one-line summary). */
+/* Crew-style modular rule card (name + pause + delete + a STATED rule).
+   OS-102: the body is no longer one summary line -- `ruleActionsSummary` read `action.type`, which a
+   real Crew formula does not carry, so every genuine rule rendered an EMPTY card. The statement is a
+   set of labelled rows instead, and a rule Meridian cannot fully explain says so and offers Crew's own
+   formula underneath rather than looking explained. */
 .m-plan-rules {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--m-space-3);
+}
+
+/* Where the rules come from and when they were observed: a card must never read as live data without
+   saying how old it is. */
+.m-plan-rules-source {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+}
+
+.m-rule-group-title {
+  grid-column: 1 / -1;
+  margin: var(--m-space-2) 0 0;
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .m-rule-card {
@@ -1470,10 +1518,51 @@
   font-weight: 600;
 }
 
-.m-rule-card-body {
+.m-rule-statement {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.m-rule-statement-line {
+  display: grid;
+  grid-template-columns: 3.6rem minmax(0, 1fr);
+  gap: var(--m-space-2);
+  margin: 0;
+  font-size: var(--m-text-sm);
+}
+
+.m-rule-statement-key {
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.m-rule-statement-value {
+  color: var(--m-ink);
+}
+
+.m-rule-unknown {
   margin: 0;
   color: var(--m-ink-muted);
-  font-size: var(--m-text-sm);
+  font-size: var(--m-text-xs);
+}
+
+.m-rule-raw {
+  color: var(--m-ink-muted);
+  font-size: var(--m-text-xs);
+}
+
+.m-rule-raw pre {
+  max-height: 12rem;
+  margin: var(--m-space-2) 0 0;
+  padding: var(--m-space-2);
+  overflow: auto;
+  border-radius: var(--m-radius-sm);
+  background: var(--m-surface-muted);
+  font-size: var(--m-text-xs);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 @media (max-width: 600px) {

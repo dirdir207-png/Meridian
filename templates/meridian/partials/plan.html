@@ -203,126 +203,144 @@
      rule, top-up, etc.). Updates as capabilities are exposed. #}
   </div><!-- /data-plan-view-pane="plan" -->
 
-  {# Crew-style modular rules view: one card per autopilot rule. #}
+  {# Crew-style modular rules view: one card per autopilot rule, stated in words.
+     OS-102: the empty note is a SIBLING of the list, not a child of it. It used to live inside
+     `[data-rules-list]`, and `renderRules` clears that element with `replaceChildren()` before it
+     renders -- so with zero rules the note was destroyed and the pane measured 0px tall (observed in
+     the preview: `childElementCount: 0`, the note absent from the DOM). That is the blank pane the
+     owner reported. `data-rules-source` names where the rules come from and when they were observed,
+     so a card never reads as live data without saying how old it is. #}
   <div class="m-plan-view" data-plan-view-pane="rules" hidden>
-    <section class="m-plan-rules" aria-label="Autopilot rules" data-rules-list>
+    <section class="m-plan-rules" aria-label="Autopilot rules">
       <p class="m-empty-note" data-rules-empty hidden>No autopilot rules yet.</p>
+      <p class="m-plan-rules-source" data-rules-source hidden></p>
+      <div data-rules-list></div>
     </section>
   </div>
 
-  {# Crew actions view: the write controls + honest deferred remainder. #}
-  <div class="m-plan-view" data-plan-view-pane="crew" hidden>
-  <section class="m-plan-parity" aria-label="Crew capabilities still via legacy" data-crew-parity>
-    <h2 class="m-section-label">Crew capabilities (deferred)</h2>
-    <p class="m-parity-note">
-      These Crew actions are not yet exposed as a Meridian control. The rest of
-      the write surface (bills, pockets, autopilot rules, top-up) is wired.
-    </p>
-    {# OS-066: this list must name ONLY capabilities with no live control in this pane,
-       and each entry must correspond to a shipped command in meridian/crew_commands.py.
-       It previously also listed "Set active spend pocket", "Delete pocket" and "Delete
-       autopilot rule", all three of which have working forms directly below -- exactly
-       what BUILD_SPEC line 203 forbids ("No 'deferred' item next to a working duplicate
-       control"), and a false statement about the owner's own capabilities. "Create /
-       update virtual card" was narrowed to "Update" for the same reason: create IS
-       wired below, update is not. Keep this list consistent with the wired controls;
-       tests/browser/test_capability_parity.py now fails closed on drift. #}
-    <ul class="m-parity-list">
-      <li data-parity-deferred="create_pocket_reassignment_rule">Create pocket reassignment rule</li>
-      <li data-parity-deferred="delete_pocket_reassignment_rule">Delete pocket reassignment rule</li>
-      <li data-parity-deferred="edit_autopilot_rule">Edit autopilot rule</li>
-      <li data-parity-deferred="update_virtual_card">Update virtual card</li>
-    </ul>
-  </section>
+  {# Crew actions view: every Crew write Meridian can make, GROUPED BY WHAT IT ACTS ON.
+     Owner-reported 2026-09-24 (OS-102): the pane was seven forms in one flat sequence, with the
+     capabilities Meridian cannot write yet in a separate list, so working out what was missing meant
+     holding both lists in your head. Each deferred item now sits inside the group it belongs to, so a
+     gap appears where the capability would be.
 
-  {# Crew write actions — now wired bi-directionally through /api/actions/mutate.
-     Owner-direct inputs execute immediately; AI-composed / under-specified inputs
-     route to a proposal for approval (see the write model). #}
-  <section class="m-plan-actions" aria-label="Crew write actions" data-crew-actions>
+     TWO TEST HOOKS ARE DELIBERATELY PRESERVED. `data-crew-parity` stays on exactly one element
+     (tests/browser/test_capability_parity.py asserts count == 1) and every `data-parity-deferred`
+     marker survives as plain list text inside its group, because that suite fails closed on drift.
+     `data-crew-actions` stays too: it is what the haptics guard looks for. #}
+  <section class="m-plan-actions" aria-label="Crew write actions" data-crew-actions data-crew-parity>
     <h2 class="m-section-label">Crew actions</h2>
     <p class="m-parity-note">
-      These write to Crew directly. Fully-specified owner inputs execute; anything
-      requiring interpretation becomes a proposal you approve.
+      These write to Crew directly, grouped by what they act on. Fully-specified owner inputs
+      execute; anything requiring interpretation becomes a proposal you approve. A capability
+      Meridian cannot write yet is named inside its own group rather than in a separate list.
     </p>
-    <form class="m-action-form" data-ca-create-pocket>
-      <h3 class="m-editor-title">Create pocket</h3>
-      <label class="m-field">
-        <span class="m-field-label">Pocket name</span>
-        <input class="m-input" name="name" type="text" placeholder="Savings, Vacation, …" required>
-      </label>
-      <p class="m-action-note" data-note hidden></p>
-      <button type="submit" class="m-button m-button-primary">Create pocket</button>
-    </form>
-    <form class="m-action-form" data-ca-create-bill>
-      <h3 class="m-editor-title">Create bill</h3>
-      <label class="m-field">
-        <span class="m-field-label">Bill name</span>
-        <input class="m-input" name="name" type="text" placeholder="Rent, Eversource, …" required>
-      </label>
-      <label class="m-field">
-        <span class="m-field-label">Amount</span>
-        <input class="m-input" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required>
-      </label>
-      <p class="m-action-note" data-note hidden></p>
-      <button type="submit" class="m-button m-button-primary">Create bill</button>
-    </form>
-    <form class="m-action-form" data-ca-top-up>
-      <h3 class="m-editor-title">Top up reserve</h3>
-      <label class="m-field">
-        <span class="m-field-label">Amount ($)</span>
-        <input class="m-input" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal">
-      </label>
-      <label class="m-field">
-        <span class="m-field-label">Funding id (optional)</span>
-        <input class="m-input" name="bill_reserve_id" type="text" placeholder="Reserve id">
-      </label>
-      <p class="m-action-note" data-note hidden></p>
-      <button type="submit" class="m-button m-button-primary">Top up reserve</button>
-    </form>
-    <form class="m-action-form" data-ca-delete-rule>
-      <h3 class="m-editor-title">Manage autopilot rule</h3>
-      <label class="m-field">
-        <span class="m-field-label">Rule</span>
-        <select class="m-select" name="rule_id"><option value="">Select a rule…</option></select>
-      </label>
-      <p class="m-action-note" data-note hidden></p>
-      <button type="submit" class="m-button m-button--danger">Delete rule</button>
-    </form>
-    <form class="m-action-form" data-ca-set-spend>
-      <h3 class="m-editor-title">Set active spend pocket</h3>
-      <label class="m-field">
-        <span class="m-field-label">Pocket</span>
-        <select class="m-select" name="subaccount_id"><option value="">Select a pocket…</option></select>
-      </label>
-      <p class="m-action-note" data-note hidden></p>
-      <button type="submit" class="m-button m-button-primary">Set spend pocket</button>
-    </form>
-    <form class="m-action-form" data-ca-delete-pocket>
-      <h3 class="m-editor-title">Delete pocket</h3>
-      <label class="m-field">
-        <span class="m-field-label">Pocket</span>
-        <select class="m-select" name="subaccount_id"><option value="">Select a pocket…</option></select>
-      </label>
-      <p class="m-action-note" data-note hidden></p>
-      <button type="submit" class="m-button m-button--danger">Delete pocket</button>
-    </form>
-    <form class="m-action-form" data-ca-create-virtual-card>
-      <h3 class="m-editor-title">Create virtual card</h3>
-      <label class="m-field">
-        <span class="m-field-label">Card name</span>
-        <input class="m-input" name="name" type="text" placeholder="e.g. Subscriptions" required>
-      </label>
-      <label class="m-field">
-        <span class="m-field-label">Pocket</span>
-        <select class="m-select" name="subaccount_id"><option value="">Match my physical card</option></select>
-      </label>
-      <p class="m-action-note" data-note hidden></p>
-      <button type="submit" class="m-button m-button-primary">Create virtual card</button>
-    </form>
+
+    <div class="m-action-group" data-action-group="pockets">
+      <h3 class="m-action-group-title">Pockets</h3>
+      <form class="m-action-form" data-ca-create-pocket>
+        <h3 class="m-editor-title">Create pocket</h3>
+        <label class="m-field">
+          <span class="m-field-label">Pocket name</span>
+          <input class="m-input" name="name" type="text" placeholder="Savings, Vacation, …" required>
+        </label>
+        <p class="m-action-note" data-note hidden></p>
+        <button type="submit" class="m-button m-button-primary">Create pocket</button>
+      </form>
+
+      <form class="m-action-form" data-ca-set-spend>
+        <h3 class="m-editor-title">Set active spend pocket</h3>
+        <label class="m-field">
+          <span class="m-field-label">Pocket</span>
+          <select class="m-select" name="subaccount_id"><option value="">Select a pocket…</option></select>
+        </label>
+        <p class="m-action-note" data-note hidden></p>
+        <button type="submit" class="m-button m-button-primary">Set spend pocket</button>
+      </form>
+
+      <form class="m-action-form" data-ca-delete-pocket>
+        <h3 class="m-editor-title">Delete pocket</h3>
+        <label class="m-field">
+          <span class="m-field-label">Pocket</span>
+          <select class="m-select" name="subaccount_id"><option value="">Select a pocket…</option></select>
+        </label>
+        <p class="m-action-note" data-note hidden></p>
+        <button type="submit" class="m-button m-button--danger">Delete pocket</button>
+      </form>
+    </div>
+
+    <div class="m-action-group" data-action-group="bills">
+      <h3 class="m-action-group-title">Bills &amp; reserves</h3>
+      <form class="m-action-form" data-ca-create-bill>
+        <h3 class="m-editor-title">Create bill</h3>
+        <label class="m-field">
+          <span class="m-field-label">Bill name</span>
+          <input class="m-input" name="name" type="text" placeholder="Rent, Eversource, …" required>
+        </label>
+        <label class="m-field">
+          <span class="m-field-label">Amount</span>
+          <input class="m-input" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required>
+        </label>
+        <p class="m-action-note" data-note hidden></p>
+        <button type="submit" class="m-button m-button-primary">Create bill</button>
+      </form>
+
+      <form class="m-action-form" data-ca-top-up>
+        <h3 class="m-editor-title">Top up reserve</h3>
+        <label class="m-field">
+          <span class="m-field-label">Amount ($)</span>
+          <input class="m-input" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal">
+        </label>
+        <label class="m-field">
+          <span class="m-field-label">Funding id (optional)</span>
+          <input class="m-input" name="bill_reserve_id" type="text" placeholder="Reserve id">
+        </label>
+        <p class="m-action-note" data-note hidden></p>
+        <button type="submit" class="m-button m-button-primary">Top up reserve</button>
+      </form>
+    </div>
+
+    <div class="m-action-group" data-action-group="rules">
+      <h3 class="m-action-group-title">Rules</h3>
+      <form class="m-action-form" data-ca-delete-rule>
+        <h3 class="m-editor-title">Manage autopilot rule</h3>
+        <label class="m-field">
+          <span class="m-field-label">Rule</span>
+          <select class="m-select" name="rule_id"><option value="">Select a rule…</option></select>
+        </label>
+        <p class="m-action-note" data-note hidden></p>
+        <button type="submit" class="m-button m-button--danger">Delete rule</button>
+      </form>
+
+      <ul class="m-parity-list">
+        <li data-parity-deferred="create_pocket_reassignment_rule">Create pocket reassignment rule</li>
+        <li data-parity-deferred="delete_pocket_reassignment_rule">Delete pocket reassignment rule</li>
+        <li data-parity-deferred="edit_autopilot_rule">Edit autopilot rule</li>
+      </ul>
+    </div>
+
+    <div class="m-action-group" data-action-group="cards">
+      <h3 class="m-action-group-title">Cards</h3>
+      <form class="m-action-form" data-ca-create-virtual-card>
+        <h3 class="m-editor-title">Create virtual card</h3>
+        <label class="m-field">
+          <span class="m-field-label">Card name</span>
+          <input class="m-input" name="name" type="text" placeholder="e.g. Subscriptions" required>
+        </label>
+        <label class="m-field">
+          <span class="m-field-label">Pocket</span>
+          <select class="m-select" name="subaccount_id"><option value="">Match my physical card</option></select>
+        </label>
+        <p class="m-action-note" data-note hidden></p>
+        <button type="submit" class="m-button m-button-primary">Create virtual card</button>
+      </form>
+
+      <ul class="m-parity-list">
+        <li data-parity-deferred="update_virtual_card">Update virtual card</li>
+      </ul>
+    </div>
   </section>
 
-  {# Verified Crew mutation capture status — read-only, so Meridian's write path
-     never has to guess a contract. Surfaced for the owner to review coverage. #}
   <section class="m-surface m-plan-capture-status" aria-label="Crew mutation capture status" data-capture-status>
     <h2 class="m-section-label">Crew mutation coverage</h2>
     <div class="m-capture-status-row">

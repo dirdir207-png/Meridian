@@ -578,3 +578,93 @@ def test_three_bills_are_fully_visible_and_no_map_figure_wraps():
             f"{add['y'] + add['height']:.0f} exceeds the canvas bottom {canvas['bottom']:.0f}"
         )
         browser.close()
+
+
+def test_rules_are_stated_in_words_and_the_empty_pane_is_not_blank(browser):
+    """OS-102: the rules pane used to render an empty card body for every real Crew rule (the old
+    summary read `action.type`, which a Crew formula does not carry) and measured 0px when there
+    were no rules at all, because the empty note was a child of the list the renderer clears."""
+    context, page = _authed_page(browser)
+    payload = {
+        "crew_ids": {
+            "account_id": "acc-1",
+            "subaccounts": [{"id": "sub-2", "name": "Free to Spend"}],
+            "rules": [
+                {
+                    "id": "rule-1",
+                    "name": "Round Up",
+                    "is_paused": False,
+                    "formula": {
+                        "name": "Round Up",
+                        "triggers": ["CASH_TRANSACTION_OCCURRED"],
+                        "actions": [{"roundUpTransfer": {"accountId": "acc-1",
+                                                         "subaccountId": "sub-2",
+                                                         "roundToNearest": 100}}],
+                    },
+                },
+                {
+                    "id": "rule-2",
+                    "name": "Mystery rule",
+                    "is_paused": False,
+                    "formula": {"name": "Mystery rule", "triggers": ["SOMETHING_NEW_ENTIRELY"],
+                                "actions": [{"inventedAction": {}}]},
+                },
+            ],
+        }
+    }
+    page.route("**/api/meridian/plan*", lambda route: _fulfill(payload))
+    page.goto(f"{APP_URL}/meridian?workspace=plan", wait_until="networkidle")
+    page.locator("[data-plan-view='rules']").click()
+    page.wait_for_selector(".m-rule-card")
+
+    cards = page.locator(".m-rule-card")
+    assert cards.count() == 2
+    # A real rule is EXPLAINED: a trigger, an effect, and the destination named from the payload.
+    first = cards.first
+    assert first.get_attribute("data-rule-explained") == "true"
+    text = first.inner_text()
+    assert "cash moves in or out" in text
+    assert "$1.00" in text and "Free to Spend" in text
+    # A rule the app cannot explain says so, and offers Crew's own formula rather than looking clear.
+    second = cards.nth(1)
+    assert second.get_attribute("data-rule-explained") == "false"
+    assert "cannot fully explain this rule yet" in second.inner_text()
+    assert second.locator(".m-rule-raw pre").count() == 1
+    # Grouped by what they act on.
+    assert page.locator(".m-rule-group-title").count() >= 2
+    # And the pane is not blank when there is nothing to show.
+    page.route("**/api/meridian/plan*", lambda route: _fulfill({"crew_ids": {"rules": []}}))
+    page.reload(wait_until="networkidle")
+    page.locator("[data-plan-view='rules']").click()
+    empty = page.locator("[data-rules-empty]")
+    assert empty.is_visible()
+    assert page.locator(".m-plan-rules").bounding_box()["height"] > 20, "the empty pane is blank"
+    browser.close()
+
+
+def test_crew_actions_are_grouped_and_every_deferred_item_sits_in_its_group(browser):
+    """OS-102: seven forms in one flat sequence, with a separate deferred list beside them, made the
+    reader hold two lists in their head to see what was missing."""
+    context, page = _authed_page(browser)
+    page.goto(f"{APP_URL}/meridian?workspace=plan", wait_until="networkidle")
+    page.locator("[data-plan-view='crew']").click()
+    page.wait_for_selector("[data-action-group]")
+
+    groups = page.evaluate(
+        """() => [...document.querySelectorAll('[data-action-group]')].map((g) => ({
+             key: g.dataset.actionGroup,
+             forms: g.querySelectorAll('form.m-action-form').length,
+             deferred: [...g.querySelectorAll('[data-parity-deferred]')].map((li) => li.tagName),
+             title: g.querySelector('.m-action-group-title').textContent.trim(),
+           }))"""
+    )
+    assert [g["key"] for g in groups] == ["pockets", "bills", "rules", "cards"]
+    assert sum(g["forms"] for g in groups) == 7, "a form was lost or duplicated in the regrouping"
+    assert all(g["forms"] >= 1 for g in groups), groups
+    # Deferred capabilities are inside their group, as plain list text.
+    by_key = {g["key"]: g for g in groups}
+    assert by_key["rules"]["deferred"] == ["LI", "LI", "LI"]
+    assert by_key["cards"]["deferred"] == ["LI"]
+    assert by_key["pockets"]["deferred"] == []
+    assert page.locator("[data-crew-parity]").count() == 1
+    browser.close()

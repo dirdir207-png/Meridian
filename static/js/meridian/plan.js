@@ -8,6 +8,7 @@ import { describeActionOutcome } from "./action-outcome.js";
 import { formatCurrency, parseLocalDate } from "./format.js";
 import { ACTION_ICONS, kitIconUrl } from "./kit-icons.js";
 import { allocationIcon, allocationMark } from "./plan-map-marks.js";
+import { ruleStatement, rulePurposeLabel } from "./rule-statement.js";
 
 let controller = null;
 
@@ -1601,108 +1602,193 @@ function setupPlanSegs(root) {
   });
 }
 
-/* Render autopilot rules as modular cards (name, trigger, action, pause, delete)
-   in a Crew-like layout. */
+/* OS-102: a rule is explained in words, and what cannot be explained honestly is DISCLOSED rather
+   than smoothed over. The old body line looked for `action.type`; a real Crew formula carries
+   `actions: [{roundUpTransfer: {...}}]`, where the action name is the KEY, so every genuine rule
+   rendered with an empty body. The statement builder lives in ./rule-statement.js so it can be
+   executed under Node (tests/meridian/test_rule_statement_js.py) rather than only grepped. */
+
+function ruleNameLookup() {
+  /* Crew ids are opaque. The plan payload already resolves the ones it knows -- the account and the
+     pockets it can address -- so a statement can say "Free to Spend" wherever that is known, and say
+     the honest thing where it is not. It never invents a name for an id it cannot resolve. */
+  const names = {};
+  const crew = (currentPlan && currentPlan.crew_ids) || {};
+  if (crew.account_id) names[String(crew.account_id)] = "Checking";
+  for (const sub of crew.subaccounts || []) {
+    if (sub && sub.id) names[String(sub.id)] = sub.name || "Pocket";
+  }
+  return names;
+}
+
+function ruleStatementLine(label, text) {
+  const row = document.createElement("p");
+  row.className = "m-rule-statement-line";
+  const key = document.createElement("span");
+  key.className = "m-rule-statement-key";
+  key.textContent = label;
+  const value = document.createElement("span");
+  value.className = "m-rule-statement-value";
+  value.textContent = text;
+  row.append(key, value);
+  return row;
+}
+
+function ruleStatementNode(statement) {
+  const wrap = document.createElement("div");
+  wrap.className = "m-rule-statement";
+  const lines = [];
+  if (statement.when) {
+    lines.push(["When", statement.when]);
+  }
+  for (const condition of statement.conditions) {
+    // The statement builder owns the single "only when"; the card labels the row instead.
+    lines.push(["If", condition.replace(/^only when /, "")]);
+  }
+  for (const effect of statement.effects) {
+    lines.push(["Then", effect]);
+  }
+  if (!lines.length && statement.description) {
+    lines.push(["Crew's description", statement.description]);
+  }
+  for (const [label, text] of lines) {
+    wrap.append(ruleStatementLine(label, text));
+  }
+  if (statement.schedule) {
+    wrap.append(ruleStatementLine("Schedule", statement.schedule));
+  }
+  if (!statement.recognised) {
+    /* Not summarised away: the terms Meridian does not read are named, and Crew's own formula is
+       available underneath. A rule the app cannot fully explain must not read as explained. */
+    const note = document.createElement("p");
+    note.className = "m-rule-unknown";
+    note.textContent = `Meridian cannot fully explain this rule yet: ${statement.unknown.join("; ")}.`;
+    const details = document.createElement("details");
+    details.className = "m-rule-raw";
+    const summary = document.createElement("summary");
+    summary.textContent = "Crew's own formula";
+    const pre = document.createElement("pre");
+    pre.textContent = statement.raw;
+    details.append(summary, pre);
+    wrap.append(note, details);
+  }
+  return wrap;
+}
+
+function ruleCard(rule, statement) {
+  const card = document.createElement("article");
+  card.className = "m-rule-card";
+  card.dataset.ruleId = rule.id;
+  card.dataset.rulePurpose = statement.purpose;
+  card.dataset.ruleExplained = statement.recognised ? "true" : "false";
+  const head = document.createElement("div");
+  head.className = "m-rule-card-head";
+  const nameEl = document.createElement("h3");
+  nameEl.className = "m-rule-card-name";
+  nameEl.textContent = rule.name || "Untitled rule";
+  head.appendChild(nameEl);
+  if (rule.is_paused) {
+    const paused = document.createElement("span");
+    paused.className = "m-bill-badge m-bill-badge--due_soon";
+    paused.textContent = "Paused";
+    head.appendChild(paused);
+  }
+  const note = document.createElement("p");
+  note.className = "m-action-note";
+  note.hidden = true;
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "m-button m-button--quiet m-button--small m-button--danger";
+  del.textContent = "Delete";
+  del.setAttribute("aria-label", `Delete rule ${rule.name}`);
+  del.addEventListener("click", () => {
+    if (!window.confirm(`Delete the rule "${rule.name}"? This cannot be undone.`)) {
+      return;
+    }
+    (async () => {
+      try {
+        const result = await meridianMutate({
+          type: "delete_crew_autopilot_rule",
+          params: { rule_id: rule.id },
+          provenance: "owner_direct",
+          rationale: `Delete the Crew rule ${rule.name} from Meridian.`,
+        });
+        const outcome = describeActionOutcome(result, {
+          verifiedMessage: "Rule deleted and verified.",
+        });
+        note.hidden = false;
+        note.dataset.state = outcome.tone;
+        note.textContent = outcome.message;
+        // A returned action record is durable history. Do not turn the same
+        // control into a blind resend path after failure or uncertainty.
+        del.disabled = true;
+        if (outcome.refresh) {
+          setTimeout(() => loadPlan(), 600);
+        }
+      } catch (error) {
+        note.hidden = false;
+        note.dataset.state = "error";
+        note.textContent = error instanceof MeridianApiError
+          ? `${error.message} ${error.recoveryAction}`
+          : "The rule could not be deleted.";
+      }
+    })();
+  });
+  head.appendChild(del);
+  card.appendChild(head);
+  card.appendChild(note);
+  card.appendChild(ruleStatementNode(statement));
+  return card;
+}
+
 function renderRules(root) {
   const list = root.querySelector("[data-rules-list]");
   const empty = root.querySelector("[data-rules-empty]");
+  const source = root.querySelector("[data-rules-source]");
   if (!list) {
     return;
   }
   const crew = (currentPlan && currentPlan.crew_ids) || {};
   const rules = crew.rules || [];
-  empty.hidden = rules.length > 0;
+  const names = ruleNameLookup();
+  if (empty) {
+    // The note is a SIBLING of the list now, so clearing the list can no longer destroy it. The null
+    // check stays anyway: depending on markup elsewhere is exactly how this broke the first time.
+    empty.hidden = rules.length > 0;
+  }
+  if (source) {
+    const freshness = (currentPlan && currentPlan.data_freshness) || null;
+    const when = freshness && freshness.label ? freshness.label : "observation time unavailable";
+    source.hidden = rules.length === 0;
+    source.textContent = rules.length
+      ? `${rules.length} rule${rules.length === 1 ? "" : "s"} read from Crew · ${when}`
+      : "";
+  }
   list.replaceChildren();
+
+  /* Grouped by what each rule acts on, in the order that is useful rather than the order Crew
+     returned: money movement first because it moves money, notifications after it. One group renders
+     without a heading, so a single rule does not read as a taxonomy. */
+  const order = ["money", "notify", "other"];
+  const grouped = new Map();
   for (const rule of rules) {
-    const card = document.createElement("article");
-    card.className = "m-rule-card";
-    card.dataset.ruleId = rule.id;
-    const head = document.createElement("div");
-    head.className = "m-rule-card-head";
-    const nameEl = document.createElement("h3");
-    nameEl.className = "m-rule-card-name";
-    nameEl.textContent = rule.name || "Untitled rule";
-    head.appendChild(nameEl);
-    if (rule.is_paused) {
-      const paused = document.createElement("span");
-      paused.className = "m-bill-badge m-bill-badge--due_soon";
-      paused.textContent = "Paused";
-      head.appendChild(paused);
+    const statement = ruleStatement(rule, { names });
+    if (!grouped.has(statement.purpose)) grouped.set(statement.purpose, []);
+    grouped.get(statement.purpose).push({ rule, statement });
+  }
+  const present = order.filter((purpose) => grouped.has(purpose));
+  for (const purpose of present) {
+    if (present.length > 1) {
+      const heading = document.createElement("h3");
+      heading.className = "m-rule-group-title";
+      heading.textContent = rulePurposeLabel(purpose);
+      list.appendChild(heading);
     }
-    const note = document.createElement("p");
-    note.className = "m-action-note";
-    note.hidden = true;
-    const del = document.createElement("button");
-    del.type = "button";
-    del.className = "m-button m-button--quiet m-button--small m-button--danger";
-    del.textContent = "Delete";
-    del.setAttribute("aria-label", `Delete rule ${rule.name}`);
-    del.addEventListener("click", () => {
-      if (!window.confirm(`Delete the rule "${rule.name}"? This cannot be undone.`)) {
-        return;
-      }
-      (async () => {
-        try {
-          const result = await meridianMutate({
-            type: "delete_crew_autopilot_rule",
-            params: { rule_id: rule.id },
-            provenance: "owner_direct",
-            rationale: `Delete the Crew rule ${rule.name} from Meridian.`,
-          });
-          const outcome = describeActionOutcome(result, {
-            verifiedMessage: "Rule deleted and verified.",
-          });
-          note.hidden = false;
-          note.dataset.state = outcome.tone;
-          note.textContent = outcome.message;
-          // A returned action record is durable history. Do not turn the same
-          // control into a blind resend path after failure or uncertainty.
-          del.disabled = true;
-          if (outcome.refresh) {
-            setTimeout(() => loadPlan(), 600);
-          }
-        } catch (error) {
-          note.hidden = false;
-          note.dataset.state = "error";
-          note.textContent = error instanceof MeridianApiError
-            ? `${error.message} ${error.recoveryAction}`
-            : "The rule could not be deleted.";
-        }
-      })();
-    });
-    head.appendChild(del);
-    card.appendChild(head);
-    card.appendChild(note);
-    const body = document.createElement("p");
-    body.className = "m-rule-card-body";
-    body.textContent = ruleActionsSummary(rule);
-    card.appendChild(body);
-    list.appendChild(card);
+    for (const { rule, statement } of grouped.get(purpose)) {
+      list.appendChild(ruleCard(rule, statement));
+    }
   }
 }
-
-function ruleActionsSummary(rule) {
-  const formula = (rule.formula || {}) || {};
-  const actions = formula.actions || [];
-  const labels = {
-    SWEEP_EXCESS: "Sweep excess",
-    ROUND_UP_TRANSFER: "Round up",
-    TARGET_BALANCE_TRANSFER: "Target balance",
-    SPLIT_DEPOSIT: "Split deposit",
-    SPLIT_DEPOSIT_BY_AMOUNT: "Split deposit (amount)",
-    INTERNAL_TRANSFER: "Internal transfer",
-    SEND_NOTIFICATION: "Notify",
-    SEND_WEBHOOK: "Webhook",
-  };
-  if (!actions.length) {
-    return formula.description || "Autopilot rule";
-  }
-  return actions.map((a) => {
-    const key = (typeof a === "object" && a && a.type) || "";
-    return labels[key] || key.replace(/_/g, " ").toLowerCase() || "action";
-  }).filter(Boolean).join(" · ");
-}
-
 
 async function loadCaptureStatus(root) {
   const panel = root.querySelector("[data-capture-status]");
