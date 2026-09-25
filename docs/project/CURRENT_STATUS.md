@@ -1,5 +1,37 @@
 # Enhanced SimpleCrew — Current Status
 
+## 2026-09-25: OS-114 discovery — nothing was lost, and four captured facets are never ingested
+
+Owner: *"ChatGPT captured all internal crew data, was something lost?"* Answered from artifacts, not
+assurance. Read-only everywhere, matched by **provider key**, never by name.
+
+**Nothing was lost — proven.** All 100 transactions in the capture (2026-09-04) are in the live
+database, and the ChatGPT-side database is a **strict subset** of ours on every provider-keyed table:
+
+| table | live preview | ChatGPT-side | theirs-only keys | ours-only keys |
+|---|---|---|---|---|
+| `financial_accounts` | 7 | 7 | **0** | 0 |
+| `financial_transactions` | 260 | 257 | **0** | 3 |
+| `commitments` | 7 | 5 | **0** | 2 |
+
+So there is nothing to backfill *from* their database; ours is the superset. The repo's own
+`savings_data.db` lacks 23 captured transactions, all before 2026-08-20 and outside its recorded
+window — staleness, not loss.
+
+**What is genuinely missing, classified rather than assumed:** pocket goals are *not* missing (every
+`goal` in the capture was NULL, which is why `goal_target` from migration 029 is empty — recorded so
+nobody "fixes" a correct column). Four facets are captured and never ingested: `autopilot` (2 rules
+with formula/conditions/actions), `family` (2 children + 1 parent, with balances), `physical_cards`
+and `virtual_cards` (inventories, each carrying the same selection OS-113 now persists).
+
+**The one gap that touches money:** per-bill reserved amounts have **no history**. `funded_amount` IS
+Crew's per-bill `reservedAmount`, but it and its reported-flag are single mutable values overwritten
+per sync, while the reserve-level total keeps dated rows. So the capture's 2026-09-04 Rent value
+($710.98) against today's `0.00` cannot be told apart from a lost observation — and that capture is
+the only record of the earlier number. Which gaps to close is the owner's call, so the task is
+`in_progress` with its remainder recorded and nothing ingested yet. Nothing from a historical capture
+may ever be presented as current.
+
 ## 2026-09-25 (latest): OS-113 delivered — the spend pocket is Crew's own selection, with the name as a NAMED fallback
 
 `meridian/services/spend_pocket.py::resolve_spend_pocket()` now answers "which pocket does the owner
