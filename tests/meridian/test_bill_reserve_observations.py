@@ -142,6 +142,9 @@ def test_migration_024_backfills_only_amounts_that_could_have_been_stated(tmp_pa
         "028_allow_negative_bill_reserve.sql",
         "029_crew_pocket_goals.sql",
         "030_crew_spend_selection.sql",
+        # 031 keeps the dated per-bill allocation history (OS-114); it applies after 030 and
+        # is listed here because this test enumerates every migration the database applies.
+        "031_crew_bill_allocation_observations.sql",
     ]
 
     with sqlite3.connect(db) as connection:

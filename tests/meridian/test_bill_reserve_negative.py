@@ -131,6 +131,9 @@ def test_the_rebuild_preserves_every_row_value_and_id(tmp_path, monkeypatch):
         "028_allow_negative_bill_reserve.sql",
         "029_crew_pocket_goals.sql",
         "030_crew_spend_selection.sql",
+        # 031 keeps the dated per-bill allocation history (OS-114); it applies after 030 and
+        # is listed here because this test enumerates every migration the database applies.
+        "031_crew_bill_allocation_observations.sql",
     ]
 
     after = sorted(

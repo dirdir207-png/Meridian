@@ -625,3 +625,46 @@ made take effect on the surface it writes to" — reading a second surface there
 while the physical card merely lags behind a write that succeeded, and a false verification failure on
 a money path is worse than a narrower question. Both behaviours are pinned by tests in
 `tests/meridian/providers/test_crewwork.py`.
+
+## D-026 — The per-bill reserved amount is the ONE reserve bucket's internal allocation, and it is kept as dated history (owner direction + arithmetic, 2026-09-25)
+
+**The owner's premise, and the arithmetic that confirms it.** Owner: *"Reserve is one bucket, so I'm not
+sure it's possible, but you may be referring to its internal bill allocation. If possible, 1."* He is
+right that there is one bucket, and the reading makes the history MORE meaningful rather than less:
+
+* his 2026-09-04 capture contains exactly **one** `totalReservedAmount` value — 71098 cents ($710.98);
+* the five per-bill `reservedAmount` values in that same capture sum to **71098 cents exactly**, 0 cents
+  of difference, so the per-bill figures ARE that one bucket's internal allocation;
+* the allocation is **lumpy, not proportional**: Rent held the entire $710.98 while the other four bills
+  held $0.00, and on 2026-09-20 the bucket's whole $1,097.10 was again attributed to Rent alone.
+
+**The decision.** Per-bill reserved amounts are recorded as **append-only, dated observations**
+(`crew_bill_allocation_observations`, migration 031, `meridian/bill_allocation.py`), one row per bill per
+capture, replacing nothing. `commitments.funded_amount` and `commitments.reserved_amount_reported` keep
+their existing meaning and behaviour — history is an addition, not a new source of truth. This follows
+the pattern migration 030 established for the spend-pocket selection, including the capture timestamp as
+the identity, so re-ingesting one capture adds no second entry.
+
+**Why the column was not enough.** `funded_amount` IS Crew's per-bill `reservedAmount`, but it is a
+single value overwritten on every sync: the same number that answers "how is the bucket allocated right
+now" destroys the answer to "how did it get that way". Observed so far — Rent holding $710.98 on
+2026-09-04, $1,097.10 on 2026-09-20, and $0.00 on 2026-09-25 — and until now nothing could distinguish a
+bucket that moved because a bill was paid from one that moved because a sync dropped a value.
+
+**C01, encoded rather than remembered.** `reserved_amount` is NULL exactly when Crew stated no amount,
+and `reserved_amount_reported` records the silence, so an unstated figure can never be read as $0.00. A
+row IS written in that case, which deliberately differs from the selection table (030) where an
+unobserved facet writes no row at all: there the whole read was absent, whereas here the bill was
+observed and only its amount was silent — the same distinction `commitments` already draws.
+
+**Bounds.** This decides nothing about money and changes no figure. It never treats the reserve-level
+`totalReservedAmount` as a dividend (D-015), it does not derive one quantity from another, and a
+simulated row must be marked `data_mode='simulated'` so it can never be mistaken for an observation of
+real money. It exists so that OS-058's still-open question — *which bill is credited with holding the
+reserve, and by what rule* — is answered from a series of dated observations rather than from argument.
+
+**Also fixed in passing, because it is the same defect class:** `sync_providers` (the plural entry point,
+and the only path that writes commitments) builds a local wrapper adapter carrying none of the readback
+methods `sync_provider` looks for, so an ingest through it left the spend-pocket selection **unobserved**
+— OS-113's mechanism silently inert on one of its two entry points. Both observation hooks now run there
+with the real adapter.

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from .ai.classifier import classify_with_ai_fallback
+from .bill_allocation import BillAllocationStore
 from .classify import AssignmentRule, ClassificationInput, classify_deterministic
 from .commitments import (
     CommitmentRepository,
@@ -29,6 +30,60 @@ class SyncReport:
     accounts_synced: int
     transactions_synced: int
     errors: int
+
+
+def _record_bill_allocations(adapter, repository, snapshot) -> int:
+    """Record each observed bill's share of the reserve, as THIS capture saw it (OS-114).
+
+    The money ``sync_providers`` writes into ``commitments.funded_amount`` is the same number, but that
+    column is overwritten on every sync, so this is the only place the value survives as history. Runs
+    for every provider whose candidates carry a per-bill reserved amount; a provider that never states
+    one records silence rather than zero.
+
+    Returns the number of rows written, for the sync report and for tests. Failures are swallowed for
+    the same reason as the spend-selection hook: provenance must never cost the owner a reconciled run.
+    """
+    try:
+        captured_at = _capture_time(adapter)
+        store = BillAllocationStore(repository.db_path)
+        written = 0
+        for candidate in getattr(snapshot, "commitment_candidates", ()) or ():
+            recorded = store.record(
+                provider=adapter.provider_name,
+                connection_external_id=adapter.connection_external_id,
+                bill_external_id=candidate.external_id,
+                bill_name=candidate.name,
+                observed_at=captured_at,
+                # `funded_amount` is Crew's per-bill `reservedAmount` (C01). None means the read was
+                # silent about this bill, which is stored as silence, never as 0.0.
+                reserved_amount=candidate.funded_amount,
+                estimated_next_funding_amount=candidate.estimated_next_funding_amount,
+                reserved_by=candidate.reserved_by,
+                bill_reserve_id=candidate.bill_reserve_id or None,
+            )
+            if recorded is not None:
+                written += 1
+        return written
+    except Exception:  # noqa: BLE001 - provenance must never fail a sync
+        return 0
+
+
+def _capture_time(adapter) -> str:
+    """This capture's own timestamp, or the moment of this attempt when it carries none.
+
+    One capture is one observation, and the capture's timestamp is what identifies it: using it as the
+    observation key is what makes re-ingesting the same capture add nothing, instead of manufacturing a
+    second history entry for the same moment.
+    """
+    reader = getattr(adapter, "readback_capture_time", None)
+    if callable(reader):
+        try:
+            captured_at = reader()
+        except Exception:  # noqa: BLE001 - a broken timestamp must not stop the ingest
+            captured_at = None
+        if captured_at:
+            return str(captured_at)
+    return _now_iso()
 
 
 def _record_spend_selection(adapter, repository, snapshot) -> None:
@@ -68,10 +123,7 @@ def _record_spend_selection(adapter, repository, snapshot) -> None:
         except TypeError:
             # An adapter whose signature predates the flag: still an observation, just narrower.
             observed = reader()
-        captured_at = None
-        capture_time = getattr(adapter, "readback_capture_time", None)
-        if callable(capture_time):
-            captured_at = capture_time()
+        captured_at = _capture_time(adapter)
         store = SpendSelectionStore(repository.db_path)
         store.record(
             provider=adapter.provider_name,
@@ -79,10 +131,9 @@ def _record_spend_selection(adapter, repository, snapshot) -> None:
             # The CAPTURE identifies the observation, so re-syncing one capture cannot manufacture a
             # second selection; a capture that carries no timestamp falls back to this run's own
             # identity, which is still unique per attempt.
-            snapshot_id=(f"{adapter.provider_name}:{captured_at}" if captured_at
-                         else f"{adapter.provider_name}:sync-run:{getattr(snapshot, 'snapshot_id', '') or id(snapshot)}"),
+            snapshot_id=f"{adapter.provider_name}:{captured_at}",
             observed=observed,
-            observed_at=captured_at or _now_iso(),
+            observed_at=captured_at,
             freshness="fresh" if getattr(snapshot, "is_complete", False) else "partial",
             assumptions=(
                 "read from the cards facet; the parent user's own config, children excluded",
@@ -260,6 +311,12 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
         reports.append(report)
         if report.status == "failed":
             continue
+        # Both observation hooks run HERE, with the REAL adapter, because this path holds the candidate
+        # objects while its local wrapper carries none of the readback methods `sync_provider` looks
+        # for. Recording the selection here too closes a gap the singular path could not see: an ingest
+        # through `sync_providers` used to leave the spend pocket unobserved entirely.
+        _record_spend_selection(adapter, repository, snapshot)
+        _record_bill_allocations(adapter, repository, snapshot)
         for candidate in snapshot.commitment_candidates:
             existing = commitment_repository.get_commitment_by_legacy(
                 adapter.provider_name, candidate.external_id

@@ -42,6 +42,11 @@ _LATER_MIGRATIONS = [
     # tests/meridian/test_spend_selection_store.py; here it only has to apply in order, exactly once,
     # and stay append-only like every row above it.
     "030_crew_spend_selection.sql",
+    # 031 keeps DATED observations of each bill's share of the reserve (OS-114): the per-bill
+    # `reservedAmount` is the ONE bucket's internal allocation, and the column that holds it today is
+    # overwritten every sync, so history has nowhere else to live. Behaviour is covered by
+    # tests/meridian/test_bill_allocation_store.py and test_bill_allocation_ingest.py.
+    "031_crew_bill_allocation_observations.sql",
 ]
 
 
@@ -163,6 +168,7 @@ def test_migrations_are_idempotent_and_preserve_legacy_rows(tmp_path):
         ("028", "028_allow_negative_bill_reserve.sql"),
         ("029", "029_crew_pocket_goals.sql"),
         ("030", "030_crew_spend_selection.sql"),
+        ("031", "031_crew_bill_allocation_observations.sql"),
     ]
     assert legacy_row == ("2026-08-26", 1234.56)
     assert {

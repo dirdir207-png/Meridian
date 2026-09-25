@@ -1,5 +1,40 @@
 # Enhanced SimpleCrew — Current Status
 
+## 2026-09-25: the reserve's internal bill allocation is now kept as dated history (OS-114 item 2)
+
+The owner's correction was the premise and the arithmetic confirmed it: the reserve is **one bucket**, and
+in his 2026-09-04 capture the five per-bill `reservedAmount` values sum to that bucket's own
+`totalReservedAmount` **exactly** (71098 = 71098 cents, difference 0) with only one distinct bucket total
+in the read. So the per-bill figure IS the bucket's internal allocation — and it is **lumpy, not
+proportional**: Rent held the entire $710.98 while the other four held $0.00.
+
+**Delivered:** migration **031** (`crew_bill_allocation_observations`, append-only, one row per bill per
+capture, keyed on `(provider, bill_external_id, observed_at)` so re-ingesting a capture adds nothing), the
+store in `meridian/bill_allocation.py` with the `parts_equal_whole` check that established the
+relationship, and the ingest hook in `sync_providers`, where the candidates already are. Reasoning: D-026.
+
+**No figure changed.** `commitments.funded_amount` keeps its meaning and behaviour; history is an
+addition, not a new source of truth. That column was never enough on its own — it is a single value
+overwritten every sync, so the same number that answers "how is the bucket allocated now" destroys "how
+did it get that way". Rent holding $710.98 (09-04), $1,097.10 (09-20) and $0.00 (09-25) could not
+distinguish a paid bill from a dropped value; now it can.
+
+**C01 is encoded in the schema, not remembered:** `reserved_amount` is NULL exactly when Crew stated
+none, with a flag recording the silence, so an unstated figure can never be read as $0.00. A row IS
+written in that case — deliberately unlike the selection table (030), where an unobserved facet writes no
+row at all, because here the bill was observed and only its amount was silent.
+
+**A gap closed in passing:** `sync_providers` wraps the adapter in a local class carrying none of the
+readback methods `sync_provider` looks for, so an ingest through that path left the spend-pocket
+selection **unobserved** — OS-113's mechanism was inert on one of its two entry points. Both hooks now
+run there with the real adapter, and a test asserts it.
+
+**Item 1's retrospective also landed** (`OS058_FUNDING_EVENT_MEASUREMENT.md`): Crew's `bills` array is a
+sort keyed on `(daysOverdue desc, reservedBy asc)`; "credit the overdue bill" is refuted by the 09-04
+state; and the funding-math doc's refutation of nearest-due-first is corrected — it compared a
+rolled-forward due date against the field Crew actually funds against. The surviving rule makes a fresh,
+falsifiable prediction for 10-02: the soonest `reservedBy` is now Eversource and Xfinity (both 09-30).
+
 ## 2026-09-25: "Meridian says 0, Crew says 16.69" — a STALE PROCESS, not a wrong rule
 
 Owner-reported: Safe to Spend read **0** in Meridian while Crew read **16.69**.
