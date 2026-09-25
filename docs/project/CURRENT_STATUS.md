@@ -16,6 +16,7 @@ rail fix from four rendered options. Full record with the sweep and the captures
 | day labels colliding | 7 visible pairs, 349.8px² (`ARC_END` 132) | **3 pairs, 28.1px²** (`ARC_END` 180) |
 | last day number | 132°, about 4:24 | **180° — the bottom of the dial** |
 | callout text over the ring | 19px inside the ring's ink | **3px clear** (rail 126px → 104px) |
+| label corners vs the rim | 3.5px inside the painted wheel | **5.9px** (`DAY_LABEL_CLEARANCE_UNITS` 6 → 10) |
 | the top of every page | flat `rgb(22,28,52)` over a textured `rgb(29,35,59)`: a 7.4-point step | **no surface, no rule** — 1.4–1.6 points, the texture's own grain |
 
 Three things worth keeping, because each was a measurement rather than a judgement:
@@ -35,9 +36,27 @@ Three things worth keeping, because each was a measurement rather than a judgeme
   rule names `.m-topbar` as the painter. The browser guard was restated from "the bar's colour equals
   the body's" — which that flat bar satisfied — to "the bar paints no surface and no rule".
 
-**Residual, stated rather than hidden:** 3 label pairs, 28.1px² total; the largest (20.9px²,
+**Residual, stated rather than hidden:** 3 label pairs, 35.4px² total; the largest (24.8px²,
 `28 MON` vs `29 TUE`) sits at the phone's left edge where the instrument is deliberately clipped off
 screen by the owner's own 2026-09-24 direction, and where his live frame hides those days anyway.
+
+**The inward clearance is at its limit for this form.** The labels are axis-aligned on a circular ring,
+so their furthest point is a box corner at the diagonals, and moving them inward shrinks the ring they
+sit on — the two pull against each other. Measured: clearance 6 → 3.5px margin and a 20.7px² worst
+pair; 10 (now) → 5.9px and 24.5px²; 12 → 7.0px and 26.3px², outside the guard; 18 → 10.6px and
+59.3px² total. If the weekday still touches the rim, the next step is a change of FORM — the weekday
+above the number on the lower half, so the stack opens toward the centre — not a bigger inset.
+
+**The 104px rail cost 1px of callout type, and a guard is what found it.** At 16px the word
+"arrangement" measures 106.1px in a 104px column, so it split;
+`test_long_event_list_does_not_push_dial_down_or_split_amounts` failed at 390/420/430. At 15px it
+measures 99.5px and holds one line, the rows are shorter, and the rail is still 3px clear. My earlier
+"no row re-wraps" check measured item HEIGHTS with short synthetic titles, so it could not have caught
+a split word — recorded because the guard, not the measurement, is what proved the real cost. All three
+alternatives were measured and each breaks a governed guard: shrinking the dial to clear the rail
+gives 7 pairs/136.9px² of label collision against a 60px² limit; shifting the dial breaks the owner's
+own seating guards (`bleed == 56`, `painted.left >= -48`); widening the rail back restores the
+overlap.
 
 Also landed in this slice and recorded in `MERIDIAN_DECISIONS.md` as **D-024**: the one-money-rule
 work described in the entry below.

@@ -1682,6 +1682,7 @@ is all the textured blue, no line delineating a divide at the top."*
 | where the last day number sits | 132deg, about 4:24 | **180deg — the bottom of the dial** | his words: *"plenty of room from where the 16th sits currently and the bottom of the dial"* |
 | callout text over the ring | **19px inside the ring's ink** | **3px clear** | the governing concept measures **16.2px clear** |
 | the top of every page | flat `rgb(22,28,52)` against a textured `rgb(29,35,59)` — a **7.4-point step** at the bar's edge | no surface, no rule — **1.4-1.6 points**, the texture's own grain | his instruction; the concept draws one continuous field |
+| the labels against the rim | worst corner **3.5px** inside the painted wheel (`DAY_LABEL_CLEARANCE_UNITS` 6) | **5.9px** inside (clearance 10) | his words: *"move slightly interiorly so that the week days don't clip into the edge of the dial on the bottom left"* |
 
 **ARC_END 132 -> 180 was measured, not chosen by eye.** Rendering the owner's own frame (today Sep 25,
 horizon Oct 16, every day numbered) at 420x912 DPR3 and counting pairs of *visible* labels whose boxes
@@ -1721,6 +1722,57 @@ different surface — to "the bar paints no surface and no rule", which is what 
 `28 MON` vs `29 TUE`) is at the phone's left edge, where the instrument is deliberately clipped off
 screen by the owner's own 2026-09-24 direction, and where his live frame hides those days anyway. The
 other two are 5.9 and 1.1px2 — corners grazing.
+
+### The fourth pass: inward clearance, and why 10 is where it stops
+
+The owner, seeing the widened arc live: *"This is perfect spacing, the numbers and days of the week
+just need to move slightly interiorly so that the week days don't clip into the edge of the dial on
+the bottom left, I understand there will be some clipping with the Thursday the 15th with the rotunda
+art (more than likely) I'll accept that if need be."*
+
+The labels are **axis-aligned while the ring is a circle**, so the furthest point of a label is a box
+corner at the diagonals rather than a flat edge at the top — and at the bottom of the dial the weekday
+row is the element nearest the rim, which is what clips. The margin is set by
+`DAY_LABEL_CLEARANCE_UNITS`, and moving the labels inward shrinks the ring they sit on, so the two
+constraints pull against each other. Measured at 420px (worst label pair, total, margin):
+
+| clearance | worst pair | total | margin inside the painted wheel (165.8px) |
+|---|---|---|---|
+| 6 (was) | 20.7px² | 27.7px² | **3.5px** |
+| **10 (now)** | **24.5px²** | **35.4px²** | **5.9px** |
+| 12 | 26.3px² | 39.6px² | 7.0px |
+| 18 | — | 59.3px² | 10.6px |
+
+Ten is the furthest in that keeps the worst pair inside the collision guard's tolerance, so it buys
+the margin without spending the spacing he called perfect. **If the weekday still touches the rim on
+his screen, the next honest step is a change of FORM rather than a bigger inset** — letting the
+weekday sit ABOVE the number on the lower half, so the stack always opens toward the centre, which
+keeps both the radius and the spacing. That is the owner's call, so it is recorded here rather than
+taken.
+
+### The 104px rail needed 15px type, and the guard is what proved it
+
+Narrowing the rail to 104px has a cost that the earlier measurement missed and a browser guard caught:
+at 16px the longest ordinary word in a callout title — "arrangement", in "Household payment
+arrangement" — measures **106.1px in a 104px column**, so `overflow-wrap: break-word` splits it.
+`test_long_event_list_does_not_push_dial_down_or_split_amounts` failed at 390/420/430 for exactly
+that, which is worth recording as a process point: my "no row re-wraps" check used short synthetic
+titles and measured item HEIGHTS, so it could not have caught a split word.
+
+At **15px** the same word measures **99.5px** and renders on one line, the rows are slightly shorter
+(130.9px vs 151.8px), and the rail is still 3px clear of the ring. That 1px of type is the price of
+the narrower column, and there was no other knob left — all three alternatives were measured and each
+breaks a governed guard:
+
+| alternative | measured result |
+|---|---|
+| shrink the dial to clear the rail (78vw, 76vw) | 7 pairs/136.9px² and 6/138.9px² of label collision against a 60px² limit — a smaller ring tightens the labels |
+| shift the instrument further left | breaks the owner's own seating guards (`bleed == 56`, `painted.left >= -48`) |
+| widen the rail back | restores the 19px overlap he reported |
+
+The source-level twin of that guard (`test_mobile_callout_column_fits_ordinary_words`) was retargeted
+with both measurements in its docstring, since a unit test has no font metrics and can only pin the
+pair the arithmetic depends on; the browser guard is the executable proof that the pair still fits.
 
 Captures: `artifacts/os111-implementation-2026-09-25/16-final-dial-{theme}.png` and
 `16-final-top-{theme}.png` (shipped, both themes), `options/15-arc-end-*.png` (the arc sweep, 132

@@ -190,8 +190,24 @@ const ALL_DAY_NUMBERS_MAX_DAYS = 31;
    wrap's MEASURED width, plus a clearance) — only the evenness differs.
    `DAY_LABEL_MAX_INSET_UNITS` is the largest such inset any governed dial needs (the biggest
    label at the smallest dial: a 31x38px box on a 240px wrap = 61 units of half-diagonal, plus
-   clearance), and it seeds the pre-measurement position so nothing is ever painted overhanging. */
-export const DAY_LABEL_CLEARANCE_UNITS = 6;
+   clearance), and it seeds the pre-measurement position so nothing is ever painted overhanging.
+
+   `DAY_LABEL_CLEARANCE_UNITS` is 10, not 6 (owner, 2026-09-25, after the arc widened: "the numbers
+   and days of the week just need to move slightly interiorly so that the week days don't clip into
+   the edge of the dial on the bottom left"). The label is AXIS-ALIGNED while the ring is a circle, so
+   its furthest corner is a box corner at the diagonals rather than a flat edge at the top, and at the
+   bottom of the dial the weekday row is the element nearest the rim. Measured at 420px: the painted
+   wheel is 165.8px from the centre and the worst label corner reached 162.3 -- a **3.5px margin**,
+   which is why the weekday text touched the edge. At 10 the margin is **5.9px**.
+
+   Ten and not more, because the two constraints pull against each other: moving the labels inward
+   shrinks the ring they sit on, so their spacing falls with it. Measured (worst label pair, total,
+   margin): 6 -> 20.7px2, 27.7px2, 3.5px; 10 -> 24.5px2, 35.4px2, 5.9px; 12 -> 26.3px2, 39.6px2,
+   7.0px; 18 -> 59.3px2 total, 10.6px. Ten is the furthest in that keeps the worst pair inside the
+   browser guard's own tolerance, and it buys the margin he asked for without spending the spacing he
+   called "perfect". Beyond it the honest alternative is a different form (the weekday flipping above
+   the number on the lower half so the stack opens toward the centre), not a bigger inset. */
+export const DAY_LABEL_CLEARANCE_UNITS = 10;
 export const DAY_LABEL_MAX_INSET_UNITS = 68;
 
 export function placeDayLabels(state, wrap) {

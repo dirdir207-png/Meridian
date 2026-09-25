@@ -1,0 +1,89 @@
+[
+  {
+    "labels": 18,
+    "worst": 162.3,
+    "worstText": "13Tue",
+    "wheelRadius": 165.8,
+    "marginPx": 3.5,
+    "centreHits": 0,
+    "collide": 3,
+    "collideArea": 27.7,
+    "hits": [
+      {
+        "a": "28Mon",
+        "b": "29Tue",
+        "area": 20.7
+      },
+      {
+        "a": "11Sun",
+        "b": "12Mon",
+        "area": 5.9
+      },
+      {
+        "a": "7Wed",
+        "b": "8Thu",
+        "area": 1
+      }
+    ],
+    "last": "16Fri",
+    "clearance": 6
+  },
+  {
+    "labels": 18,
+    "worst": 159.9,
+    "worstText": "13Tue",
+    "wheelRadius": 165.8,
+    "marginPx": 5.9,
+    "centreHits": 0,
+    "collide": 3,
+    "collideArea": 35.4,
+    "hits": [
+      {
+        "a": "28Mon",
+        "b": "29Tue",
+        "area": 24.5
+      },
+      {
+        "a": "11Sun",
+        "b": "12Mon",
+        "area": 8
+      },
+      {
+        "a": "7Wed",
+        "b": "8Thu",
+        "area": 2.9
+      }
+    ],
+    "last": "16Fri",
+    "clearance": 10
+  },
+  {
+    "labels": 18,
+    "worst": 158.8,
+    "worstText": "13Tue",
+    "wheelRadius": 165.8,
+    "marginPx": 7,
+    "centreHits": 0,
+    "collide": 3,
+    "collideArea": 39.6,
+    "hits": [
+      {
+        "a": "28Mon",
+        "b": "29Tue",
+        "area": 26.3
+      },
+      {
+        "a": "11Sun",
+        "b": "12Mon",
+        "area": 9.2
+      },
+      {
+        "a": "7Wed",
+        "b": "8Thu",
+        "area": 4.1
+      }
+    ],
+    "last": "16Fri",
+    "clearance": 12
+  }
+]

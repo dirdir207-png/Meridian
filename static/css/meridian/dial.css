@@ -1017,7 +1017,21 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
   .obs-event-list--orbit .obs-event-kind { width: 30px; height: 30px; min-width: 30px; grid-row: 1; }
   .obs-event-kind img { width: 17px; height: 17px; }
   .obs-event-list--orbit .obs-event-body { display: contents; }
-  .obs-event-list--orbit .obs-event-title { font-size: 16px; grid-column: 1 / -1; overflow-wrap: break-word; }
+  /* 15px, not 16px, TO PAY FOR THE RAIL'S OWN 104px (owner, 2026-09-25). He chose to narrow the
+     rail to clear the dial, and narrowing it has one cost that is measured rather than assumed: at
+     16px the longest ordinary word in a callout title ("arrangement", in "Household payment
+     arrangement") measures **106.1px against a 104px column**, so `overflow-wrap: break-word` splits
+     it -- which the guard `test_long_event_list_does_not_push_dial_down_or_split_amounts` catches at
+     390/420/430. At 15px the same word measures **99.5px** and renders on one line, with the rail
+     still 3px clear of the ring (rail ink 314, ring 311) and the rows slightly shorter
+     (130.9px vs 151.8px for the longest).
+     There is no other knob left, and this was checked before accepting a 1px type change: shrinking
+     the DIAL to clear the rail (78vw, 76vw) breaks the day-label collision guard -- 7 pairs/136.9px2
+     and 6/138.9px2 against a 60px2 limit -- because a smaller ring tightens the labels; shifting the
+     dial breaks the owner's own seating guards (`bleed == 56`, `painted.left >= -48`); and widening
+     the rail back restores the very overlap he reported. The rows paint no background, so the text's
+     own fit is the only thing at stake. */
+  .obs-event-list--orbit .obs-event-title { font-size: 15px; grid-column: 1 / -1; overflow-wrap: break-word; }
   .obs-event-list--orbit .obs-event-date { font-size: 11px; grid-column: 2; align-self: center; }
   .obs-event-list--orbit .obs-event-meta { font-size: 10px; grid-column: 1 / -1; }
   .obs-event-list--orbit .obs-event-amount { font-size: 17px; grid-column: 1 / -1; letter-spacing: -.03em; white-space: nowrap; }

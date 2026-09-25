@@ -598,16 +598,33 @@ def test_evidence_ticket_uses_the_supplied_shaped_asset():
 
 def test_mobile_callout_column_fits_ordinary_words():
     """Diagnosed callout defect at ≤700px: the title spans the whole rail column, so the
-    rail width *is* the title's measure. At 116px the column left 110px while the word
-    "arrangement" measures 112.7px at 17px serif, so `overflow-wrap: break-word` split an
-    ordinary word across two lines. The rail now leaves room at 16px instead."""
+    rail width *is* the title's measure.
+
+    RETARGETED 2026-09-25, on measurement, and the history is the reason to trust the new pair. At a
+    116px rail and 17px serif the word "arrangement" measured 112.7px in a 110px column, so
+    `overflow-wrap: break-word` split an ordinary word; the rail was widened and the type set to 16px.
+    The owner then narrowed the rail to **104px** (2026-09-25) to stop its text sitting on the dial,
+    and the same word measured **106.1px in that 104px column** — so it split again, which is what
+    `test_long_event_list_does_not_push_dial_down_or_split_amounts` caught at 390/420/430. At
+    **15px** the word measures **99.5px** and renders on one line, with the rail still 3px clear of
+    the ring (rail ink 314, ring 311).
+
+    Both figures are rendered measurements at 420px. This test pins the pair the arithmetic depends
+    on, and the browser guard above is the executable proof that the pair still fits — this one cannot
+    be, since a unit test has no font metrics to measure with.
+    """
     css = _read("static/css/meridian/dial.css")
     assert "grid-template-columns: minmax(0, 1fr) 130px" in css
     assert (
-        ".obs-event-list--orbit .obs-event-title { font-size: 16px; "
+        ".obs-event-list--orbit .obs-event-title { font-size: 15px; "
         "grid-column: 1 / -1; overflow-wrap: break-word; }" in css
-    )
+    ), "the mobile title's size is half of the measured fit; see the docstring"
     assert "minmax(0, 1fr) 116px" not in css
+    # The rail's own width, which is the other half of that fit.
+    assert "    width: 104px;" in css, (
+        "the mobile rail's width is the title's measure; 104px is what the 15px title was measured "
+        "against"
+    )
 
 
 def test_the_day_arc_starts_clear_of_the_dials_building_art():

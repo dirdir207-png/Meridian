@@ -1,0 +1,74 @@
+[
+  {
+    "title": "Household payment arrangement",
+    "wordRects": 2,
+    "titleWidth": 104,
+    "titleFont": "16px",
+    "wordWidth": 106.1,
+    "railWidth": 104,
+    "railInkLeft": 314,
+    "ringRight": 311,
+    "clearance": -3,
+    "itemHeights": [
+      151.8,
+      116.6,
+      116.6,
+      116.6
+    ],
+    "size": "16px"
+  },
+  {
+    "title": "Household payment arrangement",
+    "wordRects": 1,
+    "titleWidth": 104,
+    "titleFont": "15px",
+    "wordWidth": 99.5,
+    "railWidth": 104,
+    "railInkLeft": 314,
+    "ringRight": 311,
+    "clearance": -3,
+    "itemHeights": [
+      130.9,
+      114.4,
+      114.4,
+      114.4
+    ],
+    "size": "15px"
+  },
+  {
+    "title": "Household payment arrangement",
+    "wordRects": 1,
+    "titleWidth": 104,
+    "titleFont": "14px",
+    "wordWidth": 92.8,
+    "railWidth": 104,
+    "railInkLeft": 314,
+    "ringRight": 311,
+    "clearance": -3,
+    "itemHeights": [
+      127.6,
+      112.2,
+      112.2,
+      112.2
+    ],
+    "size": "14px"
+  },
+  {
+    "title": "Household payment arrangement",
+    "wordRects": 1,
+    "titleWidth": 104,
+    "titleFont": "13px",
+    "wordWidth": 86.2,
+    "railWidth": 104,
+    "railInkLeft": 314,
+    "ringRight": 311,
+    "clearance": -3,
+    "itemHeights": [
+      124.3,
+      110,
+      110,
+      110
+    ],
+    "size": "13px"
+  }
+]
