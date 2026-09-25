@@ -1,5 +1,17 @@
 # Enhanced SimpleCrew — Current Status
 
+## 2026-09-25: owner-authorized capacity experiment observed the complete current reserve cascade
+
+Five real internal top-ups, each followed by a complete settling read, filled the current Crew bills in
+this order: Verizon Payment Arrangement, Verizon, Xfinity, Eversource, then Rent. Every settled read
+matched `sum(bill.reservedAmount) == billReserve.totalReservedAmount`; a bill capped at its amount and
+the excess cascaded to the next bill. The final $480.77 reserve equals those per-bill observations. The
+order is consistent with overdue priority, then `reservedBy`, but Xfinity/Eversource's tie-breaker is
+now measured: a later-created $200 same-deadline probe displaced an earlier-created $300 probe, so lower
+bill amount wins that tie. Immediate post-write reads can be transiently inconsistent; use a fresh
+settling read.
+Evidence and bounds: `OS058_FUNDING_EVENT_MEASUREMENT.md`.
+
 ## 2026-09-25: the reserve's internal bill allocation is now kept as dated history (OS-114 item 2)
 
 The owner's correction was the premise and the arithmetic confirmed it: the reserve is **one bucket**, and

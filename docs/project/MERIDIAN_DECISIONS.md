@@ -668,3 +668,33 @@ and the only path that writes commitments) builds a local wrapper adapter carryi
 methods `sync_provider` looks for, so an ingest through it left the spend-pocket selection **unobserved**
 — OS-113's mechanism silently inert on one of its two entry points. Both observation hooks now run there
 with the real adapter.
+
+## D-027 — A negative funding account paired with a positive reserve is Crew's PREORDAINED negative, backfilled by income (owner, 2026-09-25)
+
+**Owner's words:** *"It still lets you top up to reserve regardless"* and *"It's like a preordained
+negative and backfill."*
+
+**The model, stated so it is not re-derived as a defect.** Crew permits the Bill Reserve to be topped up
+beyond the cash in its funding account. The owner's real data on 2026-09-25 shows the shape exactly:
+Checking `clearedBalance = -48077` cents verbatim, the reserve's `totalReservedAmount = 48077` cents, and
+pockets holding 11.39 — i.e. the reserve's figure and the funding account's negative are **mirrors of one
+another**, and the negative is *intended*, to be made up by the next income. The owner confirms he never
+held that 480.77: in this instance it was injected by an authorised experiment, while the
+negative-then-backfill **shape** is ordinary product behaviour.
+
+**What Meridian must therefore do, and must not do:**
+
+* **Report it, never clamp it.** D-024's "never clamped" is what makes Today read `-469.38` in this
+  state: 11.39 of real money, less 480.77 earmarked beyond it. That is a truthful statement of a
+  pre-committed position, so the figure is **not** a bug and must not acquire a floor.
+* **Never read the negative as an error, a failed write, or an overdraft to be corrected.** It is an
+  advance earmark awaiting backfill, so no repair path, retry, or "fix the balance" behaviour may key off
+  it.
+* **Never derive the reserve from the account balance, or the account balance from the reserve.** They
+  are two views of one movement; deriving one from the other double-counts it. This is the second time
+  this pair has bitten: the rule adds the reserve into the total AND subtracts it as a set-aside, which
+  is self-consistent only while the mirror is counted too.
+* **Keep artificial amounts out of the observation stores.** A reserve figure an experiment injected is
+  NOT an observation of the owner's money. When the injected 480.77 is unwound the shape may remain
+  ordinary, but the amount must never enter history as `data_mode='actual'` — which is why the ingest
+  fix below is committed but deliberately NOT deployed while that injected amount is live.

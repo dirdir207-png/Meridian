@@ -83,6 +83,77 @@ derived** to fill a gap in the series.
 
 ---
 
+## Owner-authorized manual-capacity experiment — 2026-09-25T21:06:07Z
+
+This is deliberately separate from the scheduled-event measurement above. The owner explicitly
+authorized real, internal Bill Reserve top-ups to settle the allocation order now; these are provider
+mutations, not a simulation or a passive observation. Each top-up had one submission, a complete,
+error-free before read, and a fresh complete settling read. No uncertain result was retried.
+
+Starting at a $0.00 reserve, five ordered top-ups ($1.00, $75.20, $101.57, $93.00, and $210.00) left a
+final reserve total of **$480.77**. The settled provider fields were:
+
+| allocation order | bill | bill amount | settled `reservedAmount` |
+|---:|---|---:|---:|
+| 1 | Verizon Payment Arrangement | $75.20 | $75.20 |
+| 2 | Verizon | $101.57 | $101.57 |
+| 3 | Xfinity | $93.00 | $93.00 |
+| 4 | Eversource | $210.00 | $210.00 |
+| 5 | Rent | $1,442.00 | $1.00 |
+
+The parts equal the whole exactly: 48077 cents of per-bill `reservedAmount` equals the 48077-cent
+`totalReservedAmount`. This establishes two observable behaviours for this exact state: Crew caps a
+bill at its stated amount, then cascades excess to the next bill; and the complete current order is the
+five rows above. The first two bills were 9 and 3 days overdue. The next two shared the earliest
+non-overdue `reservedBy` date, with Xfinity before Eversource; Rent followed. That is consistent with
+`daysOverdue DESC`, then `reservedBy ASC`, plus a deterministic tie-breaker, but the tie-breaker's
+implementation is not inferred from this experiment alone. The 2026-09-04 non-overdue Rent allocation
+also means overdue status is a priority when present, not a necessary condition for allocation.
+
+One operational observation is now mandatory for future measurements: the immediate post-write read can
+transiently show every bill non-zero while the reserve total is much smaller. Each subsequent complete
+read reconciled exactly. Treat the settling read, not the immediate read, as the observation.
+
+---
+
+## Owner-authorized same-deadline tie-break experiment — 2026-09-25T21:19:10Z
+
+The capacity cascade left Xfinity before Eversource when both reported `reservedBy=2026-09-30`, but one
+pair alone could have reflected creation order. The owner therefore authorized temporary same-date bills.
+A $2 bill created before a $5 bill was fully funded before Eversource, but that first pair was
+creation-order-confounded. The decisive reverse pair created a **$300** bill first and a **$200** bill
+second, both with the same 2026-09-30 anchor. Before the second creation the $300 bill held $211.00.
+After the second creation, the complete settling read reported the later-created $200 bill at **$200.00**
+and the earlier-created $300 bill at **$0.00**; the 48077-cent per-bill sum still equalled the 48077-cent
+reserve total.
+
+This establishes the observed current ordering as: higher `daysOverdue` first; then earlier
+`reservedBy`; then lower bill amount for an otherwise equal deadline. It does not establish Crew's source
+implementation or every possible further tie-breaker, but it refutes creation order as the amount-tie
+rule. The temporary `Allocation Probe*` bills are live Crew records and intentionally remain visible for
+the owner to revise or remove with the planned bill overhaul; no deletion was silently performed.
+
+---
+
+## Additional read-only checks — 2026-09-25T21:33Z
+
+The same complete Crew snapshot carried one biweekly funding plan (`WEEKLY`, interval 2) and eleven
+bills. Crew's reported `estimatedNextFundingAmount` matched the 14-day proration formula for **11/11**
+bills, including every temporary probe. This validates the per-event estimate path, not the reserve
+balance: estimates remain projections and are not added to `totalReservedAmount`.
+
+The parent physical debit card and four virtual cards all reported the same selected spend-subaccount
+identity. The spend-pocket selection therefore agrees across all five observed card surfaces in this
+read.
+
+Autopilot exposed two rules: `Sweep Excess Checking Funds` is active and unbroken, triggered by
+`ACCOUNT_BALANCE_UPDATED`, with the description "Removes funds over 1800 in the checking pocket";
+`Round Ups` is unpaused but marked broken. The Bill Reserve's funding subaccount was present. The
+snapshot did not expose an account-level balance in the pockets facet, so the reserve-level estimate
+versus account-total reconciliation remains unresolved and is not inferred here.
+
+---
+
 ## Retrospective, 2026-09-25 — what the held artifacts already settle (item 1 of the agreed order)
 
 Run before the 10-02 event, from artifacts already held: the 2026-09-04 capture (bills facet, which
@@ -136,3 +207,51 @@ whereas before this retrospective they could not be told apart at all.
   Rent-sized outflow — so the reserve going 1097.10 → 0 between 09-20 and 09-25 is *consistent with*
   Rent's occurrence being settled (its `reservedBy` rolled forward to 10-16), but the money movement is
   not visible in synced transactions. Whether the reserve paid it, or it was swept elsewhere, is open.
+
+---
+
+## Independent verification of the experiment records, and what is still open (2026-09-25, Meridian lane)
+
+The two experiment sections above landed in this repository from the parallel lane. Their claims were
+checked against the **live database**, not accepted from the write-up, and the results are recorded here
+so the record is verified rather than merely asserted.
+
+**Verified, claim by claim.** Every temporary bill exists with the stated amount and settled allocation:
+`Allocation Probe $200 Second` 200.00 funded / `$300 First` 0.00, `Small` 2.00, `Small Second` 1.00,
+`Large First` 3.00, `Large` 5.00. `crew_bill_reserves.total_reserved_amount` is 480.77 and the reported
+per-bill amounts sum to **480.77 exactly**, so parts still equal the whole. The real bills read Verizon
+101.57, VPA 75.20, Xfinity 93.00, Eversource 0.00, Rent 0.00.
+
+**A critique of mine, withdrawn on the evidence.** I first objected that the reversed pair could not
+distinguish "lower amount wins" from "fund whatever the available cash covers", since 480.77 − 280.77 =
+200.00 exactly. The record defeats that objection: the `$300` bill **held 211.00 before the second bill
+existed** and lost it to the later, lower `$200` bill. Funds were therefore not the binding constraint,
+and the tie-break conclusion stands on the reallocation, not on a funding opportunity. Creation order is
+refuted as the tie rule.
+
+**Still open, and NOT resolved by either experiment.** The rule "lower amount wins an otherwise equal
+deadline" **contradicts the 2026-09-04 capture**, where Rent (1442.00) and VPA (75.20) shared
+`reservedBy=2026-09-16` and the entire 710.98 sat on **Rent**, the larger. The likeliest reconciliation is
+that a single read is a *mid-cascade* state — VPA having already been settled and released — rather than a
+tie outcome at all. That is a hypothesis, not a finding, and the dated history built in OS-114 item 2 is
+what would settle it: a series shows whether a bill's share is *released* after it is paid.
+
+**Two facts that must travel with any figure from this window.**
+
+1. **The 480.77 is artificial and the owner does not hold it** (owner, verbatim: *"No, I do not have that
+   amount, it's artificial"*). It was injected by the authorised experiment, so today's Today figure
+   (−469.38) and any history rows written now reflect injected money, not the owner's position.
+2. **The shape is ordinary even though this instance is artificial** (owner, verbatim: *"It still lets you
+   top up to reserve regardless"*, *"It's like a preordained negative and backfill"*): a negative funding
+   account mirroring a positive reserve is designed behaviour awaiting the next income. Recorded as
+   **D-027** so it is never again diagnosed as a defect.
+
+**Operational consequence the owner should decide on before 2026-09-30.** Eversource carries a real
+210.00 obligation due 09-30 and currently holds **0.00**, having been displaced by probe bills that hold
+211.00 of the same bucket between them. Two paths, and the choice is his because both are provider
+mutations: unwind the experiment before the 09-30/10-02 window (remove the probe bills and the injected
+reserve) so OS-058 measures a clean reserve, or keep them and accept that the 10-02 measurement describes
+a polluted state in which part of the owner's real paycheck will backfill an injected amount.
+
+**Deployment held for the same reason:** the OS-114 ingest fix is committed but the live sync bridge has
+NOT been restarted, so no artificial allocation has entered the history as `data_mode='actual'`.
