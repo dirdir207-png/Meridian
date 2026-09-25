@@ -373,8 +373,12 @@ if it dies the preview stays down. `setsid` **does not exist on macOS** — a la
 silently apart from one line in a log. Start it with Python instead:
 `subprocess.Popen([...], start_new_session=True)`, which is macOS's own route to a detached session.
 
-**Still standing, and now the main open risk:** the `Allocation Probe*` bills keep
-`reservedBy = 2026-09-30`, the same deadline as Eversource's real 210.00 obligation, and under the ordering
-the experiment measured (equal deadline → lower amount first) the probes of 2.00, 3.00, 5.00 and 200.00 all
-outrank it. Giving them a later deadline, or pausing them, stops a test fixture from competing with a real
-bill.
+**The probe-deadline risk was raised to the owner and CLOSED BY HIM, not carried open** (2026-09-25,
+verbatim: *"Not concerning, I need to update all my bills anyway, which is why I ran the tests"*). The
+reason they remain on `reservedBy = 2026-09-30` alongside Eversource's real 210.00 — and why, under the
+ordering the experiment measured, their smaller amounts outrank it — is that they are deliberate FIXTURES
+for the coming bill overhaul, so they are expected to disappear with it. Recorded here so a later reader
+sees a considered decision rather than an unresolved warning, and so nobody re-raises it as a discovery.
+Meridian still treats them as what they are: OS-116 requires that a fixture never drives the production
+UI, and D-027 requires that no artificial amount enter the observation stores as real — which is why the
+history began only after the injected money was unwound.
