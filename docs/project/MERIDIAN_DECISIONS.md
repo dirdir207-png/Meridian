@@ -857,3 +857,33 @@ is the owner's decision, and it is `OS-119`.
 **Non-negotiables for whichever shape is chosen:** no expansion of authority, no auto-retry, and no route may
 acquire a write the pipeline cannot verify. If a route is migrated, it gains the pipeline's guarantees — it
 does not get a shortcut around them because it is "only the owner's own click".
+
+## D-032 — Friction is not impossibility: build the missing machinery, reproduce it agentically, corroborate with other tools, and LOOK at the work (owner, 2026-09-25)
+
+**Owner, verbatim:** *"I understand the arent completely fleshed out, thats your job to try to implement. Friction to
+implementation does not mean impossibility, I want creativity. If the machinery doesn't exist, build it. If something
+can't be done without an API, reproduce it agentically, there is almost always an answer. Do not rely on only your own
+measurements. inputs or outputs. If something can't be verified, try a different tool. If you are relying solely on data
+on a task where you can visually inspect things, actually look at the work."*
+
+This is the direct successor to D-030 and it corrects a habit of this lane, not only its option sets. Five rules:
+
+1. **A missing dependency is a work item, not a terminus.** When the audit found the evaluation harness does not exist,
+   the three council roles do not exist and the calendar has no scheduler, the honest output was *what is missing* —
+   and it stopped there. The next output must be the built thing, or the smallest real step toward it.
+2. **Reproduce it agentically.** Where a capability appears to need an API we do not hold, an agent can often perform
+   the same work: reading a facet, comparing it, drafting the result. The connector-exposed gaps (autopilot rules,
+   calendar observation, card inventory) are candidates for exactly this, not permanent blockers.
+3. **Corroborate.** Do not rest a conclusion on one lane's measurements, inputs or outputs. Cross-check a database
+   reading against the rendered screen, a code claim against a test, an audit against the code it cites.
+4. **Change the tool when verification fails.** A browser test that skips without `APP_URL` is not a proof of anything;
+   run it against a synthetic instance, or drive the browser directly, or use a different instrument entirely.
+5. **LOOK at the work.** Where the subject is visual or user-facing, reading rows is not inspection. Take a capture,
+   open it, and judge what a person would actually see.
+
+**Boundaries unchanged, and they matter more under this rule, not less.** Building machinery never widens authority: the
+constrained executor still gates every financial mutation, proposal → approval → execution → verification still holds,
+uncertain writes stay unknown until readback, nothing auto-retries, and design authority remains the owner's and Astra's
+— so a new surface is built to be shown and judged, never to be declared final by the lane that built it. Where a step
+genuinely needs the owner's facts or a design decision, the rule is to build everything up to that line and say
+precisely where the line is.
