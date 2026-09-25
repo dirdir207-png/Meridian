@@ -50,7 +50,8 @@
       "why": "A $9.99 marketing email is linked to charges 55/59/84, and one charge has the same receipt linked three times. Harmless while nothing reads them; misleading the moment a surface displays transaction links.",
       "arose": "2026-09-21",
       "parked_in": "MERIDIAN_ROADMAP.md §12 Addendum (checkpoint: whenever a surface first displays transaction links)",
-      "decision_owed": true
+      "decision_owed": false,
+      "resolved": "Owner 2026-09-25: leave them until a surface displays transaction links."
     },
     {
       "summary": "The daily calendar TRIGGER is chosen but not wired — the last open piece of OS-067",
@@ -163,15 +164,17 @@
       "summary": "Plan's write forms resolve Crew's opaque ids by parsing a snapshot FILE outside the repository.",
       "why": "`meridian/services/plan.py::_crew_ids()` reads `_CREW_SNAPSHOT_PATH` or `~/Library/Application Support/SimpleCrew/live_crew_snapshot.txt`. By the repo's own rule 6 that is a private harness -- if only one machine can run it, it is not evidence -- and OS-113 has just proved the better home exists: the spend-pocket selection now arrives through the database with provenance, so the same move can retire this file dependency for the pocket id first, then for the account/checking ids. Touches `plan.py`, the payload the write forms read, and the browser tests that pin `free_to_spend_subaccount_id`.",
       "arose": "2026-09-25",
-      "decision_owed": true,
-      "parked_in": "Track C — Capability spine"
+      "decision_owed": false,
+      "parked_in": "Track C — Capability spine",
+      "resolved": "Owner 2026-09-25: move id resolution into the database. Now OS-117."
     },
     {
       "summary": "The ChatGPT-side tree runs its own application and database lineage alongside ours.",
       "why": "`Simplecrew Branch/data/savings_data.db` is schema 017 with 257 transactions and its own `live_snapshot_loop.sh` / `sync_live_snapshot.py`, while the live preview is schema 030 with 260. Verified 2026-09-25 that theirs is a strict SUBSET of ours on every provider-keyed table (0 theirs-only keys), so nothing is lost by it existing -- but two lineages will drift, and only one of them can be authoritative for money. Either declare theirs a read-only scratch mirror in writing, or retire it.",
       "arose": "2026-09-25",
-      "decision_owed": true,
-      "parked_in": "0. Consolidation — one tree, one branch"
+      "decision_owed": false,
+      "parked_in": "0. Consolidation — one tree, one branch",
+      "resolved": "Owner 2026-09-25: read-only scratch mirror, BUT referenceable and searchable. Verification refined it further: it is a DIFFERENT REPOSITORY (openrouter = Open-Router-Meridian-Attempt) whose main checkout sits on ox-alpha/meridian-overhaul with a worktree on a branch NAMED feat/meridian-implementation, and our HEAD is absent from its object store. HAZARD: the same branch name exists in two unrelated repositories, so any instruction of that shape must name the repository."
     },
     {
       "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",

@@ -734,3 +734,60 @@ The owner chose the harness-side schedule.
 * **Read-only context stays read-only.** Nothing here matches an event to money: the calendar table has no
   amount, commitment, charge or transaction column at all, so linking cannot begin without a deliberate
   migration, and the module exposes no linking API.
+
+## D-029 — The second batch of owner decisions, 2026-09-25, with the two verifications he demanded
+
+Recorded together because they were answered together, and because two of his answers carried an
+instruction to VERIFY FIRST rather than believe a record — which turned out to be the right instinct.
+
+| decision | disposition |
+|---|---|
+| Next slice | **`OS-076`, the Investigator's user-facing surface.** His earlier choice, Track I.2, was already delivered as `OS-073`; my claim that I.2 had no ledger id was wrong and is corrected in the roadmap. |
+| 18 legacy evidence links | **Leave them** until a surface displays transaction links. Absence is recorded, never deleted (C01), so this stays reversible. |
+| Investigator's form | **He asked what is needed to expand the premise and implement the actual vision** — answered below as three prerequisites plus the work that proceeds without them. |
+| Date/recurrence semantics | **Bring the two cases with numbers, then decide.** Owed. |
+| A bill that cannot be funded | **Let Meridian propose an adjustment** — that is `OS-063`, now owner-authorised, and its authority is proposal only. |
+| Payday vs funding | **One cadence read from Crew's funding plan, with a BIDIRECTIONAL setup** — and "the machinery of which we have … verify first". Verified: it exists. |
+| Callout titles | **Keep 15px.** |
+| Plan's write forms | **Move Crew id resolution into the database**, off the external snapshot file. Now `OS-117`. |
+| The ChatGPT-side tree | **Read-only scratch mirror — but referenceable and searchable**, because it holds material we lack. Refined by verification: see the hazard below. |
+| Retention policy | **Bring a short proposal with sizes first.** Owed. |
+| Consolidation (§0 destructive half) | **Not now.** |
+| `OS-114` remainder | Family and card inventory are **low priority**; Autopilot "I thought this was already built, verify first". Verified: the capability is built, the persistence is not. |
+
+### Verification 1 — the Crew write path is genuinely bidirectional (he was right)
+
+`meridian/crew_write_actions.py` already carries `create_crew_paycheck_funding_plan`,
+`update_crew_paycheck_funding_plan`, `update_crew_bill` and `update_crew_bill_reserve_settings`, each with a
+readback verifier (`_verify_crew_funding_plan` distinguishes `expect_absent` from `expect_created`, so a
+plan that is missing reads as absent rather than as success). `meridian/providers/crewwork.py` exposes
+`readback_autopilot_rules` — which returns **None when unobserved** rather than an empty list — and
+`meridian/crew_commands.py` wires `create_autopilot_rule`, `edit_autopilot_rule` and `delete_autopilot_rule`.
+So reading, proposing, executing and verifying all exist. **What does NOT exist: persistence.** No migration
+mentions autopilot, so rules can be read on demand and written, but nothing is stored and there is no dated
+history of them — the same gap the reserve's per-bill allocation had before migration 031. `OS-059` is
+therefore not "build the integration"; it is "give an existing capability a place to be observed".
+
+### Verification 2 — the two "lineages" are two DIFFERENT REPOSITORIES, and one hazard follows
+
+Not a fork of our tree and not a worktree of it either, which is what our records implied. The facts:
+
+* **Ours** — `origin = https://github.com/dirdir207-png/Meridian.git`, branch `feat/meridian-implementation`.
+* **Theirs** — `openrouter = https://github.com/dirdir207-png/Open-Router-Meridian-Attempt.git`, main checkout
+  on branch `ox-alpha/meridian-overhaul`, with a worktree at `.worktrees/meridian` on a branch **named**
+  `feat/meridian-implementation`.
+* **Our HEAD does not exist in their object store**, so the histories have diverged; their
+  `meridian/services/` also lacks `reserves.py`, `safe_to_spend.py`, `spend_pocket.py` and `dial.py`, which is
+  consistent with an older base of related work rather than a copy of ours.
+
+**The hazard, recorded because it is exactly the class of confusion that has cost this project sessions:
+two different repositories carry a branch with the SAME NAME.** "Pull the latest on
+`feat/meridian-implementation`" is therefore ambiguous, and a cherry-pick, a force-push, or a worktree
+command run against the wrong one would look correct while acting on unrelated history. Any instruction of
+that shape must name the repository.
+
+What he remembers of their materials is real, and it is **not live payday data**: their tree holds
+`artifacts/design-audit-2026-09-01/payday-context/` (explicitly *"deterministic synthetic preview data"*),
+`tests/meridian/services/test_payday.py` and `tests/browser/test_payday_settings.py`. So it is UI evidence
+and pinned test expectations about payday — referenceable and searchable, exactly as he said, while our own
+`meridian/services/payday.py` does exist.
