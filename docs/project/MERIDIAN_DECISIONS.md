@@ -454,3 +454,94 @@ Implemented in OS-089 against `docs/project/PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2
    * **Goal money is pocket money.** A goal in Crew is a target on a pocket (`createSubaccount` carries `goal` and `targetAmount`; `meridian/crew_commands.py:32,167-175`), so the Goals station's figure is the balance held in pockets that carry a goal. Those balances are part of `cash_total`, so the partition must be re-derived rather than appended to, or the map would double-count pocket cash.
    * **The read path does not carry the goal value yet.** `meridian/providers/crew.py:12-20` requests `subaccounts { id displayName name overallBalance isPrimary }` and no `goal`, and `meridian/services/accounts.py` has no pocket accessor. The provider query and its normalisation are the first thing to extend.
    * **Do NOT extend `app.py:~1776`.** There is a second, legacy path that fetches subaccounts over its own direct HTTP call with its own credential helper, requests `goal`, and then only sums BALANCES of non-checking pockets into a variable called `total_goals` — so it neither uses the goal value nor is named for what it does. It is a pre-existing duplication, not a foundation: the new figure goes through the provider layer, and the legacy path is left exactly as found unless separately scheduled.
+
+## D-024 — ONE money rule: everything you have, less every pocket you set aside (owner, 2026-09-25)
+
+The owner's order: *"make Today and Plan publish one 'money you can spend' number instead of two."*
+The rule is his, stated before any code was written: *"the safe to spend figure is calculating by
+taking the total amount of funds in the account and reducing it by all obligations where funds have
+been tucked away ... Available balance, or total balance, less bill reserve (a collective
+expense/bill bucket) less goals/other not immediately spendable buckets"*, and on the goals term:
+*"should be money sitting in pocket."*
+
+**The rule, in one place — `meridian/services/safe_to_spend.py`.**
+
+```
+total     = Σ money accounts (cash, checking, savings, pocket) + reserve   [reserve SIGNED]
+set aside = every active pocket EXCEPT the spend pocket, positive balances only
+amount    = total − Σ set aside − max(0, reserve)                          [NEVER clamped]
+```
+
+**Why the reserve is entered SIGNED, and why that is not a detail.** Crew holds the reserve at
+ACCOUNT level, outside every pocket — D-015's own arithmetic on the live read: reserve `1097.10` +
+`345.28` across the four subaccounts = `1442.38`, "the owner's live total to the cent". A pool built
+from account rows alone therefore omits it entirely, and subtracting it as well would double-count it.
+Entering it signed means an overdrawn reserve (`-324.90`) lowers the total by exactly the amount the
+old deficit term removed: **the owner's `424.90` against a `-324.90` reserve is `100.00` from one term
+instead of two.** A reserve that HOLDS money nets to zero inside the total and is reported as its own
+named line — the owner's worked example (total `1000`, bill reserve `100`, emergency fund `100` →
+`800`, not `900`).
+
+**The premise this replaced was false, and it was falsified by artifacts rather than by argument.**
+The pending ledger entry asserted that "Plan already implements the owner's rule", and on that basis
+Today was to adopt `plan.py`'s arithmetic. Three measured facts say otherwise:
+
+- `plan.py:448-455` built its base from `cash`/`checking`/`savings` **only**, while
+  `meridian/providers/crewwork.py:540` types every non-primary Crew pocket as `"pocket"`. The sets are
+  disjoint, so the station subtracted goal-pocket money from a base that never contained it — while the
+  comment above it claimed the opposite ("their current balances are already inside cash_total"). The
+  repo's own fixture proves the base: `tests/meridian/services/test_plan.py:236-255` could only sum to
+  `1500.00` because the `250.00` pocket sat OUTSIDE the base it was subtracted from.
+- Plan's bill term was `committed + unfunded` with `committed = Σ min(funded, target)`, which cancels
+  exactly, i.e. the term was arithmetically `Σ target`: **every bill's full amount, funded or not.**
+- Plan could not see the overdraft at all. A negative reserve exists only in
+  `crew_bill_reserves.total_reserved_amount` (what migration `028` permits); `commitments.funded_amount`
+  is still `CHECK >= 0` and nothing copies one into the other.
+
+Adopting it would have moved the owner's headline to `0.00` while the pocket he spends from held
+`15.45` — the unification would have been an adoption of a defect. **The recommendation was withdrawn
+before any file was touched, and the correction is what this decision records.**
+
+**Superseded explicitly. Each is superseded as rule; the original text is left in place, unedited,
+because the history of a rule is part of the record.**
+
+- **D-019 rule 1 ("only NEGATIVE reserves count") — SUPERSEDED as mechanism.** It was a workaround for
+  a base that did not contain the reserve. The reserve is now inside the total, signed, so both signs
+  are handled by one term and neither can be double-counted. Its *purpose* is met more strictly: a
+  negative reserve reduces the figure, a positive one does not inflate it.
+- **D-019 rule 2 ("nothing is clamped") — REAFFIRMED, and now enforced in both workspaces.**
+  `plan.py`'s `max(_ZERO, ...)` is removed and `plan.js` no longer floors the figure in prose. Under
+  this rule the only way to go negative is a genuinely negative total, i.e. a real overdraft.
+- **D-023 point 8's "`unfunded` must keep subtracting from `available`" — SUPERSEDED.** Money the owner
+  has not yet set aside is not subtracted from what is free to spend; the obligation figures stay where
+  that decision already said nothing is lost by removing the station (summary `unfunded`,
+  `coverage_ratio`, `first_shortfall`, the per-bill views, the callouts and the ticket).
+- **D-023 point 8's partition — SUPERSEDED by the same partition, corrected.** The three stations no
+  longer partition a base that excluded pockets: `cash_total` is now the account's total, and the
+  stations are **Bills** (the reserve), **Goals** (every other set-aside pocket) and **Available** (the
+  shared figure). They sum to the published base by construction, which the agreement test asserts.
+
+**What did NOT change, stated so it is not read as scope.** `unfunded`, `coverage_ratio`,
+`first_shortfall`, the timeline and its shortfall projection, the funding model's own cash events, the
+per-bill `funded`/`target` views and every action path are untouched. No migration, no route, no
+provider write, no deployment, no authority change: this is read-only arithmetic on observed values.
+
+**Two consequences that must not be discovered later.**
+
+- **The spend-pocket question is now MORE load-bearing on Today, not less.** Pocket accounting has to
+  exempt the pocket the owner spends from, so OS-113 (identify it by Crew's own
+  `selectedSpendSubaccount`) and OS-112 (the owner's selection surface) remain prerequisites. When it
+  cannot be identified, NO pocket is treated as spendable and every one is named as set aside —
+  visible, conservative, and never the direction that presents earmarked money as free. A rename is
+  also no longer a silent basis change: the same rule runs, and the affected pocket simply appears as
+  a line.
+- **The label vocabulary moved with the rule.** The base line is `Total balance` — it names the BASIS,
+  not a pocket — and every subtraction carries its pocket's own Crew name (the owner's OS-079 wording,
+  which instructed exactly this). OS-079's separate `Cash accounts` label existed because that branch
+  had a different basis; under one rule the basis is the same quantity, so the lines carry which
+  pockets were set aside and the label no longer implies a basis change that does not happen.
+
+**Verified.** Whole `tests/` tree green, lint clean, and `tests/meridian/test_safe_to_spend_agreement.py`
+builds BOTH payloads from one seeded database and asserts they state the same figure, so the two
+workspaces cannot drift apart again. Rendered at 420x912 DPR 3 in both themes: the owner's example
+`800.00`, his D-019 case `100.00`, an overdrawn pocket `-83.14`, the map `-120.00` with no breakage.
