@@ -916,3 +916,35 @@ it — cross-reference the roadmap and the ledger FIRST, and then:
 | the 22-concept spine and its wiring | roadmap §0.4 named *"the 22-concept mapping"* as an active authority while no document was reachable | that row now points at a real document; the mapping is **delivered** |
 | the capability matrix | the substrate/inventory work behind `OS-059` and `OS-115` | recorded as their evidence, not as a new artifact to maintain separately |
 | the concept-coverage corrections | `CONCEPT_COVERAGE.md`, test-enforced | rows corrected in place; **no new authority created** |
+
+## D-034 — Before building any Crew capability, mine the retired trees and the connector: most of it is already recorded (owner, 2026-09-25)
+
+**Owner, verbatim:** *"ANY shape/mutation/capability that crew has, cross reference our own code and all other
+older retired trees locally and on github to make sure the information isnt already recorded. Most of it is, its
+just a matter of retrieving it and then building the machinery if it doesnt exist."*
+
+This extends D-033 from "mark what you built" to "**retrieve before you build**". The rule: for any Crew
+shape, mutation or capability, search, in this order — this repository; the retired branches already fetched into
+it; the sibling trees (`Documents/ChatGPT/Simplecrew Branch` and its worktrees); and the connector application at
+`/Users/stephenwest/Applications/CrewWorkAssistantOTP`, which is where the provider's real surface is recorded.
+Then build only the machinery that is genuinely absent.
+
+**First pass, executed the same hour, with its instrument stated.**
+
+| source | what it holds | result |
+|---|---|---|
+| `CrewWorkAssistantOTP/operations/` | **15 recorded Crew operations** (`accounts`, `autopilot`, `autopilot_rule_detail`, `card_detail`, `expenses`, `family`, `family_subaccounts`, `physical_cards`, `pocket_transactions`, `pockets`, `profile`, `subaccounts`, `transaction_detail`, `transactions`, `virtual_cards`) | **all 15 appear in our code** — by filename-stem grep across `meridian/` and `app.py`, which is indicative rather than proof |
+| `CrewWorkAssistantOTP/SIMPLECREW_PARITY.md` | a prior capability-parity plan with an explicit safety boundary per row | independently records the design our pipeline implements: transfers as *"fresh-balance preview plus separately gated internal-pocket executor … exact approval, fresh preflight, one submission, Crew postflight; no third-party transfer"*, and Safe-to-Spend as *"never infer silently when unavailable"* — the same rule as C01 |
+| `origin/main` | **38 source files** mention autopilot/calendar/family/evaluation, against 1 file each on `main`, `origin/docs/enhanced-simplecrew-project-control`, `origin/fix/review-blockers` and `origin/scratch-a` | a richer retired tree that has not been mined; `OS-122` |
+| the sibling tree | its `meridian/` is an older base (no `reserves.py`, `safe_to_spend.py`, `spend_pocket.py`, `dial.py`) | not a source of newer capability; useful only for its payday evidence and tests |
+
+**The conclusion, which is the useful part: the gap is not Crew *shapes*.** Every shape the connector can perform
+is already reachable, and the parity record shows the safety design was thought through before this branch existed.
+What is missing is the **machinery that persists and uses them** — autopilot rules, family members, cards and
+transfer links are read on demand and stored nowhere (`CREW_CAPABILITY_MATRIX.md` §2) — plus the evaluation harness
+that would prove any of it useful. That is a building problem, not a discovery problem, and D-032 already says what
+to do about it.
+
+**Boundary, unchanged and repeated because this rule invites retrieval from outside the lane:** reading
+`CrewWorkAssistantOTP` and the sibling trees is inspection only. Nothing outside this repository is modified,
+copied in wholesale, or used for authority; the connector holds the provider's surface, not our governance.

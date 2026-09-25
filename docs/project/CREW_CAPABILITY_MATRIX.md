@@ -106,3 +106,27 @@ unused) · `financial_observations`.
 It is a record of what exists, taken by reading code. It is **not** a decision: whether Surface B is migrated
 onto the pipeline, fenced, or documented is the owner's call, and it is recorded as such in D-031. Nothing here
 was changed by the audit, and no route was disabled.
+
+## 6. Archaeology — what was already recorded (owner's rule, D-034)
+
+Executed 2026-09-25 with the instrument stated, because a figure without its instrument is an anecdote.
+
+- **Crew's own operation catalogue** (`CrewWorkAssistantOTP/operations/`, 15 files): `accounts`, `autopilot`,
+  `autopilot_rule_detail`, `card_detail`, `expenses`, `family`, `family_subaccounts`, `physical_cards`,
+  `pocket_transactions`, `pockets`, `profile`, `subaccounts`, `transaction_detail`, `transactions`,
+  `virtual_cards`. **All 15 appear in our code**, by filename-stem grep across `meridian/` and `app.py` — a
+  positive signal and not a proof; a stem can match a comment.
+- **A prior parity plan exists** (`SIMPLECREW_PARITY.md`) with a safety boundary per capability, and it records
+  the same two rules this project rediscovered independently: money transfers as a *separately gated* executor
+  with exact approval, fresh preflight, one submission and no third-party transfer; and Safe-to-Spend that
+  *"never infer[s] silently when unavailable"* — C01 in another document's words.
+- **A richer retired tree exists**: `origin/main` carries **38** source files mentioning
+  autopilot/calendar/family/evaluation, against **1** file on each of `main`,
+  `origin/docs/enhanced-simplecrew-project-control`, `origin/fix/review-blockers` and `origin/scratch-a`. It has
+  not been mined (`OS-122`).
+- **The sibling tree is older, not richer**: its `meridian/` lacks `reserves.py`, `safe_to_spend.py`,
+  `spend_pocket.py` and `dial.py`.
+
+**Conclusion: the gap is not Crew shapes.** Every shape the connector can perform is reachable, and the gating
+design was recorded before this branch existed. What is missing is the machinery that **persists and uses** them —
+and, above all, the evaluation harness that would prove any of it useful.
