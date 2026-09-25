@@ -290,3 +290,43 @@ once here:
 That is an owner decision, because both paths are provider mutations. Nothing else is outstanding from
 this lane's side: the ingest fix is committed and waiting, the evidence is verified and committed, and the
 retrospective, history, and simulation are delivered.
+
+---
+
+## PRE-UNWIND record — 2026-09-25, before the owner removes the injected top-ups
+
+The owner's plan: *"remove the manual top ups (by deleting and recreating income source, thats the only
+way)"*, then report back. Deleting and recreating the income source changes **its id** and, critically,
+**its anchor date** — and the anchor is what makes the next funding 2026-10-02. So the state is recorded
+FIRST, verbatim, so the unwind can be proved rather than assumed.
+
+| what | value before the unwind |
+|---|---|
+| reserve id | `QmlsbFJlc2VydmU6OGQyZjNlOGYtZDI0MS00MDY3LWI4OGUtMGQ1NDRlNzc4MDc5` |
+| `totalReservedAmount` | 48077 cents ($480.77) — the INJECTED amount, which the owner does not hold |
+| `nextFundingDate` | **2026-10-02** |
+| `estimatedNextFundingAmount` | 167148 cents ($1,671.48) — a projection, never added to the reserve |
+| income source id | `RnVuZGluZ1BsYW46ZmY2YjQyMDctNmVhZS00ODEwLTg1YzUtM2FlMTNkM2QxYmZk` |
+| income source | 1663.00, `biweekly`, **anchor 2026-09-04** → 09-18 → **10-02** |
+
+**What must be verified AFTER, and why each one matters:**
+
+1. **`nextFundingDate` is still 2026-10-02** (or the new date is recorded and OS-058's window moves with
+   it). A recreated income source that anchors on the day of recreation would push the next funding to
+   **2026-10-09** and silently move the measurement window out from under the pre-registered simulation.
+2. **The reserve reads 0.00 and every probe reads 0.00**, so the bucket holds no injected money and the
+   probe bills stop competing for it.
+3. **The new income-source id, cadence, amount and anchor are recorded.** A delete-and-recreate is a
+   DELIBERATE discontinuity: our records will show the old plan absent and a new one appearing. Writing
+   that down is what stops it later being read as a provider anomaly or a data loss.
+
+**Two facts to carry into the unwind, neither caused by it:**
+
+* Every `Allocation Probe*` bill carries `reservedBy 2026-09-30` — the SAME deadline as Eversource. Under
+  the behaviour the experiment measured (equal deadline → lower amount first), the probes of 2.00, 3.00,
+  5.00 and 200.00 all outrank a real 210.00 bill. Keeping them for the bill overhaul and giving them a
+  later deadline stops them competing with a real obligation.
+* Eversource's 210.00 falls due **2026-09-30**, while income lands **2026-10-02**, with roughly 11.39 on
+  hand. On Crew's own numbers that obligation has no funding source inside the reserve before it is due.
+  This is arithmetic stated for the owner, not advice — and it is the kind of thing Meridian exists to
+  surface rather than discover late.
