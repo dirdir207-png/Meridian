@@ -145,6 +145,12 @@ def _reaches_raw_mutation(func: ast.FunctionDef, functions: dict[str, ast.Functi
     called = _calls_in(func)
     if MUTATION_FLAG in called:
         return True
+    # The third mechanism, found by the ratchet's own blind spot rather than by design: a direct HTTP POST to
+    # the provider's GraphQL endpoint carrying live credentials (`get_crew_headers()` + `requests.post`). The
+    # three autopilot-rule routes use this and no `crew_client`, so a detector keyed only on `crew_client` reads
+    # them as governed. Two instruments, two blind spots -- the union is what is trustworthy.
+    if "get_crew_headers" in called and {"post", "execute"} & called:
+        return True
     for name in called & RAW_MUTATION_CALLS:
         return True
     for name in called & set(functions):
