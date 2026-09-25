@@ -5193,3 +5193,46 @@ Verified: 4 new tests (2 targeting the fix, 2 regression guards proving an expli
 clears and a new bill still starts at zero) plus the existing provider tests; reverting the fix
 turns the 2 target tests red. Full suite 902 passed, 56 skipped, same pre-existing
 playwright-unavailable failure; Ruff and `git diff --check` clean.
+
+## A renamed Crew pocket no longer changes what Safe to Spend MEANS — 2026-09-25
+
+The owner renamed Crew's `Free to Spend` pocket to `Safe to Spend` (*"I hated the slight
+discrepancy"*). **The app did not error, and nothing looked broken — that is the whole problem.**
+
+`today.py` identified the spend pocket by English name: `"free to spend" in name`. `Safe to Spend`
+satisfies that test in neither branch, so the lookup returned `None` and Today fell through to its
+`"Cash accounts"` branch — **a different base**, the sum of the cash/checking/savings accounts — and
+carried on. On a figure the owner acts on, that is the same class of silent basis-change D-019 was
+written about after the 424.90 / 100.00 defect.
+
+The rename had to be repeated in **five places**, and the duplication was already known: `dial.py`'s
+own docstring records that its copy and Today's *"had already drifted"*. Two more copies lived in
+`plan.py` (`free_to_spend_subaccount_id`, which the money-movement UI addresses pockets by) and in
+`accounts.js` (the bucket emblem, and the `liquid` filter that feeds the Accounts available total —
+so the renamed pocket also quietly left that total).
+
+**Fix: one definition.** New `meridian/services/spend_pocket.py` answers the single question *"is
+this the spend pocket?"*; both private copies of `_spend_source_account` are DELETED, and `plan.py`
+and `accounts.js` call the same rule. The accepted names are an explicit **list**, deliberately not
+a pattern: something loose enough to survive any rename (`"contains 'spend'"`) would also accept
+`"Spending money"` or `"Christmas spend"` and quietly count money the owner had set aside as free to
+spend — the dangerous direction. A test pins exactly that.
+
+The Accounts emblem needed care. Concept 04 draws a compass for the pocket it calls "Free to Spend",
+and a test forbids fuzzy resolution in that resolver (a prefix rule would relabel *"Emergency
+plumbing fund"* with the emergency fund's own emblem — decoration asserting something untrue about
+the owner's money). So the concept's three-name table is **untouched**, and the rename resolves
+through a separate map keyed by EXACT name, derived from the same list. **The pre-existing guard
+passes unmodified** — it was satisfied rather than edited, which is the point.
+
+Verified: 34 tests in the touched files; **proved to bite** by removing the new name, which turns 6
+of them red including the browser/Python list-parity guard. Full suite 2015 passed, 102 skipped,
+with the only remaining failure being `HANDOFF.md` needing its regenerate (the documented
+one-commit offset). Ruff clean over `app.py meridian/ scripts/ tests/`; `git diff --check` clean.
+
+**Not done, and recorded as OS-113 rather than guessed:** name matching is still the wrong
+mechanism. Crew carries the answer per user at `userSpendConfig.selectedSpendSubaccount.id`, already
+read live by `crewwork.py:347 readback_selected_spend_pocket()` (which refuses to guess) and by
+`app.py:2591`. Nothing persists it, and the repository's pattern for a provider fact is an
+observation table (019, 024) — so the durable fix is one migration, which is a one-way door and
+therefore needs the owner's explicit approval. `spend_pocket.py` is the seam it fills in behind.

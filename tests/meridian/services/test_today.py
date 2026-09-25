@@ -398,6 +398,55 @@ def test_today_safe_to_spend_matches_free_to_spend_pocket(repository):
     assert result["safe_to_spend"]["amount"] == 71.61
 
 
+def test_today_still_finds_the_pocket_after_the_owner_renames_it(repository):
+    """The owner renamed Crew's 'Free to Spend' pocket to 'Safe to Spend' on 2026-09-25.
+
+    Before this guard the figure did not error and did not change its LABEL to anything
+    alarming -- it silently switched basis to the 'Cash accounts' branch, i.e. the sum of the
+    cash/checking/savings accounts, and carried on. Two assertions, because either alone can
+    pass by luck: the AMOUNT must be the renamed pocket's cleared balance rather than the
+    checking fallback, and the breakdown's own first line must name the pocket rather than
+    'Cash accounts'. The second is what makes a future rename visible instead of silent.
+    """
+    run = repository.begin_sync_run(
+        provider="crew",
+        connection_external_id="crew-household",
+        connection_name="Crew",
+    )
+    # Primary holding Checking: a large balance but $0 available, and NOT the spend pocket.
+    repository.upsert_account(
+        provider="crew",
+        external_id="acct-checking",
+        name="Checking",
+        account_type="checking",
+        balance=500.0,
+        available_balance=0.0,
+        connection_id=run.connection_id,
+        source_updated_at="2026-09-06T08:00:00Z",
+    )
+    repository.upsert_account(
+        provider="crew",
+        external_id="acct-safe-to-spend",
+        name="Safe to Spend",
+        account_type="pocket",
+        balance=71.61,
+        available_balance=71.61,
+        connection_id=run.connection_id,
+        source_updated_at="2026-09-06T08:00:00Z",
+    )
+    repository.finish_sync_run(
+        run.id, status="complete", accounts_synced=2, transactions_synced=0, errors=0
+    )
+
+    result = build_today(repository, now=datetime.now(timezone.utc))
+
+    assert result["safe_to_spend"]["amount"] == 71.61, (
+        "the renamed pocket was not found, so Safe to Spend fell through to the Cash accounts "
+        "basis and silently reported a different number"
+    )
+    assert result["safe_to_spend"]["breakdown"]["lines"][0]["label"] == "Safe to Spend"
+
+
 def test_beacon_signal_notes_negative_safe_to_spend():
     from meridian.services.today import _build_beacon_signal
 

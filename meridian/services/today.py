@@ -12,6 +12,7 @@ from meridian.services.reserves import (
     reserve_deficit,
     spendable_after_reserve_deficit,
 )
+from meridian.services.spend_pocket import find_spend_pocket
 
 _STALE_AFTER = timedelta(hours=24)
 _CASH_ACCOUNT_TYPES = frozenset({"cash", "checking", "savings"})
@@ -119,23 +120,12 @@ def _currency_total(values: Sequence[tuple[str, float]]) -> dict[str, object]:
     return {"amount": None, "currency": None, "by_currency": ordered}
 
 
-def _spend_source_account(accounts):
-    """The discretionary spend source: Crew's 'Free to Spend' pocket.
-
-    Crew separates the primary holding 'Checking' pocket from the discretionary
-    'Free to Spend' pocket. Safe-to-spend should reflect the money actually
-    available to spend, which is that Free to Spend pocket's available
-    (cleared) balance. Falls back to the first active account named like a
-    spend/free pocket when the exact name is absent.
-    """
-    def _is_spend(account) -> bool:
-        name = (getattr(account, "name", "") or "").strip().casefold()
-        return "free to spend" in name or name == "free to spend"
-
-    for account in accounts:
-        if _is_spend(account):
-            return account
-    return None
+# The pocket-identity rule lives in ONE place now. This module and dial.py each carried a
+# private copy of it that had already drifted once (see dial.py's own docstring), and a third
+# lived in plan.py -- so the owner's 2026-09-25 rename of his Crew pocket had to be repeated in
+# five places, and Today silently fell through to a different base instead. See
+# meridian/services/spend_pocket.py, which is also the seam the durable fix (identify the pocket
+# by Crew's own selectedSpendSubaccount) will be filled in behind.
 
 
 def _unfunded_bill_total(commitment_repository):
@@ -455,7 +445,7 @@ def build_today(
     # free by exactly that deficit -- the owner saw 424.90 where the true figure was 100.00
     # (reserve -324.90). The deficit is subtracted and reported as an input. See D-019 and
     # meridian/services/reserves.py.
-    spend_source = _spend_source_account(accounts)
+    spend_source = find_spend_pocket(accounts)
     # "Committed" (known obligations) is independent of which account is the
     # spend source: it is the unfunded bill/commitment total Meridian is tracking
     # toward. Always surface it so the card is never dead.

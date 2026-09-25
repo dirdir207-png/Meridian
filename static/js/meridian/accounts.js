@@ -70,6 +70,13 @@ function roleTint(role) {
    Tints follow the concept too: the compass is lilac, the Wi-Fi mint, the star the concept's
    apricot. The connector node inherits the SAME tint, because the concept's cord takes its
    colour from the medallion it leaves. */
+/* The discretionary spend pocket. These names are the SAME set as
+   meridian/services/spend_pocket.py, and they are kept as an explicit list rather than a
+   pattern on purpose: /to spend/ would also match an earmarked bucket and quietly count it
+   as free cash. Kept in step because a pocket renamed in Crew must not change a figure in
+   any workspace -- the owner renamed his on 2026-09-25 and Today silently changed basis. */
+const SPEND_POCKET_NAMES = ["free to spend", "safe to spend"];
+
 const BUCKET_EMBLEMS = {
   "free to spend": "compass",
   "bill reserve": "wifi",
@@ -77,6 +84,15 @@ const BUCKET_EMBLEMS = {
 };
 
 const EMBLEM_TINTS = { compass: "lilac", wifi: "mint", star: "apricot" };
+
+/* The spend pocket's emblem, resolved by ROLE so the owner's 2026-09-25 rename cannot cost
+   the pocket its compass. Derived from SPEND_POCKET_NAMES rather than written twice, and
+   keyed by EXACT name like the concept table above -- a prefix rule here would relabel
+   "Emergency plumbing fund" with the emergency fund's own emblem, which is a decoration
+   asserting something untrue about the owner's money. */
+const BUCKET_EMBLEM_ALIASES = Object.fromEntries(
+  SPEND_POCKET_NAMES.map((name) => [name, "compass"]),
+);
 
 function normalizeAccountName(value) {
   return String(value || "")
@@ -87,7 +103,11 @@ function normalizeAccountName(value) {
 }
 
 export function bucketEmblem(name) {
-  return BUCKET_EMBLEMS[normalizeAccountName(name)] || null;
+  return (
+    BUCKET_EMBLEMS[normalizeAccountName(name)] ||
+    BUCKET_EMBLEM_ALIASES[normalizeAccountName(name)] ||
+    null
+  );
 }
 
 export function emblemTint(emblem) {
@@ -492,7 +512,7 @@ function summarize(groups) {
     if (a.account_type === "checking" || a.account_type === "cash" || a.account_type === "savings") {
       return true;
     }
-    return a.account_type === "pocket" && /free to spend/i.test(a.name || "");
+    return a.account_type === "pocket" && SPEND_POCKET_NAMES.includes(normalizeAccountName(a.name));
   });
   // Liabilities = accounts carrying a negative balance (debt/cards owe money).
   const liabilities = all.filter((a) => (Number(a.balance) || 0) < 0);

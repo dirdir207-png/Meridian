@@ -9,6 +9,7 @@ from meridian.beacon import forecast
 from meridian.cadence import next_occurrence
 from meridian.funding import project_funding
 from meridian.funding_repo import FundingRuleRepository
+from meridian.services.spend_pocket import is_spend_pocket_name
 
 _HORIZON_DAYS = 30
 
@@ -91,7 +92,7 @@ def _crew_ids() -> Optional[dict]:
                 sname = sub.get("displayName") or sub.get("name") or ""
                 if name == "checking" and (sname or "").strip().lower() == "checking":
                     result["checking_subaccount_id"] = sid
-                if (sname or "").strip().lower() in ("free to spend", "free to spend "):
+                if is_spend_pocket_name(sname):
                     result["free_to_spend_subaccount_id"] = sid
                 if sid and sid not in seen_sub:
                     seen_sub.add(sid)

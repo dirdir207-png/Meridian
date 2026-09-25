@@ -20,6 +20,7 @@ from meridian.services.reserves import (
     reserve_deficit,
     spendable_after_reserve_deficit,
 )
+from meridian.services.spend_pocket import find_spend_pocket
 from meridian.services.today import data_freshness
 
 # Currency exponents used to convert the dollar-valued normalized model to
@@ -74,18 +75,6 @@ def _next_occurrence(anchor: date, recurrence: str, as_of: date) -> date:
     return next_occurrence(anchor, recurrence, as_of)
 
 
-def _spend_source_account(accounts):
-    """Crew's discretionary 'Free to Spend' pocket, matching Today semantics."""
-    def _is_spend(account) -> bool:
-        name = (getattr(account, "name", "") or "").strip().casefold()
-        return "free to spend" in name or name == "free to spend"
-
-    for account in accounts:
-        if _is_spend(account):
-            return account
-    return None
-
-
 def _available_to_spend(graph):
     """Crew's discretionary 'Free to Spend' pocket, adjusted for a negative reserve.
 
@@ -97,7 +86,7 @@ def _available_to_spend(graph):
     arithmetic -- they had already drifted into two copies of ``_spend_source_account``.
     """
     accounts = graph.list_accounts()
-    spend = _spend_source_account(accounts)
+    spend = find_spend_pocket(accounts)
     try:
         deficit = reserve_deficit(graph.list_bill_reserves())
     except Exception:  # noqa: BLE001 - an unreadable reserve must not blank the dial

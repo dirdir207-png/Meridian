@@ -2708,6 +2708,73 @@
         "guard": "tests/browser/test_dial_fidelity.py::test_the_dial_readout_wraps_clear_of_the_rotunda converts the rendered box's four corners into dial units and fails if any of them is inside the sector. It reproduces the pre-fix overlap, which is how the model was checked.",
         "captures": "artifacts/dial-stylus-2026-09-25/"
       }
+    },
+    {
+      "id": "OS-111",
+      "title": "Safe to Spend: make Today state the rule Plan already computes (total funds less everything set aside)",
+      "status": "ready",
+      "priority": "high",
+      "phase": "track-D-surfaces",
+      "owner_raised": true,
+      "dependencies": [
+        "OS-078",
+        "OS-079"
+      ],
+      "authority": "CHANGES A HEADLINE FINANCIAL FIGURE. Not presentation. Own decision, own tests.",
+      "detail": "OWNER SPEC, 2026-09-25, verbatim: \"the safe to spend figure is calculating by taking the total amount of funds in the account and reducing it by all obligations where funds have been tucked away. In an account like Simple Bank, this was done as Available balance, less expenses, less goals. In Crew it is done as Available balance, or total balance, less bill reserve (a collective expense/bill bucket) less goals/other not immediately spendable buckets.\" And, on the base: \"available balance ... is the total of all money in the account essentially. With pending transactions, available balance may differ from current balance.\"",
+      "conflicts_with": "D-019 rule 1, which must be superseded explicitly rather than quietly edited away: 'Only NEGATIVE reserves count ... subtracting it would double-count and understate.' That holds only for the Free to Spend base. Second, smaller divergence to settle in the same breath: Plan CLAMPS at zero (`max(_ZERO, ...)`) while D-019 forbids clamping ('Flooring it at zero would hide an overdraft behind a plausible-looking zero'). Whichever way that goes, the two workspaces must agree.",
+      "blocks_on": "Nothing technical. Blocked only on the owner confirming that Today adopting Plan's rule is what he wants, and on the clamp decision above.",
+      "goals_half": "Goals are already modelled: commitments with type GOAL, and _commitment_breakdown (today.py:581) sums target_amount-or-amount into goals_total. OS-090 sourced the Plan map's second station from Crew pocket goals, so a goals figure already exists on the read path. The owner's stated intent -- one-time payment arrangements modelled as goals with a target amount and a date, instead of as recurring bills -- makes this half the more important one.",
+      "acceptance": "Today's Safe-to-Spend figure and Plan's 'Available' segment are the SAME number for the same data, one of the two rules is deleted rather than left standing beside the other, and a test asserts the agreement so they cannot drift apart again. The explanation panel names each subtraction with the pocket it came from.",
+      "limits": "Reuse plan.py's rule; do not write a third one. Do not change Plan's rule to match Today's. The two must converge on the owner's shape. No provider write, no deployment.",
+      "evidence": {
+        "reconciled_2026_09_25": "Read against today.py:396-513, meridian/services/plan.py:445-540, meridian/services/reserves.py and meridian/providers/crewwork.py:518-543. The owner corrected the framing mid-session -- 'I think you are losing the forest for the trees' -- after this entry's first version audited Crew's pocket accounting instead of noticing that Plan already implements the stated rule. The correction is recorded because the wrong question was expensive to ask and would be asked again."
+      },
+      "the_finding_supersedes_the_first_reading": "THE RULE ALREADY SHIPS -- ON THE OTHER WORKSPACE. meridian/services/plan.py:465-484 computes `available = max(0, cash_total - bill_purpose - goals_total)` from `cash_total = sum(account.balance)` over active cash/checking/savings accounts, and publishes it at plan.py:538 as the allocation segment {\"label\": \"Available\"}. That IS the owner's rule, including the goals half (goal_pockets are Crew pocket targets, OS-090). Today computes a DIFFERENT figure from a different base -- today.py:122 _spend_source_account picks the pocket NAMED 'Free to Spend' and subtracts only the reserve deficit -- so the product publishes two 'money you can spend' numbers. Unifying them is this task, and it is a reuse, not an invention.",
+      "why_the_base_question_is_now_settled": "The first version of this entry asked what 'available balance' was the balance OF, on the theory that a positive reserve might be double-counted. plan.py's own recorded reasoning answers it: 'Crew goals are pocket targets, so their current balances are already inside cash_total.' The pockets' money IS inside the total (Crew's primary pocket reports overallBalance, i.e. the whole pool). Therefore the base DOES contain the reserve, subtracting a POSITIVE reserve is correct, and D-019 rule 1 ('only NEGATIVE reserves count') was a workaround for the wrong base rather than a property of the right one. The owner's rule and Plan's rule agree; Today's does not.",
+      "imminent_rename_trap": "THE OWNER IS RENAMING CREW'S POCKET 'Free to Spend' -> 'Safe to Spend' (stated 2026-09-25). today.py:122-136 _spend_source_account identifies the spend source BY ENGLISH NAME: `name = account.name.strip().casefold(); return \"free to spend\" in name or name == \"free to spend\"`. 'Safe to Spend' matches neither test, so the lookup returns None and today.py:474-479 SILENTLY falls back to `source_label = \"Cash accounts\"` with `available_cash` (the sum of the cash/checking/savings accounts) as the base. No error, no warning, no test failure: the headline figure just changes basis and the tooltip would then explain a different number than the one the owner renamed the pocket to produce. This is the same class of silent-basis-change that D-019 was written about.",
+      "the_durable_fix": "Stop matching on an English name. meridian/providers/crewwork.py:347 readback_selected_spend_pocket() already reads Crew's own per-user userSpendConfig.selectedSpendSubaccount off the virtual cards, and already refuses to guess: None (facet unobserved) / () (no card exposed a selection) / (one,) (the value) / (a, b) (cards disagreed -- never resolved). Identifying the spendable pocket by Crew's own selection instead of by name removes the whole class of defect AND is the same setting the OS-112 gear configures, so the two tasks converge.",
+      "phrasing_decided": "OWNER, 2026-09-25, verbatim: \"I would go with Available Balance, and then - with each pocket name and their balance and - Bill Reserve. Have pockets only appear in the tooltip if they have a balance, otherwise they are omitted, and include your footer.\" Rendered samples: artifacts/os079-affordance-samples-2026-09-25/. Completeness is enforced by data plus a test (sum(lines) == result), never by the wording."
+    },
+    {
+      "id": "OS-112",
+      "title": "Safe to Spend: copy Crew's gear -- choose which pockets count toward the figure",
+      "status": "open",
+      "priority": "medium",
+      "phase": "track-D-surfaces",
+      "owner_raised": true,
+      "dependencies": [
+        "OS-111"
+      ],
+      "authority": "CONFIGURES A HEADLINE FINANCIAL FIGURE. Choosing which pockets count changes what Safe to Spend says, so it is a write, not an explanation. It must not be presented as part of OS-079's read-only panel.",
+      "detail": "OWNER, 2026-09-25, verbatim: \"I think we should copy Crews design, a small gear icon. In crew when you click it, you can assign how safe to spend is calculated by pocket, however, I only ever had it set to Free to spend (I'm going to rename the pocket to Safe to Spend).\" Owner's screenshots show Crew's sheet: a 'Safe to spend' header, a CHART toggle, 1M/2M/3M, then POCKETS with 'Reorder', the instruction 'Select which pockets count toward your total.', and per-pocket toggles for Checking, Autopilot Reserve, Free to Spend, Emergency Fund and Fun Money/Splurge/Travel.",
+      "already_partly_built": "The read path exists and was built carefully. meridian/providers/crewwork.py:347 readback_selected_spend_pocket() reads the per-user userSpendConfig.selectedSpendSubaccount off the virtual cards and REFUSES to guess, returning None (facet unobserved) / () (no card exposed a selection) / (one,) (the value) / (a, b) (cards disagreed -- never resolved). meridian/crew_write_actions.py:425 already consumes it. That discipline is the model for this task.",
+      "to_reconcile_before_building": "The readback exposes a SINGLE selected spend pocket, while Crew's own sheet draws MULTIPLE pocket toggles. These are not obviously the same setting, and the difference decides both the UI and the storage. Establish which Crew setting the sheet writes before drawing anything.",
+      "acceptance": "There is exactly ONE Safe to Spend in the product. If Meridian owns the setting, it persists and every surface reads it; if it mirrors Crew's, it is a readback plus a Crew write through the existing router. Two surfaces disagreeing about the figure is the failure this task exists to prevent.",
+      "limits": "Read-only until the write path is chosen and approved. No local-only setting that silently diverges from Crew's -- that produces two Safe to Spends, which is worse than none. No provider write by an agent, no deployment.",
+      "evidence": {
+        "recorded_2026_09_25": "Earmarked rather than chased, per the owner's stated working style: the in-flight slice is finished first. Depends on OS-111 -- there is no point choosing pockets for a rule that is still unsettled."
+      }
+    },
+    {
+      "id": "OS-113",
+      "title": "Identify the spend pocket from Crew's own SELECTION, not from its name",
+      "status": "open",
+      "priority": "high",
+      "phase": "track-D-surfaces",
+      "owner_raised": true,
+      "dependencies": [
+        "OS-111",
+        "OS-112"
+      ],
+      "owner_direction": "OWNER, 2026-09-25, verbatim: \"Shouldn't the code inherit the name of the pocket directly from crew, so its durable in the case of change?\" The instinct is right and the mechanism is one step better: inherit the SELECTION, not the name. A name inherited from Crew is still a name, and the next rename breaks it again.",
+      "the_defect_it_removes": "Five production sites decide 'which pocket is the discretionary spend pocket' by matching an English string. meridian/services/today.py:133 (the Safe-to-Spend base -- on a failed match it SILENTLY falls through to the 'Cash accounts' branch at today.py:474, a different base, with no error and no failing test), meridian/services/dial.py:81 (the dial's availableToSpend, whose own docstring already notes the two copies 'had already drifted'), meridian/services/plan.py:94 (free_to_spend_subaccount_id, which the money-movement UI addresses pockets by), and static/js/meridian/accounts.js:74 and :495 (the Accounts bucket emblem and the 'liquid' filter, so the renamed pocket also drops out of the Accounts available total). Renaming a pocket had to be repeated in five places and there is no chance anyone remembers five places. The owner renamed it on 2026-09-25 and Today silently changed basis.",
+      "the_fact_to_inherit": "Crew carries the answer per user at userSpendConfig.selectedSpendSubaccount.id on every virtual card. It is already read LIVE in two places: meridian/providers/crewwork.py:347 readback_selected_spend_pocket(), which refuses to guess (None = cards facet unobserved, () = no card exposed a selection, (a,b) = the cards disagreed and it will never pick), and app.py:2591 and :2694 inside get_cards_data(). The join to the read path is financial_accounts.external_id, which already holds Crew's own subaccount id.",
+      "what_is_missing": "NOTHING PERSISTS IT. There is no generic settings/key-value table -- migrations 019 (financial_observations) and 024 (crew_bill_reserves) are the repository's established pattern for 'a fact observed from a provider, with provenance', so this is a new observation table plus capture at sync (meridian/sync.py:27 sync_provider) plus reading it in build_today / the dial / plan / accounts. One migration, which is a ONE-WAY DOOR and therefore needs explicit owner approval before it is written.",
+      "relationship_to_OS_111": "If OS-111 lands as the owner stated it -- base = the account's available balance, reduced by everything set aside -- then Today no longer needs to identify a spend pocket at all. The dial, Plan's money-movement targets and the Accounts liquid filter still do. So this task does not become unnecessary; it changes which surfaces need it.",
+      "the_seam_that_already_exists": "meridian/services/spend_pocket.py, added 2026-09-25. Its callers ask one question -- 'is this the spend pocket?' -- and only its internals change when this task lands. Until then it accepts the old and new names explicitly, which is deliberately a list and not a pattern: something loose enough to accept any rename ('contains spend') would also accept 'Spending money' or 'Christmas spend' and quietly treat an earmarked bucket as free cash.",
+      "acceptance": "Renaming a pocket in Crew changes no figure, in any workspace, with no code edit -- proved by a test that renames the fixture pocket to a name appearing nowhere in the source and asserts every surface still finds it. When the selection is unobserved or ambiguous, the surfaces say WHICH basis they used rather than presenting a different figure as the same figure.",
+      "limits": "No provider write. No deployment. Do not add a name pattern to paper over this. Do not ship the migration without the owner's explicit approval."
     }
   ]
 }
