@@ -1,4 +1,5 @@
 """Isolated, deterministic component acceptance; no app, credentials or bank calls."""
+import math
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -942,11 +943,15 @@ def test_the_stylus_reads_as_a_hand_at_the_governed_phone_sizes(dial_page, width
         };
     }""")
     assert measured is not None, "the stylus must exist"
+    # Owner, 2026-09-25: "The pointer on the today page does not extend to the center of the dial and is
+    # still quite small." The hand now spans nearly the whole radius (the concept's needle runs from the
+    # centre to the ring), so the floor this asserts is a share of the RADIUS, and it is checked against
+    # the figure the concept shows rather than the 36.9% the previous geometry settled for.
     share = measured["needlePx"] / painted["r"]
-    assert share >= 0.30, (
+    assert share >= 0.75, (
         f"at {width}x{height} the hand spans {share:.0%} of the painted wheel ({measured['needlePx']:.1f}px "
-        f"against r={painted['r']:.1f}px); the concept measures ~51% and the owner reported anything "
-        "smaller as missing"
+        f"against r={painted['r']:.1f}px); the concept draws a needle from the dial's centre out to the "
+        "ring, and the owner reported anything shorter as not reaching the centre"
     )
     # A hand nobody can see against the sky is the same defect: the dark edge must be painted.
     assert measured["stroke"] not in ("none", "rgba(0, 0, 0, 0)") and float(
@@ -980,21 +985,57 @@ def test_the_stylus_reads_as_a_hand_at_the_governed_phone_sizes(dial_page, width
     assert guards["nearestNumberUnits"] >= 30, (
         f"the tip's centre is only {guards['nearestNumberUnits']:.1f} units from a day number"
     )
-    assert guards["tipRadiusFromCentre"] >= 230, (
-        "the tip must sit out on the ring band, not in the middle of the dial"
+    # The bound is the head's OUTER edge, not its centre: `placeDayLabels()` seats the numbers' centres at
+    # 243.7 units, and the concept's head sits at the ring band. Measured 2026-09-25 after the owner asked
+    # for a bigger hand: tip 224 + radius 20 = 244, exactly the bound. Keeping this as a range is what
+    # stops a future size increase from quietly covering the day numbers.
+    tip_radius_units = page.evaluate(
+        "() => Number(document.querySelector('.obs-dial-pointer-tip').getAttribute('r'))")
+    head_outer_units = guards["tipRadiusFromCentre"] + tip_radius_units
+    assert 238 <= head_outer_units <= 246, (
+        f"the hand's head reaches {head_outer_units:.1f} units from the centre (tip "
+        f"{guards['tipRadiusFromCentre']:.1f} + radius {tip_radius_units}); it must sit on the ring band "
+        "and stay inside the day numbers, whose centres are at 243.7 units"
     )
-    centre = measured["centre"]
-    needle_box = page.evaluate("""() => {
-        const r = document.querySelector('.obs-dial-pointer-needle').getBoundingClientRect();
-        return {left: r.left, top: r.top, right: r.right, bottom: r.bottom};
+    assert guards["tipRadiusFromCentre"] >= 220, (
+        f"the head sits {guards['tipRadiusFromCentre']:.1f} units from the centre, inside the sky rather "
+        "than out on the ring band"
+    )
+    # The tail must reach the CENTRE -- the owner's own words, and the half of his report the previous
+    # geometry failed. Read from the rendered path's first vertex, in viewBox units, so this measures the
+    # paint rather than the constants.
+    tail_units = page.evaluate("""() => {
+        const d = document.querySelector('.obs-dial-pointer-needle').getAttribute('d').trim();
+        const m = /^M\\s*(-?[\\d.]+)[ ,]+(-?[\\d.]+)/.exec(d);
+        if (!m) return null;
+        return Math.hypot(Number(m[1]) - 300, Number(m[2]) - 300);
     }""")
-    centre_overlap = not (
-        needle_box["right"] <= centre["x"]
-        or needle_box["left"] >= centre["x"] + centre["width"]
-        or needle_box["bottom"] <= centre["y"]
-        or needle_box["top"] >= centre["y"] + centre["height"]
+    assert tail_units is not None, "the needle's path no longer starts with an absolute moveto"
+    assert tail_units <= 20, (
+        f"the needle's tail starts {tail_units:.1f} units from the dial's centre; the owner asked for a "
+        "pointer that extends to the centre (measured 6 units after the 2026-09-25 correction)"
     )
-    assert not centre_overlap, "the stylus must stay clear of the centre readout"
+    layering = page.evaluate("""() => {
+        const svg = document.querySelector('.obs-dial-svg');
+        const overlay = document.querySelector('.obs-dial-overlay');
+        const readout = document.querySelector('.obs-dial-center');
+        return {
+            overlayAfterSvg: !!(svg.compareDocumentPosition(overlay)
+                                & Node.DOCUMENT_POSITION_FOLLOWING),
+            overlayZ: parseInt(getComputedStyle(overlay).zIndex, 10),
+            readoutInsideOverlay: overlay.contains(readout),
+            readoutTop: Math.round(readout.getBoundingClientRect().top),
+            needleTop: Math.round(document.querySelector('.obs-dial-pointer-needle')
+                                  .getBoundingClientRect().top),
+        };
+    }""")
+    assert layering["readoutInsideOverlay"], "the centre readout must live in the overlay"
+    assert layering["overlayAfterSvg"], (
+        "the overlay must follow the SVG in document order, or the needle paints over the readout"
+    )
+    assert layering["overlayZ"] >= 1, (
+        f"the overlay needs a stacking order above the needle, measured z-index {layering['overlayZ']}"
+    )
 
 
 def test_nothing_after_the_seating_block_reimposes_a_callout_column():
@@ -1120,3 +1161,63 @@ def test_the_stylus_wedge_has_area_and_its_base_is_square_to_the_hand(dial_page)
     dial_page.keyboard.press("ArrowRight")
     dial_page.wait_for_timeout(200)
     assert_wedge_is_real(measure(), "after the pointer moves")
+
+
+READOUT_CORNERS = r"""
+() => {
+  const svg = document.querySelector('.obs-dial-svg');
+  const centre = document.querySelector('.obs-dial-center');
+  const svgBox = svg.getBoundingClientRect();
+  const box = centre.getBoundingClientRect();
+  return {
+    scale: svgBox.width / 600,
+    cx: svgBox.x + svgBox.width / 2,
+    cy: svgBox.y + svgBox.height / 2,
+    left: box.left, right: box.right, top: box.top, bottom: box.bottom,
+  };
+}
+"""
+
+#: The kit's rotunda, as measured in dial.js off `dial-plate.png`: it occupies bearings -140deg..-105deg
+#: and reaches inward to r=165 units, with a near-vertical roofline that jumps to 283 units at -105deg.
+ROTUNDA_SECTOR = (-140.0, -105.0)
+ROTUNDA_EDGE = (165.0, 283.0)
+
+
+def test_the_dial_readout_wraps_clear_of_the_rotunda(dial_page):
+    """The bill text inside the dial must not print across the building.
+
+    Owner, 2026-09-25: "can the bill text INSIDE of the dial on the today page have wrap boundaries that
+    include the rotunda image on the left, so there is no overlap and it is more easily read?"
+
+    The rotunda is baked into the dial plate, so it cannot be read from the DOM -- but its geometry was
+    measured off the art when `ARC_START` was chosen and is recorded in dial.js. This converts the
+    rendered readout's box into dial units and checks each corner against that sector: a corner is inside
+    the building when its bearing falls in the sector AND it is further out than the roofline's inner
+    edge at that bearing. The previous 52%-wide readout at 49% failed this by 2 units; the current 44% at
+    46% clears it by 40+.
+    """
+    measured = dial_page.evaluate(READOUT_CORNERS)
+    scale, cx, cy = measured["scale"], measured["cx"], measured["cy"]
+    near, far = ROTUNDA_SECTOR
+    edge_near, edge_far = ROTUNDA_EDGE
+    offenders = []
+    for name, (x, y) in {
+        "top-left": (measured["left"], measured["top"]),
+        "bottom-left": (measured["left"], measured["bottom"]),
+        "top-right": (measured["right"], measured["top"]),
+        "bottom-right": (measured["right"], measured["bottom"]),
+    }.items():
+        ux = (x - cx) / scale
+        uy = (cy - y) / scale
+        radius = (ux * ux + uy * uy) ** 0.5
+        bearing = math.degrees(math.atan2(ux, uy))
+        if not (near <= bearing <= far):
+            continue
+        edge = edge_near + (edge_far - edge_near) * ((bearing - near) / (far - near))
+        if radius >= edge - 6:
+            offenders.append(f"{name} at r={radius:.0f} bearing={bearing:.0f}deg (roofline {edge:.0f})")
+    assert not offenders, (
+        "the dial's readout runs into the kit's rotunda: " + "; ".join(offenders)
+        + " -- narrow or raise .obs-dial-center so every line wraps in the sky"
+    )

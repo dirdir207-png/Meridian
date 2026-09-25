@@ -443,11 +443,15 @@ def test_dial_pointer_is_prominent_and_keeps_a_mint_selection_cue():
 def test_dial_pointer_hand_is_a_visible_share_of_the_dial_radius():
     """The owner's report was not "there is no pointer" but "the pointer is not visible".
 
-    Measured from the concept (06-interactive-observatory-vision.png, dial r=282 units): its wedge
-    runs from ~0.42 r to the ring. The first implementation started at 96 units -- 0.34 r -- and at
-    the governed phone size that painted an 18.1px sliver on the engraved sky, which the owner
-    correctly read as missing. This pins the painted LENGTH as a share of the radius rather than the
-    literal constants, so the number can be tuned without deleting the property being protected."""
+    RETARGETED 2026-09-25. This used to pin the span at 0.30..0.70 r from a reading that put the concept's
+    wedge at "~0.42 r to the ring". That reading measured only the BRIGHT part of the concept's stroke: at
+    full resolution its stylus is a hairline taper whose tail reaches the dial's centre, so the concept's
+    span is ~89%, not ~51%. The owner then said it plainly -- "The pointer on the today page does not
+    extend to the center of the dial and is still quite small" -- so the property is now: a long needle
+    that reaches the centre, with a tip that still sits on the ring band.
+
+    Pinned as shares and bounds rather than literals, so the numbers can be tuned without deleting the
+    property being protected."""
     js = _read("static/js/meridian/dial.js")
     radius = float(re.search(r"const VIEWBOX = \{[^}]*?r:\s*(\d+(?:\.\d+)?)", js).group(1))
 
@@ -459,9 +463,13 @@ def test_dial_pointer_hand_is_a_visible_share_of_the_dial_radius():
     inner = constant("POINTER_INNER_UNITS")
     tip = constant("POINTER_TIP_UNITS")
     span = (tip - inner) / radius
-    assert 0.30 <= span <= 0.70, (
-        f"the needle spans {span:.0%} of the dial radius; the concept measures ~51% and a value "
-        "below 30% is the invisible sliver the owner reported"
+    assert span >= 0.75, (
+        f"the needle spans {span:.0%} of the dial radius; the concept draws it from the centre out to the "
+        "ring (~89%), and the owner reported anything shorter as not reaching the centre"
+    )
+    assert inner <= 20, (
+        f"the needle's tail starts {inner} units from the centre; the owner asked for a pointer that "
+        "extends TO the centre"
     )
     # The rim numbers' INNER edge is the binding constraint, and it is measured rather than guessed:
     # `placeDayLabels()` seats their centres at 243.7 units at the governed phone widths with a

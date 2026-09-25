@@ -99,21 +99,34 @@ const MARKER_RADIUS_UNITS = VIEWBOX.r - 118;
  * GEOMETRY CHECK, and these figures are MEASURED IN THE BROWSER at the governed phone widths rather
  * than derived, because two derived estimates passed geometry that actually collided:
  *   - `placeDayLabels()` seats the rim numbers' centres at radius **243.7 units** (389..432px from the
- *     dial centre at 390/420/430 CSS, DPR 3). The tip circle's far edge is 230 + 14 = 244, i.e. it
- *     ends exactly where the numbers' own centres begin, with the whole stylus INSIDE the number ring.
+ *     dial centre at 390/420/430 CSS, DPR 3). The tip circle's far edge is 224 + 20 = 244, i.e. it ends
+ *     where the numbers' own centres begin, with the whole stylus INSIDE the number ring. That bound is
+ *     respected rather than relaxed: it is what keeps the hand off the day numbers.
  *   - The selected day draws no number while every day is numbered (see `renderInstrumentOverlay`),
  *     because the stylus is that day's mark and the two sit at the same angle.
- *   - The wedge's base reaches 126 + 4.5 = 130.5 units, and the centre readout is a 52%-wide HTML
- *     overlay around the dial's middle, so the hand reaches neither.
- * The hand spans 36.9% of the radius -- 104 units, 61px at 420x912 -- and its head is 17.6 CSS px
- * across. The 53% the concept shows is not reachable on this instrument: at 250 units the tip circle
- * straddled the number ring and the wedge ran under a date. */
-const POINTER_INNER_UNITS = 126;
-const POINTER_TIP_UNITS = 230;
-const POINTER_TIP_HALF_WIDTH = 4.5;
-const POINTER_TIP_RADIUS = 14;
-const POINTER_TIP_RING_RADIUS = 9.8;
-const POINTER_TIP_PUPIL_RADIUS = 5.6;
+ *
+ * OWNER CORRECTION, 2026-09-25: "The pointer on the today page does not extend to the center of the dial
+ * and is still quite small." He is looking at concept 06, and he is right -- read at full resolution, the
+ * concept's stylus is a fine mint needle whose tail runs all the way to the dial's centre and widens as
+ * it goes out to the ring, ending in a ring head ~50 concept px across (= 42 units, radius ~21).
+ *
+ * This comment used to claim the hand spanned 36.9% of the radius and that "the 53% the concept shows is
+ * not reachable on this instrument". The second half of that was a measurement error, not a constraint:
+ * the needle's tail is a hairline taper, and measuring only the bright part of the stroke reads the
+ * thick half of it. The real constraint was always the TIP bound above, and the tail was parked at 126
+ * units for no better reason than that the centre readout lives there.
+ *
+ * The readout is an HTML overlay and the needle is SVG BENEATH it, so extending the tail cannot cost a
+ * word of legibility: the needle passes behind the centre readout exactly as the concept draws it.
+ * Measured after this correction at 420x912: the needle spans 6..224 units (89% of the radius), its head
+ * is 23.5 CSS px across against the concept's ~24.6, and the day-number bound is unchanged at 244.
+ */
+const POINTER_INNER_UNITS = 6;
+const POINTER_TIP_UNITS = 224;
+const POINTER_TIP_HALF_WIDTH = 5.5;
+const POINTER_TIP_RADIUS = 20;
+const POINTER_TIP_RING_RADIUS = 14;
+const POINTER_TIP_PUPIL_RADIUS = 8;
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /* ── Reversible visual preview: every day number on the rim ──────────────────────────────────────

@@ -726,7 +726,20 @@
 .obs-dial-svg-wrap { width: min(100%, 620px); aspect-ratio: 1; }
 .obs-dial-instrument { padding: 0; }
 .obs-dial-overlay { aspect-ratio: 1; }
-.obs-dial-center { top: 49%; width: 52%; gap: 5px; }
+/* Owner, 2026-09-25: "can the bill text INSIDE of the dial on the today page have wrap boundaries that
+   include the rotunda image on the left(*), so there is no overlap and it is more easily read?"
+
+   The rotunda is part of the kit's `dial-plate.png`, and its geometry is already measured in dial.js: it
+   occupies bearings -140deg..-105deg, reaching inward to r=165 units, with a near-vertical roofline that
+   jumps to 283 units at -105deg. The readout was 52% wide, centred at 49% of the dial, so its lower-left
+   corner sat at (-156,+55) -- r=165 at bearing -109.5deg, i.e. exactly ON that roofline. That is the
+   overlap he photographed: the status line's left end printing across the building.
+
+   Wrapping inside the rotunda means bounding the BOX, not adding an overflow rule: 44% wide (half-width
+   132 units) and raised to 46% puts the widest line's left end at bearing ~-113deg, clear of the roofline
+   by ~8deg, with the block's bottom above the building's inner edge. The guard in
+   tests/browser/test_dial_fidelity.py measures the rendered corners rather than this CSS. */
+.obs-dial-center { top: 46%; width: 44%; gap: 5px; }
 .obs-dial-center-kicker { font-size: clamp(10px, 1.2vw, 13px); letter-spacing: .16em; color: #c9bedb; }
 .obs-dial-center-title { font-size: clamp(21px, 2.7vw, 31px); line-height: 1.12; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .obs-dial-center-amount { font-size: clamp(34px, 4.6vw, 54px); line-height: 1.08; }
@@ -988,7 +1001,9 @@ html[data-theme="light"] .obs-dial-caption--top { color: #655d6c; }
      Concept 01 is the authority and agrees: its dial spans ~435px inside a band whose
      callouts span ~490px, i.e. roughly 25px above and 30px below. Centred, not pinned. */
   [data-observatory-dial] .obs-dial-instrument { align-self: center; }
-  .obs-dial-center { width: 56%; }
+  /* Same rotunda clearance as the base rule above: this block used to widen the readout to 56%, which
+     put its lower-left corner well inside the building's sector on the widths it applies to. */
+  .obs-dial-center { width: 44%; }
   /* The orbit rail must stay bounded beside the dial, not tower over it. Derived from the
      chain, not guessed: the dial's height equals its wrap's width, which is the panel
      width minus the 130px callout column minus the 12px gap plus the 24px bleed; the
