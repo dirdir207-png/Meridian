@@ -1,5 +1,31 @@
 # Enhanced SimpleCrew — Current Status
 
+## 2026-09-25: "Meridian says 0, Crew says 16.69" — a STALE PROCESS, not a wrong rule
+
+Owner-reported: Safe to Spend read **0** in Meridian while Crew read **16.69**.
+
+**Diagnosis, proven mechanically rather than inferred.** `run_preview.py` (the app being viewed, port
+8081) had been running since **Thu 2026-09-24 08:25** with `use_reloader=False`, while
+`meridian/services/safe_to_spend.py` was created by OS-111 at **Fri 2026-09-25 06:55**. A process cannot
+serve a file that did not exist when it started, so it was computing the figure with the pre-OS-111
+logic — whose base was the CHECKING account, which holds 0.00, while every Crew pocket is typed
+`pocket`. Hence 0. The rule itself, run through the real API path (`build_today`) against a COPY of the
+live database, returned **16.69** — byte-identical to Crew — both before and after the fix.
+
+**Fix:** restart the preview. It now serves today's code, and the same API path returns
+`16.69`, pocket `Safe to Spend`.
+
+**And the first real selection observation landed** (2026-09-25T19:44:42Z, `resolution='selected'`,
+`Subaccount:edc8cb88…`), so the basis reads **`crew_selection`** with status **`selected`** rather than
+the name fallback. That is OS-113 doing its job on live data: from now on the figure follows Crew's own
+selection, so renaming the pocket cannot move it again.
+
+**The trap worth carrying forward:** nothing restarts the preview after a commit, so a fixed defect can
+still be *shown* as broken, and a UI report can describe code that no longer exists. Before acting on
+any Meridian figure the owner reports, check the serving process's start time against the commit that
+changed the behaviour — the same discipline already applied to Dark Reader (confirm the view is
+current before hunting a defect) and to "verify a claim against the artifact".
+
 ## 2026-09-25: OS-113 amended — Crew's "spend pocket" is the PHYSICAL card's funding pocket
 
 Owner: *"The spend pocket in crew refers to what pocket the physical card drops from … it still always
