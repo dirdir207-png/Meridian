@@ -1928,7 +1928,7 @@
     {
       "id": "OS-080",
       "title": "Virgil's panel summons the soft keyboard on open and leaves a black screen on close",
-      "status": "complete",
+      "status": "in_progress",
       "priority": "high",
       "phase": "design-fidelity",
       "owner_raised": "2026-09-21, from the LIVE app on the owner's own phone (the :8081 preview over Tailscale), verbatim: 'When opening Virgil I do not want the keyboard opened by default, it occludes too much and makes the interaction confusing. Also when closing Virgil, it leaves a black or partially black screen.'",
@@ -1942,7 +1942,10 @@
       ],
       "limits": "PRESENTATION AND INPUT BEHAVIOUR ONLY. No route, no endpoint, no model call, no provider change, no credential, no financial authority, and no change to the read-only contract of the surface. The transcript keeps coming from the same source; nothing about WHAT Virgil says is touched, only when the keyboard appears and what the screen looks like afterwards.",
       "handoff": "static/js/ui/advisor_fab.js:99 (input.focus() on open -- the keyboard), :410-411 (auto-reopen from localStorage, which fires the focus with no user action), :103-116 (the close branch, including the shell.closeSheet() delegation and the fallback teardown), :393 (focus after a suggestion chip populates the field, which is a deliberate gesture and should be reviewed against the same rule); static/js/meridian/haptics.js (the shared sheet machinery: openSheet/closeSheet and the [data-sheet] teardown); static/css/meridian/advisor.css; templates/partials/advisor_fab.html; tests/meridian/test_virgil_surface.py (the existing 16 guards); docs/project/MERIDIAN_VISUAL_CAPTURE_SPEC.md (the capture matrix never enters either state).",
-      "notes": "WHY THE EXISTING GATE PASSED THIS, and it is the same shape as the untracked-icon-kit defect found the same day: the capture matrix records the panel OPEN (ui_state 'virgil:virgil-panel-open') with animation and timers disabled, so it never raises a keyboard and never performs a close, and the browser tests assert the surface's restraint rather than the two states a phone actually produces. A full-tree suite, ten governed frames and sixteen surface guards were all green while both defects were live. The lesson to carry: a captured state is not the interaction that produces it, so any defect that lives in a TRANSITION (open, close, focus) needs a test that performs the transition.\n\nNOT TO BE FIXED BY REMOVING THE AUTO-REOPEN ALONE: the reopen flag is existing intended behaviour ('persistent history' and 'resume where you left off'), so if it is changed that is a product decision to record, not a silent side effect of fixing the keyboard. The minimum honest fix is that the panel never summons the keyboard without a tap."
+      "notes": "WHY THE EXISTING GATE PASSED THIS, and it is the same shape as the untracked-icon-kit defect found the same day: the capture matrix records the panel OPEN (ui_state 'virgil:virgil-panel-open') with animation and timers disabled, so it never raises a keyboard and never performs a close, and the browser tests assert the surface's restraint rather than the two states a phone actually produces. A full-tree suite, ten governed frames and sixteen surface guards were all green while both defects were live. The lesson to carry: a captured state is not the interaction that produces it, so any defect that lives in a TRANSITION (open, close, focus) needs a test that performs the transition.\n\nNOT TO BE FIXED BY REMOVING THE AUTO-REOPEN ALONE: the reopen flag is existing intended behaviour ('persistent history' and 'resume where you left off'), so if it is changed that is a product decision to record, not a silent side effect of fixing the keyboard. The minimum honest fix is that the panel never summons the keyboard without a tap.",
+      "evidence": {
+        "completion_falsified_2026_09_25": "This task read `complete` while its own progress said 'IT HAS NEVER RUN GREEN, so the fix is fixed-but-unproven and must not be reported as verified'. Verified today: the browser tests SKIP — `tests/browser/test_advisor_panel_transitions.py` reports '6 skipped' because 'APP_URL is required for browser tests' (checked with -rs). They were therefore never green here, and pointing them at the owner's live app would violate the capture contract's synthetic-data rule (AGENTS.md:62, 'never use live bank data for parity captures'). SO: the fix is committed and unverified, which is in_progress, not complete. The enabling condition is a synthetic-seed instance the browser tests can target without touching live data."
+      }
     },
     {
       "id": "OS-081",
@@ -2905,6 +2908,21 @@
       "detail": "OWNER-AUTHORISED 2026-09-25 ('Move it into the database'). Plan's write forms resolve Crew's opaque ids by parsing a snapshot FILE outside the repository, which a bridge rewrites every ~25 seconds. That is a dependency on an artifact the app does not control and cannot observe the health of: if the file is missing or stale, forms silently fail to resolve an id. The identifiers Meridian needs are already stored (accounts, commitments, funding plans, cards), so resolution belongs in a query.",
       "limits": "Read-path change only. Do not alter any write, proposal or verification behaviour, and do not widen what a form may do: this changes WHERE an id is looked up, never what may be written.",
       "handoff": "docs/project/MERIDIAN_DECISIONS.md (D-029); docs/project/session-emergent.json"
+    },
+    {
+      "id": "OS-118",
+      "title": "I.4 — the evaluation harness: measured usefulness, refusal correctness, citation accuracy, cost per useful proposal",
+      "status": "open",
+      "priority": "high",
+      "phase": "track-I-evaluation",
+      "detail": "The roadmap names I.4 as the step that makes the intelligence measurable — 'Measured usefulness on a real journey, refusal correctness when evidence is missing, citation accuracy, cost per useful proposal' (MERIDIAN_ROADMAP.md:360-362) — and until 2026-09-25 no task id existed for it, unlike I.1 (OS-072), I.2 (OS-073), I.3 (OS-074) and I.5 (OS-063). The drift is the one the roadmap's own protocol describes: naming the id is what makes a gap checkable. An audit on 2026-09-25 verified that NO evaluation artifact exists in any form — no file matching `*eval*` anywhere in the tree, no ledger entry, no slice. Correctness IS tested per role (adversarial unit tests for the Investigator and the council, plus the citation and refusal contract), but measured usefulness, refusal correctness on a real journey, citation accuracy and cost per useful proposal have no artifact at all. This is the difference between an intelligence that is CORRECT and one that is PROVEN USEFUL, and the owner's stated target — proactive, reactive, CULPABLE intelligence — needs the second.",
+      "limits": "Measurement only: it observes and reports, and it must not gate, score or veto any run — the OS-056 rule binds here (no score may ever remove or weaken an approval). It reads run records, which deliberately hold no claim text, no model output and no evidence body (027_ai_run_records.sql), so any usefulness measure must be built from what is actually recorded rather than from a new surveillance store. No provider write, no authority.",
+      "dependencies": [
+        "OS-072",
+        "OS-073",
+        "OS-074"
+      ],
+      "handoff": "docs/project/MERIDIAN_ROADMAP.md (Track I, I.4); docs/project/MERIDIAN_CONCEPTS.md (concept 3)"
     }
   ]
 }
