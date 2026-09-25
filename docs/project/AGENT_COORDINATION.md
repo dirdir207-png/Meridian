@@ -121,6 +121,44 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-24 (eleventh pass) — The fourth Accounts trait: the concept's three emblems, derived where they exist and drawn where they do not (`OS-103` closed)
+
+**The trait that was not guessed at is now built, on the owner's pick.** *"More diverse icons"* changed a glyph
+system, so it went to him as a choice; he chose **the concept's three emblems** — which is also the acceptance the
+delivered medallion handoff demands, since that artwork may be used only *"where that visual mapping is
+deliberately accepted"*.
+
+**Derived, not invented, where the art exists.** The two masters are 1254×1254 with the disc filling only ~80% of
+the canvas, so fitting the canvas into the disc box would have painted a 42px medallion. The new
+`scripts/build_account_medallions.py --write` crops each to its visible disc and resamples to 208×208 = 4× the
+concept's measured 52 CSS disc: **2,026,463 → 91,025 bytes** (compass, sha256 `547e3382…`) and **2,068,417 →
+92,817** (Wi-Fi, `589f7e5b…`), transparent corners, both recorded in `ASSET_MANIFEST.md` with the command — the
+repo's normal asset process, which is a recorded derivation rather than a hand-resized file. **Drawn where it does
+not:** the delivered package explicitly excludes the emergency-fund star, so `accounts/star-medallion.svg` is
+authored in-repo to the two masters' own measured construction (an angle-averaged radial profile puts the brass
+rim at 0.89–1.00 R, the colour band at 0.73–0.89, the brass inner ring at 0.70–0.73, the field inside 0.70), with
+the concept's coral for that bucket. It is vector against their raster — flatter at 208px, indistinguishable at
+the 52px display size — and a matching raster star master is the recorded follow-up rather than a hidden gap.
+
+**Measured in the running page, not from the source.** At 420×912 and 390×844, DPR 3, both themes, driving the
+real `/api/meridian/accounts` render path with the concept's own names: `Free to Spend` → compass (lilac),
+`Bill Reserve` → Wi-Fi (mint), `Emergency Fund` → star (apricot), each **52×52 with no tint border, no kit frame
+and no glyph** — the art is a complete medallion and the handoff forbids stacking it over the frame. The disc went
+46 → **52px** (the concept measures 103 device px of 853-wide art at the governed viewport) and the mobile row
+track 44 → 52px so it cannot overhang the column gap. **`Emergency plumbing fund` → no emblem, and `Checking` →
+its role medallion**: the key is the account's name matched against concept 04's three names *exactly*, so a
+lookalike keeps its semantic medallion instead of wearing an emblem that would assert something untrue. The
+connector's nodes and segment stops follow the emblems' tints, so the cord now carries the concept's colour
+progression. `docOverflow` 0 at every width and theme, no console errors.
+
+Five new guards in `tests/meridian/test_accounts_medallion.py` (assets real and referenced, the three-layer
+construction dropped for emblems, the colour longhand that keeps emblem art alive in the light theme, the concept
+sizing, the exact key with no fuzzy path, the label and `aria-hidden` retained, tints reaching the connector) and
+a browser-level case in `tests/browser/test_accounts.py` that drives five names through the real payload path.
+Two pre-existing guards were updated where the code legitimately moved — the tint assignment and the light theme's
+disc declaration — each keeping its original intent and saying why. `OS-103` is **complete**; the traits that were
+measured and deliberately not chased stay recorded in `design-qa.md`.
+
 ### 2026-09-24 (tenth pass) — OS-104: the app already agrees with the owner about payday; the screen he reads does not
 
 **The owner's observation was checked line by line and every part of it holds.** He said payday and funding

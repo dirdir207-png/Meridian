@@ -99,8 +99,12 @@ def test_parchment_re_inks_the_rules_the_card_used_to_carry():
     )
     # The medallion disc: `--m-surface` is the dark disc in the dark theme and #ffffff in the
     # light one, where brass on white is 1.90:1. The concept's own disc is the night indigo.
+    # The declaration is the COLOUR longhand rather than the `background` shorthand since
+    # 2026-09-24: the shorthand also resets `background-image`, which would wipe the concept
+    # emblems' art in the light theme. Emblem icons opt out of the colour separately (see
+    # tests/meridian/test_accounts_medallion.py), so the disc still reaches every role medallion.
     assert (
-        'html[data-theme="light"] .obs-shell .m-account-icon {\n  background: var(--obs-bg);' in css
+        'html[data-theme="light"] .obs-shell .m-account-icon {\n  background-color: var(--obs-bg);' in css
     )
     # The sheet leaves the theme's box enumeration, or the fill it no longer declares would be
     # painted back on by the box rule. Comments are stripped first: the enumeration carries the

@@ -338,17 +338,56 @@ html[data-theme="dark"] .m-accounts-summary .m-accounts-ticket {
    also the structure of the Plan concept's dials, the Activity rows and the Settings medallions,
    so the whole app now reads one way instead of per surface. `box-sizing: border-box` is global,
    so the band is eaten inward and the medallion stays 46px. */
+/* The medallion. Concept 04's is ~52 CSS px across on the governed 420-wide viewport, measured
+   from the concept itself (103 device px of 853-wide art at 420/853), so the box takes that
+   rather than the 46px the frame happened to be drawn at. The delivery derivatives are cut to
+   their visible disc, so this box IS the disc -- a naive `contain` of the 1254px masters would
+   have painted a 42px medallion inside a 52px hole, because their art fills only ~80% of its
+   canvas. */
 .m-account-icon {
   position: relative;
   flex: 0 0 auto;
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   display: grid;
   place-items: center;
   border-radius: 50%;
   background: var(--m-surface);
   border: 5px solid var(--medallion-tint, var(--m-surface-muted));
   color: var(--obs-brass);
+}
+
+/* Concept 04's three named accounts carry the concept's own emblems -- the whole medallion, art
+   and all. So this variant gives up the three-layer construction entirely: no code-owned disk
+   (the art has its own field), no tint border (the art has its own ring), and no kit frame (the
+   art has its own). That is the handoff's instruction, not an oversight: the delivered masters
+   "are complete medallions, including rings and center glyphs".
+
+   `background: none` is repeated in the light theme below for the same reason the ticket needed
+   a carve-out: a theme rule that repaints every disc would otherwise paint a square indigo block
+   behind round art. */
+.m-account-icon[data-emblem] {
+  border: 0;
+  background: none;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.m-account-icon[data-emblem]::after {
+  content: none;
+}
+
+.m-account-icon[data-emblem="compass"] {
+  background-image: url("/static/img/meridian/observatory/accounts/compass-medallion.png");
+}
+
+.m-account-icon[data-emblem="wifi"] {
+  background-image: url("/static/img/meridian/observatory/accounts/wifi-medallion.png");
+}
+
+.m-account-icon[data-emblem="star"] {
+  background-image: url("/static/img/meridian/observatory/accounts/star-medallion.svg");
 }
 
 .m-account-icon::after {
@@ -513,7 +552,14 @@ html[data-theme="light"] .obs-shell .m-account-list {
    concept's own disc is the night indigo, so the light theme takes `--obs-bg` #141b32, which
    puts the brass glyph back at 7.62:1 and keeps the two themes one construction. */
 html[data-theme="light"] .obs-shell .m-account-icon {
-  background: var(--obs-bg);
+  background-color: var(--obs-bg);
+}
+
+/* ...but a delivered medallion carries its own field, ring and glyph, so the disc rule above
+   must not paint behind it -- the art has transparent corners, and an indigo block would show
+   through them. Only the COLOUR is suppressed; the art comes from the emblem rules. */
+html[data-theme="light"] .obs-shell .m-account-icon[data-emblem] {
+  background-color: transparent;
 }
 
 .m-account-history {
@@ -589,7 +635,10 @@ html[data-theme="light"] .obs-shell .m-account-icon {
      The action drops to its own row while retaining a 44px touch target. */
   .m-account-row {
     display: grid;
-    grid-template-columns: 44px minmax(0, 1fr) auto;
+    /* 52px, not 44: the medallion is the concept's 52px disc, and a 44px track would let it
+       overhang into the column gap. The 44px figure below is the touch target, which is a
+       different thing and stays. */
+    grid-template-columns: 52px minmax(0, 1fr) auto;
     align-items: center;
     column-gap: var(--m-space-3);
     row-gap: var(--m-space-2);

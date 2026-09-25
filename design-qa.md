@@ -24,6 +24,51 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## Accounts — the emblems the concept draws on its three named accounts (2026-09-24, OS-103 trait 2)
+
+Owner, 2026-09-24, choosing between two glyph systems: **"The concept's three emblems."** That choice is also
+the acceptance the delivered medallion handoff requires — it permits that artwork only *"where that visual
+mapping is deliberately accepted"*, and the row's own name label stays, so the emblem is never the classifier.
+
+**Assets.** The two masters are 1254×1254 with the disc filling only ~80% of the canvas, so fitting the canvas
+into the 52px box would have painted a 42px medallion. `scripts/build_account_medallions.py --write` crops to
+the visible disc and resamples to 208×208 = 4× the concept's 52 CSS disc: **2.0 MB → 91 KB and 2.07 MB → 93 KB**,
+corners transparent. The star is **drawn** (`accounts/star-medallion.svg`), because the delivered package
+excludes the emergency-fund star; it follows the two masters' measured construction — an angle-averaged radial
+profile puts the brass rim at 0.89–1.00 R, the colour band at 0.73–0.89, the brass inner ring at 0.70–0.73 and
+the field inside 0.70 — with the concept's own coral for that bucket. It is vector against their raster: slightly
+flatter at 208px, indistinguishable at display size.
+
+**The disc is now the concept's size.** 46px → **52px** (concept 04 measures 103 device px of 853-wide art at the
+governed 420 viewport), and the mobile row track went 44px → 52px so the disc cannot overhang the column gap.
+
+**Measured in the running page** at 420×912 and 390×844, DPR 3, both themes, with the concept's own names served
+through the real `/api/meridian/accounts` path:
+
+| row | emblem | tint | box | border | glyph | kit frame | art |
+|---|---|---|---|---|---|---|---|
+| Free to Spend | `compass` | lilac | 52×52 | 0px | none | none | `compass-medallion.png` |
+| Checking | — | lilac | 52×52 | 5px | svg | drawn | none |
+| Bill Reserve | `wifi` | mint | 52×52 | 0px | none | none | `wifi-medallion.png` |
+| Emergency Fund | `star` | apricot | 52×52 | 0px | none | none | `star-medallion.svg` |
+| **Emergency plumbing fund** | **—** | mint | 52×52 | 5px | svg | drawn | none |
+
+The last row is the point of the guard: the key is the account's **name**, matched against concept 04's three
+names **exactly**, so a lookalike keeps its semantic medallion instead of wearing an emblem that would assert
+something untrue. `docOverflow` is 0 at every width and theme, with no console errors. The connector nodes and
+segment stops follow the emblems' tints (lilac → lilac → mint → apricot → mint), so the cord now carries the
+concept's colour progression.
+
+![The emblems on night: compass on Free to Spend, the role medallion on Checking](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/accounts-aesthetic-2026-09-24/review/emblems-rows-dark.jpg)
+
+![The same rows on parchment](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/accounts-aesthetic-2026-09-24/review/emblems-rows-light.jpg)
+
+**Recorded, not fixed:** the delivered art is dimensional and the drawn star is not, so at 208px the star reads
+flatter than the compass and Wi-Fi masters; at the 52px display size the difference is not visible. A matching
+raster star master would close it and is the open follow-up. The role medallions (Checking, and any account the
+concept does not name) keep the kit frame and their semantic glyphs, so the emblem treatment is a three-account
+treatment rather than a new system.
+
 ## Accounts — the four named aesthetic traits, measured before anything moved (2026-09-24, OS-103, base `56390c9`)
 
 Owner: *"Accounts aesthetic — larger ticket, more diverse icons, no outer box on accounts, connected dotted line

@@ -1,5 +1,43 @@
 # Enhanced SimpleCrew — Current Status
 
+## Accounts: the concept's own three emblems, on the three accounts it names (2026-09-24, OS-103 trait 2, base `8bc3c16`)
+
+The fourth trait — *"more diverse icons"* — was **not guessed at**; it was measured, then put to the owner as a
+choice between glyph systems, because it changes a system rather than closing a delta. He chose **the concept's
+three emblems**, which is also the acceptance the delivered medallion handoff demands: that artwork may be used
+only *"where that visual mapping is deliberately accepted"*.
+
+**Assets, derived not invented.** The two delivered masters are 1254×1254 with the disc filling only ~80% of the
+canvas, so a naive fit would have painted a 42px medallion in a 52px box. `scripts/build_account_medallions.py
+--write` crops to the visible disc and resamples to 208×208 = 4× the concept's measured 52 CSS disc, taking each
+master from ~2 MB to ~91–93 KB with transparent corners. The star is **drawn in-repo**
+(`accounts/star-medallion.svg`) because the delivered package excludes the emergency-fund star, and it follows
+the two masters' own measured construction (angle-averaged radial profile: brass rim 0.89–1.00 R, colour band
+0.73–0.89, brass inner ring 0.70–0.73, field inside 0.70) with the concept's coral for that bucket. Vector
+against raster: flatter at 208px, indistinguishable at the 52px display size. All three rows are in
+`ASSET_MANIFEST.md` with hashes and the derivation command.
+
+**The disc is the concept's size now** — 46px → **52px**, with the mobile row track 44px → 52px so the disc
+cannot overhang the column gap.
+
+**Measured in the running page** at 420×912 and 390×844, DPR 3, both themes, driving the real render path with
+the concept's own names: `Free to Spend` → compass (lilac), `Bill Reserve` → Wi-Fi (mint), `Emergency Fund` →
+star (apricot), each 52×52 with **no tint border, no kit frame and no glyph** — the delivered art is a complete
+medallion, and the handoff forbids stacking it over the existing frame. **`Emergency plumbing fund` → no
+emblem**, which is the whole point: the key is the account's name matched against concept 04's three names
+*exactly*, so a lookalike keeps its semantic role medallion rather than wearing an emblem that would assert
+something untrue. `Checking` likewise keeps its role medallion. The connector's nodes and segment stops follow
+the emblems' tints, so the cord now carries the concept's colour progression. `docOverflow` 0 at every width and
+theme; no console errors.
+
+Guards: five new cases in `tests/meridian/test_accounts_medallion.py` (assets real and referenced, the
+three-layer construction dropped for emblems, the concept sizing, the exact name key with no fuzzy path, the
+label and `aria-hidden` retained, tints reaching the connector) plus a browser-level case in
+`tests/browser/test_accounts.py` that drives the five names through the real payload path. Two pre-existing
+guards were updated where the code legitimately moved (the tint assignment and the light theme's disc
+declaration, which is now the colour longhand so it cannot wipe emblem art) — each keeping its original intent.
+Browser cases skip without `APP_URL`; the measured probe output is the evidence here.
+
 ## Accounts: the ticket grew, the card went, the cord took the rows' colours — and the fourth trait was not guessed at (2026-09-24, OS-103, base `56390c9`)
 
 Owner: *"Accounts aesthetic — larger ticket, more diverse icons, no outer box on accounts, connected dotted line

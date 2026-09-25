@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 208 208" width="208" height="208" role="img" aria-label="Emergency fund medallion">
+  <title>Emergency fund medallion</title>
+  <defs>
+    <!-- Geometry is taken from the two delivered Investigator masters rather than chosen: an angle-averaged
+         radial profile of each (tmp/medallion_profile.py) puts the brass outer rim at 0.89-1.00 of the
+         visible radius, the coloured band at 0.73-0.89, a brass inner ring at 0.70-0.73, and the field
+         inside 0.70. This canvas is 208x208 = the delivery size, so R = 104 and the bands land on
+         92.5 / 76 / 72.8 / 104 exactly. The compass master is the model: it is the one of the two whose
+         field is indigo behind a brass glyph, which is what concept 04's emergency-fund disc is too
+         (coral disc, navy star). Only the colour changes, from the concept's own emergency-fund coral. -->
+    <radialGradient id="rim" cx="42%" cy="34%" r="72%">
+      <stop offset="0%" stop-color="#e3cb97"/>
+      <stop offset="45%" stop-color="#c0a166"/>
+      <stop offset="100%" stop-color="#7f6531"/>
+    </radialGradient>
+    <radialGradient id="band" cx="38%" cy="30%" r="78%">
+      <stop offset="0%" stop-color="#f0a873"/>
+      <stop offset="55%" stop-color="#dd8b52"/>
+      <stop offset="100%" stop-color="#b86c39"/>
+    </radialGradient>
+    <radialGradient id="field" cx="46%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#232f5c"/>
+      <stop offset="70%" stop-color="#18213f"/>
+      <stop offset="100%" stop-color="#0e1529"/>
+    </radialGradient>
+    <radialGradient id="rivet" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#f0dcaa"/>
+      <stop offset="60%" stop-color="#c3a469"/>
+      <stop offset="100%" stop-color="#7d6330"/>
+    </radialGradient>
+    <linearGradient id="star" x1="30%" y1="10%" x2="72%" y2="92%">
+      <stop offset="0%" stop-color="#f2dfae"/>
+      <stop offset="48%" stop-color="#d3b478"/>
+      <stop offset="100%" stop-color="#9a7c42"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 1. brass outer rim, 0.89-1.00 R -->
+  <circle cx="104" cy="104" r="104" fill="url(#rim)"/>
+  <circle cx="104" cy="104" r="99.5" fill="none" stroke="#6d5628" stroke-width="1.1" opacity="0.55"/>
+  <!-- 2. the engraved separation the masters carry between rim and band -->
+  <circle cx="104" cy="104" r="94.5" fill="none" stroke="#4a3a1b" stroke-width="1.6" opacity="0.7"/>
+  <!-- 3. coral band, 0.73-0.89 R -->
+  <circle cx="104" cy="104" r="92.5" fill="url(#band)"/>
+  <circle cx="104" cy="104" r="92.5" fill="none" stroke="#8f4f26" stroke-width="1" opacity="0.5"/>
+  <!-- 4. brass inner ring, 0.70-0.73 R -->
+  <circle cx="104" cy="104" r="76" fill="url(#rim)"/>
+  <circle cx="104" cy="104" r="76" fill="none" stroke="#5c4a22" stroke-width="1" opacity="0.6"/>
+  <!-- 5. indigo field, inside 0.70 R -->
+  <circle cx="104" cy="104" r="72.8" fill="url(#field)"/>
+  <circle cx="104" cy="104" r="70.6" fill="none" stroke="#070c18" stroke-width="3" opacity="0.35"/>
+  <!-- 6. the engraved star: the concept's emergency-fund emblem, in the masters' brass on indigo -->
+  <g>
+    <path d="M104 56 L117.6 90.6 L154.5 92.3 L125.8 115.4 L135 150.9 L104 131.2 L73 150.9 L82.2 115.4 L53.5 92.3 L90.4 90.6 Z"
+          fill="url(#star)" stroke="#6b5626" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M104 56 L117.6 90.6 L104 104 L90.4 90.6 Z" fill="#ffffff" opacity="0.14"/>
+    <path d="M104 131.2 L73 150.9 L82.2 115.4 L104 104 Z" fill="#000000" opacity="0.16"/>
+    <path d="M53.5 92.3 L90.4 90.6 L104 104 L82.2 115.4 Z" fill="#000000" opacity="0.1"/>
+  </g>
+  <!-- 7. the four rim rivets the masters carry, at 0.94 R -->
+  <g>
+    <circle cx="104" cy="7.5" r="5.2" fill="url(#rivet)" stroke="#5c4a22" stroke-width="0.9"/>
+    <circle cx="200.5" cy="104" r="5.2" fill="url(#rivet)" stroke="#5c4a22" stroke-width="0.9"/>
+    <circle cx="104" cy="200.5" r="5.2" fill="url(#rivet)" stroke="#5c4a22" stroke-width="0.9"/>
+    <circle cx="7.5" cy="104" r="5.2" fill="url(#rivet)" stroke="#5c4a22" stroke-width="0.9"/>
+  </g>
+</svg>

@@ -47,6 +47,53 @@ function roleTint(role) {
   return ROLE_TINTS[role] || "slate";
 }
 
+/* Concept 04 draws three DIFFERENT emblems on three named accounts: a compass rose for Free to
+   Spend, a Wi-Fi mark for Bill Reserve, and a star for Emergency Fund. The app draws one glyph
+   per financial ROLE instead, and both of the owner's first two accounts are pockets that
+   resolve to `other` -- so they came out as two identical houses, which is what he reported as
+   "more diverse icons" on 2026-09-24.
+
+   The owner chose the concept's own three emblems, and the delivered medallion handoff permits
+   that artwork only "where that visual mapping is deliberately accepted" -- it does, and he
+   accepted it on 2026-09-24. Three things keep that permission narrow rather than a licence:
+
+     1. The key is the account's NAME, matched against concept 04's own three names after
+        normalisation, and matched EXACTLY. There is no substring or fuzzy matching, because a
+        rule that fires on "Emergency" would relabel "Emergency plumbing fund" with an emblem
+        that means something else. His rows carry the three names verbatim.
+     2. Anything that does not match keeps its semantic role medallion, so the emblem is never
+        the only thing distinguishing two accounts -- and every row still carries its own name
+        label, which the handoff requires it to keep.
+     3. The artwork is never a classifier: it is decoration on a row that already says what it
+        is, `aria-hidden`, exactly as the role glyph was.
+
+   Tints follow the concept too: the compass is lilac, the Wi-Fi mint, the star the concept's
+   apricot. The connector node inherits the SAME tint, because the concept's cord takes its
+   colour from the medallion it leaves. */
+const BUCKET_EMBLEMS = {
+  "free to spend": "compass",
+  "bill reserve": "wifi",
+  "emergency fund": "star",
+};
+
+const EMBLEM_TINTS = { compass: "lilac", wifi: "mint", star: "apricot" };
+
+function normalizeAccountName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+export function bucketEmblem(name) {
+  return BUCKET_EMBLEMS[normalizeAccountName(name)] || null;
+}
+
+export function emblemTint(emblem) {
+  return EMBLEM_TINTS[emblem] || "slate";
+}
+
 /* The same tints the medallions carry, as colour values, so the connector nodes can
    take their row's ink without the stylesheet repeating a second colour table. Kept
    beside ROLE_TINTS so the two cannot drift apart unnoticed. */
@@ -314,14 +361,27 @@ function accountRow(account, role) {
   row.className = "m-account-row";
   row.dataset.accountRow = "";
   // The tint lives on the row as well as the medallion so the connector rail's node can
-  // inherit the same colour without the two reading from separate sources.
-  row.dataset.tint = roleTint(role);
+  // inherit the same colour without the two reading from separate sources. A concept emblem
+  // brings the concept's own colour with it, so the node follows the medallion either way.
+  const emblem = bucketEmblem(account.name);
+  const tint = emblem ? emblemTint(emblem) : roleTint(role);
+  row.dataset.tint = tint;
 
   const icon = document.createElement("span");
   icon.className = "m-account-icon";
   icon.dataset.accountIcon = role;
-  icon.dataset.tint = roleTint(role);
-  icon.innerHTML = roleIcon(role);
+  icon.dataset.tint = tint;
+  if (emblem) {
+    // A delivered medallion is COMPLETE -- ring, field and centre glyph in one image -- so the
+    // whole mark is replaced rather than the frame being stacked over a code-owned disk and a
+    // semantic glyph. The handoff is explicit: "Replace the whole decorative medallion in the
+    // chosen location; do not stack them over the existing frame or recolor them with a CSS
+    // mask." The stylesheet paints the art off this attribute, and the row keeps its visible
+    // name, so nothing here carries meaning on its own.
+    icon.dataset.emblem = emblem;
+  } else {
+    icon.innerHTML = roleIcon(role);
+  }
   icon.setAttribute("aria-hidden", "true");
 
   const identity = document.createElement("div");
