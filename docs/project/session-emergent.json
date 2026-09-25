@@ -144,31 +144,36 @@
       "summary": "The dial's ticket still prints 'No event selected' beneath a line that already explains the same thing.",
       "why": "Owner, 2026-09-25, then WITHDRAWN in the same session ('please disregard my two previous messages'). Recorded so it is neither acted on as approval nor lost: the ticket's own prose already says no event is selected, so the label is redundant, and on the narrow phone viewport it also overlaps. Removing it touches the dial ticket template and its browser tests; the owner's withdrawal means anyone acting on this is acting on a request he cancelled.",
       "arose": "2026-09-25",
-      "decision_owed": true
+      "decision_owed": true,
+      "parked_in": "Track D — Design and layout fidelity"
     },
     {
       "summary": "Callout titles in the Today rail are 15px, because the owner-chosen 104px rail splits the word 'arrangement' at 16px.",
       "why": "OS-113's visual slice, 2026-09-25. At 16px the longest ordinary title word measures 106.1px in a 104px column, so `overflow-wrap: break-word` splits it and the browser guard `test_long_event_list_does_not_push_dial_down_or_split_amounts` fails at 390/420/430. At 15px the word measures 99.5px, rows are 14% shorter, and the rail is still 3px clear of the ring. The three alternatives were measured and each breaks a governed guard: rail back to 126px restores the 19px overlap he reported; shrinking the dial to 78vw gives 7 label pairs/136.9px2 against a 60px2 limit; shifting the instrument left breaks his own seating guards (`content_left - dial_box.x == 56`, `painted.left >= -48`). So if the owner wants 16px titles back, the FORM must change rather than a number.",
       "arose": "2026-09-25",
-      "decision_owed": true
+      "decision_owed": true,
+      "parked_in": "Track D — Design and layout fidelity"
     },
     {
       "summary": "Plan's write forms resolve Crew's opaque ids by parsing a snapshot FILE outside the repository.",
       "why": "`meridian/services/plan.py::_crew_ids()` reads `_CREW_SNAPSHOT_PATH` or `~/Library/Application Support/SimpleCrew/live_crew_snapshot.txt`. By the repo's own rule 6 that is a private harness -- if only one machine can run it, it is not evidence -- and OS-113 has just proved the better home exists: the spend-pocket selection now arrives through the database with provenance, so the same move can retire this file dependency for the pocket id first, then for the account/checking ids. Touches `plan.py`, the payload the write forms read, and the browser tests that pin `free_to_spend_subaccount_id`.",
       "arose": "2026-09-25",
-      "decision_owed": true
+      "decision_owed": true,
+      "parked_in": "Track C — Capability spine"
     },
     {
       "summary": "The ChatGPT-side tree runs its own application and database lineage alongside ours.",
       "why": "`Simplecrew Branch/data/savings_data.db` is schema 017 with 257 transactions and its own `live_snapshot_loop.sh` / `sync_live_snapshot.py`, while the live preview is schema 030 with 260. Verified 2026-09-25 that theirs is a strict SUBSET of ours on every provider-keyed table (0 theirs-only keys), so nothing is lost by it existing -- but two lineages will drift, and only one of them can be authoritative for money. Either declare theirs a read-only scratch mirror in writing, or retire it.",
       "arose": "2026-09-25",
-      "decision_owed": true
+      "decision_owed": true,
+      "parked_in": "0. Consolidation — one tree, one branch"
     },
     {
       "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
       "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
       "arose": "2026-09-25",
-      "decision_owed": true
+      "decision_owed": true,
+      "parked_in": "3. Memory and context — what lives where"
     }
   ]
 }
