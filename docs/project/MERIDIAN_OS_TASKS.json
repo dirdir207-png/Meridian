@@ -2824,7 +2824,7 @@
     {
       "id": "OS-114",
       "title": "Cannibalize the ChatGPT-side Crew captures: cross-reference and fill the gaps on our side",
-      "status": "open",
+      "status": "in_progress",
       "priority": "high",
       "phase": "track-C-capability",
       "owner_request_2026_09_25": "Owner, 2026-09-25: 'Once this is done, please cannibalize ChatGPT's captures and cross reference, fill in any missing data we had on our end.'",
@@ -2834,7 +2834,18 @@
         "A facet-by-facet inventory, with counts and capture dates, of what each capture holds and what our database stores for the same surface.",
         "Every gap classified as: already stored, deliberately discarded (with the reason), or missing and worth ingesting.",
         "For anything ingested: provenance preserved, absence never stored as zero, and tests proving both."
-      ]
+      ],
+      "progress": "discovery delivered 2026-09-25; ingestion awaiting the owner's choice of gaps",
+      "evidence": {
+        "compared_2026_09_25": "Three lineages read read-only against the owner's capture (`Simplecrew Branch/data/live_crew_snapshot.txt`, captured 2026-09-04T18:10:19Z, complete=true, errors=0, 8 facets: accounts, autopilot, expenses, family, physical_cards, pockets, transactions, virtual_cards): the ChatGPT-side database (schema 017, 257 transactions, 5 commitments), the repo's own savings_data.db (schema 025, 124, 7), and the live preview /tmp/gate-preview/gate.db (schema 030, 260, 19 + 822 evidence rows).",
+        "nothing_was_lost": "PROVEN, and it is the answer to the owner's own question. All 100 transactions in the capture are present in the live database, and the ChatGPT-side database is a STRICT SUBSET of ours on every provider-keyed table: accounts 7/7 with 0 theirs-only keys; transactions 257 of our 260 with **0 theirs-only**; commitments 5 of our 7 with **0 theirs-only**. So there is nothing to backfill FROM their database -- ours is the superset, and the 3 transactions and 2 commitments only we hold are ours to keep, not theirs to give. (The repo's own savings_data.db lacks 23 captured transactions, all before 2026-08-20, which is outside its recorded window -- staleness, not loss.)",
+        "the_capture_holds_what_we_discard": "Four facets are captured and never ingested: `autopilot` (2 rules with id/name/isPaused/isBroken/formula/conditions/actions/type), `family` (2 children + 1 parent with ids, names, balances and subaccounts), `physical_cards` and `virtual_cards` (card inventories, each carrying the same `userSpendConfig.selectedSpendSubaccount` the OS-113 slice now persists for the parent user).",
+        "pocket_goals_were_not_missing": "The capture reports a `goal` on pockets, and every value was NULL on 2026-09-04, which is why `financial_accounts.goal_target` (migration 029) is empty in every database. The column is not unfilled; the data did not exist. Recorded so a future reader does not 'fix' an empty column that is correct.",
+        "a_real_structural_gap_the_capture_exposes": "Per-bill reserved amounts have NO HISTORY on our side. `commitments.funded_amount` IS Crew's per-bill `reservedAmount` (C01) and `reserved_amount_reported` is only the flag that says whether Crew reported one -- both are single mutable values overwritten per sync, while the reserve-level total keeps dated rows in `crew_bill_reserves`. So the capture's 2026-09-04 value for Rent (71098 cents = $710.98) against today's 0.00 cannot be explained as a payment rather than a lost observation, and that capture is the only record of the earlier number. This is the one gap that touches money arithmetic.",
+        "the_capture_pipeline_exists_on_their_side": "`scripts/live_snapshot_loop.sh` and `scripts/sync_live_snapshot.py` keep `data/live_crew_snapshot.txt` fresh and sync it into their database, and `crew/` carries the session-credential capture. Nothing about that pipeline needs to move; what matters is that the capture is a LIVE artifact, so a facet we start ingesting will keep arriving.",
+        "method": "Read-only everywhere: the capture via `ast.literal_eval`, every database via `file:...?mode=ro`. Matching is by PROVIDER KEY (external_id / legacy_id), never by name -- the OS-113 lesson. No balance was printed; amounts appear only where the comparison needs the value itself."
+      },
+      "open_remainder": "Which gaps to close is the owner's choice, because they are money-model decisions rather than cleanup: (A) per-bill reserved-amount HISTORY as dated observations -- the only money-affecting gap, and the capture can backfill exactly one date; (B) `autopilot` rules, already earmarked as OS-059; (C) `family`/card inventories, which affect who can spend but not the figure. Nothing may be ingested from a historical capture as CURRENT: a 2026-09-04 value is history, and the payload must date it."
     }
   ]
 }
