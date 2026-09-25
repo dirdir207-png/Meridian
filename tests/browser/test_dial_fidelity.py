@@ -1221,3 +1221,49 @@ def test_the_dial_readout_wraps_clear_of_the_rotunda(dial_page):
         "the dial's readout runs into the kit's rotunda: " + "; ".join(offenders)
         + " -- narrow or raise .obs-dial-center so every line wraps in the sky"
     )
+
+
+def test_every_single_event_marker_carries_the_icon_the_list_uses(dial_page):
+    """Owner, 2026-09-25: "can we instead have them be miniature versions of the bill icons on the right".
+
+    A marker used to be a plain lilac dot, so the ring and the event list showed two different
+    vocabularies for the same event: a dot on the dial, a lightning bolt in the list. This asserts they
+    are the SAME asset rather than two lookalikes that can drift -- the marker's SVG `<image>` must
+    reference the very icon `eventIconName()` gives the event list, read from the DOM on both sides.
+
+    Multi-event markers are asserted to keep their count instead: a number is more use than one of N
+    icons, and the events behind it are listed in the panel.
+    """
+    mapping = dial_page.evaluate("""() => {
+      const listIcons = {};
+      for (const item of document.querySelectorAll('.obs-event-item')) {
+        const img = item.querySelector('.obs-event-kind img');
+        if (item.dataset.eventId && img) listIcons[item.dataset.eventId] = img.dataset.eventIcon || null;
+      }
+      const markers = [...document.querySelectorAll('.obs-dial-marker')].map((marker) => {
+        const image = marker.querySelector('image');
+        return {
+          date: marker.dataset.date,
+          count: Number(marker.dataset.count || 1),
+          icon: image ? image.dataset.eventIcon : null,
+          href: image ? image.getAttribute('href') : null,
+        };
+      });
+      return {listIcons, markers, listCount: Object.keys(listIcons).length};
+    }""")
+    assert mapping["markers"], "the fixture renders no markers, so this guard proves nothing"
+    assert mapping["listCount"], "the fixture renders no event list, so there is nothing to compare with"
+
+    singles = [marker for marker in mapping["markers"] if marker["count"] == 1]
+    assert singles, "the fixture must render at least one single-event marker"
+    for marker in singles:
+        assert marker["icon"], f"the marker on {marker['date']} carries no icon: {marker}"
+        assert marker["href"].endswith(f"/icons/{marker['icon']}.svg"), (
+            f"the marker on {marker['date']} points at {marker['href']} but claims {marker['icon']}"
+        )
+    assert {marker["icon"] for marker in singles} <= set(mapping["listIcons"].values()), (
+        f"the dial draws {sorted({m['icon'] for m in singles})} while the list draws "
+        f"{sorted(set(mapping['listIcons'].values()))}; the two must share one vocabulary"
+    )
+    for marker in [item for item in mapping["markers"] if item["count"] > 1]:
+        assert marker["icon"] is None, "a multi-event marker keeps its count, not an icon"

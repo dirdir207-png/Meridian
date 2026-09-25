@@ -1031,9 +1031,28 @@ function renderDialSVG(state, container) {
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     circle.setAttribute("cx", String(point.x.toFixed(2)));
     circle.setAttribute("cy", String(point.y.toFixed(2)));
-    circle.setAttribute("r", dayEvents.length > 1 ? "15" : "7");
+    // A single-event marker is now big enough to CARRY its icon, and a multi-event marker keeps the
+    // count: a number is more use than one of N icons, and the events behind it are listed in the panel.
+    circle.setAttribute("r", dayEvents.length > 1 ? "15" : "14");
     circle.setAttribute("fill", "currentColor");
     marker.appendChild(circle);
+    if (dayEvents.length === 1) {
+      // Owner, 2026-09-25: "I see they have to do with the commitments, can we instead have them be
+      // miniature versions of the bill icons on the right". The same `eventIconName()` the event list
+      // uses, drawn as an SVG <image> on the marker's own disc, so a lightning bolt on the ring and a
+      // lightning bolt in the list are literally the same asset rather than two lookalikes that can
+      // drift apart. Sized to sit inside the disc with a 3-unit rim.
+      const iconName = eventIconName(dayEvents[0]);
+      const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+      image.setAttribute("class", "obs-dial-marker-icon");
+      image.setAttribute("href", `/static/img/meridian/observatory/kit-2026-09-16/icons/${iconName}.svg`);
+      image.setAttribute("x", (point.x - 10).toFixed(2));
+      image.setAttribute("y", (point.y - 10).toFixed(2));
+      image.setAttribute("width", "20");
+      image.setAttribute("height", "20");
+      image.dataset.eventIcon = iconName;
+      marker.appendChild(image);
+    }
     if (dayEvents.length > 1) {
       const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
       text.setAttribute("x", String(point.x.toFixed(2)));
