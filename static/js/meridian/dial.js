@@ -71,48 +71,49 @@ const MARKER_RADIUS_UNITS = VIEWBOX.r - 118;
  * wedge POINTER_TIP_HALF_WIDTH either side at POINTER_TIP_UNITS, where its tip circle sits ON the
  * ring band (the painted disc's outer edge is ~265 units at r=282).
  *
- * RE-MEASURED 2026-09-24 (owner: "just need the pointer now"). The first pass read the concept as
- * a SHORT needle -- inner point 96 units, tip base 5.4 units either side -- and at the governed
- * mobile size (a 352.8px wrap, so 1 unit = 0.588px) that drew an 18.1 x 6.4px mint sliver lying on
- * the dial's engraved sky. It was in the DOM, it was visible, and it was unreadable, which is why
- * the owner kept reporting it as missing.
+ * RE-MEASURED 2026-09-25, FROM THE RENDERED PATH rather than from the art alone, because the
+ * 2026-09-24 pass tuned these constants while the geometry was silently DEGENERATE and therefore
+ * unpaintable. Owner then: "The pointer in the dial still needs considerable work ... Its so thin its
+ * barely visible, a far cry from the concept."
  *
- * RE-MEASURED, not guessed, from
- * `design/observatory-drafts-2026-09-08/06-interactive-observatory-vision.png`, whose dial has a
- * radius of ~271.2px:
- *   tip circle centre   144.5px = 0.533 r  -> 233 units (a measured 0.83 r; see the spacing note)
- *   inner point         114.7px = 0.423 r  -> 126 units (was 96; the concept's point is longer AND
- *                                            the wedge is what carries the reading)
- *   tip base half-width  19.9px = 0.073 r  -> 14 units (was 5.4, then 10.5)
- *   tip circle radius    10.4px = 0.038 r  -> 11 units   (unchanged)
+ * THE DEFECT, and it was arithmetic, not taste: the base offset was built with the MATHEMATICAL
+ * perpendicular (`perpX = -sin(rad), perpY = cos(rad)`) while `positionOnArc` is a BEARING off north
+ * (`x = cx + r*sin(rad)`, `y = cy - r*cos(rad)`). The two are 90 degrees apart, so the offset ran
+ * ALONG the hand's axis and the three path vertices were collinear -- read off the rendered `d`,
+ * |AB| 93 + |BC| 28 = |AC| 121 exactly, area ZERO. Nothing but the 0.88px dark stroke was painting.
+ * That is why every previous increase in half-width changed nothing the owner could see: he was
+ * looking at a stroke, and the wedge had no area to widen. It also appeared in TWO places (the first
+ * render and `paintSVGSelection`, the update path that repaints on every change), and fixing one left
+ * the other painting the same hairline.
  *
- * BOTH ends were under-scaled, and the half-width is what the owner saw last (2026-09-24: "the
- * pointer is barely visible it's so thin as well, does not match the scope of the concept"). At
- * 420x912 a 10.5-unit half-width painted a wedge 12.3px across at its base -- thinner than the
- * 13.2px event badges it points past -- so the hand read as engraving rather than an instrument. At
- * 14 units it is 16.5px across, which is the concept's own measured proportion (its wedge is 0.146
- * of the dial radius at the base; 14/282 = 0.0496 of r measured as HALF-width, i.e. 0.099 of the
- * diameter).
+ * RE-MEASURED proportions, concept 06 at 853px for 420 CSS (its dial r=~271px, 1 unit = 0.588 CSS px
+ * on this instrument):
+ *   inner point         114.7px = 0.423 r  -> 126 units   (the wedge tapers to a point well inside)
+ *   tip circle centre   144.5px = 0.533 r  -> 230 units   (on the band; the number band caps it)
+ *   tip base half-width   8.1px = 0.030 r  -> 4.5 units   (the concept's blade is SLIM: ~4.8 CSS px)
+ *   tip circle radius    10.4px = 0.038 r  -> 14 units    (17.6 CSS px across; the concept's is ~19)
+ * The earlier 14-unit half-width came from reading the head's own width as the blade's, which would
+ * have made a wedge 16.5 CSS px across at the base -- wider than the head that sits on it, i.e. the
+ * opposite of the concept, where a slim blade carries a large ring.
  *
  * GEOMETRY CHECK, and these figures are MEASURED IN THE BROWSER at the governed phone widths rather
  * than derived, because two derived estimates passed geometry that actually collided:
  *   - `placeDayLabels()` seats the rim numbers' centres at radius **243.7 units** (389..432px from the
- *     dial centre at 390/420/430 CSS, DPR 3). The tip circle's far edge is 244, i.e. it ends exactly
- *     where the numbers' own centres begin, with the whole stylus INSIDE the number ring. The
- *     browser guard asserts that no painted part of the stylus overlaps a number.
+ *     dial centre at 390/420/430 CSS, DPR 3). The tip circle's far edge is 230 + 14 = 244, i.e. it
+ *     ends exactly where the numbers' own centres begin, with the whole stylus INSIDE the number ring.
  *   - The selected day draws no number while every day is numbered (see `renderInstrumentOverlay`),
  *     because the stylus is that day's mark and the two sit at the same angle.
- *   - The wedge's base reaches 126 + 10.5 = 136.5 units, and the centre readout is a 52%-wide HTML
+ *   - The wedge's base reaches 126 + 4.5 = 130.5 units, and the centre readout is a 52%-wide HTML
  *     overlay around the dial's middle, so the hand reaches neither.
- * The needle spans 37.9% of the radius -- 107 units, i.e. 63px of hand at 420x912 against the 18.1px
- * sliver the owner reported as missing. The 53% the concept shows is not reachable on this
- * instrument: at 250 units the tip circle straddled the number ring and the wedge ran under a date. */
+ * The hand spans 36.9% of the radius -- 104 units, 61px at 420x912 -- and its head is 17.6 CSS px
+ * across. The 53% the concept shows is not reachable on this instrument: at 250 units the tip circle
+ * straddled the number ring and the wedge ran under a date. */
 const POINTER_INNER_UNITS = 126;
-const POINTER_TIP_UNITS = 233;
-const POINTER_TIP_HALF_WIDTH = 14;
-const POINTER_TIP_RADIUS = 11;
-const POINTER_TIP_RING_RADIUS = 6.6;
-const POINTER_TIP_PUPIL_RADIUS = 3.4;
+const POINTER_TIP_UNITS = 230;
+const POINTER_TIP_HALF_WIDTH = 4.5;
+const POINTER_TIP_RADIUS = 14;
+const POINTER_TIP_RING_RADIUS = 9.8;
+const POINTER_TIP_PUPIL_RADIUS = 5.6;
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /* ── Reversible visual preview: every day number on the rim ──────────────────────────────────────
@@ -1055,10 +1056,24 @@ function renderDialSVG(state, container) {
   pointerGroup.setAttribute("class", "obs-dial-pointer");
   const needlePoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, POINTER_INNER_UNITS, pointerAngle);
   const tipPoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, POINTER_TIP_UNITS, pointerAngle);
-  // The perpendicular at the tip, which is the wedge's base.
-  const radians = (pointerAngle * Math.PI) / 180;
-  const perpX = -Math.sin(radians) * POINTER_TIP_HALF_WIDTH;
-  const perpY = Math.cos(radians) * POINTER_TIP_HALF_WIDTH;
+  // The perpendicular at the tip, which is the wedge's base -- derived from the TWO POINTS rather
+  // than from the angle, and that derivation is the fix for a real defect found 2026-09-25.
+  //
+  // This read `perpX = -sin(rad) * HALF; perpY = cos(rad) * HALF`, the mathematical convention, while
+  // `positionOnArc` above returns a BEARING off north (`x = cx + r*sin`, `y = cy - r*cos`). A
+  // 90-degree mismatch is not a subtle tilt here: the "perpendicular" offset then ran ALONG the
+  // hand's own axis, so the path's three vertices were collinear -- measured off the rendered `d`,
+  // |AB| 93 + |BC| 28 = |AC| 121 exactly -- and the triangle's area was zero. What painted was a
+  // 0.88px dark stroke along a degenerate outline, which is precisely what the owner reported: "Its
+  // so thin its barely visible, a far cry from the concept."
+  //
+  // Deriving it from the points makes the base genuinely perpendicular to whatever direction the
+  // hand points, so this cannot break again if the angle convention changes.
+  const axisX = tipPoint.x - VIEWBOX.cx;
+  const axisY = tipPoint.y - VIEWBOX.cy;
+  const axisLength = Math.hypot(axisX, axisY) || 1;
+  const perpX = (-axisY / axisLength) * POINTER_TIP_HALF_WIDTH;
+  const perpY = (axisX / axisLength) * POINTER_TIP_HALF_WIDTH;
   const needle = document.createElementNS("http://www.w3.org/2000/svg", "path");
   needle.setAttribute("class", "obs-dial-pointer-needle");
   needle.setAttribute(
@@ -1552,9 +1567,16 @@ function paintSVGSelection(svg, state) {
   const pointerAngle = dayToAngle(selectedIndex, totalDays);
   const needlePoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, POINTER_INNER_UNITS, pointerAngle);
   const tipPoint = positionOnArc(VIEWBOX.cx, VIEWBOX.cy, POINTER_TIP_UNITS, pointerAngle);
-  const radians = (pointerAngle * Math.PI) / 180;
-  const perpX = -Math.sin(radians) * POINTER_TIP_HALF_WIDTH;
-  const perpY = Math.cos(radians) * POINTER_TIP_HALF_WIDTH;
+  /* The SAME derivation as the initial render, and this is the copy that actually paints: the pointer
+     is re-drawn here on every update, so the owner's screenshot showed this path's output. It carried
+     the identical convention bug (`-sin, cos` against a bearing-based `positionOnArc`), which made the
+     wedge's three points collinear and its area zero -- a 0.88px hairline instead of a hand. Fixing
+     only the first copy left this one painting the defect. */
+  const axisX = tipPoint.x - VIEWBOX.cx;
+  const axisY = tipPoint.y - VIEWBOX.cy;
+  const axisLength = Math.hypot(axisX, axisY) || 1;
+  const perpX = (-axisY / axisLength) * POINTER_TIP_HALF_WIDTH;
+  const perpY = (axisX / axisLength) * POINTER_TIP_HALF_WIDTH;
   if (pointerNeedle) {
     pointerNeedle.setAttribute(
       "d",

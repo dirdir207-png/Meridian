@@ -1,5 +1,41 @@
 # Enhanced SimpleCrew — Current Status
 
+## The Today stylus was geometrically degenerate (2026-09-25, OS-105, base `d5689a3`)
+
+Owner: *"The pointer in the dial still needs considerable work, but we can pivot away from the visual and earmark it.
+Its so thin its barely visible, a far cry from the concept -- unless you feel its a simple fix."* He asked for a
+verdict, and the verdict is that it was a **one-derivation fix**, because the reason two rounds of constant tuning
+changed nothing is that the wedge had **no area to widen**.
+
+**The defect was arithmetic, not taste.** `positionOnArc` returns a *bearing* off north (`x = cx + r*sin`,
+`y = cy - r*cos`) while the base offset used the *mathematical* perpendicular (`perpX = -sin(rad)*HALF`,
+`perpY = cos(rad)*HALF`). Ninety degrees apart, so the offset ran along the hand's own axis. The rendered `d` proved
+it: `|AB| 93 + |BC| 28 = |AC| 121` exactly -- three collinear points, area **zero** -- so the only ink was the 0.88px
+dark stroke along a degenerate outline, which is precisely the hairline in his screenshot. Every previous increase in
+half-width (5.4 -> 10.5 -> 14 units) was therefore invisible. **And it existed twice**: the initial render and
+`paintSVGSelection`, the update path that repaints the hand on every change, so fixing one left the live app painting
+the defect.
+
+**The fix derives the perpendicular from the two points** -- axisX/axisY from the tip point to the dial's centre --
+so the base is square to whatever direction the hand points and cannot break if the angle convention changes.
+Proportions were then re-measured against concept 06 at the instrument's own scale (0.588 CSS px per unit): blade
+half-width **4.5 units** (4.8 CSS px across at the base), tip circle radius **14 units** (17.6 CSS px across, against
+the concept's ~19), tip centre 230, inner point 126. The old 14-unit half-width came from reading the *head's* width
+as the blade's, which would have made a wedge wider than the head sitting on it -- the opposite of the concept, where
+a slim blade carries a large ring.
+
+**Measured after:** triangle area 463 units^2 (was 0), base square to the axis within 1 degree (was 90), tip circle
+16.46 CSS px (was 12.94), a painted mint blade with its dark edge and ring head. Both existing bounds were
+**respected rather than relaxed**: `tip + radius <= 244` and `tipRadiusFromCentre >= 230` still hold at their
+original values and the geometry was fitted inside them.
+
+**The guard is geometric, and it fires twice.** `test_the_stylus_wedge_has_area_and_its_base_is_square_to_the_hand`
+parses the rendered path and asserts real area, a square base, a base with a body and the concept's head
+proportion -- on first paint AND after the pointer moves, because a check of the initial paint alone would have
+passed while the owner still saw a hairline. `test_the_pointer_perpendicular_is_derived_from_the_points_not_the_angle`
+pins the derivation, since the broken version satisfied every constant-shaped claim. Presentation only: no route,
+data, action, financial, provider, migration or authority change.
+
 ## Plan's two panes: rules stated in words, Crew grouped by purpose (2026-09-24, OS-102, base `431612a`)
 
 Owner: *"I think we should see the rules"* -- and the premise that there was no concept for the Plan panes was

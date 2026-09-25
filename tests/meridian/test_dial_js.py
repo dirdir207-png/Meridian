@@ -802,3 +802,23 @@ def test_the_ticket_prefers_the_bills_invoice_over_the_plan_page():
     assert "Bill email attached." not in js, (
         "invoice provenance stays available through View bill without adding a second action-row line"
     )
+
+
+def test_the_pointer_perpendicular_is_derived_from_the_points_not_the_angle():
+    """The 2026-09-25 hairline: a perpendicular built from the angle while the points came from a
+    bearing, 90 degrees apart, which put the wedge's base along its own axis and gave it zero area.
+
+    The fix derives the base from the two points, so it is square to the hand whatever the angle
+    convention does. This guard is deliberately about the DERIVATION rather than the constants: the
+    broken version satisfied every constant-shaped assertion, which is why the browser test measures
+    the rendered triangle's area and this one pins where the perpendicular comes from.
+    """
+    js = _read("static/js/meridian/dial.js")
+    assert "const perpX = (-axisY / axisLength) * POINTER_TIP_HALF_WIDTH;" in js
+    assert "const perpY = (axisX / axisLength) * POINTER_TIP_HALF_WIDTH;" in js
+    # The mismatched form, in either spelling, must not come back.
+    assert "-Math.sin(radians) * POINTER_TIP_HALF_WIDTH" not in js
+    assert "Math.cos(radians) * POINTER_TIP_HALF_WIDTH" not in js
+    # And the axis really is built from the tip point rather than from an assumed centre distance.
+    assert "const axisX = tipPoint.x - VIEWBOX.cx;" in js
+    assert "const axisY = tipPoint.y - VIEWBOX.cy;" in js

@@ -1044,3 +1044,79 @@ def test_nothing_after_the_seating_block_reimposes_a_callout_column():
     assert not offenders, (
         "the phone seating must not be re-caped by a later rule: " + "; ".join(offenders)
     )
+
+
+def test_the_stylus_wedge_has_area_and_its_base_is_square_to_the_hand(dial_page):
+    """A degenerate wedge painted a dark hairline, and that is what the owner reported.
+
+    Owner, 2026-09-25: "The pointer in the dial still needs considerable work ... Its so thin its
+    barely visible, a far cry from the concept." The cause was geometric, not stylistic. The base
+    offset was built with the MATHEMATICAL perpendicular (`-sin, cos`) while `positionOnArc` returns a
+    BEARING off north (`x = cx + r*sin`, `y = cy - r*cos`), so the offset ran along the hand's own
+    axis. The rendered `d` proved it: |AB| 93 + |BC| 28 = |AC| 121 exactly, i.e. three collinear
+    points and an area of ZERO. Only the 0.88px dark stroke was painting -- a hairline.
+
+    This measures the property that was violated, off the rendered path, in the same terms that found
+    it: the triangle's AREA must be real, and its base must be perpendicular to the hand's own axis.
+    A clamp on the constants would have passed the broken geometry, which is why this measures
+    geometry.
+
+    AND IT MEASURES IT TWICE, because the defect existed in TWO places: the initial render, and
+    `paintSVGSelection`, the update path that repaints the hand on every change. Fixing only the first
+    left the second painting the hairline in the live app, so a check of the initial paint alone would
+    have passed while the owner still saw a hairline.
+    """
+    def measure():
+        return dial_page.evaluate("""() => {
+            const svg = document.querySelector('.obs-dial-svg');
+            const needle = svg.querySelector('.obs-dial-pointer-needle');
+            const tip = svg.querySelector('.obs-dial-pointer-tip');
+            const svgBox = svg.getBoundingClientRect();
+            const nums = needle.getAttribute('d').match(/-?\\d+(?:\\.\\d+)?/g).map(Number);
+            const tipBox = tip.getBoundingClientRect();
+            return {
+              apex: [nums[0], nums[1]],
+              b1: [nums[2], nums[3]],
+              b2: [nums[4], nums[5]],
+              tipCentreCss: [tipBox.x + tipBox.width / 2, tipBox.y + tipBox.height / 2],
+              svgCentreCss: [svgBox.x + svgBox.width / 2, svgBox.y + svgBox.height / 2],
+              tipDiameterCss: tipBox.width,
+            };
+        }""")
+
+    def assert_wedge_is_real(measured, when):
+        [ax, ay], [b1x, b1y], [b2x, b2y] = measured["apex"], measured["b1"], measured["b2"]
+        area = abs(ax * (b1y - b2y) + b1x * (b2y - ay) + b2x * (ay - b1y)) / 2
+        assert area >= 300, (
+            f"{when}: the stylus wedge encloses {area:.0f} square units; the degenerate version "
+            "measured 0 and painted as a hairline"
+        )
+        # The base is the short side; it must be square to the hand's axis through the dial's centre.
+        base = (b1x - b2x, b1y - b2y)
+        base_length = (base[0] ** 2 + base[1] ** 2) ** 0.5
+        cx, cy = measured["svgCentreCss"]
+        tx, ty = measured["tipCentreCss"]
+        axis = (tx - cx, ty - cy)
+        axis_length = (axis[0] ** 2 + axis[1] ** 2) ** 0.5
+        dot = base[0] * axis[0] + base[1] * axis[1]
+        # A tilt of at most a degree; the bug produced 90.
+        assert abs(dot) / (base_length * axis_length) <= 0.02, (
+            f"{when}: the wedge's base is {abs(dot) / (base_length * axis_length):.2f} off square to "
+            "the hand's axis; the convention mismatch made it exactly parallel"
+        )
+        # The wedge needs a body: 8 units is 0.028 r, which at the governed phone size is 4.7 CSS px.
+        assert base_length >= 8, f"{when}: the wedge's base is only {base_length:.1f} units wide"
+        # The concept's head is ~19 CSS px; the number band bounds ours, so 15 is the floor rather
+        # than the target.
+        assert measured["tipDiameterCss"] >= 15, (
+            f"{when}: the tip circle is {measured['tipDiameterCss']:.1f} CSS px across; the "
+            "concept's is ~19"
+        )
+
+    assert_wedge_is_real(measure(), "on first paint")
+    # Now move the selection, which repaints the hand through the OTHER copy of the geometry.
+    slider = dial_page.locator("#obs-dial-range")
+    slider.focus()
+    dial_page.keyboard.press("ArrowRight")
+    dial_page.wait_for_timeout(200)
+    assert_wedge_is_real(measure(), "after the pointer moves")

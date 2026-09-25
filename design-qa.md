@@ -24,6 +24,44 @@ Rules that matter, taken from the client's own tests:
 and was the practical reason review stalled. Keep the full-resolution PNGs as the archival evidence and reference
 these for review; do not treat the JPEG as the acceptance artifact, since it is lossy.
 
+## The stylus was geometrically degenerate (2026-09-25, OS-105)
+
+Owner: *"The pointer in the dial still needs considerable work, but we can pivot away from the visual and earmark it.
+Its so thin its barely visible, a far cry from the concept — unless you feel its a simple fix."* It was a one-derivation
+fix, and the reason two rounds of tuning failed is that **the wedge had no area to widen**.
+
+![The hand before, and the concept's own hand at the same scale](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/dial-stylus-2026-09-25/review/before-vs-concept.jpg)
+
+`positionOnArc` returns a **bearing** off north (`x = cx + r·sin θ`, `y = cy − r·cos θ`), but the base offset used the
+**mathematical** perpendicular (`perpX = −sin θ·HALF`, `perpY = cos θ·HALF`). Ninety degrees apart, so the "base"
+offset ran *along the hand's own axis*. The rendered `d` proved it: `|AB| 93 + |BC| 28 = |AC| 121` exactly — three
+collinear points, **area zero**. Only the 0.88px dark stroke was painting, which is precisely the hairline in his
+screenshot. It also lived in **two places**: the initial render and `paintSVGSelection`, the update path that repaints
+the hand on every change — so fixing one left the live app still painting the hairline.
+
+![The hand after: same code, same constants family, real area](/Users/stephenwest/Openrouter/simplecrew-latest/artifacts/dial-stylus-2026-09-25/review/after-vs-concept.jpg)
+
+The perpendicular is now derived from the **two points**, so it is square to whatever direction the hand points and
+cannot break if the convention changes. Proportions were then re-measured against concept 06 at the instrument's own
+scale (0.588 CSS px per unit): blade half-width **4.5 units** (4.8 CSS px at the base), tip circle radius **14 units**
+(17.6 CSS px across against the concept's ~19), tip centre 230, inner point 126. The earlier 14-unit half-width came
+from reading the *head's* width as the blade's — which would have made a wedge wider than the head sitting on it, the
+opposite of the concept.
+
+| | before | after |
+|---|---|---|
+| triangle area (units²) | **0** | 463 |
+| base ⟂ hand axis | 90° off (parallel) | ≤1° |
+| tip circle | 12.94 CSS px | **16.46** CSS px |
+| painted body | 0.88px stroke, no fill | mint blade + dark edge + ring head |
+
+Measured in the running page at 420×912 DPR 3. Both existing bounds were respected rather than relaxed: `tip +
+radius ≤ 244` and `tipRadiusFromCentre ≥ 230` still hold at their original values, and the geometry was fitted
+inside them. **The guard that matters is geometric**: `test_the_stylus_wedge_has_area_and_its_base_is_square_to_the_hand`
+measures the rendered path's area, perpendicularity, base width and head diameter **twice** — on first paint and
+after the pointer moves — because a check of the initial paint alone would have passed while the owner still saw a
+hairline. The source-level guard pins the derivation, since the broken version satisfied every constant-shaped claim.
+
 ## Plan's two panes: rules stated in words, Crew grouped by purpose (2026-09-24, OS-102)
 
 Owner: *"I think we should see the rules... there is no concept for the plan panes"* — and half a concept existed: no

@@ -121,6 +121,30 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-25 (fourteenth pass) — OS-105: the stylus was degenerate, which is why tuning it never worked
+
+The owner asked a direct question -- *"unless you feel its a simple fix"* -- and the honest answer needed a
+measurement rather than an opinion, so I measured the rendered path instead of the art. It was **arithmetic**:
+`positionOnArc` returns a bearing off north while the wedge's base offset used the mathematical perpendicular, 90
+degrees apart, so the offset ran along the hand's own axis. `|AB| 93 + |BC| 28 = |AC| 121` exactly: collinear, **zero
+area**, and only the 0.88px dark stroke was painting. That is why two passes of widening the half-width (5.4 -> 10.5
+-> 14 units) changed nothing he could see -- there was no area to widen. The same arithmetic sat in **two** places,
+the initial render and `paintSVGSelection` (the update path), so fixing one left the live app unchanged.
+
+The perpendicular is now derived from the two points, and the proportions were re-measured against concept 06 at the
+instrument's scale: a slim blade (4.5-unit half-width) carrying a larger ring head (14-unit radius, 17.6 CSS px
+against the concept's ~19). Measured after: area 463 units^2, base square within 1 degree, tip 16.46 CSS px. Both
+pre-existing bounds were respected rather than relaxed.
+
+The durable part is the guard, and it taught a lesson worth keeping: **constant-shaped assertions cannot catch a
+degenerate shape** -- the broken version satisfied every one of them. The new guard measures the rendered triangle's
+area and squareness, and it measures them on first paint AND after the hand moves, because checking only the initial
+paint would have passed while the owner still saw a hairline.
+
+Also corrected in the ledger this pass: OS-104's `decision_owed` field held the owner's ANSWER while still reading
+as owed, so a query for outstanding decisions reported it as open. Renamed to
+`decision_answered_2026_09_25`; nothing is owed on it.
+
 ### 2026-09-24 (thirteenth pass) — OS-102 implemented: the Rules pane was drawing nothing, and the reason was a parser that could not read Crew (`OS-102` complete)
 
 **The owner's premise was half wrong and his complaint was entirely right.** There is no concept *drawing* for the

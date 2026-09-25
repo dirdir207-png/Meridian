@@ -755,7 +755,11 @@
         "templates/meridian/partials/plan.html",
         "tests/meridian/test_rule_statement_js.py",
         "tests/meridian/test_plan_panes_os102.py",
-        "tests/browser/test_plan.py"
+        "tests/browser/test_plan.py",
+        "static/js/meridian/dial.js",
+        "tests/browser/test_dial_fidelity.py",
+        "tests/meridian/test_dial_js.py",
+        "docs/project/LEDGER_RECONCILIATION_2026-09-25.md"
       ],
       "base_sha": "56390c911bea1f4a61717c40d05b602ee1ad4159",
       "since": "2026-09-24T00:00:00-04:00",
