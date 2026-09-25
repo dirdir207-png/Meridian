@@ -1619,3 +1619,52 @@ Focused suite green and the post-adjustment matrix captured; composition verifie
 direction. **Not claimed:** light-theme contrast verification, broader application acceptance, live served-app
 acceptance, or any deployment. Remaining bounded work: resolve or explicitly accept the two measured gaps
 above, and inspect light-theme foregrounds visually.
+
+## 2026-09-25 (evening) -- Assets & Contracts: tickets per item, kit button plates, readable type
+
+Owner, in his own words, in the order he sent them: "they have white boxes in the parchment tickets" /
+"no where else is this the design" / "now lets make sure text isnt overlapping lines etc" / "Lets have
+the add asset add contract edit and delete buttons be rendered in the deep orange found on some other
+buttons in the app, and approve" / "Lets use the whole button plate, very visually appealing" / "Can we
+also separate the tickets per items and enlarge the buttons" / "wrong text fonts" /
+"remove essentially user facing nonesense text like delete_asset: Meridian delete_asset".
+
+| | before | after |
+|---|---|---|
+| section | one 1020px parchment plate | a stack; each row and proposal its own ticket |
+| seams across text | 7 continuous, crossing row text | 0 (the art is used at its drawn shape) |
+| row fill | `--m-surface` card (a white box on paper) | the ticket paper itself |
+| row name | ledger-table sans | observatory serif, as every other ticket |
+| action buttons | 1px ink outline, ~72x40 | kit apricot plate, 44px rows / 52px section |
+| proposal label | `delete_asset: Meridian delete_asset: 6` | `Delete the asset "Test Asset"` |
+| darkest text contrast on paper | 1.67:1 (unreadable, his report) | 11.1:1 |
+
+Captures: `artifacts/paper-plate-2026-09-25/` (the seam diagnosis and the frame+paper variants) and
+`artifacts/tickets-2026-09-25/`.
+
+## 2026-09-25 (evening) -- the dial's stylus and readout
+
+His report: "The pointer on the today page does not extend to the center of the dial and is still quite
+small", then "can the bill text INSIDE of the dial ... have wrap boundaries that include the rotunda
+image on the left". Both were measured against the concept at full resolution rather than tuned by eye.
+
+| | before | after | concept |
+|---|---|---|---|
+| needle tail | 126 units from centre | 6 units | reaches the centre |
+| hand span | 37% of the radius | 89% | ~89% |
+| head diameter | 17.6 CSS px | 23.5 CSS px | ~24.6 |
+| readout vs rotunda | corner 2 units inside the roofline | 47 units clear | clear |
+
+The readout overlaps the needle by design now, and that is safe because the readout is an HTML overlay
+above the SVG; the guard asserts the layering rather than "no overlap". Captures:
+`artifacts/dial-stylus-2026-09-25/pointer-concept-vs-live.png` and `readout-clears-rotunda.png`.
+
+### Earmarked, not done (owner: "move on from the visual for now")
+
+- The readout's lilac badge (`span.obs-dial-center-badge`, #c1a9e2, 28px) now sits immediately beneath
+  the needle's tail and can read as attached to it. It is the concept's own element (concept 06 draws
+  the same badge above "Electric"), so it was left where the concept puts it.
+- The pointer's head still sits just inside the ring band rather than straddling it as the concept's
+  does; the day numbers' bound (243.7 units) is what stops it, and relaxing that bound would cover a
+  numeral.
+- Medallions on Today/Activity/Plan rows (OS-082), blocked on category data (OS-088) for Plan.

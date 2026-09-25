@@ -2603,6 +2603,111 @@
         "captures": "artifacts/dial-stylus-2026-09-25/ (the hand before, the hand after, and the concept's own hand at the same scale).",
         "not_changed": "Nothing about the dial's data, the day mapping, the interaction, the labels or the ticket. The existing guards that bound the tip (tip + radius <= 244 units, tip radius from centre >= 230) still hold at their original bounds -- the geometry was fitted inside them rather than the bounds being relaxed."
       }
+    },
+    {
+      "id": "OS-106",
+      "title": "The shell markup broke: a stray </div> pushed the Activity and Accounts panes a full viewport below the page (owner-reported; MY regression from OS-102)",
+      "status": "complete",
+      "priority": "critical",
+      "phase": "design-fidelity",
+      "owner_decided": false,
+      "authority": "presentation only: one missing template line, no route, data, action, financial, provider, migration or authority change",
+      "why": "Owner, 2026-09-25: 'Activity and plan displays both broken', with two screenshots -- the Activity page empty between the header and the dock, and the Accounts page showing its own content a full screen down with the dock above it. This was MY regression: the OS-102 regrouping of the Crew pane was applied with a script, and the script dropped the crew pane's opening `<div>`. plan.html then had 35 `<div>` opens against 36 closes.",
+      "scope": "templates/meridian/partials/plan.html (restore the crew pane wrapper) and a new guard for the shell's markup, which had none.",
+      "acceptance": "All four workspace sections nest inside `main#main`, the rendered shell needs no parser recovery, and every partial balances on its own.",
+      "evidence": {
+        "status": "FIXED 2026-09-25. Cause, effect and guard are all measured, and the guard was falsified before it was trusted.",
+        "the_effect": "Without the wrapper, `</div><!-- /data-plan-view-pane=\"crew\" -->` closed `m-plan` instead, and the shell's own `</div>` then closed the plan SECTION and `<main>`. The HTML parser recovered silently: the Activity and Accounts sections became children of `<body>`, laid out AFTER the `.m-shell` grid. That grid is `min-height: 100vh`, so both panes started at y=912 on a 912px viewport -- exactly one screen down. Measured on the running app before the fix: `section#workspace-activity` rect x=0 y=912 w=420 (instead of x=16 y~85 w=388), and the same for accounts.",
+        "the_diagnosis": "Found by replaying the SERVED html through a real parser rather than by reading the template: the source looked balanced because the stray closer matched a different open element. The trace named the exact line: 'line 658 </div> end tag skipped 2 open element(s): [\"main\", \"section\"]'. A tag-balance count on each partial then attributed it precisely -- plan.html was 31/31 opens/closes at 431612a (before OS-102) and 35/36 after.",
+        "why_nothing_caught_it": "The OS-102 structural guard counted the elements it cared about (seven Crew forms, the parity hooks) and never asked whether the document still nested. The browser suites skip without APP_URL, and the OS-102 captures were crops of the panes, not the shell.",
+        "measured_after": "All four sections inside `main` (parser: no recoveries, nothing unclosed at EOF); on the running app activity x=16 y=85 w=388 with document height 912, accounts x=16 y=92 w=388, plan x=16 y=74.",
+        "guard": "tests/meridian/test_shell_markup.py, three assertions: (1) every partial balances on its own with Jinja comments stripped -- and containers only, because HTML5 legally lets an inline element wrap a block, which is why the first draft misreported settings-navigation.html; (2) the RENDERED shell nests all four workspace sections in one common `main`, with no parser recovery; (3) plan.html keeps its three `data-plan-view-pane` wrappers as siblings. FALSIFIED: removing the crew wrapper again fails all three.",
+        "captures": "artifacts/shell-markup-2026-09-25/ (the owner's two before screenshots are referenced in design-qa.md; the after captures are the same viewports).",
+        "regression_notice": "The slide was introduced by 8c63d1a (OS-102, committed by this agent). The fix is 1 line; the guard is the part that matters."
+      }
+    },
+    {
+      "id": "OS-107",
+      "title": "Assets & Contracts took the PAGE's theme inside its parchment plate: navy cards and cream text on paper (owner-reported)",
+      "status": "complete",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "owner_decided": false,
+      "authority": "presentation only: scoped CSS custom properties, no route, data, action, financial, provider, migration or authority change",
+      "why": "Owner, 2026-09-25: 'on dar[k] theme assets and contracts is using the light theme dark blue fill and the text below is unreadable'. The plate is the kit's parchment ticket, drawn as a `border-image`, so the page's theme is a lie inside it: the interior is ink on paper whatever the page behind is doing -- the same rule `observatory.css` already states in mirror image for dark BOXES.",
+      "scope": "static/css/meridian/accounts.css: a paper scope on `.memory-management`.",
+      "acceptance": "In BOTH themes the plate's ink, surface and canvas tokens are the paper ones, its copy clears 4.5:1 against paper, and any asset card is a light surface with readable text.",
+      "evidence": {
+        "status": "FIXED 2026-09-25, measured before and after in both themes on the running app.",
+        "measured_before": "dark theme -- `.memory-item` kept `--m-surface: #141b32` (navy cards on parchment) and the review text under them inherited `--m-ink: #eee4cf`: cream on parchment. Because `.memory-item` paints itself with `color-mix(in srgb, var(--m-surface) 82%, var(--m-canvas))` and `--m-canvas` stayed the page's navy, the cards came out grey-blue rgb(204,198,192) instead of the light theme's rgb(244,236,223).",
+        "measured_after": "Both themes: `--m-ink: #20263b`, `--m-surface: #f4ecdf`, `--m-canvas: #f4ecdf`; `.memory-item` paints NO fill at all and separates rows with a hairline ink rule; the plate's copy clears 4.5:1 against paper in both themes.",
+        "the_fix": "Declare the paper scale on `.memory-management` itself. A declaration on the element beats an inherited one from `.obs-shell` whatever the specificity, so no `[data-theme]` prefix is needed and the rule cannot be right in one theme and wrong in the other. `--m-canvas` is included deliberately: it is what makes the cards paper rather than grey.",
+        "guard": "tests/browser/test_assets_paper_theme.py asserts the tokens, the contrast ratio computed for real against the paper, and that NO element inside the ticket paints a fill -- in BOTH themes. It caught its own parsing bug first (Chromium reports a color-mix result as `color(srgb 0-1)`, not `rgb(0-255)`), and it was falsified twice: reverting the ink scale fails both themes, and restoring the card fill fails both themes. tests/meridian/test_accounts_size.py holds the cheap half: the declarations must exist and must not be theme-prefixed.",
+        "captures": "artifacts/paper-plate-2026-09-25/",
+        "why": "THREE reported defects on one surface, in the order the owner found them (2026-09-25). (1) 'on dar[k] theme assets and contracts is using the light theme dark blue fill and the text below is unreadable'. (2) 'they have white boxes in the parchment tickets'. (3) when the boxes were merely re-tinted, 'no where else is this the design' -- i.e. the box itself was the defect. The plate is the kit's parchment ticket, drawn as a `border-image`, so the page's theme is a lie inside it: the interior is ink on paper whatever the page behind is doing, and rows sit ON the sheet, not in cards.",
+        "the_white_boxes": "Re-tinting the cards fixed the contrast but not the design: a row filled with `--m-surface` inside a parchment ticket is a white box on paper -- 'they have white boxes in the parchment tickets'. His second correction, 'no where else is this the design', is confirmed by the concept: 04-accounts.png draws assets as a SINGLE parchment row with a chevron, and every other paper surface in the app (`.m-accounts-ledger`, the Today ticket) draws its rows on the sheet. The rows therefore lost their fill and their card border for a hairline rule, and the plate's own controls moved onto the kit's apricot button plate (see OS-108)."
+      }
+    },
+    {
+      "id": "OS-108",
+      "title": "Assets & Contracts: one ticket per item, the kit's apricot button plates, kit serif on paper, and proposal labels that read as sentences",
+      "status": "complete",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "owner_decided": true,
+      "authority": "presentation and wording only: no route, no action, no routing, no financial, provider or migration change; the proposal sentence is composed from fields the store already holds",
+      "why": "Four owner corrections in one sitting (2026-09-25), each photographed on his phone: (1) 'Lets have the add asset add contract edit and delete buttons be rendered in the deep orange found on some other buttons in the app, and approve'; (2) 'Lets use the whole button plate, very visually appealing'; (3) 'Can we also separate the tickets per items and enlarge the buttons'; (4) 'remove essentially user facing nonesense text like delete_asset: Meridian delete_asset', followed by 'wrong text fonts'.",
+      "scope": "static/css/meridian/accounts.css (the plate moved to the rows), static/js/meridian/memory.js (confidence band hook already added), static/js/meridian/memory-manage.js (the label), meridian/action_summary.py (new, pure), app.py's `_meridian_memory_proposal_sink` (the stored summary).",
+      "acceptance": "Each row and each pending proposal is its own parchment ticket; the section is a stack on the page; the action plates are the kit's apricot button plate at a comfortable tap size; a row's name is set in the observatory serif; and a proposal reads as a sentence with no action type, colon or id in it.",
+      "evidence": {
+        "status": "COMPLETE 2026-09-25 (base 8c63d1a), verified visually in both themes and by guards that were falsified first.",
+        "why_one_ticket_per_item_also_fixed_a_bug": "The single tall plate was the seam defect in the entry above: the kit's ticket is drawn for a ONE-ROW ticket (concept 04's 'Assets & documents' is exactly that), so a 1000px plate made the browser tile its interior through the words. One row per ticket is the shape the art was drawn for, so the seams cannot come back.",
+        "the_white_boxes_and_the_fonts": "'no where else is this the design' settled the cards: a row is the paper now, not a box on paper. 'wrong text fonts' was the row name inheriting the ledger table's sans -- every other ticket in Meridian sets its title in the observatory serif (`.obs-ticket-title`), so the row does too.",
+        "the_label": "The nonsense string had TWO producers, both fixed: `app.py` wrote `f\"Meridian {action_type}: {params.get('name') or params.get('record_id')}\"` and the UI prefixed the action type to it. The sink now composes a sentence through the pure `meridian/action_summary.py` ('Delete the asset \"Test Asset\"', resolving the record's own name; 'Delete an asset' when it cannot), and the UI recognises strings already stored, because rows proposed before today are not migrated. The raw type and id survive as data attributes.",
+        "measured": "Buttons: section plates 52px tall with the kit's caps, row plates 44px with scaled caps. Readout on a ticket: 11.1:1 contrast in both themes. Labels: all 5 pending proposals on the live app render as sentences with no underscore, no colon and no 'Meridian ' prefix, each keeping its `data-action-type` and `data-action-id`.",
+        "guard": "tests/browser/test_assets_paper_theme.py (tokens, contrast, every fill on a ticket is either the paper or a kit apricot plate, and the rendered proposal labels are sentences); tests/meridian/test_accounts_size.py (the paper scope sits on the tickets, the frame rule has no `fill`, and the section is not a plate again); tests/meridian/test_proposal_labels.py (the sentences, the article, the no-id fallback, a lookup that raises, and both producers' source).",
+        "captures": "artifacts/paper-plate-2026-09-25/ and artifacts/tickets-2026-09-25/"
+      }
+    },
+    {
+      "id": "OS-109",
+      "title": "The Today stylus stopped short of the dial's centre and read small against concept 06",
+      "status": "complete",
+      "priority": "high",
+      "phase": "design-fidelity",
+      "owner_decided": true,
+      "authority": "presentation only: geometry constants for one drawn element, no data, action, routing, provider or migration change",
+      "why": "Owner, 2026-09-25: 'The pointer on the today page does not extend to the center of the dial and is still quite small.' He is looking at concept 06, and reading the concept at full resolution confirms him: its stylus is a fine mint needle whose tail runs all the way to the dial's centre, widening out to a ring head ~50 concept px across.",
+      "scope": "static/js/meridian/dial.js: the six pointer constants and the comment block that records their measurement; the two guards that pinned the old geometry.",
+      "acceptance": "The needle runs from the dial's centre out to the ring band; its head is at the concept's size; and it still clears the day numbers, which is the bound that bounds it.",
+      "evidence": {
+        "status": "COMPLETE 2026-09-25.",
+        "the_old_comment_was_wrong": "It claimed the concept's hand spanned ~51% of the radius and that 'the 53% the concept shows is not reachable on this instrument'. That was a measurement error, not a constraint: the needle's tail is a hairline taper, so measuring only the bright part of the stroke reads the thick half of it. The only real constraint was always the TIP bound.",
+        "measured_after": "Needle 6..224 units of a 282-unit radius (89%, was 37%); head radius 20 units, i.e. 23.5 CSS px across against the concept's ~24.6; ring and pupil scaled with it (14/8). The head's OUTER edge is 244 units, exactly the day numbers' centre radius (243.7), so the bound is respected, not relaxed.",
+        "why_the_tail_can_reach_the_centre": "The centre readout is an HTML overlay and the needle is SVG beneath it (`svgWrap.appendChild(overlay)` after the SVG, `.obs-dial-overlay { z-index: 2 }`), so the needle passes behind the words exactly as the concept draws it, and no word loses legibility.",
+        "guard": "tests/browser/test_dial_fidelity.py: the tail's rendered vertex must be within 20 units of the centre, the head's outer edge must land in 238..246 units, the hand must span >= 75% of the radius, and the readout must be layered above the needle. tests/meridian/test_dial_js.py pins the same shares off the constants. Both failures the old geometry would produce were observed before the guards were updated.",
+        "captures": "artifacts/dial-stylus-2026-09-25/"
+      }
+    },
+    {
+      "id": "OS-110",
+      "title": "The dial's bill text printed across the kit's rotunda",
+      "status": "complete",
+      "priority": "medium",
+      "phase": "design-fidelity",
+      "owner_decided": true,
+      "authority": "presentation only: two CSS values bounding an existing box",
+      "why": "Owner, 2026-09-25: 'can the bill text INSIDE of the dial on the today page have wrap boundaries that include the rotunda image on the left, so there is no overlap and it is more easily read?'",
+      "scope": "static/css/meridian/dial.css: `.obs-dial-center`'s width and top, in the base rule and in the block that re-declared it.",
+      "acceptance": "No line of the centre readout prints over the building, in either theme, and the readout still sits where the concept puts it.",
+      "evidence": {
+        "status": "COMPLETE 2026-09-25.",
+        "the_geometry_was_already_known": "The rotunda is baked into the kit's `dial-plate.png`, so it cannot be read from the DOM -- but dial.js already carries its measurement from when `ARC_START` was chosen: it occupies bearings -140deg..-105deg, reaching inward to r=165 units, with a near-vertical roofline that jumps to 283 units at -105deg.",
+        "measured_before": "The readout was 52% wide, centred at 49%. Its lower-left corner landed at (-156,-126), i.e. r=200 at bearing -128.9deg, against a roofline inner edge of 202 units at that bearing -- ON the building, by 2 units.",
+        "measured_after": "44% wide, centred at 46%: the same corner is r=163.6 at bearing -126.2deg against a roofline of 211 units, a 47-unit clearance. Verified by eye in both themes as well as by the corner arithmetic.",
+        "guard": "tests/browser/test_dial_fidelity.py::test_the_dial_readout_wraps_clear_of_the_rotunda converts the rendered box's four corners into dial units and fails if any of them is inside the sector. It reproduces the pre-fix overlap, which is how the model was checked.",
+        "captures": "artifacts/dial-stylus-2026-09-25/"
+      }
     }
   ]
 }

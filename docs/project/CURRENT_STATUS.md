@@ -1,5 +1,36 @@
 # Enhanced SimpleCrew — Current Status
 
+## 2026-09-25 (evening): the Assets section rebuilt to the owner's own corrections, and the stylus finished
+
+Three defects the owner photographed on his phone, each measured before and after rather than
+judged by eye.
+
+**Activity and Plan rendered a full viewport down the page.** A stray `</div>` in the crew pane
+(OS-102's regrouping dropped its opening wrapper) closed `<main>` early, so two workspaces became
+children of `<body>`, below the shell's `min-height: 100vh`. Found by replaying the SERVED html
+through a parser, which named the one bad end tag and no other imbalance. `tests/meridian/test_shell_markup.py`
+now parses the shell in CI.
+
+**Assets & Contracts (OS-107, OS-108).** The section was one tall parchment plate whose ticket
+`fill` tiled seams straight through the row text -- seven continuous seams, crossing "Test Asset",
+"Edit"/"Delete", "delete_asset: Meridian delete_asset: 6" and the review sentence. `border-image-source:
+none` removed all but one of them, which proved the art was drawing them; `stretch` removed the seams
+but smeared the paper. The answer was the shape the art was drawn for -- one ticket per row, each with
+the kit's frame and the app's own tileable `paper-texture.webp` -- which also retired the white boxes,
+the theme leak, and the page-surface cards. The action plates are now the kit's apricot button plate
+(the same one the Plan's primary action uses) at a comfortable tap size, the row name is set in the
+observatory serif the rest of the kit uses on paper, and proposals read as sentences
+("Delete the asset \"Test Asset\"") instead of `delete_asset: Meridian delete_asset`.
+
+**The stylus (OS-109) and the readout (OS-110).** The needle spans 6..224 units of a 282-unit radius
+(89%, was 37%) with a 20-unit head against the concept's ~21, its outer edge still exactly on the day
+numbers' bound (244 vs 243.7). The bill text no longer prints across the kit's rotunda: it was 2 units
+inside the building's roofline, it is 47 units clear now.
+
+**Rule that earned its place tonight:** a guard must not read prose. Two of these guards failed on
+correct stylesheets because the rules' own comments name the art they no longer use. Comments are
+stripped before source assertions.
+
 ## The Today stylus was geometrically degenerate (2026-09-25, OS-105, base `d5689a3`)
 
 Owner: *"The pointer in the dial still needs considerable work, but we can pivot away from the visual and earmark it.

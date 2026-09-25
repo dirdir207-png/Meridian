@@ -764,6 +764,36 @@
       "base_sha": "56390c911bea1f4a61717c40d05b602ee1ad4159",
       "since": "2026-09-24T00:00:00-04:00",
       "note": "Active. Claimed before the first edit, per AGENT_COORDINATION.md rule 1. This claim CONSOLIDATES five earlier entries that all carried the agent id 'constitutional-builder' (track-I-ai-roles-20260921, bill-reserve-negative-20260921, evidence-fact-bundle-20260921, safe-to-spend-reserve-overdraft-20260921, os089-plan-mobile-concept-alignment-20260923), which put the declared-scope file in a config-error state: check_guardrails.py validates every claim and dies with `CONFIG duplicate claim for agent 'constitutional-builder'` before it can check anything, for ANY agent. Their declared scope was released with their commits; their records live in the AGENT_COORDINATION.md claims table and in this file's own git history, so nothing was deleted that a released claim was still the only record of. The file's own lifecycle is one claim per agent, updated in place with an incremented generation (builder-trackd is generation 2 under one claim_id). Untracked captures and scratch probes live under artifacts/ and tmp/ and are never committed."
+    },
+    {
+      "agent": "constitutional-builder",
+      "claim_id": "visual-corrections-20260925-evening",
+      "generation": 7,
+      "since": "2026-09-25T02:55:00",
+      "base_sha": "24d0134",
+      "description": "OS-106 (shell markup guard), OS-107/OS-108 (Assets & Contracts: per-item tickets, kit apricot button plates, observatory serif on paper, sentence proposal labels), OS-109 (stylus reaches the dial's centre) and OS-110 (readout wraps clear of the rotunda) -- all from the owner's 2026-09-25 reports. Released: the slices are complete, the whole suite is green and the commits are pushed.",
+      "note": "Released on completion; see MERIDIAN_OS_TASKS.json OS-106..OS-110 for evidence.",
+      "files": [
+        "templates/meridian/partials/plan.html",
+        "static/css/meridian/accounts.css",
+        "static/css/meridian/dial.css",
+        "static/js/meridian/dial.js",
+        "static/js/meridian/memory.js",
+        "static/js/meridian/memory-manage.js",
+        "meridian/action_summary.py",
+        "app.py",
+        "tests/meridian/test_shell_markup.py",
+        "tests/meridian/test_proposal_labels.py",
+        "tests/meridian/test_memory_confidence_band.py",
+        "tests/meridian/test_accounts_size.py",
+        "tests/meridian/test_accounts_assets_strip.py",
+        "tests/meridian/test_dial_js.py",
+        "tests/browser/test_assets_paper_theme.py",
+        "tests/browser/test_dial_fidelity.py",
+        "artifacts/paper-plate-2026-09-25/**",
+        "artifacts/tickets-2026-09-25/**",
+        "artifacts/dial-stylus-2026-09-25/**"
+      ]
     }
   ]
 }
