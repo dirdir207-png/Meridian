@@ -495,8 +495,20 @@
     padding: calc(var(--m-space-2) + env(safe-area-inset-top))
       max(var(--m-space-4), env(safe-area-inset-right)) var(--m-space-2)
       max(var(--m-space-4), env(safe-area-inset-left));
-    background: var(--m-surface);
-    border-bottom: 1px solid var(--m-border);
+    /* NO SURFACE OF ITS OWN, AND NO RULE UNDER IT (owner, 2026-09-25): "remove the separate at the
+       top of all pages, not present in the concept. It is all the textured blue, no line
+       delineating a divide at the top."
+       The bar used to paint `var(--m-surface)` with a `var(--m-border)` rule beneath it. Painting the
+       SAME colour as the page is not the same surface as the page: the shell carries
+       `ink-texture.webp` across the whole viewport, so a flat bar of the page's colour still ends in a
+       visible step. Measured at 420px, dark: the bar read a flat rgb(22,28,52) while the shell below
+       it read rgb(29,35,59) textured -- a 7-point seam exactly at the bar's bottom edge, which is the
+       line he photographed. Clearing the bar's background made the two bands identical, which is the
+       experiment that named it.
+       `border-bottom: 0` rather than a transparent colour keeps the box honest: 1px of border was
+       contributing to the bar's height. min-height (68px) holds the bar's size unchanged. */
+    background: transparent;
+    border-bottom: 0;
   }
 
   .m-brand--compact {

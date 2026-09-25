@@ -108,7 +108,7 @@ def test_pointer_and_keyboard_range_select_the_same_date(dial_page):
       const svg = document.querySelector('.obs-dial-svg').getBoundingClientRect();
       const angle = Math.atan2(tip.x + tip.width / 2 - (svg.x + svg.width / 2),
                                -(tip.y + tip.height / 2 - (svg.y + svg.height / 2))) * 180 / Math.PI;
-      return angle > -101 && angle < 133;
+      return angle > -101 && angle < 181;
     }""")
     slider.focus()
     assert slider.is_visible()
@@ -385,6 +385,69 @@ def test_day_labels_sit_inside_the_painted_wheel(dial_page, width, height):
         )
 
 
+@pytest.mark.parametrize("width,height", [(390, 844), (420, 912), (430, 932), (1440, 900)])
+def test_day_labels_never_overlap_each_other(dial_page, width, height):
+    """No two VISIBLE day labels may sit on top of one another.
+
+    Owner, 2026-09-25: *"there is a little overlap with the numbers and weekdays on the dial ... the
+    obvious solution is spacing them out evenly, just slightly wider apart."* This invariant was
+    simply never checked: `test_day_labels_sit_inside_the_painted_wheel` guards each label against the
+    WHEEL and against the centre readout, and the collision count guards a callout against a label,
+    but nothing compared two labels with each other.
+
+    Measured at the governed phone size in the owner's own frame (today Sep 25, horizon Oct 16, every
+    day numbered): **7 pairs / 349.8px2 at ARC_END=132**, the whole right-hand side with the weekday
+    abbreviations crossing into the neighbouring numbers. At 180 it is **2-3 pairs / 25-28px2**, i.e.
+    two labels grazing a corner with ~21px2 the largest. The threshold below is set from those two
+    measurements rather than invented: a visible collision is an order of magnitude larger than a
+    graze, so 45px2 total and 25px2 for any single pair separate them with room, and the values are
+    recorded here so a future change that re-creates the defect fails loudly.
+
+    VISIBILITY IS PART OF THE MEASUREMENT. `placeDayLabels` hides a label that would fall outside the
+    wrap or under a callout, and a hidden label still reports a box -- counting those invents
+    collisions that nobody can see, which is the error the first sweep of this made.
+    """
+    page = dial_page
+    page.set_viewport_size({"width": width, "height": height})
+    page.wait_for_timeout(200)
+    measured = page.evaluate("""() => {
+        const visible = [...document.querySelectorAll('.obs-dial-day-label')].filter((el) => {
+          const cs = getComputedStyle(el);
+          if (el.hidden || cs.display === 'none' || cs.visibility === 'hidden') return false;
+          return (el.textContent || '').trim().length > 0;
+        }).map((el) => ({
+          text: (el.textContent || '').trim().replace(/\\s+/g, ' '),
+          box: el.getBoundingClientRect(),
+        }));
+        const hits = [];
+        for (let i = 0; i < visible.length; i += 1)
+          for (let j = i + 1; j < visible.length; j += 1) {
+            const a = visible[i].box, b = visible[j].box;
+            const w = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+            const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+            if (w > 0 && h > 0) hits.push({a: visible[i].text, b: visible[j].text,
+                                           area: +(w * h).toFixed(1)});
+          }
+        hits.sort((x, y) => y.area - x.area);
+        return {visible: visible.length, hits,
+                total: +hits.reduce((sum, hit) => sum + hit.area, 0).toFixed(1),
+                state: document.querySelector('.obs-dial-day-labels')?.dataset.dayNumbers || null};
+    }""")
+    assert measured["visible"] >= 3, (
+        f"the dial must render labels for today, events and the horizon end; got "
+        f"{measured['visible']} in the {measured['state']} state"
+    )
+    assert measured["total"] <= 45, (
+        f"{measured['total']}px2 of day labels overlap each other in the {measured['state']} state "
+        f"(as shipped at ARC_END=132 this read 349.8px2): {measured['hits'][:4]}"
+    )
+    for hit in measured["hits"]:
+        assert hit["area"] <= 25, (
+            f"'{hit['a']}' and '{hit['b']}' overlap by {hit['area']}px2, which is a visible "
+            f"collision rather than a graze: {measured['hits'][:4]}"
+        )
+
+
 @pytest.mark.parametrize("width,height", [(390, 844), (430, 932), (1024, 768), (1440, 900)])
 @pytest.mark.parametrize("theme", ["light", "dark"])
 def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height, theme):
@@ -492,9 +555,21 @@ def test_dial_layout_in_actual_template_and_stylesheets(dial_page, width, height
         assert page.locator(".m-topbar-settings-icon").is_visible()
         assert page.locator(".m-topbar .m-theme-toggle-label").bounding_box()["width"] <= 1
         if theme == "dark":
+            # RESTATED 2026-09-25 (owner). The requirement was never "the bar is the same COLOUR as
+            # the page" -- it was "the top is ONE surface, with no line dividing it". Comparing
+            # backgroundColor to the body's is satisfied by a flat bar of the page's colour, which is
+            # precisely what shipped: measured at 420px dark, the bar read rgb(22,28,52) flat while
+            # the shell below read rgb(29,35,59) textured, a 7-point seam at the bar's bottom edge --
+            # the "line delineating a divide at the top" the owner asked to remove. The honest guard
+            # is that the bar paints NO surface and NO rule, so the shell's ink texture runs through.
+            # Verified by experiment rather than by reading the cascade: clearing this background made
+            # the two bands identical.
             assert page.locator(".m-topbar").evaluate(
                 "el => getComputedStyle(el).backgroundColor"
-            ) == page.locator("body").evaluate("el => getComputedStyle(el).backgroundColor")
+            ) == "rgba(0, 0, 0, 0)", "the top bar must not paint a surface of its own"
+            assert page.locator(".m-topbar").evaluate(
+                "el => getComputedStyle(el).borderBottomWidth"
+            ) == "0px", "the top bar must not draw a rule under itself"
         rail_box = page.locator(".obs-dial-events").bounding_box()
         # OS-049. This was `dial_box["width"] >= width * 0.74`, which no CSS ever
         # satisfied -- it fails in both themes at 390 and 430px -- and it had no

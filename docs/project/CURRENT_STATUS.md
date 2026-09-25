@@ -1,6 +1,48 @@
 # Enhanced SimpleCrew — Current Status
 
-## 2026-09-25 (late): OS-111 — one money rule for Today and Plan (code landed, docs pending)
+## 2026-09-25 (latest): three overlaps the owner reported — fixed, measured, and guarded
+
+Owner, reviewing the shipped app: *"there is a little overlap with the numbers and weekdays on the
+dial, and some slight overlap between the scrollable bills on the right and the dial on the today
+page"* and *"remove the separate at the top of all pages, not present in the concept. It is all the
+textured blue, no line delineating a divide at the top."* He then named the mechanism for the dial
+himself — *"there is still plenty of room from where the 16th sits currently and the bottom of the
+dial, the obvious solution is spacing them out evenly, just slightly wider apart"* — and chose the
+rail fix from four rendered options. Full record with the sweep and the captures: `design-qa.md`,
+2026-09-25 (later).
+
+| | before | after |
+|---|---|---|
+| day labels colliding | 7 visible pairs, 349.8px² (`ARC_END` 132) | **3 pairs, 28.1px²** (`ARC_END` 180) |
+| last day number | 132°, about 4:24 | **180° — the bottom of the dial** |
+| callout text over the ring | 19px inside the ring's ink | **3px clear** (rail 126px → 104px) |
+| the top of every page | flat `rgb(22,28,52)` over a textured `rgb(29,35,59)`: a 7.4-point step | **no surface, no rule** — 1.4–1.6 points, the texture's own grain |
+
+Three things worth keeping, because each was a measurement rather than a judgement:
+
+- **180° is the ceiling, and the building says so.** 190 renders the last numbers (`15`, `16`) behind
+  the rotunda's foliage and 210 paints them onto it, so the bottom of the dial is as far as the sweep
+  can go — which is also where the owner pointed. `ARC_START` could not move at all (the roofline
+  fixes it at −100), and the labels cannot spread radially (already at radius 243 of a 280-unit wheel).
+- **A hidden label still reports a box.** `placeDayLabels` hides labels that fall outside the wrap or
+  under a callout, and the first sweep counted those, inventing collisions nobody can see. Every
+  number here is over painted labels only. The new browser guard
+  (`test_day_labels_never_overlap_each_other`) carries the same rule, and its threshold is set from
+  the two measurements above rather than invented.
+- **The top bar painted the same COLOUR as the page, which is not the same SURFACE.** The shell
+  carries `ink-texture.webp` across the viewport, so a flat bar of the page's colour still ends in a
+  seam. It was found by clearing one candidate at a time and re-scanning the pixel column, because no
+  rule names `.m-topbar` as the painter. The browser guard was restated from "the bar's colour equals
+  the body's" — which that flat bar satisfied — to "the bar paints no surface and no rule".
+
+**Residual, stated rather than hidden:** 3 label pairs, 28.1px² total; the largest (20.9px²,
+`28 MON` vs `29 TUE`) sits at the phone's left edge where the instrument is deliberately clipped off
+screen by the owner's own 2026-09-24 direction, and where his live frame hides those days anyway.
+
+Also landed in this slice and recorded in `MERIDIAN_DECISIONS.md` as **D-024**: the one-money-rule
+work described in the entry below.
+
+## 2026-09-25 (late): OS-111 — one money rule for Today and Plan (delivered)
 
 **Owner decisions taken before any edit, 2026-09-25:** (1) the single rule is **pocket accounting** —
 *everything you have, minus every pocket you set aside*; (2) **no clamp anywhere**, so `plan.py`'s

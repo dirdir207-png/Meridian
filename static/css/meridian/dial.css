@@ -1258,15 +1258,28 @@ body.obs-shell:has([data-workspace-section="today"]:not([hidden])) #advisor-fab.
     position: absolute;
     top: 0;
     right: 0;
-    width: 126px;
+    /* 104px, not 126px (owner, 2026-09-25: "some slight overlap between the scrollable bills on the
+       right and the dial on the today page"). Measured at 420px: the ring's ink reaches x=311 and
+       the rail's text began at x=292 -- 19px of the callout TEXT over the brass, which is what his
+       screenshot shows. At 104px the text starts at 314, i.e. 3px clear, and the rows do not
+       re-wrap (item heights measured identical: 99/99/82.5/99).
+       The comment this replaces claimed the callouts "reach past the dial's right edge exactly as the
+       concept draws them -- overlapping the ring". Measuring the governing record
+       (`design/observatory-drafts-2026-09-08/06-interactive-observatory-vision.png`, owner-confirmed)
+       says otherwise: on the row through its own "Internet" callout the ring's brass ends at 290 CSS
+       px and the callout text begins at 306 -- **16.2px clear**, not overlapping. What overlaps in
+       the concept is the callout's round kind medallion, which sits on the brass by design; the text
+       never does. This keeps the medallion where the concept draws it. */
+    width: 104px;
     height: 100%;
     max-height: none;
     padding-right: 0;
     background: none;
     z-index: 3;
     /* The rows sit at the panel's right edge, and the panel is narrower than the instrument (the
-       instrument bleeds 15px left), so the callouts reach past the dial's right edge exactly as the
-       concept draws them -- overlapping the ring, not the centre readout. */
+       instrument bleeds 15px left), so the callout's leading MEDALLION lands on the ring, as the
+       concept draws it. The TEXT does not: see the width note above, measured 2026-09-25 against the
+       governing concept. */
     right: -14px;
   }
   [data-observatory-dial] .obs-event-list--orbit {

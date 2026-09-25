@@ -1,0 +1,195 @@
+[
+  {
+    "ring": {
+      "l": -38.2,
+      "t": 252.8,
+      "r": 311,
+      "b": 602,
+      "w": 349.3,
+      "h": 349.3
+    },
+    "rail": {
+      "l": 314,
+      "t": 251,
+      "r": 418,
+      "b": 576,
+      "w": 104,
+      "h": 325
+    },
+    "leftmost": {
+      "cls": "obs-event-list obs-event-list--orbit",
+      "text": "Sep 30 Eversource Reserved",
+      "box": {
+        "l": 314,
+        "t": 251,
+        "r": 418,
+        "b": 576,
+        "w": 104,
+        "h": 325
+      },
+      "kind": "ul"
+    },
+    "crossing": -3,
+    "sample": [
+      {
+        "cls": "obs-event-list obs-event-list--orbit",
+        "text": "Sep 30 Eversource Reserved",
+        "box": {
+          "l": 314,
+          "t": 251,
+          "r": 418,
+          "b": 576,
+          "w": 104,
+          "h": 325
+        },
+        "kind": "ul"
+      },
+      {
+        "cls": "",
+        "text": "Sep 30 Eversource Reserved",
+        "box": {
+          "l": 314,
+          "t": 448,
+          "r": 418,
+          "b": 547,
+          "w": 104,
+          "h": 99
+        },
+        "kind": "li"
+      },
+      {
+        "cls": "obs-event-item",
+        "text": "Sep 30 Eversource Reserved",
+        "box": {
+          "l": 314,
+          "t": 448,
+          "r": 418,
+          "b": 547,
+          "w": 104,
+          "h": 99
+        },
+        "kind": "button"
+      },
+      {
+        "cls": "obs-event-kind",
+        "text": "",
+        "box": {
+          "l": 314,
+          "t": 452,
+          "r": 344,
+          "b": 482,
+          "w": 30,
+          "h": 30
+        },
+        "kind": "span"
+      },
+      {
+        "cls": "obs-event-title",
+        "text": "Eversource",
+        "box": {
+          "l": 314,
+          "t": 485,
+          "r": 418,
+          "b": 502.6,
+          "w": 104,
+          "h": 17.6
+        },
+        "kind": "span"
+      },
+      {
+        "cls": "obs-event-meta",
+        "text": "Reserved",
+        "box": {
+          "l": 314,
+          "t": 505.6,
+          "r": 418,
+          "b": 519.1,
+          "w": 104,
+          "h": 13.5
+        },
+        "kind": "span"
+      },
+      {
+        "cls": "obs-event-amount",
+        "text": "\u2212$210.00",
+        "box": {
+          "l": 314,
+          "t": 522.1,
+          "r": 418,
+          "b": 543,
+          "w": 104,
+          "h": 20.9
+        },
+        "kind": "strong"
+      },
+      {
+        "cls": "",
+        "text": "Sep 30 Xfinity Reserved \u2212$",
+        "box": {
+          "l": 314,
+          "t": 555,
+          "r": 418,
+          "b": 654,
+          "w": 104,
+          "h": 99
+        },
+        "kind": "li"
+      }
+    ],
+    "chips": [
+      {
+        "cls": "obs-event-date",
+        "text": "Sep 30",
+        "box": {
+          "l": 351,
+          "t": 459.5,
+          "r": 418,
+          "b": 474.5,
+          "w": 67,
+          "h": 15
+        },
+        "kind": "span"
+      },
+      {
+        "cls": "obs-event-date",
+        "text": "Sep 30",
+        "box": {
+          "l": 351,
+          "t": 566.5,
+          "r": 418,
+          "b": 581.5,
+          "w": 67,
+          "h": 15
+        },
+        "kind": "span"
+      },
+      {
+        "cls": "obs-event-date",
+        "text": "Oct 2",
+        "box": {
+          "l": 351,
+          "t": 262.5,
+          "r": 418,
+          "b": 277.5,
+          "w": 67,
+          "h": 15
+        },
+        "kind": "span"
+      },
+      {
+        "cls": "obs-event-date",
+        "text": "Oct 2",
+        "box": {
+          "l": 351,
+          "t": 352.5,
+          "r": 418,
+          "b": 367.5,
+          "w": 67,
+          "h": 15
+        },
+        "kind": "span"
+      }
+    ],
+    "option": "shipped"
+  }
+]

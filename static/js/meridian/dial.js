@@ -41,13 +41,25 @@ const VIEWBOX = { w: 600, h: 600, cx: 300, cy: 300, r: 282 };
    for how a hand should treat it. The concept's own arc does start near the top and sweep
    clockwise, so shifting the start right is also the direction it points in.
 
-   `ARC_END` moves to 132 (owner, 2026-09-24: "can we spread them out a little more, so the
-   numbers extend down to the graphic on the bottom right and to the graphic at the top left (the
-   rotunda image)"). Only the END could move, and the start's own measurement above is why: the
-   rotunda occupies the arc's beginning, so -100 is already the closest the sweep can come to the
-   top-left engraving without a hand entering the building. The end had no such obstacle, so the
-   ring of numbers now reaches ~12deg further clockwise — down toward the lower-right graphic —
-   and the sweep widens 220deg -> 232deg rather than narrowing.
+   `ARC_END` moves to 180 (owner, 2026-09-25, reporting the defect his own screenshot showed: "there
+   is a little overlap with the numbers and weekdays on the dial ... There is still plenty of room
+   from where the 16th sits currently and the bottom of the dial, the obvious solution is spacing them
+   out evenly, just slightly wider apart"). At the time the end sat at 132, so a 21-day horizon put 21
+   labels over 232deg -- 27px of centre-to-centre arc against ~31px labels -- and the weekday
+   abbreviations crossed into the neighbouring numbers on the whole right-hand side. Measured at the
+   governed phone size with the owner's own horizon (today Sep 25, ending Oct 16): **7 visible
+   collisions totalling 350px2 at 132**, 5/48.9 at 160, **2/25.3 at 180**, 1/11.9 at 190.
+
+   180 is the bottom of the dial and also the CEILING, which is not a guess: a sweep to 210 was
+   rendered and the last numbers (`16`, `14`, `15`) came down behind the rotunda's own engraving,
+   i.e. a number painted onto the building reads as a defect rather than as a spread. So the arc now
+   runs -100 -> 180 (280deg) and the numbers reach the graphic at each end, which is what the
+   2026-09-24 change asked for ("the numbers extend down to the graphic on the bottom right and to
+   the graphic at the top left (the rotunda image)").
+
+   The remaining 2 collisions at 180 are ~25px2 in total -- two labels grazing a neighbour's corner,
+   not text over text -- and they are LEFT VISIBLE rather than papered over: closing them entirely
+   needs either a smaller weekday face or an arc past the building, and both are the owner's call.
 
    The numbers themselves cannot spread radially, which is worth recording because it was the
    first interpretation measured: their ring already sits at radius 243 of the painted wheel's
@@ -55,7 +67,7 @@ const VIEWBOX = { w: 600, h: 600, cx: 300, cy: 300, r: 282 };
    `placeDayLabels` which keeps every label inside the wheel. Widening the ARC is the only
    spread this instrument has left. */
 const ARC_START = -100;
-const ARC_END = 132;
+const ARC_END = 180;
 /* Where an event's marker badge sits, as a radius from the dial centre.
  *
  * This is a shared constant because TWO placements must agree: the badge itself and the run that

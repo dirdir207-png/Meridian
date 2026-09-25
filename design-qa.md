@@ -1668,3 +1668,61 @@ above the SVG; the guard asserts the layering rather than "no overlap". Captures
   does; the day numbers' bound (243.7 units) is what stops it, and relaxing that bound would cover a
   numeral.
 - Medallions on Today/Activity/Plan rows (OS-082), blocked on category data (OS-088) for Plan.
+
+## 2026-09-25 (later): three overlaps the owner reported, each measured before and after
+
+Owner, reviewing the shipped app on 2026-09-25: *"there is a little overlap with the numbers and
+weekdays on the dial, and some slight overlap between the scrollable bills on the right and the dial
+on the today page"*, and *"remove the separate at the top of all pages, not present in the concept. It
+is all the textured blue, no line delineating a divide at the top."*
+
+| | before | after | authority for the target |
+|---|---|---|---|
+| day labels colliding with each other | **7 visible pairs, 349.8px2** (ARC_END 132) | **3 pairs, 28.1px2** (ARC_END 180) | his words: *"spacing them out evenly, just slightly wider apart"* |
+| where the last day number sits | 132deg, about 4:24 | **180deg — the bottom of the dial** | his words: *"plenty of room from where the 16th sits currently and the bottom of the dial"* |
+| callout text over the ring | **19px inside the ring's ink** | **3px clear** | the governing concept measures **16.2px clear** |
+| the top of every page | flat `rgb(22,28,52)` against a textured `rgb(29,35,59)` — a **7.4-point step** at the bar's edge | no surface, no rule — **1.4-1.6 points**, the texture's own grain | his instruction; the concept draws one continuous field |
+
+**ARC_END 132 -> 180 was measured, not chosen by eye.** Rendering the owner's own frame (today Sep 25,
+horizon Oct 16, every day numbered) at 420x912 DPR3 and counting pairs of *visible* labels whose boxes
+intersect: 160 gave 5 pairs/48.9px2, 180 gave 2-3/25-28, 190 gave 1/11.9, 210 gave 1/0.9. The ceiling
+is the building, and it is not theoretical: **190 renders the last numbers (`15`, `16`) behind the
+rotunda's foliage and 210 paints them onto it**, so the bottom of the dial is as far as the sweep can
+go — which is also exactly where he pointed. `ARC_START` could not move at all (the roofline fixes it
+at -100), and the labels cannot spread radially: they already sit at radius 243 of a 280-unit wheel,
+~4 units from the edge.
+
+**Visibility is part of the measurement.** `placeDayLabels` hides a label that would fall outside the
+wrap or under a callout, and a hidden label still reports a box. The first sweep counted those and
+reported collisions nobody can see; every number here is over rendered, painted labels only.
+
+**The rail's 126px was 19px too wide.** Its rows are `text-align: right; width: 100%`, so the text's
+LEFT edge is the rail's left edge and a long line — *"Funding source: Veterans Home - $210.00 — not
+yet set aside - $96.60/event - Crew's own estimate"* — reached over the brass. 104px puts the text
+3px clear of the ring's widest ink and **does not re-wrap a single row** (item heights measured
+identical, 99/99/82.5/99). The comment this replaced claimed the callouts overlap the ring *"exactly
+as the concept draws them"*; measuring the governing record
+(`design/observatory-drafts-2026-09-08/06-interactive-observatory-vision.png`, owner-confirmed) shows
+its callout text clears the ring by **16.2px** on the row measured. What overlaps in the concept is
+the callout's round kind medallion, which does sit on the brass — and still does.
+
+**The top bar painted the same COLOUR as the page, which is not the same SURFACE.** The shell carries
+`ink-texture.webp` across the viewport; the bar painted flat `var(--m-surface)` plus a
+`var(--m-border)` rule, so the texture stopped dead at its bottom edge — the divide he photographed.
+It was located by experiment rather than by reading the cascade: clearing one candidate at a time and
+re-scanning the pixel column, because no stylesheet rule names `.m-topbar` as the painter (the
+declaration lives in `shell.css`'s `<=700px` block, whose base rule is `display: none`). Clearing the
+bar made the two bands identical, which named it. Now `background: transparent; border-bottom: 0`,
+verified across **all four workspaces and both themes**. The browser guard was restated from "the
+bar's colour equals the body's" — which a flat bar of the page's colour satisfies while still being a
+different surface — to "the bar paints no surface and no rule", which is what the requirement meant.
+
+**Residual, stated rather than hidden:** 3 label pairs, 28.1px2 in total. The largest (20.9px2,
+`28 MON` vs `29 TUE`) is at the phone's left edge, where the instrument is deliberately clipped off
+screen by the owner's own 2026-09-24 direction, and where his live frame hides those days anyway. The
+other two are 5.9 and 1.1px2 — corners grazing.
+
+Captures: `artifacts/os111-implementation-2026-09-25/16-final-dial-{theme}.png` and
+`16-final-top-{theme}.png` (shipped, both themes), `options/15-arc-end-*.png` (the arc sweep, 132
+through 210), `options/14-clearance-*.png` (the four rail options he chose between),
+`12-top-{workspace}-{theme}.png` (the seam, every workspace).

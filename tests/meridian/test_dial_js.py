@@ -84,9 +84,12 @@ def test_dial_js_pure_geometry_round_trips_with_node():
       if (civilDaysBetween('2026-09-08', '2026-09-08') !== 0) throw new Error('same-day mismatch');
       if (civilDaysBetween('2024-02-28', '2024-03-01') !== 2) throw new Error('leap-day mismatch');
       if (!close(dayToAngle(0, 14), -100)) throw new Error('arc start');
-      if (!close(dayToAngle(14, 14), 132)) throw new Error('arc end');
+      // The endpoints here are FIXTURES for the round trip, not the property under test, so they
+      // follow ARC_END: it moved 132 -> 180 on 2026-09-25 to spread the colliding day labels (see
+      // the arc guard below). `ARC_START` is unchanged at -100, pinned by the rotunda.
+      if (!close(dayToAngle(14, 14), 180)) throw new Error('arc end');
       if (angleToDay(dayToAngle(7, 14), 14) !== 7) throw new Error('angle->day round trip');
-      if (angleToDay(-100, 1) !== 0 || angleToDay(132, 1) !== 1) throw new Error('N=1 endpoints');
+      if (angleToDay(-100, 1) !== 0 || angleToDay(180, 1) !== 1) throw new Error('N=1 endpoints');
       if (addDays('2025-12-31', 1) !== '2026-01-01') throw new Error('year rollover');
     """
     result = subprocess.run(
@@ -639,6 +642,17 @@ def test_the_day_arc_starts_clear_of_the_dials_building_art():
     # invariant the pin was protecting is not the literal but the RELATIONSHIP: the end must stay on
     # the far side of the dial from the building, so the sweep keeps growing away from the artwork
     # rather than back into it.
+    #
+    # RETARGETED AGAIN 2026-09-25, on measurement, after the owner reported the collision the 132deg
+    # end produced: "there is a little overlap with the numbers and weekdays on the dial ... the
+    # obvious solution is spacing them out evenly, just slightly wider apart". Rendering ARC_END at
+    # 160/180/190/210 in his own frame (today Sep 25, horizon Oct 16, all 21 days numbered) and
+    # counting pairs of VISIBLE labels whose boxes intersect gave 5/48.9, 2/25.3, 1/11.9 and 1/0.9
+    # px2 against 7/349.8 at 132. **180 is the value that spreads the ring while staying clear of the
+    # building**: at 190 the last numbers (`15`, `16`) come down behind the rotunda's foliage and at
+    # 210 they are plainly painted onto it, so the ceiling is the bottom of the dial and not further.
+    # The old `<= 140` was a conservative number from before anyone measured a label collision; the
+    # relationship it encoded is kept, and is now pinned where the artwork actually begins.
     match = re.search(r"const ARC_END = (-?\d+(?:\.\d+)?);", js)
     assert match, "ARC_END must stay a plain literal so this guard can read it"
     end = float(match.group(1))
@@ -646,12 +660,15 @@ def test_the_day_arc_starts_clear_of_the_dials_building_art():
         f"ARC_END={end}deg would pull the ring of day numbers back in; the owner asked for them "
         "spread further round the wheel, and 120 was the value they were looking at"
     )
-    assert end - start <= 250, (
-        f"the sweep is {end - start}deg; past ~250 it reaches the arc's own start and the ring "
-        "would overlap itself at the top"
+    assert end - start <= 280, (
+        f"the sweep is {end - start}deg; at 280 the arc's end is at the dial's bottom with a "
+        "measured 80deg still between it and its own start at -100, so the ring cannot overlap "
+        "itself, and past this the end would have to pass the roofline"
     )
-    assert end <= 140, (
-        f"ARC_END={end}deg runs the arc into the lower-left, where the plate draws the roofline"
+    assert end <= 180, (
+        f"ARC_END={end}deg runs the arc into the lower-left: measured 2026-09-25, 190 puts the last "
+        "numbers (15, 16) behind the rotunda's foliage and 210 paints them onto it, while 180 leaves "
+        "the ring's last number at the bottom of the dial, clear of the building"
     )
 
 

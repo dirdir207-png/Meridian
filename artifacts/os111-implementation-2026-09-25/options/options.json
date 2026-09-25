@@ -1,0 +1,306 @@
+{
+  "labelOptions": [
+    {
+      "labels": 21,
+      "labelPairs": 11,
+      "labelArea": 635.5,
+      "numberPairs": 0,
+      "numberArea": 0,
+      "dayNumbers": "all",
+      "withWeekday": 17,
+      "railHeight": 325,
+      "itemHeights": [
+        99,
+        99,
+        82.5,
+        99
+      ],
+      "rail": {
+        "l": 292,
+        "t": 251,
+        "r": 418,
+        "b": 576
+      },
+      "dial": {
+        "l": -40,
+        "t": 251,
+        "r": 312.8,
+        "b": 603.8
+      },
+      "gutter": -20.8,
+      "option": "as-is"
+    },
+    {
+      "labels": 21,
+      "labelPairs": 1,
+      "labelArea": 17.4,
+      "numberPairs": 1,
+      "numberArea": 12.7,
+      "dayNumbers": "all",
+      "withWeekday": 2,
+      "railHeight": 325,
+      "itemHeights": [
+        99,
+        99,
+        82.5,
+        99
+      ],
+      "rail": {
+        "l": 292,
+        "t": 251,
+        "r": 418,
+        "b": 576
+      },
+      "dial": {
+        "l": -40,
+        "t": 251,
+        "r": 312.8,
+        "b": 603.8
+      },
+      "gutter": -20.8,
+      "option": "weekday-key-days"
+    },
+    {
+      "labels": 21,
+      "labelPairs": 0,
+      "labelArea": 0,
+      "numberPairs": 0,
+      "numberArea": 0,
+      "dayNumbers": "all",
+      "withWeekday": 0,
+      "railHeight": 325,
+      "itemHeights": [
+        99,
+        99,
+        82.5,
+        99
+      ],
+      "rail": {
+        "l": 292,
+        "t": 251,
+        "r": 418,
+        "b": 576
+      },
+      "dial": {
+        "l": -40,
+        "t": 251,
+        "r": 312.8,
+        "b": 603.8
+      },
+      "gutter": -20.8,
+      "option": "weekday-never"
+    },
+    {
+      "labels": 4,
+      "labelPairs": 0,
+      "labelArea": 0,
+      "numberPairs": 0,
+      "numberArea": 0,
+      "dayNumbers": "key",
+      "withWeekday": 3,
+      "railHeight": 325,
+      "itemHeights": [
+        99,
+        99,
+        82.5,
+        99
+      ],
+      "rail": {
+        "l": 292,
+        "t": 251,
+        "r": 418,
+        "b": 576
+      },
+      "dial": {
+        "l": -40,
+        "t": 251,
+        "r": 312.8,
+        "b": 603.8
+      },
+      "gutter": -20.8,
+      "option": "cap-14-days"
+    },
+    {
+      "labels": 21,
+      "labelPairs": 1,
+      "labelArea": 17.4,
+      "numberPairs": 1,
+      "numberArea": 12.7,
+      "dayNumbers": "all",
+      "withWeekday": 2,
+      "railHeight": 325,
+      "itemHeights": [
+        99,
+        99,
+        82.5,
+        99
+      ],
+      "rail": {
+        "l": 292,
+        "t": 251,
+        "r": 418,
+        "b": 576
+      },
+      "dial": {
+        "l": -40,
+        "t": 251,
+        "r": 312.8,
+        "b": 603.8
+      },
+      "gutter": -20.8,
+      "option": "weekday-key-days-and-cap-21"
+    }
+  ],
+  "clearanceOptions": [
+    {
+      "labels": 21,
+      "labelPairs": 11,
+      "labelArea": 609.7,
+      "numberPairs": 0,
+      "numberArea": 0,
+      "dayNumbers": "all",
+      "withWeekday": 17,
+      "railHeight": 325,
+      "itemHeights": [
+        99,
+        99,
+        82.5,
+        99
+      ],
+      "rail": {
+        "l": 292,
+        "t": 251,
+        "r": 418,
+        "b": 576
+      },
+      "dial": {
+        "l": -40,
+        "t": 251,
+        "r": 312.8,
+        "b": 603.8
+      },
+      "gutter": -20.8,
+      "option": "as-is"
+    },
+    {
+      "labels": 21,
+      "labelPairs": 11,
+      "labelArea": 609.7,
+      "numberPairs": 0,
+      "numberArea": 0,
+      "dayNumbers": "all",
+      "withWeekday": 17,
+      "railHeight": 325,
+      "itemHeights": [
+        99,
+        99,
+        82.5,
+        99
+      ],
+      "rail": {
+        "l": 314,
+        "t": 251,
+        "r": 418,
+        "b": 576
+      },
+      "dial": {
+        "l": -40,
+        "t": 251,
+        "r": 312.8,
+        "b": 603.8
+      },
+      "gutter": 1.2,
+      "option": "rail-104px"
+    },
+    {
+      "labels": 21,
+      "labelPairs": 11,
+      "labelArea": 1113.9,
+      "numberPairs": 1,
+      "numberArea": 1.3,
+      "dayNumbers": "all",
+      "withWeekday": 17,
+      "railHeight": 291,
+      "itemHeights": [
+        99,
+        99,
+        82.5,
+        99
+      ],
+      "rail": {
+        "l": 292,
+        "t": 251,
+        "r": 418,
+        "b": 542
+      },
+      "dial": {
+        "l": -40,
+        "t": 251,
+        "r": 279.2,
+        "b": 570.2
+      },
+      "gutter": 12.8,
+      "option": "dial-76vw"
+    },
+    {
+      "labels": 21,
+      "labelPairs": 11,
+      "labelArea": 883.3,
+      "numberPairs": 0,
+      "numberArea": 0,
+      "dayNumbers": "all",
+      "withWeekday": 17,
+      "railHeight": 308,
+      "itemHeights": [
+        99,
+        99,
+        82.5,
+        99
+      ],
+      "rail": {
+        "l": 302,
+        "t": 251,
+        "r": 418,
+        "b": 559
+      },
+      "dial": {
+        "l": -40,
+        "t": 251,
+        "r": 296,
+        "b": 587
+      },
+      "gutter": 6,
+      "option": "dial-80vw-and-rail-116px"
+    },
+    {
+      "labels": 21,
+      "labelPairs": 11,
+      "labelArea": 635.5,
+      "numberPairs": 0,
+      "numberArea": 0,
+      "dayNumbers": "all",
+      "withWeekday": 16,
+      "railHeight": 325,
+      "itemHeights": [
+        99,
+        99,
+        82.5,
+        99
+      ],
+      "rail": {
+        "l": 292,
+        "t": 251,
+        "r": 418,
+        "b": 576
+      },
+      "dial": {
+        "l": -64,
+        "t": 251,
+        "r": 288.8,
+        "b": 603.8
+      },
+      "gutter": 3.2,
+      "option": "dial-shifted-24px-left"
+    }
+  ]
+}
