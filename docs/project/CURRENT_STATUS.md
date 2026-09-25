@@ -5306,3 +5306,33 @@ Also corrected this session: Today's governing concept is recorded in `design/RE
 `00-selected-direction.png`, which draw the figure inside the dial. The 09-08 folder is **a set of
 choices, not a specification** — a lesson bought by checking only two of its files and concluding the
 app was wrong until the owner corrected it.
+
+## Next slice chosen: OS-111, in a fresh session — 2026-09-25
+
+The owner picked the next slice from an explicit set of options, and picked a **new session** for it.
+
+**OS-111, ahead of OS-113 — a reversal of the earlier "079 then 113" order, with the reason on the
+record.** OS-111 may remove Today's need for the spend pocket entirely: if Today's base becomes total
+funds, the pocket's identity stops mattering *there*. Hardening that input first (OS-113) would
+therefore risk persisting a selection Today no longer requires. Settle the rule, then harden what it
+still needs. OS-113 stays necessary either way — the dial, Plan's money-movement targets and the
+Accounts liquid filter all still identify the pocket.
+
+**Four traps recorded on OS-111 for whoever starts cold**, because this is a money rule and a
+plausible-looking copy of it is the dangerous outcome:
+
+1. **`goals_total` means two different things.** `plan.py:475` sums the money **actually sitting in**
+   Crew's goal pockets (`account.balance`); `today.py:581` already has a field of the same name that
+   sums the **targets** (`target_amount`). Plan's rule subtracts the balance. Reusing Today's existing
+   value would subtract the aim instead of the money.
+2. **Plan's bill term is `committed + unfunded`; Today only has the unfunded half** (`known_obligations`,
+   `today.py:452`). Using it alone subtracts too little.
+3. **The clamp is a decision, not a bug.** Plan floors the residual with `max(_ZERO, …)`; D-019 forbids
+   clamping Safe-to-Spend. Both sides must end on the same side, or the unification trades one
+   disagreement for another.
+4. **Do not import Plan into Today to reuse the expression.** Extract the rule instead — the pattern
+   `meridian/services/reserves.py` (reserve rule) and `meridian/services/spend_pocket.py` (pocket
+   identity) already set. Two copies of one money rule is precisely what drifted before.
+
+Also recorded: `total_cash` at `today.py:395` is already the same base Plan calls `cash_total`, so the
+base needs no new query — the work is in the SUBTRACTION terms, not the base.
