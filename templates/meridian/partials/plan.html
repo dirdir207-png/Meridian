@@ -224,10 +224,19 @@
      holding both lists in your head. Each deferred item now sits inside the group it belongs to, so a
      gap appears where the capability would be.
 
+     The pane's own wrapper is NOT decoration. It is what `renderRules`/the pane toggle address by
+     `data-plan-view-pane="crew"`, and its loss is how this file broke the shell: without this opener
+     the closing `</div><!-- /data-plan-view-pane="crew" -->` below closed `m-plan` instead, and the
+     browser's error recovery then closed `<main>` early -- which pushed the Activity and Accounts
+     sections out of the shell, a full viewport down the page. Owner, 2026-09-25: "Activity and plan
+     displays both broken". `tests/meridian/test_shell_markup.py` now parses the rendered shell and
+     asserts all four workspace sections live inside `main`, so a stray tag cannot do this again.
+
      TWO TEST HOOKS ARE DELIBERATELY PRESERVED. `data-crew-parity` stays on exactly one element
      (tests/browser/test_capability_parity.py asserts count == 1) and every `data-parity-deferred`
      marker survives as plain list text inside its group, because that suite fails closed on drift.
      `data-crew-actions` stays too: it is what the haptics guard looks for. #}
+  <div class="m-plan-view" data-plan-view-pane="crew" hidden>
   <section class="m-plan-actions" aria-label="Crew write actions" data-crew-actions data-crew-parity>
     <h2 class="m-section-label">Crew actions</h2>
     <p class="m-parity-note">
