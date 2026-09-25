@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import ast
 import pathlib
+import re
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 APP = ROOT / "app.py"
@@ -76,6 +77,12 @@ KNOWN_UNGOVERNED_MUTATING_ROUTES = {
     "/api/splitwise/create-pockets",
     "/api/splitwise/disconnect",
     "/api/splitwise/sync-now",
+    # Declared with a reason rather than as write debt: this route is a GraphQL MUTATION
+    # (`generateViewSadToken`) but it does not change financial state — it mints a token that reveals card
+    # details. Declared so the ratchet keeps its value, which is that any NEW raw provider mutation route is
+    # caught. If a future reviewer disagrees, the correct fix is to route it or rename the declaration; the one
+    # thing this list must never become is a place where a genuine write hides among harmless entries.
+    "/api/cards/<card_id>/sensitive",
 }
 
 #: Routes that legitimately mutate through the pipeline. Presence here is not a bypass.
@@ -122,6 +129,25 @@ def _calls_in(node: ast.AST) -> set[str]:
     return names
 
 
+MUTATION_DOCUMENT = re.compile(r"\bmutation\s+\w+\s*[({]", re.IGNORECASE)
+
+
+def _has_inline_mutation(func: ast.FunctionDef) -> bool:
+    """A GraphQL mutation document written in this function's own body (docstring excluded).
+
+    Reading a mutation is not performing one, so this checks string CONSTANTS that look like GraphQL
+    mutations — `mutation Name(` or `mutation Name {` — rather than any mention of the word.
+    """
+    docstring = ast.get_docstring(func, clean=False)
+    for node in ast.walk(func):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if docstring is not None and node.value == docstring:
+                continue
+            if MUTATION_DOCUMENT.search(node.value):
+                return True
+    return False
+
+
 def _handler_map() -> dict[str, ast.FunctionDef]:
     """Route path -> the function that serves it, plus every helper it calls anywhere in the module.
 
@@ -145,11 +171,13 @@ def _reaches_raw_mutation(func: ast.FunctionDef, functions: dict[str, ast.Functi
     called = _calls_in(func)
     if MUTATION_FLAG in called:
         return True
-    # The third mechanism, found by the ratchet's own blind spot rather than by design: a direct HTTP POST to
-    # the provider's GraphQL endpoint carrying live credentials (`get_crew_headers()` + `requests.post`). The
-    # three autopilot-rule routes use this and no `crew_client`, so a detector keyed only on `crew_client` reads
-    # them as governed. Two instruments, two blind spots -- the union is what is trustworthy.
-    if "get_crew_headers" in called and {"post", "execute"} & called:
+    # The third mechanism, found through the ratchet's own blind spot rather than by design: three routes do
+    # not call `crew_client` at all but post straight to the provider's GraphQL endpoint with live credentials.
+    # The discriminator must be the MUTATION DOCUMENT itself, not the transport -- `get_crew_headers` + `post` is
+    # shared by every read route, and keying on it flagged eighteen harmless readers. So: a mutation string in
+    # THIS function's own body (documentation excluded, since a docstring mentioning mutations is not a write),
+    # together with a provider call. Two instruments, two blind spots; the union is what is trustworthy.
+    if _has_inline_mutation(func) and ({"post", "execute", "execute_graphql"} & called):
         return True
     for name in called & RAW_MUTATION_CALLS:
         return True
