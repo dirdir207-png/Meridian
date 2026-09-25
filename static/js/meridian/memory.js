@@ -11,6 +11,22 @@
     'use strict';
 
     const Memory = {
+        // Owner, 2026-09-25: "confidence have a range of colors based on the confidence level, from red
+        // to green". Three bands, and the BAND is a presentation fact while the number stays on screen:
+        // the percentage is still the text, so colour is additive and never the only signal. The
+        // thresholds are a display choice, not a claim about what Crew means by its own number -- the
+        // value is Crew's, rendered unchanged.
+        //
+        // Exposed on the object (which the file already publishes as `window.MeridianMemory` for
+        // testing) so the mapping can be asserted directly instead of inferred from a colour.
+        confidenceBand(confidence) {
+            if (typeof confidence !== 'number' || !Number.isFinite(confidence)) return null;
+            const percent = confidence * 100;
+            if (percent >= 85) return 'high';
+            if (percent >= 60) return 'medium';
+            return 'low';
+        },
+
         init() {
             this.bindWorkspaceTriggers();
         },
@@ -128,6 +144,8 @@
                     const confidence = document.createElement('span');
                     confidence.className = 'memory-item__confidence';
                     confidence.textContent = `${Math.round(item.confidence * 100)}% confidence`;
+                    const band = Memory.confidenceBand(item.confidence);
+                    if (band) confidence.dataset.confidenceBand = band;
                     meta.appendChild(confidence);
                 }
                 li.appendChild(meta);

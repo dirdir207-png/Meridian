@@ -178,6 +178,33 @@ import { renderActionReviewDetails } from "./action-review.js";
             host.appendChild(form);
         },
 
+        // Owner, 2026-09-25, on the Assets & Contracts plate: "remove essentially user facing nonesense
+        // text like delete_asset: Meridian delete_asset". The label was
+        // `${action.type}: ${action.rationale || action.id}` -- an internal action type, a colon, and a
+        // 32-character id or an old machine summary. A proposal's label is the one line the owner reads
+        // before deciding, so it now says what will happen.
+        //
+        // `machineSummary` recognises the strings the app itself used to write ("Meridian delete_asset:
+        // 6", "delete_asset: 6") so proposals ALREADY in the store also read as sentences -- the fix is
+        // in the display as well as in `app.py`'s generator, because stored rows are not migrated.
+        // Nothing is hidden: the raw type and id stay on the row as data attributes for support.
+        machineSummary(value) {
+            return /^(Meridian\s+)?[a-z][a-z0-9]*(_[a-z0-9]+)*:\s*\S+$/.test(String(value || '').trim());
+        },
+
+        proposalSentence(action) {
+            const machine = this.machineSummary.bind(this);
+            for (const candidate of [action.rationale, action.summary]) {
+                const text = String(candidate || '').trim();
+                if (text && !machine(text)) return text;
+            }
+            const params = action.params || {};
+            const name = params.name || params.title || params.label;
+            const words = String(action.type || 'proposed change').replace(/_/g, ' ').trim();
+            const sentence = words.charAt(0).toUpperCase() + words.slice(1);
+            return name ? `${sentence} "${name}"` : sentence;
+        },
+
         async loadPending() {
             const container = document.querySelector('[data-testid=pending-memory-proposals]');
             if (!container) return;
@@ -201,18 +228,27 @@ import { renderActionReviewDetails } from "./action-review.js";
                 const row = document.createElement('div');
                 row.className = 'pending-memory-proposal';
                 row.setAttribute('data-testid', 'pending-memory-proposal');
+                // The raw type and id are kept on the row, not in the sentence: support and tests can
+                // still identify exactly which action this is, and the owner does not have to read it.
+                if (action.type) row.dataset.actionType = action.type;
+                if (action.id) row.dataset.actionId = action.id;
                 const label = document.createElement('span');
-                label.textContent = `${action.type}: ${action.rationale || action.id}`;
+                label.textContent = this.proposalSentence(action);
                 row.appendChild(label);
                 row.appendChild(renderActionReviewDetails(action));
                 const approve = document.createElement('button');
                 approve.textContent = 'Approve';
                 approve.setAttribute('data-testid', 'approve-proposal');
+                // `data-action` is the hook the stylesheet needs to dress the two steps differently:
+                // Approve is a decision, Execute is the mutation, and they must not look like one
+                // button. The test ids stay as they are -- tests already depend on them.
+                approve.dataset.action = 'approve';
                 approve.addEventListener('click', () => this.decide(action.id, 'approve', approve));
                 row.appendChild(approve);
                 const execute = document.createElement('button');
                 execute.textContent = 'Execute';
                 execute.setAttribute('data-testid', 'execute-proposal');
+                execute.dataset.action = 'execute';
                 execute.disabled = true;
                 execute.addEventListener('click', () => this.decide(action.id, 'execute', execute));
                 row.appendChild(execute);

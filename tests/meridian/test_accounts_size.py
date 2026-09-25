@@ -24,6 +24,7 @@ nine-slice carries its own transparent margins plus scalloped-edge shading, so t
 sits ~31px inside the box on each side. Matching the concept's 379.6 would need a ~5px frame,
 which is not the frame the kit draws.
 """
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -127,3 +128,69 @@ def test_the_dark_theme_rules_the_concept_draws_are_untouched():
     assert "border-bottom: 1px dotted var(--obs-brass, #c6aa71)" in css
     light_overrides = css.split('html[data-theme="light"] .obs-shell .m-account-row {')[1]
     assert "#c6aa71" not in light_overrides.split("}")[0], "the dark rule must not be re-inked"
+
+
+def test_the_assets_plate_declares_paper_inks_without_a_theme_prefix():
+    """Assets & Contracts is paper in BOTH themes, so its ink scale is declared unconditionally.
+
+    Owner, 2026-09-25: "on dar[k] theme assets and contracts is using the light theme dark blue fill and
+    the text below is unreadable". The plate is the kit's parchment ticket, so the interior must read as
+    ink on paper whatever the page behind is doing.
+
+    RETARGETED the same day, when the same owner asked for "one ticket per item": the scope moved from the
+    SECTION to the surfaces that are actually paper -- each `.memory-item` and each pending proposal --
+    so this asserts the selector that now carries it. The property is unchanged: unconditional ink scale,
+    present on every paper surface, with no `[data-theme]` prefix anywhere.
+
+    This is the cheap half of the guard; the browser test measures the computed colours and the contrast
+    ratio. This one fails fast if the scope is deleted, narrowed back to a single surface, moved behind a
+    `[data-theme]` prefix (which would put the defect back in the other theme), or loses the canvas token
+    that `.memory-item` mixes with.
+    """
+    css = (ROOT / "static/css/meridian/accounts.css").read_text(encoding="utf-8")
+    match = re.search(
+        r"\.obs-shell \.memory-management \.memory-item,\s*\n"
+        r"\.obs-shell \.memory-management \.pending-memory-proposal \{(.*?)\n\}",
+        css, re.S,
+    )
+    assert match, "the paper scope is no longer declared on the item and proposal tickets"
+    block = match.group(1)
+    for token, value in (("--m-ink", "#20263b"), ("--m-surface", "#f4ecdf"), ("--m-canvas", "#f4ecdf")):
+        assert f"{token}: {value};" in block, f"{token} must be {value} on the paper tickets"
+    # A theme-prefixed copy would mean one theme is right and the other is not.
+    for theme in ("light", "dark"):
+        assert f'[data-theme="{theme}"] .obs-shell .memory-management' not in css
+
+
+def test_every_asset_row_is_its_own_ticket():
+    """Owner, 2026-09-25: "Can we also separate the tickets per items and enlarge the buttons".
+
+    A row is a ticket when it carries the kit's ticket frame AND the tileable paper the frame is cut from,
+    rather than being laid out inside one tall plate. The section itself must NOT carry the frame any
+    more: that single 1000px plate is what tiled seams through the row text.
+    """
+    css = (ROOT / "static/css/meridian/accounts.css").read_text(encoding="utf-8")
+    # Comments are stripped first, and that is not incidental: these rules carry long explanations that
+    # name `parchment-ticket.png` when describing what they USED to do, and a guard that reads prose
+    # would fail on a correct stylesheet -- or worse, pass on a broken one whose comment mentioned the fix.
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    # The selector names BOTH the ink scope and the frame rule, so pick the block that is the frame --
+    # the one carrying the border-image. Matching the first would assert against the token list.
+    blocks = re.findall(
+        r"\.obs-shell \.memory-management \.memory-item,\s*\n"
+        r"\.obs-shell \.memory-management \.pending-memory-proposal \{(.*?)\n\}", css, re.S)
+    assert blocks, "the per-item ticket rule is gone"
+    frames = [block for block in blocks if "border-image" in block]
+    assert frames, "no rule gives a row the kit's ticket frame"
+    block = frames[0]
+    assert "parchment-ticket.png" in block, "a row must wear the kit's ticket frame"
+    assert "paper-texture.webp" in block, "a row's field must be the tileable paper"
+    assert not re.search(r"\bfill\b", block.split("border-image:")[1].split(";")[0]), (
+        "the ticket frame must not use `fill`: filling a tall surface is what drew the seams"
+    )
+
+    section_rule = re.search(r"\.memory-management \{(.*?)\n\}", css, re.S)
+    assert section_rule, "the section rule is gone"
+    assert "parchment-ticket.png" not in section_rule.group(1), (
+        "the section must not be one tall plate again; that is the seam defect"
+    )

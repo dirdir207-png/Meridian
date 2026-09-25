@@ -754,6 +754,174 @@ html[data-theme="light"] .obs-shell .m-account-icon[data-emblem] {
    Specificity note, and the same trap as the summary panel above: `.obs-shell
    .m-section-label` sets the label colour at (0,2,0), so a two-class selector here ties
    with it and the winner falls to stylesheet order. Three classes is deliberate. */
+/* ── Assets & Contracts is PAPER, in both themes, so the ink scale flips BACK inside it ──────────
+   This plate is the kit's parchment ticket, drawn as a `border-image`, which makes the page's theme a
+   lie inside it: the interior is ink on paper whatever the page behind is doing. `observatory.css`
+   already states the mirror-image rule for dark BOXES -- "the ink scale is flipped INSIDE the box and
+   nowhere else, because the box is dark while the page is not" -- and this is that rule read the other
+   way round for a light box.
+
+   Owner, 2026-09-25: "on dar[k] theme assets and contracts is using the light theme dark blue fill and
+   the text below is unreadable". Measured before the fix, in dark theme: the waiting-proposal cards
+   kept `--m-surface: #141b32` (navy cards sitting on parchment) and the review text under them
+   inherited `--m-ink: #eee4cf` -- cream on parchment, a contrast ratio of roughly 1.1:1.
+
+   Declared on the section rather than per child, so any control added inside the plate inherits the
+   right ink and surface without having to be told, which is how the theme blocks themselves do it. A
+   declaration on the element beats an inherited one from `.obs-shell` whatever the specificity, so this
+   holds in both themes without a `[data-theme]` prefix. */
+.obs-shell .memory-management .memory-item,
+.obs-shell .memory-management .pending-memory-proposal {
+  /* `--m-canvas` too, and not only the ink: `.memory-item` paints itself with
+     `color-mix(in srgb, var(--m-surface) 82%, var(--m-canvas))`, so leaving the canvas at the page's
+     navy turned every card grey-blue on parchment (measured rgb(204,198,192) against the light theme's
+     rgb(244,236,223)). Inside paper the canvas is paper. */
+  --m-canvas: #f4ecdf;
+  --m-surface: #f4ecdf;
+  --m-surface-muted: rgba(32, 38, 59, 0.05);
+  --m-border: rgba(32, 38, 59, 0.16);
+  --m-border-strong: rgba(32, 38, 59, 0.3);
+  --m-ink: #20263b;
+  --m-ink-muted: #655d6c;
+  --m-ink-faint: #756d79;
+  /* Status inks are the light theme's, because on paper the darker ones are the readable ones. */
+  --m-healthy: #25644f;
+  --m-caution: #9a4a18;
+  --m-risk: #a74444;
+  --m-information: #674d86;
+  color: var(--m-ink);
+}
+
+/* ── On a ticket, the kit's serif ────────────────────────────────────────────────────────────────
+   Owner, 2026-09-25: "wrong text fonts". The row name inherited the page's sans from the ledger table,
+   but every other ticket in Meridian sets its title in the observatory serif (`.obs-ticket-title` in
+   dial.css: `font-family: var(--obs-font-serif)`, weight 500) and so does the concept -- "Emergency
+   Fund" and "Assets & documents" in 04-accounts.png are serif. The row name now matches the surface it
+   is printed on; the confidence line stays a small sans detail, which is how the ticket's own
+   `.obs-ticket-detail` is set. */
+.obs-shell .memory-management .memory-item__title {
+  font-family: var(--obs-font-serif);
+  font-size: var(--m-text-lg);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.obs-shell .memory-management .memory-item__confidence {
+  font-size: var(--m-text-sm);
+  letter-spacing: 0.01em;
+}
+
+.obs-shell .memory-management .memory-item__why {
+  font-size: var(--m-text-sm);
+  line-height: 1.45;
+}
+
+/* ── One ticket per item ─────────────────────────────────────────────────────────────────────────
+   Owner, 2026-09-25: "Can we also separate the tickets per items and enlarge the buttons".
+
+   Every row is its own parchment ticket. That is what concept 04 draws -- its "Assets & documents" is a
+   single one-row ticket, not a panel -- and it is also why the seams are gone for good rather than
+   patched: the kit's ticket art is drawn for a ONE-ROW ticket, and the previous single 1000px plate made
+   the browser tile its interior through the words ("now lets make sure text isnt overlapping lines etc").
+
+   The rows still paint no fill of their own: a filled row inside a ticket is the white box the owner
+   rejected, whatever colour it is filled with. The ticket IS the surface. */
+.obs-shell .memory-management .memory-item,
+.obs-shell .memory-management .pending-memory-proposal {
+  border: 20px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 / 20px round;
+  background-color: #f5d8b3;
+  background-image: url("/static/img/meridian/observatory/paper-texture.webp");
+  background-size: 256px 256px;
+  background-repeat: repeat;
+  background-position: center;
+  background-clip: padding-box;
+  border-radius: 0;
+  box-shadow: none;
+  padding: var(--m-space-3);
+  margin: 0;
+}
+
+/* -- The plate's actions wear the kit's button plate ---------------------------------------------
+   Owner, 2026-09-25: "Lets have the add asset add contract edit and delete buttons be rendered in the
+   deep orange found on some other buttons in the app, and approve", then "Lets use the whole button
+   plate, very visually appealing".
+
+   So this is the SAME plate the Plan's primary action uses -- `apricot-button.png`, nine-sliced, with
+   the kit's own instruction behind it ("Primary action plate ... Use behind a real button/link. HTML
+   label and arrow; at least 44px target. Nine-slice for variable width."). Not a flat fill of the
+   apricot token: the plate carries the chamfered end caps and the four rivets, which is what makes it
+   read as a control rather than a coloured rectangle.
+
+   The label ink is the kit's own dark brown on apricot (#2c1d0d, the value `.m-primary-button` uses),
+   because apricot is a light surface and the plate is not a place for cream text.
+
+   EXECUTE IS DELIBERATELY ABSENT. Approve and Execute are two steps of the proposal -> approval ->
+   execution boundary, and dressing them identically would flatten the one distinction the action
+   pipeline exists to make. Execute keeps the ink-outlined treatment. */
+.obs-shell .memory-management__actions button,
+.obs-shell .memory-management .memory-item button,
+.obs-shell .memory-management .pending-memory-proposal button[data-action="approve"] {
+  border: 8px solid transparent;
+  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/apricot-button.png") 190 230 190 230 fill / 8px 26px round;
+  border-radius: 0;
+  background: none;
+  color: #2c1d0d;
+  min-height: 52px;
+  padding: var(--m-space-2) var(--m-space-5);
+  font-weight: 600;
+  font-size: var(--m-text-md);
+}
+
+/* The row's own pair are compact -- "Edit" and "Delete" share one row of a phone-width ticket -- so
+   the end caps scale with them. Same asset, same slice, narrower caps: at the section's cap width they
+   would eat the label. */
+.obs-shell .memory-management .memory-item button {
+  border-width: 8px;
+  border-image-width: 8px 24px;
+  min-height: 44px;
+  min-width: 96px;
+  padding: var(--m-space-1) var(--m-space-2);
+  font-size: var(--m-text-sm);
+}
+
+.obs-shell .memory-management__actions button:hover,
+.obs-shell .memory-management .memory-item button:hover,
+.obs-shell .memory-management .pending-memory-proposal button:hover {
+  filter: brightness(1.06);
+}
+
+/* Execute, and only Execute, keeps the outlined-on-paper treatment. It is the mutation step of the
+   proposal -> approval -> execution boundary; the two must not read as one button. */
+.obs-shell .memory-management .pending-memory-proposal button[data-action="execute"] {
+  background: none;
+  border: 1px solid rgba(32, 38, 59, 0.4);
+  border-image: none;
+  color: #20263b;
+}
+
+.obs-shell .memory-management .pending-memory-proposal button[data-action="execute"]:hover {
+  background: rgba(32, 38, 59, 0.08);
+  filter: none;
+}
+
+/* -- Confidence reads as a range, in the app's own semantic inks --------------------------------
+   Red to green by band (thresholds live in `Memory.confidenceBand`), using the TOKENS rather than new
+   literals so one rule is legible on the dark page (Plan's memory rows) and on this parchment plate --
+   inside the plate the ink scope above has already re-pointed these tokens to their paper-readable
+   values. The percentage is still the text, so colour never carries the meaning alone. */
+.obs-shell .memory-management .memory-item__confidence[data-confidence-band="high"] {
+  color: var(--m-healthy);
+}
+
+.obs-shell .memory-management .memory-item__confidence[data-confidence-band="medium"] {
+  color: var(--m-caution);
+}
+
+.obs-shell .memory-management .memory-item__confidence[data-confidence-band="low"] {
+  color: var(--m-risk);
+}
+
 .memory-management {
   display: grid;
   /* A grid track is `auto` by default, which can never go below its item's MIN-CONTENT.
@@ -764,10 +932,23 @@ html[data-theme="light"] .obs-shell .m-account-icon[data-emblem] {
   grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   gap: var(--m-space-3);
-  padding: var(--m-space-4);
-  border: 20px solid transparent;
-  border-image: url("/static/img/meridian/observatory/kit-2026-09-16/parchment-ticket.png") 80 fill / 20px round;
-  border-radius: 0;
+  padding: 0;
+  /* ── The section is a STACK, not a plate ─────────────────────────────────────────────────────────
+     Owner, 2026-09-25: "Can we also separate the tickets per items". The plate moved down to the items,
+     where the kit's art is used at the shape it was drawn for, and the section is now only the rhythm
+     between them.
+
+     WHAT THIS RULE USED TO BE, and why it is worth remembering: the section itself was one tall
+     parchment plate, painted by `border-image: url(parchment-ticket.png) 80 fill / 20px round`. Because
+     the kit's ticket is drawn for a ONE-ROW ticket (concept 04's "Assets & documents" is exactly that),
+     asking its interior slice to cover a 1000px list made the browser tile it: measured on the live
+     page, the filled plate drew SEVEN continuous seams across its width, crossing 'Test Asset',
+     'Edit'/'Delete', 'delete_asset: Meridian delete_asset: 6' and the review sentence beneath them --
+     which is what the owner saw as "text overlapping lines". Turning `border-image-source` off removed
+     all but one of them, which is what proved the art was drawing them. `stretch` removed the seams but
+     smeared the paper into vertical streaks. One row per ticket is the shape the art was drawn for, so
+     the seams cannot come back. */
+  border: 0;
   background: none;
   box-shadow: none;
 }
@@ -779,14 +960,12 @@ html[data-theme="light"] .obs-shell .m-account-icon[data-emblem] {
   min-width: 0;
 }
 
+/* The heading and its copy are back on the PAGE, not on paper, because the plate moved down to the
+   tickets. Their paper inks were right while the section itself was a ticket; leaving them here would
+   have put brown-on-navy. The type scale is kept -- only the ink changes with the surface. */
 .obs-shell .memory-management .m-section-label {
-  color: #7a5a2e;
   font-family: var(--m-font-serif);
   font-size: var(--m-text-lg);
-}
-
-.obs-shell .memory-management .m-section-copy {
-  color: #5c5136;
 }
 
 .memory-management__actions {

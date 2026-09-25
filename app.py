@@ -1297,7 +1297,19 @@ for _kind, (_execute, _verify) in {
 
 
 def _meridian_memory_proposal_sink(action_type, params):
-    summary = f"Meridian {action_type}: {params.get('name') or params.get('record_id')}"
+    # Owner, 2026-09-25, on the Assets & Contracts plate: "remove essentially user facing nonesense text
+    # like delete_asset: Meridian delete_asset". This read
+    #   f"Meridian {action_type}: {params.get('name') or params.get('record_id')}"
+    # which is where that string came from -- an internal action type and a record id, joined by a
+    # colon, saying nothing about what is about to happen. It is now a sentence built from the action
+    # and the record's own name ("Delete the asset \"Test Asset\""), and it never contains an id.
+    # Wording only: routing, approval and execution are untouched.
+    try:
+        from meridian.action_summary import human_action_summary, lookup_record_name
+
+        summary = human_action_summary(action_type, params, name_lookup=lookup_record_name)
+    except Exception:  # pragma: no cover - a label must never block proposing
+        summary = f"Proposed change: {' '.join(str(action_type).split('_'))}"
     # Capture the state the reviewer is about to approve, so execution can prove
     # the reviewed state still holds. None for types without a declared base
     # state; those types are unaffected.
