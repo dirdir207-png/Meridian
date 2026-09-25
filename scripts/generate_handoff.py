@@ -35,6 +35,11 @@ ROOT = Path(__file__).resolve().parent.parent
 LEDGER = ROOT / "docs/project/MERIDIAN_OS_TASKS.json"
 ROADMAP = ROOT / "docs/project/MERIDIAN_ROADMAP.md"
 DECISIONS = ROOT / "docs/project/MERIDIAN_DECISIONS.md"
+# The vision inventory. It was authoritative in the builder prompt and named by the roadmap's
+# section 0, but sat in no session-ritual list at all until 2026-09-25, which is how a project
+# loses sight of its own concepts while believing it reviews everything.
+CONCEPTS = ROOT / "docs/project/MERIDIAN_CONCEPTS.md"
+BUILDER_PROMPT = ROOT / "docs/project/MERIDIAN_INITIAL_BUILDER_PROMPT.md"
 AGENTS = ROOT / "AGENTS.md"
 EMERGENT = ROOT / "docs/project/session-emergent.json"
 OUT = ROOT / "docs/project/HANDOFF.md"
@@ -43,7 +48,7 @@ CDB = ROOT / "docs/project/CURRENT_STATUS.md"
 FINISHED = {"complete", "done"}
 #: The governing sources a handoff must be able to cite. A handoff that cannot name these is a
 #: session summary and is labelled as one.
-GOVERNING = (AGENTS, ROADMAP, DECISIONS, LEDGER)
+GOVERNING = (AGENTS, ROADMAP, DECISIONS, LEDGER, CONCEPTS, BUILDER_PROMPT)
 #: Order in which tracks are laid out, so the spine is visible rather than alphabetical.
 TRACK_ORDER = ("design-fidelity", "audit", "track-C", "track-I", "virgil")
 
@@ -228,6 +233,8 @@ def main() -> int:
     L.append("## 7. READ DEEPER — where the facts actually live")
     L.append("")
     for name, why in (
+        ("docs/project/MERIDIAN_CONCEPTS.md", "the 22 concepts — which every slice must name"),
+        ("docs/project/MERIDIAN_INITIAL_BUILDER_PROMPT.md", "the concepts' authoritative source: evaluate, do not auto-implement"),
         ("docs/project/MERIDIAN_ROADMAP.md", "the trajectory and its stated next move"),
         ("docs/project/MERIDIAN_OS_TASKS.json", "every task, its track, gates and limits"),
         ("docs/project/MERIDIAN_DECISIONS.md", "binding decisions; the newest governs"),

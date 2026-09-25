@@ -46,7 +46,7 @@ The current confusion is real and measurable `[E]`:
    Private per-agent harnesses are retired; a harness that only its author can run is not evidence.
 4. **One entry point - not one file.** An index (this document's opening block plus
    `docs/project/README.md`) links the *active authorities*: the builder prompt, `MERIDIAN_DECISIONS.md`, the
-   22-concept mapping, `MERIDIAN_VISUAL_CAPTURE_SPEC.md`, this roadmap, the task ledger, the substrate
+   22-concept mapping (**`MERIDIAN_CONCEPTS.md`**, created 2026-09-25 because this row named an authority no session could reach — the mapping then existed only inside a superseded review), `MERIDIAN_VISUAL_CAPTURE_SPEC.md`, this roadmap, the task ledger, the substrate
    inventory, `AGENT_COORDINATION.md` and `design-qa.md`. Superseded narratives move to
    `docs/project/archive/`. Governing requirements are **never** demoted to "history".
 5. **One trajectory:** the three tracks in §5.
