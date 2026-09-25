@@ -5319,7 +5319,12 @@ still needs. OS-113 stays necessary either way — the dial, Plan's money-moveme
 Accounts liquid filter all still identify the pocket.
 
 **Four traps recorded on OS-111 for whoever starts cold**, because this is a money rule and a
-plausible-looking copy of it is the dangerous outcome:
+plausible-looking copy of it is the dangerous outcome. The owner then settled the goals term
+outright — *"should be money sitting in pocket"* — so the subtraction is the pocket's BALANCE, never
+the target being aimed at. Subtracting an unfunded target subtracts money he still has, understating
+Safe to Spend by the unfunded remainder. Note the consequence: Today's target-based value is not wrong
+everywhere — it is wrong *as a subtraction*, and the R20 card may legitimately keep a target-based
+display. Two goals quantities must not share one name.
 
 1. **`goals_total` means two different things.** `plan.py:475` sums the money **actually sitting in**
    Crew's goal pockets (`account.balance`); `today.py:581` already has a field of the same name that
