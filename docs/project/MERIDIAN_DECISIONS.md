@@ -711,3 +711,26 @@ negative-then-backfill **shape** is ordinary product behaviour.
   NOT an observation of the owner's money. When the injected 480.77 is unwound the shape may remain
   ordinary, but the amount must never enter history as `data_mode='actual'` — which is why the ingest
   fix below is committed but deliberately NOT deployed while that injected amount is live.
+
+## D-028 — The calendar's liveness comes from a HARNESS-side daily fetch; the app never holds a Composio credential (owner, 2026-09-25)
+
+**The choice, from three shapes.** `OS-067`'s last open piece was never the connector — that is built and
+verified. What was missing is the **daily observation**: nothing fetched on a schedule, because the app has
+no Composio client, and giving the app a raw Composio credential is its own decision rather than a detail.
+The owner chose the harness-side schedule.
+
+**What that fixes, and what it forbids.**
+
+* **A scheduled harness fetch is what makes "Live" true.** The app already reads `Not observed yet` and
+  reads `Live` only inside the window a daily schedule can explain, so honest liveness needs no app change:
+  it needs the fetch to actually happen. The harness lane owns that schedule; this repository owns the
+  ingest it calls and the honesty of what the surface then says.
+* **The app installs no Composio credential.** The boundary this project has kept — the app holds no raw
+  external credential for a connector the harness fronts — still holds. Choosing the harness route is what
+  keeps it, so it must not be quietly undone later as an implementation convenience.
+* **The app never claims to be polling.** Until fetched events are observed, the surface must go on saying
+  `Not observed yet`, and must go back to STALE rather than healthy when the feed stalls. A daily job that
+  stops must produce a visibly stale surface, not a confident one.
+* **Read-only context stays read-only.** Nothing here matches an event to money: the calendar table has no
+  amount, commitment, charge or transaction column at all, so linking cannot begin without a deliberate
+  migration, and the module exposes no linking API.

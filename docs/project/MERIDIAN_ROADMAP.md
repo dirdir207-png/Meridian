@@ -506,10 +506,18 @@ Track C (V1 ─► V2 ─► V3 ─► V4 ─► V5 ─► V6 ─► V7)   V8 ga
   (reserve-versus-amount gap display, called "the next product slice" here) is `done`. This paragraph is
   left in place below as the record of that reasoning, but a reader must not treat its next move as
   current: at 2026-09-25 the open items are `OS-038` (Track D's remaining concept-vs-current gaps, which is
-  design work and therefore owner-gated), the first evidence-backed role on Track I, `OS-074` (council
-  mechanics, `in_progress`), `OS-058` (calendar-bound to the 2026-10-02 event), and `OS-067`, which is the
-  one item the roadmap itself says must close BEFORE new Track C work opens. Nothing here chooses between
-  them; the choice is the owner's (§8).
+  design work and therefore owner-gated), `OS-058` (calendar-bound to the 2026-10-02 event), and `OS-067`,
+  which is the one item the roadmap itself says must close BEFORE new Track C work opens. Nothing here
+  chooses between them; the choice is the owner's (§8).
+  **CORRECTED WITHIN THE HOUR, and kept because the mistake is instructive.** The first version of this
+  annotation listed "the first evidence-backed role on Track I" as open. That was WRONG: I.2 is `OS-073` and
+  is `complete` (delivered 2026-09-21), and `OS-074` (I.3) was closed the same day only because its status
+  had been left stale for four days. The error came from inferring absence — I looked for an I.2 id in a
+  PARTIAL list of ids I had printed and concluded none existed. Absence of evidence read as evidence of
+  absence, inside a paragraph written to prevent exactly that. **What remains of I.2 is `OS-076` (its
+  user-facing surface, open and owner-gated) and the run-record-to-proposal reference, which stays empty
+  because no role proposes yet.** Lesson for the next reconciler: search for the thing before writing that
+  it is missing, and prefer a grep over a recollection of somebody's cropped list.
 - **Next move (revised 2026-09-20, SUPERSEDED as above):** this line used to ask for the shared dated-event model first. That was
   delivered, so the sequence starts one step later: close Track D's remainder (`OS-038` design gaps, `OS-049`
   browser baseline), then build **Track I.1** — the envelope *and its permissions*, with a test per role proving
