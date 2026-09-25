@@ -61,6 +61,13 @@ predicts, written down while it is still a prediction:
    own share"; if the credit rotates or splits, say so and leave the rule open rather than inventing
    one from a single sample.
 
+## A LABELLED simulation of the event lives elsewhere, on purpose
+
+`OS058_EVENT_SIMULATION_2026-10-02.md` pre-registers what each surviving candidate rule predicts, with
+the arithmetic, so the observation below can score them. It is deliberately a **separate document**: this
+file must contain only what was observed, and the task's own limits forbid substituting a model for the
+measurement. Do not quote the simulation as a result, and never present a simulated value as a balance.
+
 ## Procedure (repeatable, so the measurement does not depend on one session's memory)
 
 Run `.venv/bin/python tmp/os058_before_snapshot.py` again — it takes a *new* dated copy and record
