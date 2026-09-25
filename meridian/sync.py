@@ -162,7 +162,12 @@ def sync_provider(adapter: ProviderAdapter, repository, *, ai_classifier=None) -
         )
         return SyncReport(adapter.provider_name, "failed", 0, 0, 1)
     accounts_by_external_id = {}
+    # BOTH observation hooks live HERE, in the SINGULAR entry point, because that is the one the live
+    # sync bridge calls (`scripts/meridian_sync_live.py`). Putting a hook only in `sync_providers` made
+    # it unreachable in production: the history stayed EMPTY while the sync ran every 15 seconds. The
+    # snapshot carries the commitment candidates, so allocations need nothing from the plural path.
     _record_spend_selection(adapter, repository, snapshot)
+    _record_bill_allocations(adapter, repository, snapshot)
     user_rules = tuple(
         AssignmentRule(
             id=f"user:{rule.id}",
@@ -299,9 +304,20 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
             continue
 
         class SnapshotAdapter:
+            """Delegates to the real adapter instead of hiding it.
+
+            The wrapper exists so the already-fetched snapshot is not fetched twice. It must therefore
+            forward the readback surfaces too: while it did not, the singular entry point saw an adapter
+            with no `readback_selected_spend_pocket`, and an ingest through this path left the spend
+            pocket UNOBSERVED -- OS-113's mechanism silently inert on one of its two entry points.
+            """
+
             provider_name = adapter.provider_name
             connection_external_id = adapter.connection_external_id
             connection_name = adapter.connection_name
+
+            def __getattr__(self, name):
+                return getattr(adapter, name)
 
             @staticmethod
             def fetch_snapshot():
@@ -311,12 +327,6 @@ def sync_providers(adapters, repository) -> tuple[SyncReport, ...]:
         reports.append(report)
         if report.status == "failed":
             continue
-        # Both observation hooks run HERE, with the REAL adapter, because this path holds the candidate
-        # objects while its local wrapper carries none of the readback methods `sync_provider` looks
-        # for. Recording the selection here too closes a gap the singular path could not see: an ingest
-        # through `sync_providers` used to leave the spend pocket unobserved entirely.
-        _record_spend_selection(adapter, repository, snapshot)
-        _record_bill_allocations(adapter, repository, snapshot)
         for candidate in snapshot.commitment_candidates:
             existing = commitment_repository.get_commitment_by_legacy(
                 adapter.provider_name, candidate.external_id

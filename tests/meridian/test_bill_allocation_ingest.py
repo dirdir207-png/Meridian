@@ -27,7 +27,7 @@ from meridian.providers.base import (
 )
 from meridian.repository import FinancialRepository
 from meridian.spend_selection import SpendSelectionStore
-from meridian.sync import sync_providers
+from meridian.sync import sync_provider, sync_providers
 
 RENT = "QmlsbDphNjcwMDQzNS0xNzc5LTRhOTEtYjMxNS1hNTE3MjlmYTA5NGE="
 POCKET = "U3ViYWNjb3VudDplZGM4Y2I4OC1mMjM0LTQzMjEtOGEzYi1kMjc5MGU5ODFhN2E="
@@ -160,3 +160,32 @@ def test_history_is_an_addition_and_the_mutable_column_still_behaves(monkeypatch
     assert [row.reserved_amount for row in history] == [0.0, 710.98], (
         "the overwritten value must survive in history, which is the whole point"
     )
+
+
+def test_the_SINGULAR_path_records_too_because_that_is_what_production_calls(monkeypatch, repository):
+    """The regression this file exists for.
+
+    Production syncs through `sync_provider` (the singular function, called by
+    `scripts/meridian_sync_live.py`), while the hooks were first written into `sync_providers`. The
+    live history therefore stayed EMPTY while the database was being synced every 15 seconds on
+    live money — the worst kind of silent gap, because everything else looked healthy.
+    """
+    monkeypatch.setattr("meridian.sync._now_iso", lambda: CAPTURE)
+    report = sync_provider(Adapter(snapshot([candidate(RENT, "Rent", 710.98)])), repository)
+
+    assert report.status == "complete"
+    history = BillAllocationStore(repository.db_path).history(RENT)
+    assert [row.reserved_amount for row in history] == [710.98]
+    assert SpendSelectionStore(repository.db_path).latest() is not None
+
+
+def test_the_plural_wrapper_does_not_hide_the_adapters_readbacks(monkeypatch, repository):
+    """`sync_providers` wraps the adapter so the snapshot is not fetched twice; the wrapper must
+    forward the readback surfaces rather than swallow them, or the singular hooks above see an
+    adapter that cannot answer and record nothing."""
+    monkeypatch.setattr("meridian.sync._now_iso", lambda: CAPTURE)
+    sync_providers([Adapter(snapshot([candidate(RENT, "Rent", 42.0)]))], repository)
+
+    assert SpendSelectionStore(repository.db_path).latest() is not None
+    assert [row.reserved_amount for row in
+            BillAllocationStore(repository.db_path).history(RENT)] == [42.0]
