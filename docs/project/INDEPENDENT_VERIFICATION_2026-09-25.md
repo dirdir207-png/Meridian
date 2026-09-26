@@ -194,6 +194,42 @@ unwind (22:30:58Z).
 **CONFIRMED (narrow):** `reservedBy ASC` as the observable secondary ordering — the entire 2026-09-04
 single-read state is fully described by *array = reservedBy-ascending*.
 
+**Where the claim is asserted, and where it is not.** Asserted at
+`OS058_FUNDING_EVENT_MEASUREMENT.md:109`, `:130-131`, `:172`, `:401`; carried as fact in the tasks ledger at
+`MERIDIAN_OS_TASKS.json:2872` and `:1464`; reported at `CURRENT_STATUS.md:30` and `:66`. **Not** asserted in
+`STATE_OF_THE_SYSTEM.md` or `INTEGRATION_AUDIT_2026-09-25.md` — both assert no ordering rule, and the former
+explicitly lists "the reserve's internal attribution" among provider-side state invisible to every instrument
+here. So the falsification lands on the measurement document, the ledger and the status record, not on the two
+documents this pass was pointed at.
+
+**Candidate orderings, side by side on the raw read** (bill positions only; the provider's own figures are
+deliberately not reproduced here):
+
+| candidate ordering | derived | vs raw array |
+|---|---|---|
+| `(daysOverdue DESC, reservedBy ASC, amount ASC)` — the asserted full rule | B2, B1, B3, B4, B5 | **DIFFERS** |
+| `(daysOverdue DESC, reservedBy ASC)` — the asserted core | B1, B2, B3, B4, B5 | matches |
+| `(reservedBy ASC)` — what `app.py:2059` actually does | B1, B2, B3, B4, B5 | matches |
+| `(array position)` — creation/id order | B1, B2, B3, B4, B5 | matches |
+| `(amount ASC, reservedBy ASC)` | B2, B5, B4, B3, B1 | DIFFERS |
+| `(amount DESC, reservedBy ASC)` | B1, B3, B4, B5, B2 | DIFFERS |
+
+**A scope limit on the confirmation, not just the falsification:** on this single read, `reservedBy ASC` and
+plain array position are *indistinguishable*, so the raw material confirms the secondary key only as "deadline
+ascending", and cannot separate it from the array simply being in creation order. The claim says creation order
+was refuted — by the injected experiments, which are not raw material. What discriminates instead is the
+**state**, and it is recorded as shares rather than amounts: exactly one bill is non-zero, it is the largest of
+the array and holds the entire bucket, while the smaller of the two soonest-deadline bills holds nothing.
+
+**Store counts** (read-only, `mode=ro`): the dated allocation series holds **11,484 rows across 1,044 captures,
+0 non-zero and 0 silent**, and its schema has **no `daysOverdue` column** — so the rule's primary key has never
+been captured on the app side either.
+
+**Instrument limits, stated so nothing is over-read.** `daysOverdue` is plausibly derived from the anchor and
+day-of-month and null because none of the five anchors had passed on that date — consistent with the data and
+**untested by it**; no claim is made about the mechanism. A single read is also consistent with a mid-cascade
+state, and a cascade needs a second read that does not exist.
+
 **Consequence, stated without prescribing a fix:** the claim is unsupported at the primary-key level by any raw
 data that exists, contradicted at the tie-break level by the one natural raw allocation, and **not implemented**
 in the application — while remaining in operational use in the status record.
