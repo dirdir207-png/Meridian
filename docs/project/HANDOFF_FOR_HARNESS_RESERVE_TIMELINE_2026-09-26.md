@@ -55,7 +55,8 @@ there and in OS-059's evidence.
 
 **Three permitted paths, in order of preference:**
 
-1. **Ask for the captured document.** The owner holds it; one paste removes the risk entirely.
+1. **If the captured document is later found, use it.** The owner has confirmed it is not currently available;
+   do not ask him to paste a document he does not possess.
 2. **Reconstruct and verify against the recorded replay properties.** Write the operation, replay it for the same
    `asOfDate`, and treat the recorded properties as the falsifier (452 rows, nondecreasing dates, row amount = sum of
    events, balances reconcile to opening, `firstNegative` matches). Any mismatch means **stop** and report — do not
