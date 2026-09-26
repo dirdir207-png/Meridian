@@ -377,16 +377,33 @@ delete → `CreateRoundUpRule`/`EditRoundUpRule`/`DeleteRule`.
 ### A structural blind spot this instrument exposed
 
 The runtime registers **200 route rules, 98 accepting POST**; the document's **74** comes from the `app.py`-only
-scan. That means roughly **24 blueprint POST rules are structurally outside the ratchet** — the ratchet parses
-`app.py` and cannot see them. Measured today, none of them reaches a provider write, so the gap is empirically
-closed for the present surface; it is not closed *structurally*, and the ratchet's declared limits should say
-so. (This also means the document's "140 / 74" and the runtime "200 / 98" describe different populations and
-must never be quoted interchangeably — same class as D-035's scope rule.)
+scan. **Measured:** the ratchet scans `app.py` only, so the POST rules carried by the Meridian blueprint
+(`/api/meridian/*`) are *structurally* outside it — the sweep covered them, and **none reached a provider
+mutation**. So the gap is empirically empty for the present surface and structurally open; the ratchet's
+declared limits should say so. (The document's "140 / 74" and the runtime "200 / 98" describe different
+populations and must never be quoted interchangeably — same class as D-035's scope rule.)
 
-**A second record-integrity defect: the composition sentence is off by one.** `STATE_OF_THE_SYSTEM.md:46` says
-the declaration is composed of *"9 routes the audit reached and 17 found by the ratchet on its first run"*, but
-its own list holds **9 + 16** (the ratchet block's comment says "seventeen"), plus the separately-reasoned card
-entry, for 26. The total is right and the composition sentence is not.
+**Also confirmed by this instrument, and worth having:** the two *governed* routes present
+(`/api/actions/mutate`, `/api/actions/<action_id>/execute`) invoked `classify_action` / `route_mutation` /
+`execute_approved_action` and **no raw write** — the governed path is governed, measured rather than assumed.
+And 11 non-declared POST rules did contact the provider **read-only**: the config routes `/api/account/*/test`,
+`/api/account/*/update-token`, `/api/lunchflow/save-key`, `/api/splitwise/save-key` and
+`/api/onboarding/crew/save-token`. They store credentials rather than moving money, so they are outside this
+claim — recorded here because a credential-writing route is its own risk class and no instrument in this pass
+examined it.
+
+**A second record-integrity defect: the composition sentence sums to 27.** `STATE_OF_THE_SYSTEM.md:46` says the
+declaration is *"9 routes the 2026-09-25 audit reached and 17 found by the ratchet on its first run"*, plus the
+separately-reasoned card entry — **9 + 17 + 1 = 27 against a list of 26**. The actual declaration is
+**9 + 16 + 1 = 26**: the audit block holds 9, the ratchet block holds 16 while its own comment says
+"seventeen". The list is right and the sentence describing it is not.
+
+**Instrument generations, disclosed because they scope the 25 figure.** The harness under-detected twice before
+it over-detected once: generations 1–7 suffered stub defects of its own making (a fake response missing
+`is_redirect`/`history`, a call-trace wrapper consuming a positional argument, a Crew answer carrying an `errors`
+key real successes omit, sqlite binding a stub object), and the measured set grew 7 → 19 → 23 → 24 → 25 as those
+were fixed. **Only generation 8's numbers are reported.** An instrument that cannot show you its own wrong
+answers cannot be trusted with its right ones.
 
 ### COULD-NOT-CHECK
 
