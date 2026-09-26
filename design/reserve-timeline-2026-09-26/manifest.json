@@ -1,0 +1,30 @@
+{
+  "date": "2026-09-26",
+  "reference": "design/observatory-extension-2026-09-18/concepts/timeline.png",
+  "images": [
+    {
+      "file": "01-observatory-ledger.png",
+      "sha256": "2b68aa5f7712a1edf5b76b207f7d6ddaf192875bc4b295be8e819e5f7f8ecd35",
+      "width": 851,
+      "height": 1848,
+      "data": "synthetic",
+      "status": "unselected design study"
+    },
+    {
+      "file": "02-pay-cycle-chapters.png",
+      "sha256": "68d9b55a1a77221828c75c7be625aa7751be3bab4871ec4eb504b020b450bea0",
+      "width": 852,
+      "height": 1846,
+      "data": "synthetic",
+      "status": "unselected design study"
+    },
+    {
+      "file": "03-shortfall-lens.png",
+      "sha256": "2c367d4b1e0e5a759b89576ae60c6c4a0e52e6f5eb0efb0aee73a74cc59eafd2",
+      "width": 851,
+      "height": 1848,
+      "data": "synthetic",
+      "status": "unselected design study"
+    }
+  ]
+}

@@ -108,6 +108,14 @@
       "decision_owed": true,
       "owner_question": "Adopt change-triggered rows plus a heartbeat for the allocation observation store? It changes WHAT THE EVIDENCE RECORD KEEPS, which is why it is put to him rather than applied: the current form is lossless-but-unreadable, and the proposal is readable-and-lossless-for-transitions but no longer literally every 15s sample. Neither option is wrong; they answer different questions, and his OS-114 intent (evidence for a later rule) favours the second.",
       "parked_in": "OS-114 (the store) + D-041 (the cadence that fills it) + OS-058 (the rule the series is meant to answer)"
+    },
+    {
+      "id": "os116-planning-artifacts-2026-09-26",
+      "arose": "2026-09-26",
+      "summary": "Owner-requested OS-116 design and draft plan prepared with three synthetic studies. Planning only; no visual selection, implementation, deployment or delegation. OS-130 provides newer captured-projection evidence; its OS-059 dependency remains.",
+      "decision_owed": true,
+      "owner_question": "Which displayed Reserve Timeline study should guide implementation, and does the written plan capture the intended scope?",
+      "parked_in": "OS-116; docs/superpowers/plans/2026-09-26-reserve-timeline.md"
     }
   ]
 }

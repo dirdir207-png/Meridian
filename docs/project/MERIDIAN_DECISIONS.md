@@ -1262,3 +1262,7 @@ contradict the first. Summaries point; the measurement document states. The map 
 artificial amount in the observation stores as real), D-030 (options must not default to the status quo), and the Harness lane's
 lessons this lane internalised on the same day — *interrogate the denominator*, *a populated schema is not populated data*, and
 *stability is not truth*.
+
+## OS-116 planning clarification — 2026-09-26 (proposal, not a new approved decision)
+
+The owner asked to complete the interrupted design-and-plan request. The resulting spec and plan are `docs/superpowers/specs/2026-09-26-reserve-timeline-design.md` and `docs/superpowers/plans/2026-09-26-reserve-timeline.md`. Newer OS-130 records a captured/replayed provider projection, superseding OS-116’s older no-source assumption for planning; it does not prove installed ingestion. Recommend that source with ordered rows and an independent observed-allocation view. Three visual studies are offered, none selected. Preserve OS-059/OS-130 gates, assigned roadmap order, and all existing financial/release boundaries. No universal allocation tie-break is adopted.

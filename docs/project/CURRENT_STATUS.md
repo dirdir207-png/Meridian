@@ -1,5 +1,9 @@
 # Enhanced SimpleCrew — Current Status
 
+## 2026-09-26: OS-116 Reserve Timeline design and draft plan
+
+Owner-requested recovery of the failed Superpowers planning prompt in “Identify Allocated Spend Pocket”. Prepared [design](../superpowers/specs/2026-09-26-reserve-timeline-design.md), [draft implementation plan](../superpowers/plans/2026-09-26-reserve-timeline.md), and three synthetic visual studies in `design/reserve-timeline-2026-09-26/`. Canonical branch `feat/meridian-implementation`, inspected source `18737b0`. The proposed architecture uses OS-130’s captured Crew projection, retaining its OS-059 connector dependency; allocation history stays separate. Visual selection and implementation approval remain pending; OS-116 stays open. Documentation/image artifacts only: no product implementation, application tests, provider calls, bank changes, deployment, or Harness workers. Planning validation and commit evidence are recorded in the plan’s validation section. Assigned roadmap order is unchanged.
+
 ## 2026-09-25: the injected reserve is unwound, and the allocation history is recording on live money
 
 The owner reset the Bill Reserve. Verified read-only against the pre-unwind record: reserve **0** (was
