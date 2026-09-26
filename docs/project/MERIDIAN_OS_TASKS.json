@@ -2977,12 +2977,15 @@
       "priority": "medium",
       "phase": "track-A-discovery",
       "detail": "Owner's rule (D-034, corrected by D-035): retrieve before building, with instruments fit for a conclusion. The first pass of this task used mention-greps and reached two wrong conclusions, both withdrawn. What exact instruments establish: the connector's catalogues are `operations/*.graphql` (15 reads) and `src/crew_work_assistant/write_operations/*.graphql` (18 write contracts, 17 distinct operations, implemented in crewwrite.py); of those, 16 are covered by our registry and the one gap is `DeleteBill`; `updateRule` is in neither catalogue although app.py uses it; and detail-level reads (profile, card_detail, transaction_detail, autopilot_rule_detail) are contracted but have no readback of ours and are stored nowhere. Still to do: CONTENT-level retrieval from `origin/main` (51 shared files differ, +8030/-255, including 36 deleted lines in dial.py and repository.py) and proper reading of the sibling tree and the connector's own documentation (SIMPLECREW_PARITY.md, WRITE_LAYER.md, WORK_PROJECT.md, BASE44_INTEGRATION_CONTRACT.md) — with the caveat that the sibling tree's absence of our modules proves nothing about its knowledge, and the owner states payday material exists there.",
-      "limits": "Retrieval is READ-ONLY, and nothing outside this repository may be modified, copied in wholesale, or treated as an authority: the connector records the provider's surface and a prior parity plan, not this project's governance. Any capability retrieved this way is re-verified in our own code before it is recorded as covered — the first pass used a filename-stem grep, which is indicative and not proof."
+      "limits": "Retrieval is READ-ONLY, and nothing outside this repository may be modified, copied in wholesale, or treated as an authority: the connector records the provider's surface and a prior parity plan, not this project's governance. Any capability retrieved this way is re-verified in our own code before it is recorded as covered — the first pass used a filename-stem grep, which is indicative and not proof.",
+      "evidence": {
+        "verdict_2026_09_25": "CONFIRMED richer, by a fresh-context agent with the corrected method: the sibling tree holds four structured payday/funding capabilities we lack — a saved owner payday schedule with an approval-gated action and readback verifier, a named funding-schedule model with CAS revisions and idempotent funding runs, a test-pinned allocation algorithm using remaining/eligible-pay-events, and a funding-source/account-buffer definition — plus a 14-row decision ledger, a 17-finding audit, three sets of working rules, and a 4,662-row three-week sync-failure series. Recorded in docs/project/RETRIEVAL_SIBLING_TREE_2026-09-25.md. The first pass by this lane had measured a DIFFERENT lineage (origin/main of our own repository) and wrongly concluded there was nothing to retrieve — the correction came from delegating to a context that did not share the author's premises."
+      }
     },
     {
       "id": "OS-123",
       "title": "Deep integration audit: dead ends, unfinished code, and seams that should link but do not",
-      "status": "open",
+      "status": "in_progress",
       "priority": "high",
       "phase": "track-A-discovery",
       "detail": "Owner request, 2026-09-25: a deep analysis of everything wired into the app — dead ends, unfinished code, and things that common sense says should link but do not. Scoped as an audit with a prescribed method, because the method is what failed in the attempts that came before: (1) independent instruments with different assumptions, never one lens; (2) fresh contexts, never forks that inherit the author's premises; (3) exact sets (route sets, caller sets, import graphs, table sets) rather than mention-greps, which generate hypotheses and never conclusions; (4) the rendered screen as evidence alongside the data, at the owner's viewport; (5) an instrument and precondition stated on every figure, and every negative finding preceded by a search of where the thing would actually live.",
@@ -3001,13 +3004,14 @@
     {
       "id": "OS-124",
       "title": "OS-122 checkpoint: content-level retrieval found no lost capability yet — the diff instrument over-reports loss",
-      "status": "in_progress",
+      "status": "complete",
       "priority": "medium",
       "phase": "track-A-discovery",
       "detail": "Content-level retrieval from `origin/main` (51 shared files differ, +8030/-255). Five apparent losses were triaged and ALL FIVE are superseded rather than lost: the dial's 'fundingStatus stays unknown' rule survives at `meridian/services/dial.py:176`; the 'free to spend' matching rule moved to `meridian/services/spend_pocket.py:7,44` with its provenance noted in a comment; `_evidence_viewer_html` survives at `meridian/api.py:1557` and is used at `:1484`; `_learned_paycheck` survives as `_learned_paycheck_range` at `meridian/services/today.py:244` and is used at `:430`; and `readback_selected_spend_pocket` merely gained a keyword argument.",
       "evidence": {
         "method_lesson": "A `git diff` line match is not evidence of loss: a function that moved file and gained a parameter appears as a deletion. Fifth instrument correction of the day, and the same family as D-035. Loss must be established by searching HEAD for the SEMANTICS, not the text.",
-        "still_open": "The prose level: rules and design constraints recorded in the sibling tree and in the connector's documentation that our tree does not carry. Delegated to a fresh-context agent with the corrected method, running as part of this task."
+        "still_open": "The prose level: rules and design constraints recorded in the sibling tree and in the connector's documentation that our tree does not carry. Delegated to a fresh-context agent with the corrected method, running as part of this task.",
+        "scope_correction": "The checkpoint's 'no lost capability found' was true only of origin/main in OUR OWN repository. The sibling tree holds four capabilities we lack, found by the delegated pass. Two different lineages, one conclusion wrongly generalised from the first."
       },
       "onset_plan": [
         "1. Measure, exactly, which shared files differ from origin/main and by how much (ls-tree + numstat).",
@@ -3039,6 +3043,24 @@
         "OS-119",
         "OS-121"
       ]
+    },
+    {
+      "id": "OS-126",
+      "title": "Govern cardholder and bank-account data exposure (owner decision owed)",
+      "status": "blocked",
+      "priority": "high",
+      "phase": "track-C-V3",
+      "blocked_reason": "Waiting on an owner choice of SHAPE, not on work. Cardholder data reaches the browser with no rule governing it (D-038). Four options are recorded — second-factor gate, server-side masking with a separate reveal, keep-and-record-the-rule, or remove. Nothing needs him to act; he needs to choose.",
+      "owner_question": "Card details and routing numbers currently reach the browser behind login only. Which shape: (1) gate the reveal behind a passkey or second factor, (2) mask server-side and reveal fully only through a short-lived audited step, (3) keep as-is and record the governing rule, or (4) remove the routes? The proposed binding rule regardless of choice: never logged, never persisted, never sent to a model provider, never in fixtures."
+    },
+    {
+      "id": "OS-127",
+      "title": "Reconcile the retrieved payday/funding knowledge against current authority (owner options owed)",
+      "status": "blocked",
+      "priority": "high",
+      "phase": "track-A-discovery",
+      "blocked_reason": "The retrieval is COMPLETE and recorded in docs/project/RETRIEVAL_SIBLING_TREE_2026-09-25.md; the remaining step is the owner choosing which parts to adopt, because each item interacts with an authority decision already made here (D-010/D-015: Crew's funding plan is authoritative). Nothing needs him to perform anything.",
+      "owner_question": "Four retrieved items, each classified against what superseded it: (A3) a test-pinned allocation algorithm — required contribution = remaining / eligible pay events, with a shared pool, per-run cap, and crew_autopilot exclusion — which is a design decision this tree never made; adopt, adapt, or decline? (A4) the rule that min/max contribution limits and account buffers are different things, plus 'zero maximum means a zero cap, absent maximum means no cap' — record as rules? (A1) the pattern for a manually-stated payday as an explicit fallback, promoted only past evidence thresholds and never silently replaced — build a manual override of Crew's plan, or hold? (A2) three transferable patterns from the old funding model — compare-and-swap revision guard, idempotency key that survives a second write, persisted run history with its own status vocabulary — adopt for our pipeline?"
     }
   ]
 }

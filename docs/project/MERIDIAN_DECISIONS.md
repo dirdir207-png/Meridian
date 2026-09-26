@@ -1069,3 +1069,37 @@ opened: finding something in an older tree is not a reason to put it back. The r
 **Enforced, narrowly.** `tests/test_supersession_before_restore.py` requires that any task proposing to restore,
 revert, recover or reinstate an old guard, rule or behaviour declares **`supersession_checked`** — a sentence
 naming what superseded it, or stating plainly that nothing did. Existing tasks are grandfathered in that file.
+
+## D-038 — Cardholder and bank-account data reaches the browser with no rule governing it (found 2026-09-25, owner decision owed)
+
+**The finding.** `app.py:4308 api_account_bank_details` returns routing numbers from
+`institution.routingNumber` (`:4328/4334/4361/4363`), and `app.py:5375 api_card_sensitive` mints a
+`generateViewSadToken` and fetches `https://cde.trycrew.com/wally/debit_card`, returning `{"pan", "cvv"}`
+(`:5416-5417`). Both are `@login_required` and nothing else. **No passkey gate exists** (0 hits for a
+required-passkey rule) and **no rule anywhere in this tree governs cardholder data** (`no PAN` → 0 files).
+
+**This is not the write-authority problem and must not be folded into it.** D-031 records the second write
+surface; the ratchet declares `/api/cards/<card_id>/sensitive` precisely because it *is not* a financial
+mutation. That reasoning is correct for what the ratchet measures — and it is exactly why the exposure stayed
+invisible: three audits of this tree asked who may *change* money, and none asked who may *see* card data.
+
+**The only two places the rule was ever written are both outside this repository** — the connector's non-goals
+(*"Never expose PAN/CVV to ChatGPT or Base44"*, `BASE44_INTEGRATION_CONTRACT.md:108` *"Do not store PAN, CVV,
+cookies, authorization headers, or bank account numbers"*) and the 2026-09-08 audit's F11 (*"Stop tracking raw
+payloads; generate schema-only catalog; assess repository exposure and rotate any exposed reusable credentials
+if found"*).
+
+**Options, all of which evaluate rather than report — the owner's call (D-030, and visual/authority decisions are
+his):**
+1. **Gate the reveal behind a second factor or a passkey**, keeping the routes but requiring an explicit
+   re-authentication step before the PAN/CVV response is returned.
+2. **Mask server-side by default** (last four only) and serve the full value only through an explicit,
+   short-lived, separately-audited reveal.
+3. **Keep the reveal and record the governing rule**, binding at minimum: never log, never cache, never store,
+   never transmit to a third party or an AI provider, and an audit trail for each reveal.
+4. **Remove the routes**, if the capability is not wanted on this surface at all.
+
+**Whichever is chosen, one rule is proposed as binding regardless:** cardholder data (PAN, CVV), bank account and
+routing numbers, cookies and authorization headers are never logged, never persisted, never sent to a model
+provider, and never placed in test fixtures. That is the connector's rule and the old audit's F11, and this tree
+holds no equivalent.
