@@ -2978,6 +2978,35 @@
       "phase": "track-A-discovery",
       "detail": "Owner's rule (D-034, corrected by D-035): retrieve before building, with instruments fit for a conclusion. The first pass of this task used mention-greps and reached two wrong conclusions, both withdrawn. What exact instruments establish: the connector's catalogues are `operations/*.graphql` (15 reads) and `src/crew_work_assistant/write_operations/*.graphql` (18 write contracts, 17 distinct operations, implemented in crewwrite.py); of those, 16 are covered by our registry and the one gap is `DeleteBill`; `updateRule` is in neither catalogue although app.py uses it; and detail-level reads (profile, card_detail, transaction_detail, autopilot_rule_detail) are contracted but have no readback of ours and are stored nowhere. Still to do: CONTENT-level retrieval from `origin/main` (51 shared files differ, +8030/-255, including 36 deleted lines in dial.py and repository.py) and proper reading of the sibling tree and the connector's own documentation (SIMPLECREW_PARITY.md, WRITE_LAYER.md, WORK_PROJECT.md, BASE44_INTEGRATION_CONTRACT.md) — with the caveat that the sibling tree's absence of our modules proves nothing about its knowledge, and the owner states payday material exists there.",
       "limits": "Retrieval is READ-ONLY, and nothing outside this repository may be modified, copied in wholesale, or treated as an authority: the connector records the provider's surface and a prior parity plan, not this project's governance. Any capability retrieved this way is re-verified in our own code before it is recorded as covered — the first pass used a filename-stem grep, which is indicative and not proof."
+    },
+    {
+      "id": "OS-123",
+      "title": "Deep integration audit: dead ends, unfinished code, and seams that should link but do not",
+      "status": "open",
+      "priority": "high",
+      "phase": "track-A-discovery",
+      "detail": "Owner request, 2026-09-25: a deep analysis of everything wired into the app — dead ends, unfinished code, and things that common sense says should link but do not. Scoped as an audit with a prescribed method, because the method is what failed in the attempts that came before: (1) independent instruments with different assumptions, never one lens; (2) fresh contexts, never forks that inherit the author's premises; (3) exact sets (route sets, caller sets, import graphs, table sets) rather than mention-greps, which generate hypotheses and never conclusions; (4) the rendered screen as evidence alongside the data, at the owner's viewport; (5) an instrument and precondition stated on every figure, and every negative finding preceded by a search of where the thing would actually live.",
+      "limits": "Findings only, no fixes inside the audit: each item is classified dead end / unfinished / unlinked seam, with file:line and the instrument that established it, so the repairs can be planned and bounded rather than applied reactively. Read-only throughout; nothing outside this repository is modified."
+    },
+    {
+      "id": "OS-124",
+      "title": "OS-122 checkpoint: content-level retrieval found no lost capability yet — the diff instrument over-reports loss",
+      "status": "in_progress",
+      "priority": "medium",
+      "phase": "track-A-discovery",
+      "detail": "Content-level retrieval from `origin/main` (51 shared files differ, +8030/-255). Five apparent losses were triaged and ALL FIVE are superseded rather than lost: the dial's 'fundingStatus stays unknown' rule survives at `meridian/services/dial.py:176`; the 'free to spend' matching rule moved to `meridian/services/spend_pocket.py:7,44` with its provenance noted in a comment; `_evidence_viewer_html` survives at `meridian/api.py:1557` and is used at `:1484`; `_learned_paycheck` survives as `_learned_paycheck_range` at `meridian/services/today.py:244` and is used at `:430`; and `readback_selected_spend_pocket` merely gained a keyword argument.",
+      "evidence": {
+        "method_lesson": "A `git diff` line match is not evidence of loss: a function that moved file and gained a parameter appears as a deletion. Fifth instrument correction of the day, and the same family as D-035. Loss must be established by searching HEAD for the SEMANTICS, not the text.",
+        "still_open": "The prose level: rules and design constraints recorded in the sibling tree and in the connector's documentation that our tree does not carry. Delegated to a fresh-context agent with the corrected method, running as part of this task."
+      },
+      "onset_plan": [
+        "1. Measure, exactly, which shared files differ from origin/main and by how much (ls-tree + numstat).",
+        "2. Triage every apparent loss against HEAD by searching for the SEMANTICS, not the text.",
+        "3. Delegate the prose level (sibling tree + connector documentation) to a fresh context with the corrected method.",
+        "4. Record findings and the method corrections; leave repairs to a bounded slice."
+      ],
+      "recommended_model": "deepseek-flash (this lane's harness), high effort",
+      "model_why": "Retrieval across two repositories plus semantic comparison of refactored code: it is reading and reconciling, not designing, so the requirement is a long context and disciplined tool use rather than frontier reasoning. The judgement needed is epistemic (is this lost or moved?), which is why the method rules in D-035 matter more here than the model choice."
     }
   ]
 }

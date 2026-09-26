@@ -990,3 +990,32 @@ registry's 17, case- and separator-insensitive:
   `card_detail`, `transaction_detail` and `autopilot_rule_detail`; our adapter exposes facet-level readbacks but
   no readback for those, and app.py fetches them through its own GraphQL. Consistent with the capability
   matrix's "read on demand, stored nowhere".
+
+## D-036 — Restore the onset ceremony, and enforce it rather than trusting it (owner, 2026-09-25)
+
+**Owner, verbatim:** *"At some point I want a deep analysis of everything wired into the app and identify dead
+ends, unfinished code, stuff within the app that should common sense and intuitively link but isn't... I bring a
+lot of it up by interrupting sessions. We fix and code a lot that way, but I am also very responsible for drift.
+We have discussed on documented this and tried to prevent it on many occasions. Lately we completely (almost) did
+away with our entire formalize handoff procedure, slice breakdown at onset, recommended model per slice, all of
+that. I'm as much to blame as you."*
+
+**The diagnosis, verified.** The formal scaffolding exists in the repository: `MERIDIAN_ROADMAP.md` carries a
+**"Recommended model / effort"** matrix with a fallback and a reason per roadmap section, and
+`docs/project/PROJECT_INSTRUCTIONS.md` names it. What does not exist is any **check**. The handoff ritual survived
+because a script regenerates it and a test notices staleness; the onset ceremony had no script and no test, so it
+became optional in practice and was eventually skipped — while slices continued to be started, in response to
+interruptions, and the interruption is *also* the drift mechanism the owner names.
+
+**Restored, as a mechanism.** `tests/test_slice_onset_ceremony.py` requires that every task in progress declares
+**`onset_plan`** (the bounded steps, at onset), **`recommended_model`** (from the roadmap matrix) and
+**`model_why`** — or is explicitly grandfathered with a reason in that file. It also guards the matrix itself, so
+the ceremony's input cannot be deleted while the ceremony is required. Fifteen existing `in_progress` tasks are
+grandfathered on the day of restoration; that list may only shrink.
+
+**And the standing instruction alongside it:** the owner wants, at some point, a **deep integration audit** of
+everything wired into the app — dead ends, unfinished code, and things that common sense says should link but do
+not. That is `OS-123`, and the method is prescribed rather than left to taste, because the same three days taught
+what a bad method costs: independent instruments with different assumptions, fresh contexts rather than forks,
+exact sets rather than mention-greps, the rendered screen as well as the data, and a stated instrument and
+precondition on every figure.
