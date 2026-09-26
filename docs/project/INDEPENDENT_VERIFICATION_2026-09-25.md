@@ -236,12 +236,94 @@ in the application — while remaining in operational use in the status record.
 
 ---
 
-## Claims 2–3 — in flight
+## Claim 3 — "Today and Plan publish one money rule" — **FALSIFIED, narrowly**
+
+**As written** (`STATE_OF_THE_SYSTEM.md:106`, the guards table): *"tests/meridian/test_safe_to_spend_agreement.py
+(yes) | Today and Plan publish one figure from one rule"*; also `AGENT_COORDINATION.md:150` and
+`TODAY_PLAN_SPEND_ALIGNMENT_2026-09-25.md:8`. The binding instruction is D-024
+(`MERIDIAN_DECISIONS.md:460`), whose rule is: `total = Σ money accounts + reserve` (SIGNED), set aside = every
+active pocket except the spend pocket, positive balances only, `amount = total − set aside − max(0, reserve)`,
+**never clamped**.
+
+**Instrument (different): the app's HTTP surface.** `app.test_client()` against the real application — through
+Flask routing, `@login_required`, `@_safe_read`, the repository-factory seam, query-string parsing and
+`jsonify`. Scratch SQLite in `/tmp` with the app running its own migrations and invented accounts seeded through
+the repository API; provider client and health service replaced with abort stubs; sockets refused on any
+non-local address (zero violations, nothing left the machine). The author's evidence is a Python-function
+comparison inside the unit fixture (`build_today()`/`build_plan()` over a seeded repository), which bypasses
+every layer above.
+
+**The falsification — the unobserved state.** In **4 of 21 scenarios** both endpoints returned HTTP 200 and the
+same quantity diverged:
+
+| scenario | Today `safe_to_spend.amount` | Plan `allocation.cash_total` |
+|---|---|---|
+| nothing observed at all | **null**, status `unavailable` | **0.0**, segments all 0.0 |
+| only a credit-type account | **null** | **0.0** |
+| only a reserve row, no accounts | **null** | **0.0** |
+| only EUR money, figured currency USD | **null** | **0.0** |
+
+These are the same quantity by the project's own mapping — *"the same number, same rule, same repository"* — so
+this is not a shape difference. In the fourth case both surfaces **know** money exists (Today's
+`available_cash.by_currency` shows EUR) while Plan still publishes a USD-shaped zero.
+
+**Adjudication, which the verifier read afterwards and did not treat as its own instrument:** the claim's own
+guard asserts this exact asymmetry — `tests/meridian/test_safe_to_spend_agreement.py:260-264` requires Today's
+amount to be `None` with status `unavailable` **and** Plan's segments to be `[0.0, 0.0, 0.0]`; its docstring
+(`:244-245`) states: *"Neither workspace may invent a 0.00: that would claim an observation the read did not
+make. Today withholds the figure and says unavailable; Plan's partition is three zeros."* So the falsification
+is of **the claim as written** and of the project's own absence rule (D-017/C01) — **not** of the author's
+declared acceptance condition, which names the exception. A reader who accepts the guard's exception would call
+it CONFIRMED.
+
+**Ledger sentence, as the verifier framed it:** *"the shared rule is confirmed wherever a figure is stated, but
+the pair does not publish one figure in the unobserved state — Today withholds, Plan states 0.00 — and the guard
+encodes that asymmetry as intended."*
+
+**Confirmed by the same sweep (17 of 21), including both pre-registered discriminators:** a positive reserve; a
+**negative** reserve that reduces the figure and is **not clamped** (D-019 rule 2); mixed signs; an overdrawn
+set-aside pocket; inactive pockets and inactive checking; investment-type accounts; a non-USD currency;
+Crew-selected spend pocket (basis `crew_selection`) including where the selection contradicts the spend name.
+Side check: `?as_of=2000-01-01` and `?as_of=2030-01-01` leave both figures unchanged — no `as_of` dependence in
+the money figure.
+
+### F2 — a shared-rule collapse, not a divergence: silence and a reported zero are the same number
+
+A reserve row with `total_reserved_amount` **NULL**, **no row at all**, and a **reported 0.00** all publish the
+identical pair (Today and Plan agree with each other in all three). The reserve term therefore does not
+distinguish "the provider said nothing" from "the provider said zero" — the distinction this repository enforces
+elsewhere (migration 031's `reported` flag) and the one F4/§Evidence-map work depends on. **Both surfaces are
+wrong together**, which is why a pair-agreement test cannot see it.
+
+### F3 — observation, not a falsification: the "Safe to Spend" name hazard, measured
+
+With two ACTIVE pockets both named "Safe to Spend", Today reports `spend_pocket_basis: "name"`, subtracts one of
+them, and Plan follows. The surfaces agree; **the arbitrary pick lives inside the shared rule**, exactly where
+the owner's recorded hazard says it would.
+
+### ⚠ Warning for any future harness: `/plan` is not isolated from live data by a scratch database
+
+`meridian/services/plan.py:71` reads a **real local file** — `~/Library/Application
+Support/SimpleCrew/live_crew_snapshot.txt` — for its `crew_ids` block, regardless of which database the app is
+pointed at. An early exploratory run **surfaced a real subaccount identifier** from it (not reproduced, and not
+recorded here). The verifier isolated it by pointing `plan._CREW_SNAPSHOT_PATH` at a non-existent path, and every
+figure above was produced with that stub in place (the figures were unchanged by it). **A scratch DB is not
+sufficient isolation for `/plan`.**
+
+### Could not check over HTTP
+
+Whether Plan's published `0.0` reaches the owner as a *rendered* figure: `static/js/meridian/plan.js:185` reads
+`…find(s => s.label === "Available")?.amount || <fallback>`, and `0.0` is falsy, so it may fall through to a
+fallback at the render layer. Not driven in a browser, so **not claimed**. The live-provider path was not driven
+and must not be.
+
+---
+
+## Claim 2 — in flight
 
 | # | claim | instrument prescribed | status |
 |---|---|---|---|
 | 2 | the ungoverned write surface is exactly the 26 declared routes | hit the routes through HTTP with the provider stubbed | in flight |
-| 3 | Today and Plan publish one money rule | the HTTP surface, not the unit fixture | in flight |
 
 Their verdicts are appended below when they return. Each will carry its instrument, its scope, and its own
 COULD-NOT-CHECK column; any falsification goes to the owner first, as instructed.
