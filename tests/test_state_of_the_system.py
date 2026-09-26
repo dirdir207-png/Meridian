@@ -60,6 +60,11 @@ def test_the_ungoverned_write_count_is_a_number_not_a_vibe() -> None:
     declared = module._declared_ungoverned()
     assert declared, "the ratchet declares no ungoverned routes; the denominator vanished"
     text = DOC.read_text()
-    assert f"| POST routes declared to reach a raw Crew mutation | {len(declared)} |" in text, (
-        "the generated document's ungoverned-route count disagrees with the ratchet's declaration"
+    assert (
+        f"| routes DECLARED to reach a raw Crew mutation (the declaration calls them POST) | {len(declared)} |"
+        in text
+    ), (
+        "the generated document's declared-route count disagrees with the ratchet's declaration, or the row was "
+        "relabelled away from 'declared' — the independent lane measured that one of these routes is GET-only at "
+        "runtime, so the row must say DECLARED and not POST"
     )
