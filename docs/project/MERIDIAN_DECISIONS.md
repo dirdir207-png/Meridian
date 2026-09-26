@@ -1160,3 +1160,41 @@ steps 2 and 3 were already in production and already tested.
 change as this decision, per D-033. The remaining genuine item — `/api/delete-bill` still calling the raw path
 (`app.py:5837-5841`) while its operation has always been governed — stays where it belongs: **`OS-119`'s
 owner-gated re-pointing**, which `OS-125`'s own step 4 had already identified.
+
+---
+
+## D-040 — Nothing in the provider's surface is dropped for lack of a current use (owner, 2026-09-25)
+
+**Owner's words, verbatim.** *"although we don't have virtual card, we need it, it's just not written, like
+anything else mentioned. if it's not functional now, it may be needed for something function later, if not by
+itself."*
+
+**The rule.** An unused provider capability is **pending work, never a non-goal**. Every operation the provider
+exposes — write, read, screen query, telemetry — is retained as a candidate, and a ledger row may describe its
+**carrier** (wired / read-and-stored / read-but-unsurfaced / catalogued-not-implemented / absent-from-the-
+connector) but may never conclude that it is unnecessary. "Not needed" is a conclusion this lane is not entitled
+to reach: the test is not whether the thing has a use today, it is whether anything would be lost by dropping it,
+and the owner has answered that — something may be needed later, alone or as a component of something else.
+
+**What it forbids, concretely.**
+* Ranking capabilities by apparent usefulness and letting the tail quietly expire. The tail is where virtual
+  cards, `RecordRiskSession`, the ~110 catalogued screen queries, `permittedActions`, `isAttachedToBill`, the
+  merchant address fields and `card_detail` all live.
+* Treating "the native app's own UI" as out of scope. A screen query is evidence about what the provider models
+  and what the user can do there; it is a candidate, not noise (D-034: retrieve before building).
+* Deleting a deferred marker, an unused route, an orphaned template or a legacy handler to tidy up. Removal is
+  only ever justified by a replacement verified in the running app, and even then it is a separate decision.
+* Reading "we do not have this feature" as "we do not need this capability". Virtual cards are exactly this
+  case: `create_virtual_card` is wired and governed, `update_virtual_card` is not carried by the connector
+  (`_ALLOWED`, `write_operations/`), and neither the absence of a virtual card in the account nor the absence of
+  a Meridian surface changes what must be listed.
+
+**Enforcement.** `OS-129` (the capability retention ledger) enumerates every operation from every catalogue with
+its carrier and the precondition to retire anything, and is written so a raw route cannot be removed while its
+row still lacks a governed carrier **or** a Meridian surface. `OS-130` carries the read-side half. The audit's
+proposals (R1–R20) remain proposals: this decision does not promote them, it removes "probably not worth it" as a
+ground for ignoring them.
+
+**Cross-references.** D-030 (never default an option set to the status quo), D-032 (friction is a work item),
+D-033 (new work is cross-referenced in the same change), D-034/D-035 (retrieve before concluding) and D-039
+(measure on the provider's own name).
