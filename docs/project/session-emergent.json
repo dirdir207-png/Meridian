@@ -100,6 +100,14 @@
       "decision_owed": true,
       "owner_question": "Route the credential question through OS-119 rather than as a separate build: MIGRATE the raw routes and the stored token can be retired once the broker is configured; FENCE them and the same is true but legacy controls go away; ACCEPT the risk and the token method stays permanently, because those 46 sites cannot use the broker without being changed.",
       "parked_in": "OS-119 (shape choice) + app.py:828-838, :1718-1727"
+    },
+    {
+      "id": "emergent-allocation-observation-store-writes-99-9-percent-repeats-2026-09-25",
+      "arose": "2026-09-26",
+      "summary": "MEASURED ON THE OWNER'S LIVE PREVIEW DB. The deliberate ~15s live-parity cadence (D-041) writes a dated per-bill allocation row every cycle, and almost all of them are identical: **11 of 9,878 rows in 5h26m represent an actual change (0.1%)**; the rest repeat the same eleven bills unchanged. That is **1,816 rows/hour, 43,579 rows/day, ~15.9M rows/year** to capture eleven transitions. The store (`crew_bill_allocation_observations`, OS-114) exists so a later rule has evidence instead of a single mutable number, and the repeats work against that: a query for the bucket's movement returns ten identical zero-bucket syncs before anything informative, which is exactly how a real transition gets missed. PROPOSED: write on change (any of reserved_amount / estimated_next_funding_amount / reserved_by differing from the previous observation) plus a heartbeat snapshot at a stated interval, so continuity stays provable and the series stays readable at ~0.1% of the volume. That preserves the evidence OS-058 needs — which bill held the bucket, and when it moved.",
+      "decision_owed": true,
+      "owner_question": "Adopt change-triggered rows plus a heartbeat for the allocation observation store? It changes WHAT THE EVIDENCE RECORD KEEPS, which is why it is put to him rather than applied: the current form is lossless-but-unreadable, and the proposal is readable-and-lossless-for-transitions but no longer literally every 15s sample. Neither option is wrong; they answer different questions, and his OS-114 intent (evidence for a later rule) favours the second.",
+      "parked_in": "OS-114 (the store) + D-041 (the cadence that fills it) + OS-058 (the rule the series is meant to answer)"
     }
   ]
 }
