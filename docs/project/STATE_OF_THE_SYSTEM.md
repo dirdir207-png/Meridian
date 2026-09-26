@@ -33,7 +33,7 @@ every-attempt behaviour (`INDEPENDENT_VERIFICATION_2026-09-25.md` §Claim 1).
 | — of those, accepting POST | 74 |
 | route rules at RUNTIME (independent harness) | 200 |
 | — of those, accepting POST | 98 |
-| POST routes declared to reach a raw Crew mutation | 26 |
+| routes DECLARED to reach a raw Crew mutation (the declaration calls them POST) | 26 |
 
 The two route populations above are NOT interchangeable: a static decorator parse cannot see blueprint or
 `add_url_rule` registrations. The runtime figures are the independent verification lane's, quoted with their
@@ -42,11 +42,16 @@ stays reproducible here; the runtime count is the one that describes the app.
 
 The declared set is asserted exactly by `tests/test_governed_write_routes.py`, which fails both when the
 set grows and when a declared route is fixed without updating the declaration. It is therefore the
-denominator for OS-119: the shape decision concerns exactly these routes. Per the declaration's own
-comments it is composed of 9 routes the 2026-09-25 audit reached and 17 found by the ratchet on its first
-run — and one of them (`/api/cards/<card_id>/sensitive`) mints a card-details view token rather than
-moving money, which is why the FINANCIAL count and the DECLARED count differ by one. Quote whichever the
-question is about, and say which.
+denominator for OS-119: the shape decision concerns exactly these routes. THE DECLARATION'S OWN COMMENT DOES NOT
+RECONCILE and is not repeated here: it says nine from the 2026-09-25 audit plus seventeen found by the ratchet,
+which would be 26, but the two blocks hold 9 and 16 while a third route sits outside both — nine plus seventeen
+plus one is 27 against a list of 26 (found by the independent lane, `INDEPENDENT_VERIFICATION_2026-09-25.md`
+§Claim 2). The LIST is authoritative; the prose is not. Two further measured facts about the denominator:
+the ratchet scans `app.py` ONLY, so the Meridian blueprint's POST rules are structurally outside it (swept once
+by the independent lane and empirically empty, but structurally open), and `/api/cards/<card_id>/sensitive` is
+GET-only at runtime while standing in a set described as POST routes — so the row above is "declared", not
+"POST", and the FINANCIAL count is smaller than the DECLARED count. Quote whichever the question is about, and
+say which.
 
 ## Derived from code — what each ungoverned route actually performs
 
@@ -95,13 +100,13 @@ instrument — a cross-repository fact that cannot be re-derived from this tree 
 
 | | |
 |---|---|
-| tasks in the ledger | 137 |
+| tasks in the ledger | 138 |
 | — blocked | 10 |
 | — complete | 79 |
 | — done | 18 |
 | — in_progress | 6 |
 | — open | 13 |
-| — ready | 11 |
+| — ready | 12 |
 | tasks carrying an owner question | 16 |
 
 ## What is checked, and by what

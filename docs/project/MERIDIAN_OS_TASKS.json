@@ -3185,6 +3185,27 @@
       "model_why": "The reproduction must be honest (a stubbed path proves nothing about the real one), the contract decision affects every harness in the tree, and the failure mode of a hasty fix is a false sense of isolation \u2014 the exact property being repaired.",
       "detail": "FOUND BY THE INDEPENDENT VERIFICATION LANE, 2026-09-26. Per docs/project/INDEPENDENT_VERIFICATION_2026-09-25.md \u00a7'Warning for any future harness': `/plan` reads a REAL local snapshot file (~/Library/Application Support/SimpleCrew/live_crew_snapshot.txt) REGARDLESS of DB_FILE, and a verification run surfaced a real subaccount identifier from it. A scratch database is therefore NOT isolation for /plan \u2014 and by extension not for any surface that resolves its own file path. This is a privacy and test-integrity defect: a harness that believes it is sandboxed can surface live identifiers, and any future automated pass over /plan can do so again.",
       "limits": "Fix the isolation and record the rule; do NOT change /plan's production behaviour or the snapshot format. No provider write. If the contract decision changes how the app finds its data, that is an owner-visible change and is brought as an option first."
+    },
+    {
+      "id": "OS-132",
+      "title": "Audit the credential-storing POST routes no instrument has examined (11 non-declared rules that contact the provider read-only)",
+      "status": "ready",
+      "priority": "high",
+      "phase": "safety",
+      "dependencies": [
+        "OS-119"
+      ],
+      "onset_plan": [
+        "1. Enumerate the 11 non-declared POST rules that contact the provider read-only, by running the independent lane's sweep method rather than by grepping for names: the routes named there are account test/update-token, lunchflow/save-key, splitwise/save-key and onboarding/crew/save-token, and the list must be re-measured, not copied.",
+        "2. For each: what it writes, where it writes it (app config, database, keychain, provider), whether the value is a credential, and whether the write is verifiable after the fact.",
+        "3. Decide and record the rule for credential-bearing routes: they are not money mutations, so the governed write pipeline is the wrong carrier \u2014 but they need their own discipline (never logged, never returned to the browser, never persisted in plaintext, and a readback that proves absence on delete).",
+        "4. Do not widen authority: this is an audit first. Any change to a credential route is proposed with its safety analysis before it is applied.",
+        "5. Record what stays unexamined, explicitly, so the gap is a number rather than a silence."
+      ],
+      "recommended_model": "a careful mid-tier model with a security-review mindset; the work is enumeration and rule-drafting, and the failure mode is a hasty 'fix' to credential handling",
+      "model_why": "The routes store credentials; the value of the pass is in a complete, honest enumeration and a defensible rule, not in code volume. Anything that touches secret material is owner-gated, so the deliverable is findings plus a proposed rule.",
+      "detail": "FOUND BY THE INDEPENDENT VERIFICATION LANE, 2026-09-26, in its Claim 2 sweep: beyond the 26 declared routes, 11 non-declared POST rules contact the provider READ-ONLY \u2014 the credential and configuration routes (account test/update-token, lunchflow/save-key, splitwise/save-key, onboarding/crew/save-token) \u2014 and its report states plainly that no instrument in its pass examined them. They store credentials rather than moving money, which is exactly why they fall outside both the write-route ratchet and the money-path audits: nothing owns them. Under D-040 an unexamined surface is pending work, not a non-goal; under D-042 the first step is enumeration with a stated scope, not a conclusion.",
+      "limits": "Audit and propose only. No credential is logged, printed, moved between stores, or returned to a browser; no provider write; no change to how any secret is stored without the owner's approval. If a live credential is encountered, stop and report the fact without its value."
     }
   ]
 }
