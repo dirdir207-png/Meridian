@@ -119,6 +119,9 @@ files: `operations/*.graphql` holds **15 reads** (`accounts`, `autopilot`, `auto
 `src/crew_work_assistant/write_operations/*.graphql` holds **18 write contracts covering 17 distinct
 operations**, implemented by `src/crew_work_assistant/crewwrite.py`.
 
+> ⚠ **WITHDRAWN 2026-09-25 (D-039) — the paragraph below states two claims that are FALSE. It is kept so the error
+> stays visible; the correction is the blockquote that follows it. Do not cite this paragraph as current.**
+
 **Coverage, measured as name sets rather than mentions.** Of Crew's 17 write operations, **16 have a counterpart
 in our registry**, four of them under a different name (ours are CLI operation names, theirs are GraphQL mutation
 names). **The one real gap is `DeleteBill`** — we register `create_bill`, `update_bill` and `archive_bill`, and no

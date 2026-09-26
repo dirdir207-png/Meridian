@@ -5724,6 +5724,20 @@ ungoverned routes, so that route is ungoverned partly because the registry lacks
 **`updateRule` exists in neither catalogue** while `app.py` uses it: one ungoverned route depends on a shape that
 nothing anywhere records. Both are now named, which is what makes them fixable.
 
+> **CORRECTION 2026-09-25 (D-039) — do not cite the paragraph above without these two amendations.** (1) The
+> coverage figure is **17 of 17, and there is no `DeleteBill` gap**: the connector's CLI operation `archive_bill`
+> *is* the `DeleteBill` mutation (`write_operations/archive_bill.graphql:1`), our
+> `meridian/crew_commands.py:47-51,111` carries it verbatim, and it is already governed as `archive_crew_bill`
+> with an absence-as-proof verifier (`meridian/crew_write_actions.py:670`, `:184-204`). The error came from
+> comparing against `docs/project/crew_mutations.json`, which names the same mutation `ArchiveBill`. The figure
+> "16 of 17" that is real lives at `CREW_CAPABILITY_MATRIX.md:16` — 16 of 17 registered *action types* carry
+> readback verifiers, the exception being `top_up_crew_reserve`. (2) `updateRule` **is** in our catalogue
+> (`meridian/crew_commands.py:60-64`, registered as `edit_autopilot_rule` at `:115-117`); the true asymmetry — and
+> the half of the paragraph that stands — is that the **connector has no CLI operation for it**, so the governed
+> pipeline cannot execute it while `/api/account/autopilot-rules/update` (`app.py:5039-5057`) performs it raw and
+> is declared ungoverned in the ratchet. Instrument and the full 17-row table:
+> `docs/project/INTEGRATION_AUDIT_2026-09-25.md` §3.6.
+
 ## 2026-09-25 — handover: the next session starts here
 
 **State at handover:** working tree clean, 0 unpushed commits, handoff fresh (6 sources hashed, 0 stale), suite
