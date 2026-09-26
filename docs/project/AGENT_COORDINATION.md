@@ -23,7 +23,6 @@ would have reverted three commits had it been applied. This file is the channel.
 
 | Agent | Files claimed | Since | Status |
 |---|---|---|---|
-| Constitutional Builder (OS-123: the deep integration audit, and OS-124's lost retrieval thread) | `docs/project/INTEGRATION_AUDIT_2026-09-25.md` (new), `docs/project/{MERIDIAN_OS_TASKS.json,AGENT_COORDINATION.md,CURRENT_STATUS.md,CONCEPT_COVERAGE.md,agent-claims.json,session-emergent.json,HANDOFF.md}`, `tmp/os123/**` + `tmp/os122/**` (untracked scratch evidence) | 2026-09-25 | **active**. Owner-requested audit under its recorded onset ceremony (D-036). **READ-ONLY on the application**: this claim edits no `app.py`, no `meridian/**`, no `templates/**`, no `static/**`, no migration, no route and no existing test — the deliverable is findings, and the task's own limit forbids fixes inside the audit. Method as prescribed: exact sets from independent instruments; **five fresh-context helpers** for the mechanical enumeration (routes/reachability, templates+JS, persistence+jobs, unfinished code, and the OS-122 prose retrieval), each required to write raw findings to `tmp/os123/` or `tmp/os122/` **before** returning, because the previous session's retrieval agent died with its session and left nothing on disk — the failure this session inherits and must not repeat. Also recorded here: the two slices named by the handoff are this one and `OS-125`. |
 | Constitutional Builder (OS-113: the spend pocket comes from Crew's own selection, not an English name) | `meridian/migrations/030_crew_spend_selection.sql` (new), `meridian/spend_selection.py` (new), `meridian/services/{spend_pocket.py,safe_to_spend.py,today.py,dial.py,plan.py}`, `meridian/{sync.py,api.py,providers/crewwork.py}`, `tests/meridian/{test_spend_selection_store.py (new),test_spend_selection_ingest.py (new),test_spend_pocket.py,test_migrations.py,test_bill_reserve_negative.py,test_bill_reserve_observations.py,test_safe_to_spend_agreement.py,services/{test_spend_pocket_resolution.py (new),test_safe_to_spend.py,test_today.py,test_plan.py}}`, `docs/project/{MERIDIAN_DECISIONS.md,MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json,HANDOFF.md}` | 2026-09-25 | **active**. Owner decisions taken BEFORE any edit, because OS-113's own limit forbids shipping the migration without explicit approval: (1) Crew's selection becomes AUTHORITATIVE, not a cross-check; (2) the two-name allow-list stays as a NAMED fallback that must say it fell back. Evidence is artifact-level, notargument: `readback_selected_spend_pocket()` run over the owner's real 2026-09-04 capture returns exactly one id, `Subaccount:edc8cb88-…`, byte-identical to `financial_accounts.external_id` for 'Safe to Spend' in gate.db and 'Free to Spend' in savings_data.db. The name rule is measurably ambiguous in BOTH databases (gate.db: two matches, one retired; savings_data.db: two ACTIVE pockets both named 'Free to Spend'), and two call sites were genuinely WRONG — `dial.py:89` had no active filter and `plan.py:97` took the last match. |
 | Constitutional Builder (OS-111: one money rule for Safe to Spend / Plan's Available) | `meridian/services/safe_to_spend.py` (new), `meridian/services/{today.py,plan.py,reserves.py,spend_pocket.py}`, `tests/meridian/services/{test_safe_to_spend.py (new),test_today.py,test_reserve_deficit.py,test_reserve_exposure.py,test_plan.py}`, `tests/meridian/{test_safe_to_spend_agreement.py (new),test_spend_pocket.py}`, `tests/browser/{test_safe_to_spend_explanation.py,fixtures/safe-to-spend-explanation.html}`, `templates/meridian/partials/today.html`, `static/js/meridian/plan.js`, `artifacts/os111-implementation-2026-09-25/**`, `design-qa.md`, `docs/project/{MERIDIAN_DECISIONS.md,MERIDIAN_OS_TASKS.json,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json,session-emergent.json,HANDOFF.md}` | 2026-09-25 | **active**. Owner decisions taken BEFORE any edit, 2026-09-25: (1) the single rule is POCKET accounting -- "everything you have, minus every pocket you set aside"; (2) NO clamp anywhere, so `plan.py`'s `max(_ZERO, ...)` is removed and D-019 rule 2 stands; (3) the base line is labelled for what it is ("Total balance"), each subtraction carrying its own pocket's name. **The recommendation first put to the owner was WRONG and was corrected before building**: the ledger's premise that "Plan already implements the owner's rule" is false -- `plan.py:448-455` sums only `cash/checking/savings` while `crewwork.py:540` types every non-primary Crew pocket as `"pocket"`, so Plan subtracts goal-pocket money from a base that never contained it (proof inside the repo: `tests/meridian/services/test_plan.py:236-255` needs the pocket OUTSIDE the base for its sum to hold). Plan's bill term is also arithmetically identical to `Σ targets` (the funding part cancels exactly), and the D-019 overdraft cannot be seen by it (`commitments.funded_amount` is `CHECK >= 0`; a negative reserve lives only in `crew_bill_reserves.total_reserved_amount`). Adopting Plan as shipped would have moved the owner's headline to `$0.00` while his spendable pocket held `15.45`. **Also repaired, disclosed in the commit:** `agent-claims.json` carried TWO claims under the agent id `constitutional-builder`, so `scripts/check_guardrails.py --agent constitutional-builder` died with `CONFIG duplicate claim` at HEAD `b184fa7` -- it entered in the prior session's `a14ae9a` (checked with `git log -S`), and `tests/test_check_guardrails.py` cannot see it because it runs only against synthetic repos. The two released claims are consolidated into one generation-8 claim naming both superseded ids; the checker now exits 0 under `.venv/bin/python`. Financial authority unchanged: read-only arithmetic, no provider write, no migration, no route, no deployment. |
 | Constitutional Builder (OS-079 decision samples; OS-111/OS-112 earmarked) | `tmp/os079_affordance_samples.py`, `tmp/os079_contact_sheet.py` (untracked scratch), `artifacts/os079-affordance-samples-2026-09-25/**`, `templates/meridian/partials/today.html`, `static/js/meridian/today.js`, `static/css/meridian/today.css`, `meridian/services/today.py` (breakdown LABELS only), `tests/meridian/test_today_safe_to_spend_explanation.py` (new), `tests/meridian/services/test_today.py`, `docs/project/{MERIDIAN_OS_TASKS.json,AGENT_COORDINATION.md,CURRENT_STATUS.md}` | 2026-09-25 | **active**. OS-079's progress note is STALE and was corrected against the artifacts before building: its 2026-09-21 premise puts the Safe-to-Spend affordance on the DIAL CENTRE, but OS-098 (`1543c5e`, owner direction 2026-09-24) moved the figure OUT of the compass into the header strip, and two inverted guards now forbid the centre from saying "Safe to spend". The affordance therefore attaches to `templates/meridian/partials/today.html:26-45` / `today.js:343-373`, and the correction is favourable: `today.js:345` already holds `payload.safe_to_spend.breakdown`, so it remains no new route, no server change, no client arithmetic. The governing Today concept is `design/observatory-drafts-2026-09-08/06-interactive-observatory-vision.png` (owner-confirmed 2026-09-25), NOT `01-today.png` -- 06 draws the figure outside the compass and the centre stating the selected event, matching the app; I mis-read this first by checking only 00 and 01, and the correction is the owner's. Deliverable is a DECISION AID, not an implementation: 20 captures + two contact sheets of the three candidate forms, rendered through the isolated synthetic preview at :8093 under the governed contract (420x912, DPR 3, both themes, animations off). Measured: options A and B add ZERO height while closed (177px, identical to the shipped strip); open costs +193px (dial top 251 -> 444px); option C costs that +193px permanently. **No app file is touched by this claim.** Also recorded here: OS-111 (the owner's new Safe-to-Spend rule, which OVERTURNS D-019's "only negative reserves count") and OS-112 (Crew's gear / pocket selection). Both are earmarks with their blocking questions stated, not work started. **RELEASED 2026-09-25, same session.** The "no app file is touched" statement above is superseded: once the owner chose form B, OS-079 was implemented and committed — `templates/meridian/partials/today.html`, `static/js/meridian/today.js`, `static/css/meridian/today.css`, `meridian/services/today.py` (breakdown LABELS only), plus `tests/browser/{fixtures/safe-to-spend-explanation.html,test_safe_to_spend_explanation.py}` and `tests/meridian/test_today_safe_to_spend_explanation.py`. The earlier capture set in `artifacts/os079-affordance-samples-2026-09-25/` is a PROPOSAL and must not be cited as the shipped component; the shipped captures are `artifacts/os079-implementation-2026-09-25/`. OS-113 was added (the spend pocket must be identified by Crew's own selectedSpendSubaccount, not by a name) and a prior slice in the same session collapsed five name-keyed sites into `meridian/services/spend_pocket.py` — see commit `d8ade65`. |
@@ -124,6 +123,79 @@ would have reverted three commits had it been applied. This file is the channel.
 | Constitutional Builder (OS-089: Plan mobile concept alignment) | `static/js/meridian/plan.js`, `static/css/meridian/plan.css`, `templates/meridian/partials/plan.html`, `scripts/preview_observatory_dial.py` (synthetic fixture only), `tests/meridian/test_plan_row_disclosure.py`, `tests/meridian/test_plan_funding_label.py`, `tests/browser/test_plan.py`, `design-qa.md`, `docs/project/{MERIDIAN_OS_TASKS.json,MERIDIAN_DECISIONS.md,CURRENT_STATUS.md,AGENT_COORDINATION.md,agent-claims.json,PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md,HANDOFF.md}` | 2026-09-23 | **released at this commit**. NOTE: the before/after captures live in the UNTRACKED scratch tree `artifacts/plan-mobile-concept-alignment-2026-09-23/`, per this repo's convention that nothing under `artifacts/` is committed; `design-qa.md` references them by path. Owner-directed 2026-09-23 slice per `docs/project/PLAN_MOBILE_CONCEPT_ALIGNMENT_SPEC_2026-09-23.md`: one-line bill rows, the facts/progress/evidence/NEXT move into the existing disclosure, the section becomes `Upcoming bills` with matching `aria-label`s, the `BILL` tag is removed, the add control stretches full width, and September coverage moves below the controls. **Presentation and copy only: no route, data, financial, authority, migration or provider change.** The medallion material is applied from the kit's existing brass ring (`medallion-frame.png`, already tracked and indexed), so no Runway generation occurs in this slice without a separately stated spend. |
 
 ## Log (append only — newest first)
+
+### 2026-09-25 (fifteenth pass) — OS-123: the deep audit the owner asked for, and the slice it withdrew instead of building
+
+**Released at `a8ab106`**, docs only, with the follow-up release commit that removes this claim's row.
+
+The owner's request was blunt and broad — *"a deep analysis of everything wired into the app… dead ends,
+unfinished code, stuff within the app that common sense and intuitively link but isn't"* — and `OS-123` had
+already recorded the method, because the method is what failed in the attempts before it: independent
+instruments, fresh contexts, exact sets, the rendered screen, and an instrument named on every figure. Five
+fresh-context helpers ran with **different** instruments (route reachability; templates and browser modules;
+persistence and background work; unfinished and dead code; the OS-122 prose retrieval), and each was required
+to write raw evidence into `tmp/` **before** returning. That instruction is not ceremony: the previous
+session's retrieval agent died with its session and left nothing on disk, which is why the handover carried an
+unrecorded loose end. Every headline finding was then **re-verified here** from the cited line — two helper
+claims were corrected on the way in, and both helpers' own withdrawn false positives are recorded in the
+report as the asset they are. Rendered evidence came from 40 governed capture records, and the isolated
+preview's **served markup** was checked against HEAD (`data-sts-horizon`) rather than trusting its process
+start time, because that preview has served a stale build before.
+
+**What the audit found, in one paragraph.** A plain defect: `POST /api/assign-group` writes `pocket_groups`, a
+table nothing anywhere creates, so it always fails while answering **HTTP 200**, and the pocket-deletion
+cleanup deletes from that same nonexistent table while never touching the `pocket_links` row the UI actually
+renders — so a deleted pocket keeps its group. A silent capability loss: `app.py:1261-1272` swallows an import
+failure and empties the Crew-write executor registry with no log. A launcher asymmetry: the container starts
+the legacy checker and never the Meridian refresh or evidence poll, while the preview deliberately does the
+reverse. A dead end with a large blast radius: the whole legacy front end — 22 JS modules, the only
+service-worker registration, the only Web Push path — is reachable **only** through `/debug`, which nothing
+links to. A regression: the Today forecast chart's markup was deleted in `c1d627f` (10 lines removed, 0 added,
+never re-added) while its guard, its CSS and a browser assertion all remain. And second paths to the same
+fact: Accounts' "Available cash" is computed in the browser without the `is_active` filter its own payload
+carries, against the server's OS-111 rule; the advisor's coverage verdict is computed from the dial's
+superseded rule while the header shows the other; the Plan scenario compares two definitions of runway and
+**demonstrably reports +10 days with no changes requested** — invisible to a fixture where `1000/20 == 50`
+makes both formulas agree, which is the degenerate-fixture lesson of the fourteenth pass turning up in a
+second place.
+
+**The part worth more than any finding: a slice was withdrawn rather than built.** The handover named
+`OS-125` — "register the missing `DeleteBill` operation" — as buildable without an owner decision. Its premise
+is false. Measured on the **provider mutation names** from the connector's own registry, all 17 Crew write
+operations are executable by our pipeline and all 17 are bound to a governed action: the connector's CLI
+operation `archive_bill` *is* the `DeleteBill` mutation, `meridian/crew_commands.py:47-51,111` carries it
+verbatim, and the absence-as-proof verifier `OS-125` proposed to build already exists at
+`crew_write_actions.py:184-204`. The claimed gap was manufactured by comparing against
+`docs/project/crew_mutations.json`, which names the same mutation `ArchiveBill` — **the same class as D-035's
+four retractions, committed hours after D-035 recorded the rule against it.** Recorded as **D-039** with its
+instrument and its 17-row table, corrected wherever the claim was published (`CREW_CAPABILITY_MATRIX.md`,
+`OS-122`'s detail, the handover paragraph in `CURRENT_STATUS.md`), and `OS-125` closed as withdrawn with
+nothing built. The genuine residue: `/api/delete-bill` still calls the raw path — `OS-119`'s owner-gated
+re-point — plus one real asymmetry, `updateRule` being in our catalogue and in use by an ungoverned route
+while the connector has no CLI operation for it, so the governed pipeline cannot execute it.
+
+**Two records repaired while passing.** `session-emergent.json` held **nineteen byte-identical copies** of one
+item, and because the generator prints every entry verbatim, `HANDOFF.md` carried that single paragraph
+nineteen times; deduplicated to one, with seven entries added from this session. And `CONCEPT_COVERAGE.md`
+row 8's "no delivery channel" was stale — the advisor panel does deliver the weather
+(`static/js/ui/advisor_fab.js:263-291`); what does not exist is any **feedback** path. Rows 1, 12 and 21 were
+corrected the same way, each carrying its instrument.
+
+**Concurrency, recorded because this file exists to catch it.** A second lane committed `5c33b69` mid-audit
+(its sibling-tree retrieval, D-038, `OS-126`/`OS-127`), and that path-scoped commit **carried this lane's
+in-flight `OS-123` status edit** — the hazard working by design on one side and silently on the other. No
+application file changed in either commit, so every line number in the audit holds at `5c33b69`. Also
+recorded: **8 of this table's 74 rows still declare `**active**`** while the tree is clean at HEAD and the
+work each names is committed, against the file's own rule 2.
+
+**Verification.** Whole suite 2 failed / 2138 passed / 102 skipped — both failures were the project's own
+guards catching this change in flight (a shipped-tree file not yet in the index; an emergent entry with no
+landable home), both fixed, and the doc-governance tests re-run at 83 passed. `ruff` over
+`app.py meridian/ scripts/ tests/`: clean. `git diff --check`: clean. `check_guardrails.py`: OK.
+**No provider write, no migration, no route, no deployment, no action-pipeline change, and no application
+file touched.** Repairs are proposed, not promoted: 18 ranked items in §6 of the report, ids from `OS-128`,
+awaiting the owner — the audit's own limit says repairs become bounded slices with their own ceremonies.
+
 
 ### 2026-09-25 (fourteenth pass) — OS-105: the stylus was degenerate, which is why tuning it never worked
 
