@@ -126,6 +126,24 @@ delete — which is exactly why `/api/delete-bill` sits among the ungoverned rou
 **`updateRule` appears in neither catalogue** while `app.py` uses it, so one ungoverned route depends on a shape
 nothing records.
 
+> **WITHDRAWN 2026-09-25 (D-039) — both claims in the paragraph above are false, and the paragraph is kept so the
+> error stays visible.** Measured on the **provider mutation names** taken from the connector's own registry
+> (`CrewWorkAssistantOTP/src/crew_work_assistant/crewwrite.py:23-60`): 17 CLI operations → 17 distinct provider
+> mutations → **all 17 executable** by `meridian/crew_write.py::_ALLOWED` → **all 17 bound to a governed action**.
+> There is no `DeleteBill` gap: the connector's CLI operation `archive_bill` **is** the `DeleteBill` mutation
+> (`write_operations/archive_bill.graphql:1`), our `meridian/crew_commands.py:47-51` carries that document
+> verbatim and registers it at `:111`, and the governed action `archive_crew_bill`
+> (`meridian/crew_write_actions.py:670`) already verifies it with absence-as-proof
+> (`_verify_archived_crew_bill`, `:184-204`). The error's mechanism: this comparison was run against
+> `docs/project/crew_mutations.json`, which names the same mutation `ArchiveBill` — a second local catalogue, and
+> the wrong one. Likewise `updateRule` **is** in our catalogue
+> (`meridian/crew_commands.py:60-64`, registered at `:115-117`); the true asymmetry is that the **connector** has
+> no CLI operation for it, so no governed action exists while `/api/account/autopilot-rules/update`
+> (`app.py:5039-5057`) performs it with raw GraphQL and live credentials. Full instrument and table:
+> `INTEGRATION_AUDIT_2026-09-25.md` §3.6. The real 16-of-17 figure is the one at `:16` of this file — 16 of 17
+> registered *action types* carry readback verifiers, the exception being `top_up_crew_reserve`
+> (`crew_write_actions.py:686`) — a different denominator that this paragraph's number was mistaken for.
+
 **The retired branches.** Exact file sets invert the earlier reading: every `.py` path at `origin/main` also
 exists in `HEAD` (301 vs 409 files; shared lineage `e652f5c`), so it is an **older snapshot of this lineage, not a
 richer tree**. Content still differs on **51 shared files (+8030/−255)**, so content-level retrieval — including

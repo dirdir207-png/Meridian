@@ -18,158 +18,6 @@
       "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
     },
     {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
-      "summary": "Hot memory is at 96% of its 10,240-byte cache, so the next durable rule cannot be saved without tiering first.",
-      "why": "Measured 2026-09-25: 9843/10240 bytes across 16 entries. The owner's policy is to tier rather than reduce, and that which fact is a rule and which is a pointer is his judgement -- so this cannot move without him, and the automatic archival at the cap must not be allowed to strip the pointers (the 2026-09-24 precedent: five entries moved to Memory Space `default` and the signal had to be rebuilt by hand). Today's durable facts were written into the repository instead, where they are authoritative, so nothing is at risk yet.",
-      "arose": "2026-09-25",
-      "decision_owed": false,
-      "parked_in": "3. Memory and context — what lives where",
-      "resolved": "RESOLVED 2026-09-25: the tiering pass happened — MEMORY.md is down to ~9.2KB of its 10.2KB cache with pointers intact, and a dedicated Meridian memory lane now owns further passes."
-    },
-    {
       "id": "emergent-envelope-enforcement-gap-2026-09-25",
       "arose": "2026-09-25",
       "summary": "The I.1 envelope DECLARES limits it does not ENFORCE at runtime. `RolePermissions.tools` is consulted only at import by `_assert_registry_is_safe` (a classification check) and never at execution: `meridian/ai/role.py` reads exactly one permission field, `budget`, and contains no reference to `TOOL_REGISTRY`. `Budget` itself is declared per role and read nowhere else, so no token or second ceiling reaches the provider (`client.complete()` takes no budget). `evidence_in_scope()` has no production caller. What actually bounds a role today is that it is handed a repository object and calls two read methods on it. The code's own prose reads as though the limits are binding ('a role can do nothing that is not named here'), so the gap is between a CLAIM and its BEHAVIOUR, which is the class this project treats as a defect.",
@@ -184,6 +32,58 @@
       "decision_owed": true,
       "owner_question": "Adopt it as the starting point for OS-076 (review, integrate and test it), delete it so the next attempt starts clean, or leave it untracked and parked? Its own response payload carries the right discipline — 'read-only commentary about stored evidence; nothing was proposed, approved or executed, and this is not permission to act' — which is worth keeping if it is adopted.",
       "parked_in": "Parked against OS-076, which the owner selected on 2026-09-25 as the next slice. It resolves the moment that slice either adopts or deletes the file."
+    },
+    {
+      "id": "emergent-os125-premise-withdrawn-2026-09-25",
+      "arose": "2026-09-25",
+      "summary": "OS-125's premise is false and the task is closed as WITHDRAWN, not built. Keyed on provider mutation names from the connector's own registry (crewwrite.py:23-60), all 17 Crew write operations are executable by our pipeline and all 17 are bound to a governed action: the connector's CLI operation `archive_bill` IS the `DeleteBill` mutation (`write_operations/archive_bill.graphql:1`), our `meridian/crew_commands.py:47-51,111` carries it verbatim, and the verifier OS-125 proposed to build already exists (`meridian/crew_write_actions.py:184-204`, absence-as-proof, ok=None on an incomplete readback). The 'gap' was manufactured by comparing against `docs/project/crew_mutations.json`, which names the same mutation `ArchiveBill`. Recorded as D-039 and corrected where it was published (CREW_CAPABILITY_MATRIX.md, OS-122's detail, the CURRENT_STATUS handover paragraph).",
+      "decision_owed": false,
+      "parked_in": "docs/project/INTEGRATION_AUDIT_2026-09-25.md §3.6"
+    },
+    {
+      "id": "emergent-app-import-writes-the-database-2026-09-25",
+      "arose": "2026-09-25",
+      "summary": "`import app` is not a read: `app.py:8826` calls `init_db()` at module level, `app.py:186` mints a secret key and `app.py:1228` mints a local proposer key, all against `DB_FILE` — which defaults to `savings_data.db`, the database six migrations behind the newest. The fresh-context routes helper hit this and had to build a guarded instrument (in-memory clone, raise-on-write, sha256 before/after) to keep its own audit read-only. Every test, rehearsal and agent that imports `app` in this lane writes schema as a side effect.",
+      "decision_owed": true,
+      "owner_question": "Move `init_db()` behind an explicit launcher call so the import becomes the read it looks like? It touches both launchers and production startup, so it needs its own slice and test rather than a drive-by fix.",
+      "parked_in": "docs/project/INTEGRATION_AUDIT_2026-09-25.md §3.4/P11"
+    },
+    {
+      "id": "emergent-accounts-money-rule-in-the-browser-2026-09-25",
+      "arose": "2026-09-25",
+      "summary": "Accounts' headline 'Available cash' is computed IN THE BROWSER (`static/js/meridian/accounts.js:505-521`, summing `balance` over 'liquid' accounts plus the pocket matched by NAME) while Today's Safe to Spend and Plan's Available come from the server's OS-111 rule. The browser filter never consults `a.is_active` although its own payload carries it (`meridian/services/accounts.py:47`), and the server guard documents exactly that hazard (`safe_to_spend.py:253-261`: the owner's Crew read carries two pockets named 'Free to Spend', one inactive since 2026-09-17). The JS comment claims it 'matches the Today safe-to-spend convention'. The governed captures cannot reveal the divergence because the fixture writes both figures equal (248.50).",
+      "decision_owed": true,
+      "owner_question": "Should Accounts render the server's figure and its basis (one money rule — and the label is a visual decision, so it is his), or keep a browser figure its own comment says is a different rule?",
+      "parked_in": "docs/project/INTEGRATION_AUDIT_2026-09-25.md §3.5/S1"
+    },
+    {
+      "id": "emergent-scenario-runway-compares-two-definitions-2026-09-25",
+      "arose": "2026-09-25",
+      "summary": "The Plan scenario panel renders 'Runway X -> Y days (delta)'. The base comes from `beacon.forecast()`, which subtracts known obligations and clamps at 0 (`meridian/beacon.py:137`); the scenario is recomputed by `meridian/scenarios.py:24` as `starting_cash / daily_expense`, subtracting nothing. DEMONSTRATED, not inferred: `run_scenario(base, {})` with a production-shaped base returns `comparison['runway_days'] = 10` while `starting_cash` and `low_point` are 0.0 and `assumptions` is empty — a plan with nothing changed is shown as ten days better. The tests cannot see it: the fixture sets `starting_cash=1000, daily_expense=20, runway_days=50`, where `1000/20 == 50` makes both formulas agree by construction. The JS also recomputes the delta instead of reading the server's comparison field (`plan.js:439-455`).",
+      "decision_owed": true,
+      "owner_question": "One runway definition owned by `beacon`, with the scenario applying changes to it — plus a fixture where the two formulas actually disagree, or the guard stays decorative?",
+      "parked_in": "docs/project/INTEGRATION_AUDIT_2026-09-25.md §3.5/S7"
+    },
+    {
+      "id": "emergent-preview-cannot-see-api-dead-ends-2026-09-25",
+      "arose": "2026-09-25",
+      "summary": "The isolated synthetic preview used for every governed capture implements a limited route set, so it answers 404/501 for REAL app endpoints: `/api/meridian/crew/mutations-status` (exists at `meridian/api.py:2090`) and POST `/api/meridian/plan/scenario` (exists at `meridian/api.py:365`). A capture-only audit would have reported two false dead ends. The method correction: believe a preview's error only after checking the real route set.",
+      "decision_owed": false,
+      "parked_in": "docs/project/INTEGRATION_AUDIT_2026-09-25.md §5.1"
+    },
+    {
+      "id": "emergent-claims-table-misreports-the-tree-2026-09-25",
+      "arose": "2026-09-25",
+      "summary": "The claims table of docs/project/AGENT_COORDINATION.md still declares 8 of its 74 rows **active** while the working tree is clean at HEAD and the work each names is committed — the file's own rule 2 is 'Release on commit'. Separately, a concurrent lane committed `5c33b69` mid-audit and that path-scoped commit carried this lane's in-flight `OS-123` status edit: the shared-tree hazard the file exists to catch, working as designed on one side and silently on the other.",
+      "decision_owed": false,
+      "parked_in": "docs/project/AGENT_COORDINATION.md (process hygiene: release pass + a guard over claim age)"
+    },
+    {
+      "id": "emergent-emergent-file-had-19-identical-copies-2026-09-25",
+      "arose": "2026-09-25",
+      "summary": "docs/project/session-emergent.json contained NINETEEN byte-identical copies of the same hot-memory item, and because the handoff generator repeats each entry verbatim, docs/project/HANDOFF.md carried that one item 19 times (its 'SESSION-EMERGENT' section was dominated by a single duplicated paragraph). Deduplicated to one in this change; the generator does not deduplicate, so an accidental repeated append silently inflates every future handoff.",
+      "decision_owed": false,
+      "parked_in": "docs/project/AGENT_COORDINATION.md (process hygiene: release pass + a guard over claim age)"
     }
   ]
 }

@@ -5755,3 +5755,60 @@ not at all: 25 ungoverned mutation routes (`tests/test_governed_write_routes.py`
 unbuilt and Jev on hold (read-only audit of `meridian/ai/`); the evaluation harness existed nowhere and is now
 `OS-118`; the roadmap carries 12 of 22 concepts with no carrier for 7 (exact phrase search); 16 of Crew's 17 write
 shapes covered, the gap being `DeleteBill` (operation-name sets, case- and separator-insensitive).
+
+> **CORRECTION 2026-09-25 (later the same evening, D-039 — the text above is kept because it is what was believed).**
+> Two figures in that last sentence are false. Measured on the **provider mutation names** from the connector's own
+> registry, all **17 of 17** Crew write operations are executable by our pipeline and bound to a governed action;
+> the connector's `archive_bill` **is** the `DeleteBill` mutation (`meridian/crew_commands.py:47-51,111`, governed
+> as `archive_crew_bill` with an absence-as-proof verifier at `crew_write_actions.py:184-204`). The "gap" came from
+> comparing against `docs/project/crew_mutations.json`, which names the same mutation `ArchiveBill`. The **real**
+> 16-of-17 is `CREW_CAPABILITY_MATRIX.md:16` — 16 of 17 registered *action types* have readback verifiers, the
+> exception being `top_up_crew_reserve`. Reason, instrument and the 17-row table:
+> `docs/project/INTEGRATION_AUDIT_2026-09-25.md` §3.6; `OS-125` was created from the withdrawn claim and is now
+> **closed as withdrawn**, with nothing built.
+
+## 2026-09-25 (evening) — OS-123: the deep integration audit, and a task withdrawn rather than built
+
+**The owner's request, executed under its recorded onset ceremony (D-036).** *"A deep analysis of everything wired
+into the app… dead ends, unfinished code, stuff within the app that should common sense and intuitively link but
+isn't."* Findings only; **no application file was modified**, per the task's own limits.
+
+**Method, because the method is what failed before.** Five fresh-context helpers with different instruments (route
+reachability; templates + browser modules; persistence + background work; unfinished/dead code; OS-122's prose
+retrieval), each required to write raw evidence to `tmp/` **before** returning — the previous session's retrieval
+agent died with its session and left nothing on disk. Every headline finding was then **re-verified here** from the
+cited line, and two helper claims were corrected on the way in. The rendered screen was captured under the governed
+contract: 40 records in `artifacts/os123-integration-audit-2026-09-25/captures/manifest.json` (commit, fixture,
+frozen clock, DPR, theme, `fullPage`), from the isolated synthetic preview — whose **served markup was checked
+against HEAD** (`data-sts-horizon`) rather than trusting its process start time.
+
+**What it found (full report: `docs/project/INTEGRATION_AUDIT_2026-09-25.md`).** The one plain defect:
+`POST /api/assign-group` writes a table (`pocket_groups`) that no migration creates, so it always fails while
+answering HTTP 200, and the pocket-deletion cleanup deletes from that same nonexistent table while never touching
+`pocket_links` — so a deleted pocket keeps rendering from a stale row. A silent capability loss:
+`app.py:1261-1272` swallows an import failure and empties the Crew-write executor registry with no log. A launcher
+asymmetry: the container (`gunicorn`) starts the legacy checker and never the Meridian refresh or evidence poll,
+while the preview does the reverse. A dead end with a large blast radius: the whole legacy front end (22 JS
+modules, the only service-worker registration, the only Web Push path) is reachable **only** through `/debug`,
+which nothing links to. A regression: the Today forecast chart's markup was deleted in `c1d627f` while its guard,
+its CSS and a browser assertion remain, so it can never draw. And second paths to the same fact: Accounts computes
+"Available cash" in the browser (missing the `is_active` filter its own payload carries) while Today and Plan use
+the server's OS-111 rule; the advisor's coverage verdict is computed from the dial's superseded rule; the Plan
+scenario compares two different definitions of "runway", demonstrated to report **+10 days with no changes
+requested** — and the test fixture cannot see it because `1000/20 == 50` makes both formulas agree.
+
+**And the slice the handover named was withdrawn instead of built.** `OS-125` ("register the missing DeleteBill
+operation") rested on a false premise: keyed on provider mutation names, 17 of 17 Crew write operations are
+executable and governed, and the verifier it proposed to build already exists. Recorded as **D-039** with its
+instrument, corrected where it was published (`CREW_CAPABILITY_MATRIX.md`, `OS-122`'s detail, the handover
+paragraph above), and the task closed as withdrawn with nothing built. The genuine residue is `OS-119`'s
+owner-gated route re-point plus one real asymmetry: `updateRule` is documented in our catalogue and used by an
+ungoverned route, but the connector has no CLI operation for it, so the governed pipeline cannot execute it —
+**a capability in use that no operable contract down the stack records.**
+
+**Concurrency, recorded because it is a hazard this file exists to catch.** A second lane committed `5c33b69`
+mid-audit (docs only: its sibling-tree retrieval, D-038, `OS-126`/`OS-127`), and that path-scoped commit carried
+this lane's in-flight `OS-123` status edit. No application file changed in either commit, so every line number in
+the audit holds at `5c33b69`. Repairs are **proposed, not promoted**: 18 ranked items in §6 of the report, with
+ids from `OS-128`, awaiting the owner — the audit's limits say repairs become bounded slices with their own
+ceremonies, and one of them (`updateRule`) is not even bounded inside this repository.

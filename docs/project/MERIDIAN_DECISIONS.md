@@ -1103,3 +1103,58 @@ his):**
 routing numbers, cookies and authorization headers are never logged, never persisted, never sent to a model
 provider, and never placed in test fixtures. That is the connector's rule and the old audit's F11, and this tree
 holds no equivalent.
+
+## D-039 — A capability gap is measured on the provider's own name for the thing, never on a local alias (found 2026-09-25, correction)
+
+**The withdrawn claim.** *"Of Crew's 17 write operations, 16 are covered by our registry and the one genuine gap
+is `DeleteBill`."* It was published on 2026-09-25 in `CREW_CAPABILITY_MATRIX.md:122-126`, in D-035's own payoff
+table, in the handover paragraph recorded in `CURRENT_STATUS.md`, and carried verbatim by two ledger tasks
+(`OS-122.detail`, `OS-125.detail`). `OS-125` — "Register the missing DeleteBill operation, so `/api/delete-bill`
+has a governed counterpart" — was created from it, with an onset ceremony, and was named by the handover as one
+of the two slices the next session should build.
+
+**The instrument that withdrew it (2026-09-25, `INTEGRATION_AUDIT_2026-09-25.md` §3.6).** Compare the connector's
+**own** registry (`CrewWorkAssistantOTP/src/crew_work_assistant/crewwrite.py:23-60`, CLI operation → provider
+mutation) against our catalogue (`meridian/crew_commands.py`), our executor allow-list
+(`meridian/crew_write.py:19-37`) and our governed action map (`meridian/crew_write_actions.py:661-705`) — keyed
+on **provider mutation names**, never local aliases. Result: 17 CLI operations → 17 distinct provider mutations,
+all 17 executable, all 17 bound to a governed action with an executor.
+
+**The error's mechanism, stated because it will recur.** Our tree carries **two** catalogues that name the same
+provider mutation differently: `docs/project/crew_mutations.json:10-11` calls it `ArchiveBill`, while
+`meridian/crew_commands.py:47-51` carries `mutation DeleteBill` verbatim and registers it at `:111`. The
+connector's CLI operation is named `archive_bill` and its provider mutation is `DeleteBill`. The withdrawn
+comparison ran against the JSON catalogue, read our `archive_bill` as "an archive, not a delete", and published
+the difference as a missing capability. **This is the same class as D-035's four retractions** — a name-set
+comparison published as a capability conclusion — committed hours after D-035 recorded the rule against it.
+
+**What also turned out to be false.** *"`updateRule` appears in neither catalogue"* — `meridian/crew_commands.py:60-64`
+carries `mutation EditRoundUpRule(…) { updateRule(…) }` and registers `edit_autopilot_rule` at `:115-117`. The
+true statement is the inverse: the **connector** has no CLI operation for it, so `crew_write.py::_ALLOWED`
+cannot execute it and no governed action exists — while `/api/account/autopilot-rules/update`
+(`app.py:5039-5057`) performs it with raw GraphQL and live credentials and is declared ungoverned in the ratchet
+(`tests/test_governed_write_routes.py:57`). A capability in use that no operable contract down the stack records.
+
+**And the machinery `OS-125` was going to build already existed.** `meridian/crew_write_actions.py:184-204` —
+`_verify_archived_crew_bill` — reads a fresh complete provider snapshot and returns `{"ok": not present}` for a
+deletion, `ok: None` on an incomplete snapshot or unavailable readback, with `provider_truth` explicit. Its
+steps 2 and 3 were already in production and already tested.
+
+**The rule, binding from here.**
+
+1. **A gap is measured on the identity the provider actually receives.** For a Crew capability that is the
+   GraphQL mutation name; local CLI aliases, file names and catalogue keys are not identities, and two local
+   catalogues may disagree about the same mutation without either being wrong.
+2. **Before declaring something absent, name the counterparty's registry as the instrument** — for writes,
+   `crewwrite.py`'s operation table; for reads, `operations/*.graphql` — and state its path in the finding.
+3. **Two true figures that share a shape are not the same figure.** `CREW_CAPABILITY_MATRIX.md:16`'s "16 of the
+   17 carry readback verifiers" (17 registered *action types*, one bound to `no_verify`) is correct; "16 of 17
+   write *shapes*, the gap being `DeleteBill`" was false. The conflation of the two is what created `OS-125`.
+4. **A task whose premise is withdrawn is closed as withdrawn, in writing, where the premise was published** —
+   the ledger detail, the matrix row, the decision that quoted it. A silently deleted task teaches the next
+   session nothing.
+
+**Enforcement.** `OS-125` is closed as withdrawn, with the reason on the task. The corrections land in the same
+change as this decision, per D-033. The remaining genuine item — `/api/delete-bill` still calling the raw path
+(`app.py:5837-5841`) while its operation has always been governed — stays where it belongs: **`OS-119`'s
+owner-gated re-pointing**, which `OS-125`'s own step 4 had already identified.
