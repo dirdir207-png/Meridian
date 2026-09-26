@@ -13,8 +13,13 @@ staleness check on purpose, so ordinary documentation edits do not invalidate th
 |---|---:|
 | operations the executor is allowed to send | 17 |
 | governed actions registered | 17 |
-| governed actions with a readback verifier | 16 |
+| governed actions with a readback verifier (a REGISTRATION count) | 16 |
 | allowed operations with NO governed action | 0 |
+
+A registration count is not an every-attempt execution count. An independent lane drove the dispatch path and
+found 16/17 actions dispatched with 15/16 verifiers REACHED when an approval carries no reviewed base_state
+(`update_crew_bill` is refused before dispatch), and 17/17 with 16/16 when it does — never restate the row above as
+every-attempt behaviour (`INDEPENDENT_VERIFICATION_2026-09-25.md` §Claim 1).
 
 **Actions with no verifier** (a write whose result is never read back):
 
