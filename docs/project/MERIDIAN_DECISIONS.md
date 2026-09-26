@@ -1225,3 +1225,40 @@ raised or lowered silently.
 **Cross-references.** D-015 (the money model the observations feed), D-040 (unused capabilities are retained),
 OS-114 (the observation store this cadence fills), OS-058 (the funding-event measurement that depends on the
 series being continuous).
+
+---
+
+## D-042 — Enumerate every evidence channel before concluding, and never read an empty window as a fact about the subject (owner, 2026-09-25)
+
+**Owner's challenge, verbatim.** *"You stated allocation information was largely from 09/04, yet had data in your own session from
+work today done by deepseek harness simple-crew latest lane and from chatgpt, as well as the previous session, which I am sure
+documented work heavily, how do you reconcile"* — and he is right: it was documented, in the folder this lane was reading all
+night, and dated hours before the pass that missed it.
+
+**What happened.** A lane measured one live instrument (the new per-bill observation store), found it empty, and generalised from
+its emptiness — while `docs/project/OS058_FUNDING_EVENT_MEASUREMENT.md` (26 KB, written that same day) held two owner-authorized
+experiments that had already measured the allocation rule, and `CREW_FUNDING_MATH_2026-09-19.md` and
+`OS058_EVENT_SIMULATION_2026-10-02.md` held the earlier reading and the pre-registered prediction. The store's emptiness was even
+*designed*: recording began only after the injected money was unwound, because D-027 forbids artificial amounts being stored as
+real. So an empty window was read as a property of Crew.
+
+**The rule, in two halves.**
+
+1. **Enumerate before you measure.** Any conclusion about provider behaviour must first enumerate all four channels, and say which
+   it used: (a) this repository's own records, across EVERY lane and session, including the day's work and the newest documents —
+   `ls` the relevant folder, do not grep for the terms you happened to choose; (b) managed Mnemon Documents, which carry the
+   long-form records (OS-114 and OS-048 both hold per-bill reserved-amount findings); (c) other local trees and retired refs
+   (D-034/D-035); (d) live instruments last, because they are the narrowest. A live query is a confirmation step, never the
+   discovery step.
+2. **An empty window is a fact about the window.** Its scope, start time, and the reason it started there travel with it. Absence
+   of an event in a window that could not have contained it is not evidence of absence (this is the same failure as D-035's
+   mention-grep, one level up: not a wrong match, but a wrong *universe*).
+
+**One authority per fact.** A ledger entry or summary that restates a measurement's numbers is a second authority waiting to
+contradict the first. Summaries point; the measurement document states. The map of where every allocation figure lives is
+§Evidence map of `docs/project/OS058_FUNDING_EVENT_MEASUREMENT.md`.
+
+**Cross-references.** D-034/D-035 (retrieve before building; a number without its instrument and scope is an anecdote), D-027 (no
+artificial amount in the observation stores as real), D-030 (options must not default to the status quo), and the Harness lane's
+lessons this lane internalised on the same day — *interrogate the denominator*, *a populated schema is not populated data*, and
+*stability is not truth*.

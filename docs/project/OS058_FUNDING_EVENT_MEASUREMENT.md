@@ -382,3 +382,39 @@ sees a considered decision rather than an unresolved warning, and so nobody re-r
 Meridian still treats them as what they are: OS-116 requires that a fixture never drives the production
 UI, and D-027 requires that no artificial amount enter the observation stores as real — which is why the
 history began only after the injected money was unwound.
+
+---
+
+## Evidence map — every allocation figure, its date, its instrument, and whether it was natural (added 2026-09-26)
+
+Added because a lane of this repository reasoned about the allocation tonight **without reading this file**, and produced a
+narrower and partly wrong account from a live instrument alone. The map exists so the next reader enumerates before
+concluding (D-042). Nothing below is derived; each row points at where the figure is recorded.
+
+| when | what it shows | instrument | natural or injected | recorded in |
+|---|---|---|---|---|
+| 2026-09-04 | bucket 71098¢ = $710.98, **all of it on Rent** while VPA (same `reservedBy` 09-16) held 0 | captured bills facet | natural | `MERIDIAN_DECISIONS.md` (D-015), `CURRENT_STATUS.md`, `MERIDIAN_OS_TASKS.json`, and Document 95ebb613 — which notes this capture is the ONLY surviving record of that earlier per-bill number |
+| 2026-09-19 | bucket 109710¢ = $1,097.10, **exactly Rent's `reservedAmount`**, other four 0; the ceiling/daily-rate proration formula validated (Rent 66327 = ceil(144200 × 14 / 30.4375)) | captured read | natural | `docs/project/CREW_FUNDING_MATH_2026-09-19.md` |
+| 2026-09-20 | bucket 109710¢ again, Rent holding it; per-bill `estimatedNextFundingAmount` genuine; reserve-LEVEL estimate is the account total and lags | captured read + Astra live read | natural | `MERIDIAN_DECISIONS.md` (D-015); Documents cfadfebf and its successor 3809b756 |
+| 2026-09-25T18:38:30Z | BEFORE state: bucket 0.00, every bill 0.00, with the **pre-registered falsifiable prediction** for 09-30 and 10-02 | consistent SQLite copy | natural | §BEFORE state above |
+| 2026-09-25T21:06:07Z | **the complete settled per-bill allocation**: VPA 75.20, Verizon 101.57, Xfinity 93.00, Eversource 210.00, Rent 1.00 — summing exactly to 48077 = `totalReservedAmount` | five ordered owner-authorized top-ups | **injected** (owner-authorized) | §Owner-authorized manual-capacity experiment above |
+| 2026-09-25T21:19:10Z | **the ordering and the tie-break**: higher `daysOverdue` → earlier `reservedBy` → **lower bill amount**; creation order refuted by the $300-then-$200 reverse pair | temporary same-deadline probe bills | **injected** (owner-authorized) | §Owner-authorized same-deadline tie-break experiment above |
+| 2026-09-25T21:33Z | 11/11 bills' `estimatedNextFundingAmount` matched the 14-day proration formula; the reserve-level figure is never a dividend | read-only complete snapshot | natural | §Additional read-only checks above |
+| 2026-09-25T22:06–22:30Z | injected money unwound (income source deleted and recreated, 1663.00 → 1649.10, anchor 09-04 → 09-18); recording begins 24 min later | live DB + provider reads | unwind | §PRE-UNWIND and §POST-UNWIND above |
+| 2026-09-25T22:30:58Z → | the dated observation series: 10,131 rows to 04:08Z, **every per-bill value 0.00 with `reported = 1`** (a stated release, never `NULL` silence) | `crew_bill_allocation_observations` | natural, **post-unwind by construction** | OS-114 (migration 031) + the store itself |
+
+**Two consequences a reader must carry, because getting them wrong cost a whole pass tonight:**
+
+1. **The observation series' emptiness is designed, not informative.** Recording began at 22:30:58Z on purpose — D-027 requires
+   that no artificial amount enter the observation stores as real, so it could not start until the injected money was unwound
+   at 22:06:43Z. Its window therefore contains no allocation event at all, and using it as evidence that "the bucket was never
+   non-zero" says nothing about Crew's behaviour. The allocation **rule** was measured on 2026-09-25 by the two experiments
+   above; what remains outstanding is confirmation in a **natural** state (the 09-30 and 10-02 events).
+2. **A per-bill reading is only meaningful with its state.** VPA's `reservedAmount` was 75.20 at 21:06 and 0.00 at 22:30 with
+   `reported = 1`; the first is an allocation, the second is a release, and a row without its date and reported-flag invites
+   exactly the mid-cascade confusion this task was opened to remove.
+
+**Also part of the record, and not to be overlooked:** `docs/project/OS058_EVENT_SIMULATION_2026-10-02.md` (2026-09-25T15:56Z)
+pre-registers what the two surviving candidate rules predict for the 10-02 event — soonest-`reservedBy` versus largest-bill —
+with the arithmetic, so the observation can SCORE them. It is a labelled simulation, must never be quoted as a result, and its
+existence is why the 10-02 read is a test rather than a story.
