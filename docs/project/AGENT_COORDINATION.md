@@ -174,6 +174,20 @@ nothing built. The genuine residue: `/api/delete-bill` still calls the raw path 
 re-point — plus one real asymmetry, `updateRule` being in our catalogue and in use by an ungoverned route
 while the connector has no CLI operation for it, so the governed pipeline cannot execute it.
 
+**The route pass landed last, and it earned its keep.** Two independent decorator scans, agreeing exactly, give
+**204** decorator routes — 139 `app.py` + 60 blueprint + 4 in `crew/broker.py` (a separate Flask app) + 1 test
+stub — reconciling with a second helper's 199 for `app.py` + `meridian/api.py` once the scope difference is
+named. Three findings: **`GET /meridian` is registered twice** (`meridian`, `app.py:3192`, and `meridian_shell`,
+`app.py:3844`), the only method clash in `app.py`, and the winner was settled **empirically** — an in-process
+Flask 3.1.3 app with two identical GET rules dispatches to the first — so `meridian_shell` can never execute and
+the duplicate is invisible while it works; the **`/api/meridian/*` namespace is served from two places** (60
+blueprint rules plus two hand-written in `app.py`, one of them a browser-permitted write channel) while
+`scripts/verify_readiness.py` enumerates `register_blueprint` and therefore cannot see either of them; and the
+helper **refused its own easiest instrument** — enumerating `app.url_map` — because `import app` writes to the
+database, which is how that hazard surfaced, keeping `savings_data.db` byte-identical instead. It also decided
+one negative worth having: **zero dead links** among 89 template references and 8 Python-built hrefs. Its five
+genuinely undecided questions are named in the report with the scripts left to settle them, rather than guessed.
+
 **Two records repaired while passing.** `session-emergent.json` held **nineteen byte-identical copies** of one
 item, and because the generator prints every entry verbatim, `HANDOFF.md` carried that single paragraph
 nineteen times; deduplicated to one, with seven entries added from this session. And `CONCEPT_COVERAGE.md`
@@ -193,7 +207,7 @@ guards catching this change in flight (a shipped-tree file not yet in the index;
 landable home), both fixed, and the doc-governance tests re-run at 83 passed. `ruff` over
 `app.py meridian/ scripts/ tests/`: clean. `git diff --check`: clean. `check_guardrails.py`: OK.
 **No provider write, no migration, no route, no deployment, no action-pipeline change, and no application
-file touched.** Repairs are proposed, not promoted: 18 ranked items in §6 of the report, ids from `OS-128`,
+file touched.** Repairs are proposed, not promoted: **20** ranked items in §6 of the report, ids from `OS-128`,
 awaiting the owner — the audit's own limit says repairs become bounded slices with their own ceremonies.
 
 

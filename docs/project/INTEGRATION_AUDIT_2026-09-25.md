@@ -49,7 +49,7 @@ headline conclusions drawn from those sets were re-verified here (see §5, item 
 
 | Set | Count | Instrument | Where |
 |---|---|---|---|
-| registered route paths in the app | 199 | AST over `app.py` + `meridian/api.py` (helper) | §3.1 |
+| registered route paths | **199** in `app.py` + `meridian/api.py` (139 + 60), **+4** in `crew/broker.py` (a separate Flask app) **+1** test = 204 decorator routes | two independent decorator scans (AST and raw regex) agreeing exactly, cross-checked against a second helper's AST count — the two agree once the scope difference is named | §3.1/R1 |
 | JS `/api/` literals with no matching route | **0** | route set × literal set (helper) | §3.1 |
 | templates | 41 | `templates/**` enumeration (helper) | §3.2 |
 | templates never rendered and never included | **18** | Jinja2 `meta.find_referenced_templates` + `ast` render-arg set (helper) | §3.2/T3 |
@@ -79,33 +79,87 @@ Each finding names the concept it advances, per D-033.
 
 ### 3.1 Routes and reachability
 
-The dedicated route helper built its instrument and then had to stop and harden it: `import app` is **not safe**
-— it runs `init_db()` at module level (`app.py:8826`) and mints secrets, so a naive enumeration writes to the
-database (§3.4/P11). Its guarded instrument (in-memory clone seeded read-only, raise-on-write, sha256 and
-`git status` compared before/after) is described in `tmp/os123/routes.md`, which is the raw record for this
-section.
+Helper: `tmp/os123/routes.md` (548 lines; raw tables in sections 2 and 6). Its first act was to refuse an
+instrument: `import app` is **not safe** — it runs `init_db()` at module level (`app.py:8826`) and mints secrets
+(`:186`, `:1228`), so enumerating `app.url_map` writes to the database (§3.4/P11). It therefore built a guarded
+import (shared in-memory clone seeded read-only, raise-on-write, sha256 and `git status` compared before and
+after) and reported honestly that **that instrument never ran to completion** — every route finding below comes
+from its static instruments (two independent decorator scans, AST and raw regex, agreeing exactly), and the
+dynamic questions are recorded as undecided rather than guessed.
 
-What is established, from that file plus the two other helpers' independent route enumerations (re-verified here
-where stated):
+#### R1 — the route set, established by two agreeing instruments
 
-- **199 registered route paths**, parsed by AST over `app.py` + `meridian/api.py` (helper; independent of the
-  routes helper's own instrument).
-- **Zero JS `/api/` literals lack a route** — the client/server contract holds in that direction (helper:
-  route set × literal set, including inline scripts and `${…}` template literals).
-- **16 routes have no caller at all**, all reached only by dead templates (§3.2/T3, T4). A further 61 have no
-  caller by literal search, but the same helper's manual pass showed several of those *are* called through
-  composed paths (`fetch(\`${path}${suffix}\`)`), so that count is an upper bound, not a finding.
-- **Routes the audit could not settle:** the 12 trials/cancellation write routes at `meridian/api.py:1874-2090`
-  have no caller either helper could enumerate. Recorded as **open**, not as dead ends — an absence nobody
-  established is a hypothesis (D-035).
-- **`/debug` is unlinked** (`app.py:3836`; no `href` anywhere in the tree) and `/health` is a legitimate
-  constant-JSON endpoint (a falsified hypothesis, recorded so it is not chased).
+**204 decorator routes**: 139 in `app.py`, 60 in the `meridian_api` blueprint (`meridian/api.py`, served under
+`/api/meridian`), **4 in `crew/broker.py` — a separate Flask application**, and 1 test route. That reconciles
+exactly with the other helper's independent count of **199** for `app.py` + `meridian/api.py` (139 + 60): two
+instruments with different parsers agree once the scope difference is named. The route set is **closed** under
+both instruments: 0 `add_url_rule` calls, 0 non-literal paths, 0 conditionally-defined routes. *Limit:* a rule
+registered at runtime by any other mechanism is invisible to both.
 
-The route helper's full tables (URL map, AST route list, per-route caller sets) land in `tmp/os123/routes.md`.
-What remains genuinely open is the trials/cancellation caller question above and the dynamic-URL cases its
-instrument could not decide.
+#### R2 — `GET /meridian` is registered twice, and the second handler can never run (dead end; the one method clash in `app.py`)
 
----
+**Claim.** `app.py` registers the same rule with the same method twice: `meridian` at `:3194` (which reads
+`request.args.get('workspace')`, validates it against `MERIDIAN_WORKSPACES`, and renders
+`meridian/index.html` with `active_workspace`) and `meridian_shell` at `:3846` (which renders the same template
+with **no** argument). Werkzeug keeps both rules; the first registered wins.
+
+**Evidence — re-verified here by a different instrument than the helper's.** An AST pass over `app.py` found
+exactly four duplicate rule strings, and **only one is a method clash**:
+
+| duplicate rule | handlers | methods | verdict |
+|---|---|---|---|
+| `/meridian` | `meridian` (`:3194`), `meridian_shell` (`:3846`) | GET, GET | **clash — one handler is unreachable** |
+| `/api/auth/passkeys/<int:passkey_id>` | `api_delete_passkey` (`:3754`), `api_update_passkey` (`:3780`) | DELETE, PATCH | distinct methods — not a conflict |
+| `/api/simplefin/sync-schedule` | `:8104`, `:8134` | GET, POST | distinct methods — not a conflict |
+| `/api/simplefin/timezone` | `:8172`, `:8188` | GET, POST | distinct methods — not a conflict |
+
+**Which handler wins was settled empirically, not by reasoning** (the helper marked this medium-confidence, so
+the author built an instrument for it): a minimal in-process Flask app with two identical GET rules on Flask
+3.1.3 / Werkzeug 3.1.8 returns the **first** handler. So `meridian_shell` (`app.py:3846`) is dead code, and the
+live handler is the one that validates the workspace — which is why the surface works and the defect is
+invisible. `/` redirects through `url_for('meridian')` (`app.py:3811`), which resolves by endpoint name and is
+therefore correct either way. **Confidence: high.** *Repair:* delete the duplicate (or make it the fallback it
+looks like it was).
+
+#### R3 — the `/api/meridian/*` namespace is served from two places, and the readiness check sees only one (unlinked seam)
+
+60 rules come from the blueprint registered at `app.py:126`; **2 more are hand-written in `app.py`** under the
+same prefix: `/api/meridian/actions` (`app.py:4151`) and `/api/meridian/funding-rules/propose` (`app.py:4244`).
+The consequence is not cosmetic: `/api/meridian/funding-rules/propose` is **one of the browser's three
+permitted write channels** (`static/js/meridian/api.js:43-47`, `ALLOWED_PROPOSAL_PATHS`), and
+`scripts/verify_readiness.py:62` AST-scans for `register_blueprint`, so any check that treats `meridian_api` as
+"the Meridian API" silently misses it. The other two permitted paths were cross-checked and **do** exist
+(`meridian/api.py:1713`, `:1735`) — this is the one dead-link question the helper could decide, and it decided
+it in the app's favour. **Confidence: high.**
+
+#### R4 — established as *not* defects, so they are not chased again
+
+- `crew/broker.py` is a **second Flask app** (`:39`), reached server-to-server through `BrokerCrewTransport`
+  (`app.py:829-836`) and launched from a launchd template — its 4 routes must be excluded **by design** from any
+  "route set minus UI references" diff, not by ignoring misses.
+- All `url_for` endpoint references resolve (`meridian` ×4, `meridian_settings` ×2, `static` ×7 — the last
+  resolving to Flask's implicit static rule, which the route set deliberately excludes).
+- The nine legacy URL routes (`/account`, `/cards`, `/credit`, `/family`, `/splitwise`, `/bills`, `/expenses`,
+  `/goals`, `/pockets`) are **real registered routes**, not redirects. Whether their handlers merely redirect
+  could not be decided (that was the unexecuted instrument).
+- 16 routes have no caller at all, all reached only by dead templates (§3.2/T3, T4); a further 61 have no caller
+  by literal search, but the templates helper's manual pass showed several of those *are* called through composed
+  paths (`fetch(\`${path}${suffix}\`)`), so that number is an upper bound, not a finding.
+
+#### R5 — undecided, stated as such (D-035: an absence nobody established is a hypothesis)
+
+**Decided in the app's favour:** of 89 template `href`/`action` references plus 8 Python-built `"href"`
+values, **zero** match no route (converter-aware matching); the 8 dynamic references are listed rather than
+guessed, including the one `{{ row.href }}` whose values were checked separately and all resolve.
+
+**Undecided, and the reason is worth stating:** the template/Python channel matched only **3 of 203** routes, so
+no claim of "unreachable from the UI" can be made for the other 200 — the modern UI calls JSON APIs from
+`static/js/**` (115 `fetch(` calls in 51 files), which this instrument did not harvest. Along with it: (a) routes
+nothing in the UI can reach; (b) UI references matching no route **in the JS channel** and the dynamic cases that
+cannot be decided at all; (c) routes reachable only from `tests/**` or `scripts/**`; (d) routes that redirect and
+never render; and the question this task cares about most — **routes whose only guard is `@login_required` that
+can reach a Crew or provider mutation**. Its Instrument E/F scripts are left in `tmp/os123/routes.md` §5–§6 to be
+run rather than guessed at.
 
 ### 3.2 Templates and browser modules
 
@@ -724,8 +778,11 @@ the retraction is recorded where the claim was made, not only here.
 - **No secrets** in tracked files are reported here; nothing in this audit required reading `.env`, and it was
   not read. (`.env` exists at the repo root and is untracked/ignored; leave it alone.)
 - **No provider mutation, no live read, no write** was performed or needed.
-- Not yet searched: the route/table/JS exact sets (§3.1–3.4, pending helpers), the "shipped but never invoked"
-  class in `app.py`'s legacy routes, and the settings/legacy-redirect maps.
+- **Still undecided** (named with the instrument that would settle each, never guessed): routes nothing in the UI can
+  reach; UI references matching no route and their dynamic cases; routes reachable only from `tests/**` or
+  `scripts/**`; routes that redirect and never render; and whether any `@login_required`-only route can reach a
+  Crew provider mutation — the question this task cares about most. The scripts for all five are left in
+  `tmp/os123/routes.md` §4–§6. The legacy routes' render-vs-redirect behaviour is undecided too (§3.1/R4).
 
 ## 5. Method corrections this audit earned
 
@@ -789,6 +846,9 @@ different work (cardholder exposure; the retrieved payday/funding reconciliation
 five unpersisted provider reads (`P8` — that is a product judgement, and the helper explicitly declined to claim
 it); decide D-038's cardholder question (a concurrent lane owns it); or restore anything retrieved from the
 older tree (D-037 — `OS-127` holds those options).
+
+| R19 | **R2** `GET /meridian` is registered twice and `meridian_shell` (`app.py:3846`) can never run (first-registered wins, settled empirically on Flask 3.1.3) | **defect fix**: delete the duplicate, or make it the fallback it resembles | one decorator + one function | defect (invisible while it works) |
+| R20 | **R3** the `/api/meridian/*` namespace has two hand-written members in `app.py`, one of them a browser-permitted write channel, and `scripts/verify_readiness.py:62` sees only the blueprint half | **defect fix**: have the readiness scan enumerate routes rather than `register_blueprint` calls | one scan + its test | defect (a check that cannot see two routes) |
 
 ## 7. Provenance of this document
 
