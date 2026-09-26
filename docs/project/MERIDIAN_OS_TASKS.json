@@ -2986,7 +2986,17 @@
       "priority": "high",
       "phase": "track-A-discovery",
       "detail": "Owner request, 2026-09-25: a deep analysis of everything wired into the app — dead ends, unfinished code, and things that common sense says should link but do not. Scoped as an audit with a prescribed method, because the method is what failed in the attempts that came before: (1) independent instruments with different assumptions, never one lens; (2) fresh contexts, never forks that inherit the author's premises; (3) exact sets (route sets, caller sets, import graphs, table sets) rather than mention-greps, which generate hypotheses and never conclusions; (4) the rendered screen as evidence alongside the data, at the owner's viewport; (5) an instrument and precondition stated on every figure, and every negative finding preceded by a search of where the thing would actually live.",
-      "limits": "Findings only, no fixes inside the audit: each item is classified dead end / unfinished / unlinked seam, with file:line and the instrument that established it, so the repairs can be planned and bounded rather than applied reactively. Read-only throughout; nothing outside this repository is modified."
+      "limits": "Findings only, no fixes inside the audit: each item is classified dead end / unfinished / unlinked seam, with file:line and the instrument that established it, so the repairs can be planned and bounded rather than applied reactively. Read-only throughout; nothing outside this repository is modified.",
+      "onset_plan": [
+        "1. Enumerate, exactly: every route, every template, every JS module, every table, every service module and every scheduled job. Exact sets, not greps.",
+        "2. Dead ends: things wired but unreachable, reachable but unlinked, shipped but never invoked, and read but never persisted. Each needs file:line plus the instrument that established it.",
+        "3. Unfinished code: markers, half-built features, and code paths whose own comments admit incompleteness.",
+        "4. Unlinked seams: pairs that common sense says belong together (dial vs reserve, payday vs funding plan, role runs vs the UI, alerts vs feedback, calendar vs bills, evidence vs viewer) and second paths to the same fact.",
+        "5. The rendered screen, at 420x912 DPR3 and 1440x900, as evidence alongside the data — never only one of them.",
+        "6. Findings only: classify each item dead end / unfinished / unlinked seam, and stop. Repairs become bounded slices with their own ceremonies."
+      ],
+      "recommended_model": "a frontier reasoning model at high effort, with fresh-context helpers for the mechanical enumeration",
+      "model_why": "This is judgement over a large surface: deciding whether an absence is a dead end or an intentional boundary. The mechanical parts (route sets, import graphs, table sets) are exactly where a cheaper model with fresh context is BETTER, because it does not share the author's premises — the lesson from the three audits of 2026-09-25, where every find came from an instrument that did not share the previous one's assumptions."
     },
     {
       "id": "OS-124",
@@ -3007,6 +3017,27 @@
       ],
       "recommended_model": "deepseek-flash (this lane's harness), high effort",
       "model_why": "Retrieval across two repositories plus semantic comparison of refactored code: it is reading and reconciling, not designing, so the requirement is a long context and disciplined tool use rather than frontier reasoning. The judgement needed is epistemic (is this lost or moved?), which is why the method rules in D-035 matter more here than the model choice."
+    },
+    {
+      "id": "OS-125",
+      "title": "Register the missing DeleteBill operation, so /api/delete-bill has a governed counterpart",
+      "status": "open",
+      "priority": "high",
+      "phase": "track-C-V3",
+      "onset_plan": [
+        "1. Confirm against the connector contract (src/crew_work_assistant/write_operations/) that DeleteBill is the operation name and what its input requires.",
+        "2. Add the registry entry with a readback verifier that treats absence as proof ONLY for a deletion, per the existing delete_crew_pocket pattern.",
+        "3. Prove the verifier against a synthetic snapshot: present-after-delete must be ok=False, absent must be ok=True, unobserved must be ok=None.",
+        "4. Only then consider pointing /api/delete-bill at the governed path — that is a separate, owner-visible change (OS-119)."
+      ],
+      "recommended_model": "a mid-tier coding model at high effort; the pattern already exists in delete_crew_pocket and the work is replication with a verifier",
+      "model_why": "Bounded, pattern-following work with an existing reference implementation and a test matrix. The risk is not reasoning depth, it is discipline about absence-as-proof.",
+      "detail": "Found by comparing Crew's 17 recorded write operations against our registry: 16 are covered, and the one genuine gap is `DeleteBill`. `/api/delete-bill` is among the 25 ungoverned routes (D-031), so that route is ungoverned partly because the registry lacks the operation it needs. Registering it removes that excuse without requiring the owner's shape decision for the wider migration.",
+      "limits": "This adds a capability to the governed pipeline; it does not re-point the route and does not disable anything. No retry semantics are introduced, and absence-as-proof must not leak into creations.",
+      "dependencies": [
+        "OS-119",
+        "OS-121"
+      ]
     }
   ]
 }

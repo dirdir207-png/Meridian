@@ -5723,3 +5723,35 @@ under our own CLI names). The one real gap is **`DeleteBill`** — and `/api/del
 ungoverned routes, so that route is ungoverned partly because the registry lacks the operation it needs. And
 **`updateRule` exists in neither catalogue** while `app.py` uses it: one ungoverned route depends on a shape that
 nothing anywhere records. Both are now named, which is what makes them fixable.
+
+## 2026-09-25 — handover: the next session starts here
+
+**State at handover:** working tree clean, 0 unpushed commits, handoff fresh (6 sources hashed, 0 stale), suite
+green at 2,069 passed / 1 skipped. One thread was still in flight when this was written: a fresh-context agent
+retrieving knowledge from the older sibling tree and the connector's prose (OS-122) — its report lands in the
+session that started it and must be recorded there.
+
+**Read first, in this order:** `AGENTS.md` → `docs/project/HANDOFF.md` (it names the six hashed sources, so
+staleness is visible) → `docs/project/MERIDIAN_CONCEPTS.md` (the 22 concepts, which every slice must name) →
+`docs/project/CONCEPT_COVERAGE.md` (the enforced state matrix) → `docs/project/MERIDIAN_ROADMAP.md` →
+`docs/project/MERIDIAN_OS_TASKS.json` → `docs/project/MERIDIAN_DECISIONS.md` (D-030 through D-036 are this
+session's, and they change how work is chosen) → then the source you are about to change.
+
+**Two slices are planned with their onset ceremonies already recorded** (D-036, enforced by
+`tests/test_slice_onset_ceremony.py`): **`OS-123`** — the deep integration audit the owner asked for: dead ends,
+unfinished code, and seams that should link but do not — and **`OS-125`** — register the missing `DeleteBill`
+operation so `/api/delete-bill` has a governed counterpart, which is one of the 25 ungoverned routes and needs no
+owner decision to build.
+
+**Do not re-derive any of these; they are settled and recorded.** `D-030` (never default an option set to the
+status quo; every set needs an option that EVALUATES), `D-032` (friction is not impossibility: build the missing
+machinery, reproduce it agentically, change the tool when verification fails, and LOOK at user-facing work),
+`D-033` (new work must be cross-referenced to the roadmap and marked in the same change), `D-034`/`D-035`
+(retrieve before building — and a mention-grep or diff line may not produce a conclusion; four claims were
+withdrawn for exactly that), `D-036` (the onset ceremony, with the deep-audit method prescribed).
+
+**And the numbers that were expensive to obtain, with their instruments** — quote them with the instrument or
+not at all: 25 ungoverned mutation routes (`tests/test_governed_write_routes.py`, a ratchet); 3 of 5 council roles
+unbuilt and Jev on hold (read-only audit of `meridian/ai/`); the evaluation harness existed nowhere and is now
+`OS-118`; the roadmap carries 12 of 22 concepts with no carrier for 7 (exact phrase search); 16 of Crew's 17 write
+shapes covered, the gap being `DeleteBill` (operation-name sets, case- and separator-insensitive).
