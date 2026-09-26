@@ -340,7 +340,37 @@ and must not be.
 
 ---
 
-## Claim 2 — in flight
+## Claim 2 — "the ungoverned write surface is exactly the 26 declared routes" — **INTERIM**
+
+Instrument running: the live Flask app object with the test client, **all provider transports stubbed**
+(`requests.HTTPAdapter.send` → synthetic responses, subprocess never executed, sockets blocked), scratch DB
+copied to `/tmp`, credentials redacted. Two instrument facts are already settled, and both are the
+scope-with-the-number class:
+
+1. **The runtime registry does not match the document's counts.** At runtime it registers **200 route rules,
+   98 accepting POST**; `STATE_OF_THE_SYSTEM.md:27-28` reports **140 registered / 74 accepting POST**. The
+   document's figures come from a *different* instrument (static parsing of `app.py` plus the blueprint) and are
+   correct as that instrument's output — but they are not the runtime population, and the two must not be quoted
+   interchangeably. This is the same shape as D-035's scope rule: the number is not wrong, the scope is missing.
+2. **The claim's own label is imprecise.** `/api/cards/<card_id>/sensitive` is registered **GET-only** at
+   runtime (`methods = GET, HEAD, OPTIONS`), so a line reading *"POST routes declared to reach a raw Crew
+   mutation | 26"* contains **at least one non-POST route**. Exercising it *does* reach a raw GraphQL mutation
+   attempt (`GenerateViewSadToken`, POSTed to `api.trycrew.com`) through a GET handler. So the route belongs in
+   the set on the mutation criterion and does not belong on the method criterion — the declaration needs to say
+   which criterion it is using.
+
+**Measured so far, mid-sweep:** 10 of the 26 declared routes have been driven to a raw mutation or raw write
+helper; 0 undeclared POST routes have reached one *yet*; 15 declared routes were gated by local database state
+("No credit card configuration", "Pocket not found") rather than by anything about the route itself, so the
+instrument was hardened — a deterministic database precondition per route, shaped provider reads, real
+`requests.Response` objects — and a full sweep is running.
+
+**Denominator note, flagged rather than asserted:** 10 reached + 15 gated accounts for **25 of the 26** declared
+routes. One is unaccounted for in the interim, and "0 undeclared routes" is a statement against a denominator
+that is not yet complete — 15 of the declared routes have not been exercised at all. Both are for the final
+report to close, not for this record to guess at.
+
+
 
 | # | claim | instrument prescribed | status |
 |---|---|---|---|
