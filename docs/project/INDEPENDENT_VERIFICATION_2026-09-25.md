@@ -340,6 +340,174 @@ and must not be.
 
 ---
 
+## Claim 2 — "the ungoverned write surface is exactly the 26 declared routes" — **FALSIFIED as written**
+
+**As written** (`STATE_OF_THE_SYSTEM.md:36`, the write-routes table): `| POST routes declared to reach a raw Crew
+mutation | 26 |`. The original established the set by a **static AST walk of `app.py`**.
+
+**Instrument (different): the live Flask app object with its test client**, every provider transport stubbed
+**before import** (`requests.HTTPAdapter.send` → synthetic responses, subprocess never executed, socket rails
+installed), scratch DB copied to `/tmp` with credential values replaced by redaction markers. The verdict
+evidence is an actual `mutation <Name>(` document **reaching a stubbed transport**, with a call-trace on the raw
+helpers as a floor; handler reading was used only to seed valid preconditions, never as evidence.
+
+**FALSIFIED — the label, not the set.** The declared set has 26 members, but one is not a POST route:
+`/api/cards/<card_id>/sensitive` is registered **GET-only** at runtime (`GET, HEAD, OPTIONS`) and it *does* reach
+a raw provider mutation (`mutation GenerateViewSadToken(...)` POSTed to api.trycrew.com). **Measured POST routes
+reaching a raw Crew mutation: 25.** The evidence supports: *"25 POST routes + 1 GET route declared to reach a raw
+Crew mutation (26 declared entries) — 26/26 declared are raw writers, 0 undeclared are."*
+
+**The set's membership survives the independent instrument.** All 26 declared entries reached a raw provider
+write — 25 in the full sweep, and `/api/manual-cc/top-up` by a focused probe (the sweep's payload always set
+`newBalance` below the read pocket balance, so the route never fired under the standard shape). **0 of 175
+non-declared rules** (73 non-declared POST + 102 non-POST) reached a provider write. Direct-client and
+broker-client runs agree exactly, and **no declared entry goes through the governed pipeline** — so the ratchet's
+*set* is corroborated by dynamic exercise, which is a stronger instrument than the AST walk that produced it.
+
+**The one reasoned declaration checks out.** `/api/cards/<card_id>/sensitive` mints a card-details view token (a
+mutation document to api.trycrew.com plus a GET to cde.trycrew.com/wally/debit_card) and moves no funds — so
+*"a mutation but not a financial write"* holds. Its only defect is the POST label.
+
+**Operations observed per route family:** transfers, pockets and the connector families
+(simplefin/splitwise/manual-cc/lunchflow) → `InitiateTransferScottie`, `CreateSubaccount`, `DeleteSubaccount`;
+create-bill → `CreateBill`; delete-bill → `DeleteBill`; pocket create/delete →
+`CreateSubaccount`/`DeleteSubaccount`; set-card-spend → `SetActiveSpendPocketScottie`; autopilot create/update/
+delete → `CreateRoundUpRule`/`EditRoundUpRule`/`DeleteRule`.
+
+### A structural blind spot this instrument exposed
+
+The runtime registers **200 route rules, 98 accepting POST**; the document's **74** comes from the `app.py`-only
+scan. That means roughly **24 blueprint POST rules are structurally outside the ratchet** — the ratchet parses
+`app.py` and cannot see them. Measured today, none of them reaches a provider write, so the gap is empirically
+closed for the present surface; it is not closed *structurally*, and the ratchet's declared limits should say
+so. (This also means the document's "140 / 74" and the runtime "200 / 98" describe different populations and
+must never be quoted interchangeably — same class as D-035's scope rule.)
+
+**A second record-integrity defect: the composition sentence is off by one.** `STATE_OF_THE_SYSTEM.md:46` says
+the declaration is composed of *"9 routes the audit reached and 17 found by the ratchet on its first run"*, but
+its own list holds **9 + 16** (the ratchet block's comment says "seventeen"), plus the separately-reasoned card
+entry, for 26. The total is right and the composition sentence is not.
+
+### COULD-NOT-CHECK
+
+1. **Their harmlessness is unproven:** 62 of the 73 non-declared POST rules never contacted a provider under any
+   payload tried. "0 undeclared reached a write" is a measurement over the payloads attempted, not proof about
+   the routes.
+2. **Reachability is conditional on connector configuration:** with seeded scratch state the sweep reaches 25 of
+   26 declared entries, but against the **as-shipped database copy only 11 of 26** are reachable. The declared
+   surface's reachability in a given configuration is a precondition of the count, not a property of the set.
+3. **Provider reads were synthetic,** so a route gated by a read shape the harness did not guess could still hide
+   a write.
+
+**Safety ledger:** 0 outbound-network events, 0 `crew-write` CLI invocations, no repository file modified (no
+tracked edits, no new `.pyc`).
+
+---
+
+## Claim 3 — "Today and Plan publish one money rule" — **FALSIFIED, narrowly**
+
+**As written** (`STATE_OF_THE_SYSTEM.md:106`, the guards table): *"tests/meridian/test_safe_to_spend_agreement.py
+(yes) | Today and Plan publish one figure from one rule"*; also `AGENT_COORDINATION.md:150` and
+`TODAY_PLAN_SPEND_ALIGNMENT_2026-09-25.md:8`. The binding instruction is D-024
+(`MERIDIAN_DECISIONS.md:460`), whose rule is: `total = Σ money accounts + reserve` (SIGNED), set aside = every
+active pocket except the spend pocket, positive balances only, `amount = total − set aside − max(0, reserve)`,
+**never clamped**.
+
+**Instrument (different): the app's HTTP surface.** `app.test_client()` against the real application — through
+Flask routing, `@login_required`, `@_safe_read`, the repository-factory seam, query-string parsing and
+`jsonify`. Scratch SQLite in `/tmp` with the app running its own migrations and invented accounts seeded through
+the repository API; provider client and health service replaced with abort stubs; sockets refused on any
+non-local address (zero violations, nothing left the machine). The author's evidence is a Python-function
+comparison inside the unit fixture (`build_today()`/`build_plan()` over a seeded repository), which bypasses
+every layer above.
+
+**The falsification — the unobserved state.** In **4 of 21 scenarios** both endpoints returned HTTP 200 and the
+same quantity diverged:
+
+| scenario | Today `safe_to_spend.amount` | Plan `allocation.cash_total` |
+|---|---|---|
+| nothing observed at all | **null**, status `unavailable` | **0.0**, segments all 0.0 |
+| only a credit-type account | **null** | **0.0** |
+| only a reserve row, no accounts | **null** | **0.0** |
+| only EUR money, figured currency USD | **null** | **0.0** |
+
+These are the same quantity by the project's own mapping — *"the same number, same rule, same repository"* — so
+this is not a shape difference. In the fourth case both surfaces **know** money exists (Today's
+`available_cash.by_currency` shows EUR) while Plan still publishes a USD-shaped zero.
+
+**Adjudication, which the verifier read afterwards and did not treat as its own instrument:** the claim's own
+guard asserts this exact asymmetry — `tests/meridian/test_safe_to_spend_agreement.py:260-264` requires Today's
+amount to be `None` with status `unavailable` **and** Plan's segments to be `[0.0, 0.0, 0.0]`; its docstring
+(`:244-245`) states: *"Neither workspace may invent a 0.00: that would claim an observation the read did not
+make. Today withholds the figure and says unavailable; Plan's partition is three zeros."* So the falsification
+is of **the claim as written** and of the project's own absence rule (D-017/C01) — **not** of the author's
+declared acceptance condition, which names the exception. A reader who accepts the guard's exception would call
+it CONFIRMED.
+
+**Ledger sentence, as the verifier framed it:** *"the shared rule is confirmed wherever a figure is stated, but
+the pair does not publish one figure in the unobserved state — Today withholds, Plan states 0.00 — and the guard
+encodes that asymmetry as intended."*
+
+**Confirmed by the same sweep (17 of 21), including both pre-registered discriminators:** a positive reserve; a
+**negative** reserve that reduces the figure and is **not clamped** (D-019 rule 2); mixed signs; an overdrawn
+set-aside pocket; inactive pockets and inactive checking; investment-type accounts; a non-USD currency;
+Crew-selected spend pocket (basis `crew_selection`) including where the selection contradicts the spend name.
+Side check: `?as_of=2000-01-01` and `?as_of=2030-01-01` leave both figures unchanged — no `as_of` dependence in
+the money figure.
+
+### F2 — a shared-rule collapse, not a divergence: silence and a reported zero are the same number
+
+A reserve row with `total_reserved_amount` **NULL**, **no row at all**, and a **reported 0.00** all publish the
+identical pair (Today and Plan agree with each other in all three). The reserve term therefore does not
+distinguish "the provider said nothing" from "the provider said zero" — the distinction this repository enforces
+elsewhere (migration 031's `reported` flag) and the one F4/§Evidence-map work depends on. **Both surfaces are
+wrong together**, which is why a pair-agreement test cannot see it.
+
+### F3 — observation, not a falsification: the "Safe to Spend" name hazard, measured
+
+With two ACTIVE pockets both named "Safe to Spend", Today reports `spend_pocket_basis: "name"`, subtracts one of
+them, and Plan follows. The surfaces agree; **the arbitrary pick lives inside the shared rule**, exactly where
+the owner's recorded hazard says it would.
+
+### ⚠ Warning for any future harness: `/plan` is not isolated from live data by a scratch database
+
+`meridian/services/plan.py:71` reads a **real local file** — `~/Library/Application
+Support/SimpleCrew/live_crew_snapshot.txt` — for its `crew_ids` block, regardless of which database the app is
+pointed at. An early exploratory run **surfaced a real subaccount identifier** from it (not reproduced, and not
+recorded here). The verifier isolated it by pointing `plan._CREW_SNAPSHOT_PATH` at a non-existent path, and every
+figure above was produced with that stub in place (the figures were unchanged by it). **A scratch DB is not
+sufficient isolation for `/plan`.**
+
+### The scenario set, recorded so the harness can be rebuilt
+
+The verifier's scripts lived in `/tmp` and will not survive, so the **scenarios** — the durable asset — are
+recorded here. Precondition for all: scratch SQLite with migrations run by the app, synthetic accounts and
+reserves seeded through the repository API, provider stubbed, non-local sockets refused. Today's figure is
+`safe_to_spend.amount`; Plan's is `allocation.segments[label=Available].amount`.
+
+**Agreed (17 of 21):** positive reserve (with a goal pocket); **negative reserve** that reduces the figure
+(D-019's own case); reserve minus a pocket, negative and **not clamped**; two positive reserves; mixed signs;
+mixed signs net negative; overdrawn set-aside pocket; inactive pocket carrying a balance; inactive checking
+carrying a balance; investment/other account types; USD + EUR money; Crew selection by id where the pocket is not
+spend-named (basis `crew_selection`); selection contradicting the spend *name* (basis `crew_selection`); two
+active pockets both spend-named (basis `name`, see F3); reserve row with NULL total (see F2); no reserve row (see
+F2); reserve reported 0.00 (see F2).
+
+**Diverged (4 of 21):** nothing observed at all; only a credit-type account; only a reserve row with no accounts;
+only EUR money where the figured currency is USD.
+
+**Side check:** `?as_of=2000-01-01` and `?as_of=2030-01-01` leave both figures unchanged — the money figure has
+no `as_of` dependence.
+
+### Could not check over HTTP
+
+Whether Plan's published `0.0` reaches the owner as a *rendered* figure: `static/js/meridian/plan.js:185` reads
+`…find(s => s.label === "Available")?.amount || <fallback>`, and `0.0` is falsy, so it may fall through to a
+fallback at the render layer. Not driven in a browser, so **not claimed**. The live-provider path was not driven
+and must not be.
+
+---
+
 ## Claim 2 — "the ungoverned write surface is exactly the 26 declared routes" — **INTERIM**
 
 Instrument running: the live Flask app object with the test client, **all provider transports stubbed**
