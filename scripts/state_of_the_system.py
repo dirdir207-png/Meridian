@@ -195,6 +195,50 @@ def _ledger_snapshot() -> dict:
 # --------------------------------------------------------------------------- render
 
 
+def _route_mechanisms() -> dict[str, list[str]]:
+    """Declared route -> the raw mechanism(s) it reaches, transitively.
+
+    Uses the RATCHET's own detector (`_handler_map`, `_calls_in`, `_has_inline_mutation`,
+    `RAW_MUTATION_CALLS`) rather than a second implementation, so "reaches a raw mutation" has exactly one
+    definition in this repository. What this adds is the NAMING: the ratchet answers yes/no, and the shape
+    decision for each route needs to know WHICH provider mutation it performs.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("_ratchet", RATCHET)
+    ratchet = importlib.util.module_from_spec(spec)
+    sys.modules["_ratchet"] = ratchet
+    spec.loader.exec_module(ratchet)
+    routes, functions = ratchet._handler_map()
+    app_source = (ROOT / "app.py").read_text()
+    out: dict[str, list[str]] = {}
+    for path in sorted(ratchet.KNOWN_UNGOVERNED_MUTATING_ROUTES):
+        handler = routes.get(path)
+        if handler is None:
+            out[path] = ["HANDLER NOT FOUND"]
+            continue
+        seen: set[str] = set()
+        stack = [handler]
+        found: set[str] = set()
+        while stack:
+            current = stack.pop()
+            if current.name in seen:
+                continue
+            seen.add(current.name)
+            called = ratchet._calls_in(current)
+            found |= called & ratchet.RAW_MUTATION_CALLS
+            if ratchet.MUTATION_FLAG in called:
+                found.add("crew_client(is_mutation=True)")
+            if ratchet._has_inline_mutation(current) and ({"post", "execute", "execute_graphql"} & called):
+                segment = ast.get_source_segment(app_source, current) or ""
+                for name in sorted(set(re.findall(r"mutation\s+(\w+)", segment))):
+                    found.add(name)
+            for name in called & set(functions):
+                stack.append(functions[name])
+        out[path] = sorted(found) or ["** unresolved **"]
+    return out
+
+
 def render() -> str:
     cap = _capability()
     total_routes, post_routes = _routes()
@@ -251,6 +295,20 @@ def render() -> str:
     add("run — and one of them (`/api/cards/<card_id>/sensitive`) mints a card-details view token rather than")
     add("moving money, which is why the FINANCIAL count and the DECLARED count differ by one. Quote whichever the")
     add("question is about, and say which.")
+    add("")
+
+    add("## Derived from code — what each ungoverned route actually performs")
+    add("")
+    add("The ratchet answers *whether* a route reaches a raw mutation; the shape decision for OS-119 needs")
+    add("*which* one. Both come from the same detector, so there is one definition of \"reaches a raw mutation\"")
+    add("in this repository. Whether a mechanism has a governed carrier is recorded in")
+    add("`docs/project/OS119_MIGRATION_BY_EVIDENCE.md`, which cites the connector's own document list as its")
+    add("instrument — a cross-repository fact that cannot be re-derived from this tree alone.")
+    add("")
+    add("| route | raw mechanism(s) reached |")
+    add("|---|---|")
+    for path, mechanisms in _route_mechanisms().items():
+        add(f"| `{path}` | {', '.join('`' + m + '`' for m in mechanisms)} |")
     add("")
 
     add("## Derived from code — modules nothing else names")

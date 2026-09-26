@@ -36,6 +36,43 @@ run — and one of them (`/api/cards/<card_id>/sensitive`) mints a card-details 
 moving money, which is why the FINANCIAL count and the DECLARED count differ by one. Quote whichever the
 question is about, and say which.
 
+## Derived from code — what each ungoverned route actually performs
+
+The ratchet answers *whether* a route reaches a raw mutation; the shape decision for OS-119 needs
+*which* one. Both come from the same detector, so there is one definition of "reaches a raw mutation"
+in this repository. Whether a mechanism has a governed carrier is recorded in
+`docs/project/OS119_MIGRATION_BY_EVIDENCE.md`, which cites the connector's own document list as its
+instrument — a cross-repository fact that cannot be re-derived from this tree alone.
+
+| route | raw mechanism(s) reached |
+|---|---|
+| `/api/account/autopilot-rules/create` | `CreateRoundUpRule` |
+| `/api/account/autopilot-rules/delete` | `DeleteRule` |
+| `/api/account/autopilot-rules/update` | `EditRoundUpRule` |
+| `/api/cards/<card_id>/sensitive` | `GenerateViewSadToken` |
+| `/api/create-bill` | `CreateBill`, `create_bill_action` |
+| `/api/create-pocket` | `CreateSubaccount`, `create_pocket` |
+| `/api/delete-bill` | `DeleteBill`, `delete_bill_action` |
+| `/api/delete-pocket` | `DeleteSubaccount`, `delete_subaccount_action` |
+| `/api/lunchflow/change-account` | `DeleteSubaccount`, `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `delete_subaccount_action`, `move_money` |
+| `/api/lunchflow/create-pocket-with-balance` | `CreateSubaccount`, `create_pocket` |
+| `/api/lunchflow/stop-tracking` | `DeleteSubaccount`, `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `delete_subaccount_action`, `move_money` |
+| `/api/lunchflow/sync-balance` | `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `move_money` |
+| `/api/manual-cc/create` | `CreateSubaccount`, `create_pocket` |
+| `/api/manual-cc/remove` | `DeleteSubaccount`, `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `delete_subaccount_action`, `move_money` |
+| `/api/manual-cc/top-up` | `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `move_money` |
+| `/api/move-money` | `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `move_money` |
+| `/api/set-card-spend` | `SetActiveSpendPocketScottie`, `UpdateVirtualDebitCard`, `for`, `set_spend_pocket_action` |
+| `/api/simplefin/change-account` | `DeleteSubaccount`, `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `delete_subaccount_action`, `move_money` |
+| `/api/simplefin/create-pocket-with-balance` | `CreateSubaccount`, `InitiateTransferScottie`, `create_pocket`, `crew_client(is_mutation=True)`, `move_money` |
+| `/api/simplefin/disconnect` | `DeleteSubaccount`, `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `delete_subaccount_action`, `move_money` |
+| `/api/simplefin/stop-tracking` | `DeleteSubaccount`, `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `delete_subaccount_action`, `move_money` |
+| `/api/simplefin/sync-balance` | `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `move_money` |
+| `/api/simplefin/sync-now` | `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `move_money` |
+| `/api/splitwise/create-pockets` | `CreateSubaccount`, `create_pocket` |
+| `/api/splitwise/disconnect` | `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `move_money` |
+| `/api/splitwise/sync-now` | `InitiateTransferScottie`, `crew_client(is_mutation=True)`, `move_money` |
+
 ## Derived from code — modules nothing else names
 
 1 of 112 modules under `meridian/` are never named by any other module, the app, a script or a test (dotted-path search). A module here is *buried, not lost*: it exists, it may be complete, and nothing calls it.
