@@ -138,13 +138,74 @@ tree alone". This verdict therefore confirms the document's own honesty rather t
 
 ---
 
-## Claims 2–4 — in flight
+## Claim 4 — "the allocation ordering rule" — **FALSIFIED**
+
+**As written** (`docs/project/OS058_FUNDING_EVENT_MEASUREMENT.md`):
+- `:172` — *"**Crew's `bills` array is a SORT, not a fixed list — and the key is now proven.** Order matches
+  `(daysOverdue desc, reservedBy asc)` on BOTH dates, exactly"*
+- `:109` — *"consistent with `daysOverdue DESC`, then `reservedBy ASC`, plus a deterministic tie-breaker"*
+- `:401` — *"the ordering and the tie-break: higher `daysOverdue` → earlier `reservedBy` → **lower bill
+  amount**"*
+
+`STATE_OF_THE_SYSTEM.md` and `INTEGRATION_AUDIT_2026-09-25.md` assert **no** allocation-ordering rule (a
+negative, established there by exhaustive keyword search — `:110-125` explicitly lists provider-side
+attribution as unreadable).
+
+**Instrument (different): the raw provider read.** The only raw provider material that survives is
+`Simplecrew Branch/data/live_crew_snapshot.txt` (80,538 B, sha256 `138d6b7328ffd17e…`, captured
+2026-09-04T18:10:19Z, `mode=read-only`, `complete=True`, `mutations_enabled=False`) — one
+`accounts[0]/billReserve/bills` array, 5 bills. Its own fields were sorted by an independent script
+(`/tmp/raw_derive.py`, `/tmp/raw_derive2.py`; nothing written to the repository). The author's rule came from
+two owner-authorized **injected** experiments and his "09-04 column" is a transcription of the array, not an
+independent re-sort.
+
+**Four falsifications.**
+
+- **F1 — the rule's PRIMARY sort key is unobserved on the only raw capture.** All five bills carry
+  `daysOverdue` **present-but-NULL** (0 explicit zeros, 0 non-null). `daysOverdue DESC` is therefore
+  indistinguishable from omitting it, and *"the key is now proven"* is not proven by any raw read that exists.
+  What the raw read does prove is the **secondary** key: raw array order equals `reservedBy ASC` exactly
+  (09-16, 09-16, 09-20, 09-22, 09-28), and differs from `amount` in both directions. The 09-25 array exists
+  **only as a document transcription** — no raw payload for it survives in either tree — and it is not
+  reproducible by any pure sort on provider fields (two bills tie on both date and amount).
+- **F2 — the rule's full form misorders the credited bill on the raw read.** Derived independently over the raw
+  fields, treating absent as 0 as the document does, the order is [B2, B1, B3, B4, B5]; the raw array is
+  [B1, …]. B1 and B2 share the soonest `reservedBy`; B2 is the **lower** amount and holds 0.00, while B1 is the
+  larger and holds the entire bucket (1 of 5 rows non-zero). The asserted tie-break — *lower amount wins an
+  equal deadline* — **predicts the wrong bill** on the only natural, unfixtured raw allocation available. The
+  document itself marks this contradiction **OPEN** (`:232-237`); the application's status record still relies
+  on it operationally (`CURRENT_STATUS.md:25-26`: *"under the measured equal-deadline ordering the smaller
+  probes outrank it"*). **A contradiction its own source calls open is being used as a live premise.**
+- **F3 — absent and zero are conflated.** On this same capture `reservedAmount` is present with 4 explicit
+  zeros and 1 non-zero — the repository's own distinction is directly observable — while `daysOverdue` is
+  present-and-NULL for every bill. The rule folds NULL into the same term as 0, and nothing documents how a
+  NULL key orders; a mechanical Python port of the rule raises `TypeError` on this exact payload.
+- **F4 — the application does not implement the ordering the claim attributes to it.** `app.py:2059` sorts
+  bills by `reservedBy` ascending with a `"9999-12-31"` null sentinel and **drops `daysOverdue` entirely**;
+  `meridian/**` never references `daysOverdue` (it appears only in the raw GraphQL field list,
+  `app.py:2002`); the single consumer of `reserved_by` is `meridian/services/dial.py:275`, which compares ONE
+  bill's deadline and never an order. The only stored allocation series carries no `daysOverdue` and is 100%
+  zero-or-silent (11,484 rows across 1,044 captures, 0 non-zero, 0 silent-but-... as measured).
+
+**COULD-NOT-CHECK:** cascade/capacity behaviour, which needs a natural non-zero provider read. All non-zero
+evidence in this repository is injected (owner-authorized top-ups), and the continuous store begins after the
+unwind (22:30:58Z).
+
+**CONFIRMED (narrow):** `reservedBy ASC` as the observable secondary ordering — the entire 2026-09-04
+single-read state is fully described by *array = reservedBy-ascending*.
+
+**Consequence, stated without prescribing a fix:** the claim is unsupported at the primary-key level by any raw
+data that exists, contradicted at the tie-break level by the one natural raw allocation, and **not implemented**
+in the application — while remaining in operational use in the status record.
+
+---
+
+## Claims 2–3 — in flight
 
 | # | claim | instrument prescribed | status |
 |---|---|---|---|
 | 2 | the ungoverned write surface is exactly the 26 declared routes | hit the routes through HTTP with the provider stubbed | in flight |
 | 3 | Today and Plan publish one money rule | the HTTP surface, not the unit fixture | in flight |
-| 4 | the allocation ordering rule | the raw provider read, not the document | in flight |
 
 Their verdicts are appended below when they return. Each will carry its instrument, its scope, and its own
 COULD-NOT-CHECK column; any falsification goes to the owner first, as instructed.
