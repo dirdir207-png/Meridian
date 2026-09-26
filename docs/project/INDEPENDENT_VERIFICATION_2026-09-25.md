@@ -310,6 +310,27 @@ recorded here). The verifier isolated it by pointing `plan._CREW_SNAPSHOT_PATH` 
 figure above was produced with that stub in place (the figures were unchanged by it). **A scratch DB is not
 sufficient isolation for `/plan`.**
 
+### The scenario set, recorded so the harness can be rebuilt
+
+The verifier's scripts lived in `/tmp` and will not survive, so the **scenarios** — the durable asset — are
+recorded here. Precondition for all: scratch SQLite with migrations run by the app, synthetic accounts and
+reserves seeded through the repository API, provider stubbed, non-local sockets refused. Today's figure is
+`safe_to_spend.amount`; Plan's is `allocation.segments[label=Available].amount`.
+
+**Agreed (17 of 21):** positive reserve (with a goal pocket); **negative reserve** that reduces the figure
+(D-019's own case); reserve minus a pocket, negative and **not clamped**; two positive reserves; mixed signs;
+mixed signs net negative; overdrawn set-aside pocket; inactive pocket carrying a balance; inactive checking
+carrying a balance; investment/other account types; USD + EUR money; Crew selection by id where the pocket is not
+spend-named (basis `crew_selection`); selection contradicting the spend *name* (basis `crew_selection`); two
+active pockets both spend-named (basis `name`, see F3); reserve row with NULL total (see F2); no reserve row (see
+F2); reserve reported 0.00 (see F2).
+
+**Diverged (4 of 21):** nothing observed at all; only a credit-type account; only a reserve row with no accounts;
+only EUR money where the figured currency is USD.
+
+**Side check:** `?as_of=2000-01-01` and `?as_of=2030-01-01` leave both figures unchanged — the money figure has
+no `as_of` dependence.
+
 ### Could not check over HTTP
 
 Whether Plan's published `0.0` reaches the owner as a *rendered* figure: `static/js/meridian/plan.js:185` reads
