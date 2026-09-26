@@ -25,6 +25,8 @@ and the app had been up since 15:44, before the ingest fix. Two operational fact
 **Open risk, unchanged by the unwind:** the `Allocation Probe*` bills still share `reservedBy 2026-09-30`
 with Eversource's real 210.00, and under the measured equal-deadline ordering the smaller probes outrank it.
 
+> **CORRECTED 2026-09-26:** the ordering this sentence relies on is **FALSIFIED AS WRITTEN** — the primary key (`daysOverdue desc`) is unobserved on the only raw provider read, and the asserted equal-deadline tie-break ('lower amount wins') predicts the **wrong bill** on the only natural unfixtured allocation. Only `reservedBy` ascending survives, as an observable secondary order. Instrument and preconditions: `docs/project/INDEPENDENT_VERIFICATION_2026-09-25.md` §Claim 4. The probe risk itself remains closed by the owner (2026-09-25: fixtures for the upcoming bill overhaul); what changes is that no ordering rule may be quoted as its reason.
+
 ## 2026-09-25: owner-authorized capacity experiment observed the complete current reserve cascade
 
 Five real internal top-ups, each followed by a complete settling read, filled the current Crew bills in

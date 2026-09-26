@@ -7,6 +7,8 @@ requires global trust, and global trust is exactly what a reader cannot have. So
 global question. Each route moves only when **its own** evidence is complete, nothing is ever removed, and
 stopping halfway loses nothing.
 
+**The denominator is the DECLARED set, and an independent sweep has not confirmed it complete.** The independent verification lane (2026-09-26, `docs/project/INDEPENDENT_VERIFICATION_2026-09-25.md` §Claim 2) measured the RUNTIME population at **200 route rules, 98 accepting POST**, while the generated document's static parse reports 140/74 — different populations, not interchangeable — and found `/api/cards/<card_id>/sensitive` to be **GET-only at runtime** while standing in a set described as POST routes. Both verdicts are INTERIM, and an earlier sweep was gated by local database state (15 declared routes), so "0 undeclared" was stated against an incomplete denominator. Consequence: **"22 of 26 ready" is a statement about the declared set, never about the whole surface** — a hardened sweep may enlarge the queue, and nothing here claims the list is closed. The invariants, gate and queue are unaffected, because they are per-route and the queue can grow.
+
 **Instruments used, and their limits.** The route→mechanism mapping is **generated** from this repository
 (`docs/project/STATE_OF_THE_SYSTEM.md` §"what each ungoverned route actually performs", produced by
 `scripts/state_of_the_system.py` using the ratchet's own detector, so "reaches a raw mutation" has one

@@ -24,9 +24,16 @@ staleness check on purpose, so ordinary documentation edits do not invalidate th
 
 | | count |
 |---|---:|
-| route rules registered (app + meridian blueprint) | 140 |
-| rules accepting POST | 74 |
+| route decorators parsed STATICALLY (app + meridian blueprint) | 140 |
+| — of those, accepting POST | 74 |
+| route rules at RUNTIME (independent harness) | 200 |
+| — of those, accepting POST | 98 |
 | POST routes declared to reach a raw Crew mutation | 26 |
+
+The two route populations above are NOT interchangeable: a static decorator parse cannot see blueprint or
+`add_url_rule` registrations. The runtime figures are the independent verification lane's, quoted with their
+instrument for that reason (`INDEPENDENT_VERIFICATION_2026-09-25.md` §Claim 2). The static count is the one that
+stays reproducible here; the runtime count is the one that describes the app.
 
 The declared set is asserted exactly by `tests/test_governed_write_routes.py`, which fails both when the
 set grows and when a declared route is fixed without updating the declaration. It is therefore the
@@ -75,7 +82,7 @@ instrument — a cross-repository fact that cannot be re-derived from this tree 
 
 ## Derived from code — modules nothing else names
 
-1 of 112 modules under `meridian/` are never named by any other module, the app, a script or a test (dotted-path search). A module here is *buried, not lost*: it exists, it may be complete, and nothing calls it.
+1 of 112 modules under `meridian/` are never NAMED by any other module, the app, a script or a test (dotted-path text search). This is a NAMING instrument and it does not answer whether a module is LOADED. An independent runtime tracer, exercising 13 GET responses, found that the application loads only three files from `meridian/ai/` — `__init__.py`, `advisor.py`, `classifier.py` — and does NOT load the agent-role layer at all (`role`, `envelope`, `run_records`, `council`, `investigator`, `skeptic`, `facts`, `evaluation`); see `INDEPENDENT_VERIFICATION_2026-09-25.md` §Claim 5. Do not read a short list here as "nothing is buried": it is a claim about NAMING.
 
 * `meridian/ai/investigation_service.py`
 
@@ -83,13 +90,13 @@ instrument — a cross-repository fact that cannot be re-derived from this tree 
 
 | | |
 |---|---|
-| tasks in the ledger | 136 |
+| tasks in the ledger | 137 |
 | — blocked | 10 |
 | — complete | 79 |
 | — done | 18 |
 | — in_progress | 6 |
 | — open | 13 |
-| — ready | 10 |
+| — ready | 11 |
 | tasks carrying an owner question | 16 |
 
 ## What is checked, and by what

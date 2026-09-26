@@ -284,9 +284,16 @@ def render() -> str:
     add("")
     add("| | count |")
     add("|---|---:|")
-    add(f"| route rules registered (app + meridian blueprint) | {total_routes} |")
-    add(f"| rules accepting POST | {post_routes} |")
+    add(f"| route decorators parsed STATICALLY (app + meridian blueprint) | {total_routes} |")
+    add(f"| — of those, accepting POST | {post_routes} |")
+    add("| route rules at RUNTIME (independent harness) | 200 |")
+    add("| — of those, accepting POST | 98 |")
     add(f"| POST routes declared to reach a raw Crew mutation | {len(ungoverned)} |")
+    add("")
+    add("The two route populations above are NOT interchangeable: a static decorator parse cannot see blueprint or")
+    add("`add_url_rule` registrations. The runtime figures are the independent verification lane's, quoted with their")
+    add("instrument for that reason (`INDEPENDENT_VERIFICATION_2026-09-25.md` §Claim 2). The static count is the one that")
+    add("stays reproducible here; the runtime count is the one that describes the app.")
     add("")
     add("The declared set is asserted exactly by `tests/test_governed_write_routes.py`, which fails both when the")
     add("set grows and when a declared route is fixed without updating the declaration. It is therefore the")
@@ -314,9 +321,13 @@ def render() -> str:
     add("## Derived from code — modules nothing else names")
     add("")
     add(
-        f"{len(orphans)} of {module_count} modules under `meridian/` are never named by any other module, the app,"
-        " a script or a test (dotted-path search). A module here is *buried, not lost*: it exists, it may be"
-        " complete, and nothing calls it."
+        f"{len(orphans)} of {module_count} modules under `meridian/` are never NAMED by any other module, the app,"
+        " a script or a test (dotted-path text search). This is a NAMING instrument and it does not answer whether a"
+        " module is LOADED. An independent runtime tracer, exercising 13 GET responses, found that the application loads"
+        " only three files from `meridian/ai/` — `__init__.py`, `advisor.py`, `classifier.py` — and does NOT load the"
+        " agent-role layer at all (`role`, `envelope`, `run_records`, `council`, `investigator`, `skeptic`, `facts`,"
+        " `evaluation`); see `INDEPENDENT_VERIFICATION_2026-09-25.md` §Claim 5. Do not read a short list here as"
+        " \"nothing is buried\": it is a claim about NAMING."
     )
     add("")
     for path in orphans:
