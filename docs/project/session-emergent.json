@@ -84,6 +84,14 @@
       "summary": "docs/project/session-emergent.json contained NINETEEN byte-identical copies of the same hot-memory item, and because the handoff generator repeats each entry verbatim, docs/project/HANDOFF.md carried that one item 19 times (its 'SESSION-EMERGENT' section was dominated by a single duplicated paragraph). Deduplicated to one in this change; the generator does not deduplicate, so an accidental repeated append silently inflates every future handoff.",
       "decision_owed": false,
       "parked_in": "docs/project/AGENT_COORDINATION.md (process hygiene: release pass + a guard over claim age)"
+    },
+    {
+      "id": "emergent-unapplied-mitmproxy-catalog-correction-2026-09-25",
+      "arose": "2026-09-25",
+      "summary": "`docs/project/CREW_GRAPHQL_CATALOG.md:62-69` carries four \"Key corrections to ORSC `crew_commands.py`\" from the 2026-09-07 mitmproxy capture of the live native app. Three are now applied (the roundUpTransfer-only autopilot rule is FIXED: `meridian/crew_commands.py:364-366` carries all eight action types with builders through `:422`, including `sweepExcess` requiring `sweepDestinations`; conditions support IdMatch/Or/And at `:339,347,432-434`). **Correction 2 is NOT applied**: the capture records `CreateBill` as `{input{accountId,name,amount(¢),frequency,anchorDate,frequencyInterval,reassignmentRule{match,transactionType,debitCardId}}}`, while our `create_bill` document sends no `reassignmentRule` at all (`meridian/crew_commands.py:200-211`) and the string `transactionType` appears NOWHERE in `meridian/` or `app.py`. The only `debitCardId` we send belongs to `update_virtual_card`, a different operation. So a bill cannot be created with its transaction-matching rule attached, and the per-bill match fields are unsupported — documented in this repository since 2026-09-07 and never built. Named as NOT LOST (we never had it) rather than as a regression: the distinction is the whole point of the question that surfaced it.",
+      "decision_owed": true,
+      "owner_question": "Widen the bill write contract to carry `reassignmentRule{match, transactionType, debitCardId}`? It is the provider's own contract, captured from the live app, and it would still travel proposal -> approval -> execution -> verification — but it DOES widen what a governed action may send, so it is his call, not a side effect of a fix. Separately: the sibling design's A14 double-funding prohibition (\"money already under Crew Autopilot must be marked Crew-managed; Meridian cannot independently fund the same obligation twice\") still has NO carrier — `meridian/funding_proposals.py:22-70` emits one proposal per funded event with no such check — and that already sits with OS-122/OS-127.",
+      "parked_in": "docs/project/CREW_GRAPHQL_CATALOG.md:62-69 (the corrections list) + INTEGRATION_AUDIT_2026-09-25.md §6"
     }
   ]
 }
