@@ -1266,3 +1266,33 @@ lessons this lane internalised on the same day — *interrogate the denominator*
 ## OS-116 planning clarification — 2026-09-26 (proposal, not a new approved decision)
 
 The owner asked to complete the interrupted design-and-plan request. The resulting spec and plan are `docs/superpowers/specs/2026-09-26-reserve-timeline-design.md` and `docs/superpowers/plans/2026-09-26-reserve-timeline.md`. Newer OS-130 records a captured/replayed provider projection, superseding OS-116’s older no-source assumption for planning; it does not prove installed ingestion. Recommend that source with ordered rows and an independent observed-allocation view. Three visual studies are offered, none selected. Preserve OS-059/OS-130 gates, assigned roadmap order, and all existing financial/release boundaries. No universal allocation tie-break is adopted.
+
+---
+
+## D-043 — The Reserve Timeline's governing study is Option 2, "Pay-cycle Chapters" (owner, 2026-09-26)
+
+**Owner's selection, verbatim:** *"Selected visual reference — Option 2, Pay-cycle Chapters"*, given when he directed the
+bounded DeepSeek Harness handoff for OS-116. The plan had recommended Direction 1 (Observatory Ledger) and stated
+explicitly that *"Direction 1 is a recommendation, not an owner decision"* — so this is the decision that was owed, and
+recording it here is what stops a future session inferring the visual choice from the recommendation.
+
+**Study:** `design/reserve-timeline-2026-09-26/02-pay-cycle-chapters.png`, with `manifest.json` in the same directory.
+The existing Timeline authority is `design/observatory-extension-2026-09-18/concepts/timeline.png` plus that
+directory's `BUILD_HANDOFF.md` and `tokens.css`.
+
+**The corrections are not optional and are not re-negotiated by this decision.** The spec's §"Required corrections to
+the studies" (`docs/superpowers/specs/2026-09-26-reserve-timeline-design.md`, lines 64-73) governs over the generated
+imagery: the title is **Reserve Timeline**; one verified reserve and currency; the generated "All accounts" control is
+removed; same-day events stay on their dates; provider row coordinates are plotted as they are (no smoothed line,
+invented dates, or even spacing implying elapsed time); zero and negative balances render accurately; internal
+transfers are not income-green; decorative moon/sun symbols must not imply day/night; oversized header artwork shrinks
+before body text does; and all text and chart geometry is real accessible UI, never a raster screenshot background.
+
+**One substantive caveat that the selected direction makes more dangerous, not less.** The spec's own tradeoff for this
+direction is that *"chapter boundaries can obscure cross-cycle obligations"* and *"must never infer a cycle from an
+unverified schedule"*. So the chapters may group only what a verified funding schedule supports; where no schedule is
+verified, there are no chapters, and the view says so rather than inventing a pay cycle.
+
+**Scope of this decision.** It selects a visual direction for one surface. It authorizes no money model, no write path,
+no provider mutation, and no deployment — the implementation boundaries are the handoff and the plan, and the owner's
+release gate stands at the end.
