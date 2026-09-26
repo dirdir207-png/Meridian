@@ -1,0 +1,100 @@
+{
+  "captured_at": "2026-09-26T17:54:30.383332+00:00",
+  "operation_name": "AutopilotReserveProjectionScreen",
+  "host": "api.trycrew.com",
+  "http_status": 200,
+  "graphql_error_count": 0,
+  "variables_shape": {},
+  "response_shape": {
+    "data": {
+      "currentUser": {
+        "__typename": "string",
+        "id": "string",
+        "spendAccount": {
+          "__typename": "string",
+          "billReserve": {
+            "__typename": "string",
+            "autopilotReserveProjection": {
+              "__typename": "string",
+              "asOfDate": "string",
+              "firstNegative": {
+                "__typename": "string",
+                "balance": "number",
+                "date": "string"
+              },
+              "lowPoint": {
+                "__typename": "string",
+                "balance": "number",
+                "date": "string"
+              },
+              "maximumBalance": "number",
+              "openingBalance": "number",
+              "rows": {
+                "array": [
+                  {
+                    "__typename": "string",
+                    "amount": "number",
+                    "balance": "number",
+                    "date": "string",
+                    "events": {
+                      "array": [
+                        {
+                          "__typename": "string",
+                          "amount": "number",
+                          "name": "string",
+                          "sourceId": "string",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "id": "string",
+            "nextFundingDate": "string",
+            "permittedActions": {
+              "__typename": "string",
+              "billReserveTopUp": "boolean"
+            },
+            "projectedNsfDate": "string",
+            "settings": {
+              "__typename": "string",
+              "funding": {
+                "__typename": "string",
+                "adjustForOverage": "boolean",
+                "bufferDays": "number",
+                "subaccount": {
+                  "__typename": "string",
+                  "displayName": "string",
+                  "id": "string"
+                }
+              }
+            },
+            "totalFundingAdjustment": "number"
+          },
+          "id": "string"
+        }
+      }
+    }
+  },
+  "query_string_literals_redacted": 0,
+  "projection_checks": {
+    "data.data.currentUser.spendAccount.billReserve.autopilotReserveProjection": {
+      "row_count": 451,
+      "multi_event_rows": 132,
+      "dates_nondecreasing": true,
+      "event_types": [
+        "ALLOCATION",
+        "BILL",
+        "PAYCHECK"
+      ],
+      "row_amounts_equal_event_sums": true,
+      "balances_reconcile": true,
+      "first_negative_matches_row": true,
+      "low_point_matches_row_minimum": true
+    }
+  },
+  "privacy": "No headers, variable values, raw response values or flow files saved.",
+  "units": "Unresolved by shape alone; must corroborate with provider UI or schema."
+}

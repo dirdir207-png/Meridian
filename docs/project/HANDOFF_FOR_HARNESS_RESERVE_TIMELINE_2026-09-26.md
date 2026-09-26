@@ -36,34 +36,32 @@ income-green; decorative moon/sun symbols must not imply day/night; shrink overs
 body text; and all text and chart geometry must be real accessible UI, never a raster screenshot background. A
 pay-cycle chapter boundary must **never be inferred from an unverified schedule**.
 
-## Known gap — the captured projection query is NOT in any tree (resolve this first, do not invent around it)
+## Projection contract capture — now available
 
 Task 1 says: *"Inspect the actual captured `AutopilotReserveProjectionScreen` query, variable contract and units … Do not
-invent a query from this plan's field inventory."* Verified 2026-09-26: **the query text exists in no readable tree.**
-A workspace-wide search (`grep -rl "AutopilotReserveProjection|reserveProjection|ProjectionScreen"` across the Meridian
-checkout, `/tmp`, and the read-only ChatGPT-side tree) returns only *references* — the task ledger, the generated
-handoff, the plan and the spec. The connector carries **no** projection operation at all (0 hits for `projection`
-anywhere in its `.graphql`/`.py`/`.md`; 15 read operations total).
+invent a query from this plan's field inventory."* A fresh read-only capture is now available under
+`docs/project/captures/2026-09-26-reserve-projection/`. The connector still has no projection operation; this
+capture was made from the logged-in native Crew app through a temporary local proxy.
 
-What *is* recorded, and is the contract you may work from: OS-130's ledger entry — captured 2026-09-20 from the native
+What is now recorded, and is the contract you may work from: the fresh sanitized query and structural response shape,
+plus OS-130's older ledger entry — captured 2026-09-20 from the native
 app (Banking → Autopilot → Plan reserve, mitmproxy with a trusted certificate reused, upstream TLS verification left
 on, **no raw flows or scalar financial values saved**), independently **replayed through the Keychain-backed
 connector**: HTTP 200, no GraphQL errors, `asOfDate` 2026-09-20, **452 rows to 2031-12-30**, dates nondecreasing, 132
 rows with multiple events, every row amount equal to the sum of its event amounts, every balance reconciling to
-opening plus cumulative row amounts, and `firstNegative` matching. The field inventory, nesting and units are recorded
-there and in OS-059's evidence.
+opening plus cumulative row amounts, and `firstNegative` matching. The field inventory and nesting are now directly
+captured; numeric units remain unresolved.
 
-**Three permitted paths, in order of preference:**
+The fresh capture returned **451 rows**, while OS-130 recorded 452 rows. Preserve that discrepancy as capture-specific
+evidence; do not force the fresh response to match the historical count.
 
-1. **If the captured document is later found, use it.** The owner has confirmed it is not currently available;
-   do not ask him to paste a document he does not possess.
-2. **Reconstruct and verify against the recorded replay properties.** Write the operation, replay it for the same
-   `asOfDate`, and treat the recorded properties as the falsifier (452 rows, nondecreasing dates, row amount = sum of
-   events, balances reconcile to opening, `firstNegative` matches). Any mismatch means **stop** and report — do not
-   adjust the contract to fit the query.
-3. **Proceed offline on the frozen synthetic contract.** Tasks 2, 3 and 4 can be built and tested against the synthetic
-   fixture without a live feed. The plan is explicit that captured evidence can support offline contract tests but
-   **cannot justify live availability**: if units or nesting cannot be established, the UI stays unavailable.
+**Execution paths:**
+
+1. **Use the captured query shape for connector implementation.** Add the read operation only after verifying its
+   response mapping and units; do not invent fields beyond the captured selection.
+2. **Use the frozen synthetic contract for service/API/UI work in parallel.** Live availability remains blocked until
+   units, connector replay and stored observation publication are independently verified.
+3. **Stop on replay or unit mismatch.** Do not adjust the contract to fit a failing response.
 
 A reconstructed query that reproduces the recorded properties is evidence; a query that merely "looks right" is not.
 

@@ -1,0 +1,63 @@
+query AutopilotReserveProjectionScreen {
+  currentUser {
+    id
+    spendAccount {
+      id
+      billReserve {
+        id
+        projectedNsfDate
+        nextFundingDate
+        totalFundingAdjustment
+        permittedActions {
+          billReserveTopUp
+          __typename
+        }
+        settings {
+          funding {
+            adjustForOverage
+            bufferDays
+            subaccount {
+              id
+              displayName
+              __typename
+            }
+            __typename
+          }
+          __typename
+        }
+        autopilotReserveProjection {
+          asOfDate
+          maximumBalance
+          openingBalance
+          lowPoint {
+            balance
+            date
+            __typename
+          }
+          firstNegative {
+            balance
+            date
+            __typename
+          }
+          rows {
+            amount
+            balance
+            date
+            events {
+              amount
+              name
+              sourceId
+              type
+              __typename
+            }
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+}
