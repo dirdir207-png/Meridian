@@ -108,6 +108,26 @@ the 12 specs is reached during a full 17-action sweep. **A name-keyed comparison
 exactly the phantom-gap mechanism D-039 warns about.** Recorded because the next person to compare catalogues
 will be tempted to do it by name.
 
+### Instrument integrity, and one refuted hypothesis
+
+The verification ran while this repository was being committed to by a sibling agent: HEAD moved `8923958` →
+`18737b0` (this pass's own record) mid-run. The verifier checked that **no commit touched any file under
+test** and that all eight files' mtimes predate the run window — which is the state discipline this repository
+keeps having to relearn, applied correctly here. It also declined to import `app.py`, because that module runs
+`init_db()` **and mints secrets at module level**; it read the file with `ast` only, and labelled that reading a
+*precondition*, explicitly not evidence.
+
+A refuted hypothesis, recorded because the discipline matters more than the finding: the first sweep showed
+`create_autopilot_rule` never dispatched, which looked like a registered-but-unreachable operation. It was the
+verifier's own defect — that executor routes through the verified formula builder, which requires snake_case
+parameters, and camelCase inputs made it raise before dispatch. With fair parameters it dispatches like the
+other sixteen. **A refuted hypothesis is not a finding, and it was not reported as one.**
+
+Also confirmed as a precondition rather than a claim: all six facet methods the verifiers call
+(`readback_transfers`, `readback_funding_plans`, `readback_autopilot_rules`, `readback_reassignment_rules`,
+`readback_virtual_cards`, `readback_selected_spend_pocket`) exist on the real adapter; the single exception in
+the injected-truth run was a gap in the verifier's own fake.
+
 **COULD-NOT-CHECK: the provider-mutation-name level.** The connector payload contains only `{"input": {...}}`
 (verified for `create_autopilot_rule`, `create_bill`, `archive_bill`); no mutation name is transmitted, and the
 name→mutation mapping lives inside the connector binary, which must not be run. Mutation names are visible only
