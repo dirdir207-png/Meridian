@@ -1198,3 +1198,30 @@ ground for ignoring them.
 **Cross-references.** D-030 (never default an option set to the status quo), D-032 (friction is a work item),
 D-033 (new work is cross-referenced in the same change), D-034/D-035 (retrieve before concluding) and D-039
 (measure on the provider's own name).
+
+---
+
+## D-041 — The live-parity refresh cadence is deliberate (~15s), because Meridian is meant to replace the Crew app (owner, 2026-09-25)
+
+**Owner's words, verbatim.** *"Its coded to update every 15 seconds to mimic a live app state, so that the meridian
+app can completely replace use of the crew app."*
+
+**The requirement.** Meridian is intended to **displace** the Crew app for daily use, which makes provider freshness
+a product feature rather than an optimisation. The app's evidence refresh is therefore coded at ~15 seconds
+(measured on 2026-09-25/26 as 898 syncs over 5h26m, i.e. ~21s per cycle including ~6s of work), and each cycle
+writes dated per-bill observations — 9,878 rows of `crew_bill_allocation_observations` accumulated in that window.
+
+**Why this needs recording.** The 2026-09-25 audit (P8/P9) noted heavy polling and a 300-second `SimpleCache`, and
+those notes are **observations about mechanism, not defects to be fixed**: shortening or lengthening the cadence
+changes what the product is. A later session that "fixes" the polling has removed the capability the owner asked
+for.
+
+**What it does make real.** Provider quota, rate limiting and account safety are now first-class production
+concerns rather than theoretical ones, and they must be managed explicitly (backoff on provider errors,
+never-retried financial mutations — which is unchanged — and a stated cadence in one place rather than many).
+Where the cadence and a provider limit conflict, the limit wins and the owner is told; the cadence is not to be
+raised or lowered silently.
+
+**Cross-references.** D-015 (the money model the observations feed), D-040 (unused capabilities are retained),
+OS-114 (the observation store this cadence fills), OS-058 (the funding-event measurement that depends on the
+series being continuous).
