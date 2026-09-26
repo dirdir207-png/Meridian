@@ -1019,3 +1019,53 @@ not. That is `OS-123`, and the method is prescribed rather than left to taste, b
 what a bad method costs: independent instruments with different assumptions, fresh contexts rather than forks,
 exact sets rather than mention-greps, the rendered screen as well as the data, and a stated instrument and
 precondition on every figure.
+
+### D-035 addendum — recorded with every measurement: its SCOPE and its STATE (correction from the harness lane, 2026-09-25)
+
+The harness lane retracted the mechanism behind one of its own lessons, which is worth recording precisely
+because the retraction strengthens the rule. The original example — *"Finder's 1993 to 20 is one app through two
+traversals"* — **is wrong**: it is one app in two **Space/window states**, the same traversal either way. The
+sharper version, in their words: *"a measurement's scope must be recorded with it, because the same instrument
+will legitimately return 20 or 2011 depending on state — and without the scope you cannot tell a desktop-only
+read from a full one."*
+
+**So the rule is not "beware of bad instruments". It is that a number is incomplete without its scope and its
+state, because the same instrument may return two different valid figures.** Three instances already in this
+repository's recent history, all of them previously written down as instrument errors rather than scope errors:
+
+* `origin/main` versus `HEAD` — a ref-to-ref diff whose numbers ("51 files, +8030/-255") mean nothing without
+  saying which refs and which directory, and which direction.
+* "38 files mention autopilot/calendar/family/evaluation on `origin/main`, 1 on `main`" — a count whose scope
+  was four words in file contents, in trees of different sizes. It read as richness and was an artifact.
+* The live preview's staleness trap: the same endpoint returns the old behaviour or the new one depending on
+  whether the process started before or after a commit. The instrument is identical; the state differs. Compare
+  the artifact (mtime, PID start versus commit), never the process.
+
+**Recorded form:** every figure in this repository carries its instrument, its scope (which refs, which paths,
+which viewport, which population) and its state (when, in what configuration), or it is an anecdote.
+
+## D-037 — Before restoring anything old, establish what superseded it; do not revert blind (owner, 2026-09-25)
+
+**Owner, verbatim:** *"if you are recovering old/deleted/revised guards/rules etc, please double check anything
+that changed it/superseded it etc or ask me before reverting it back, just in case. I dont want to break parts of
+the app as a result."*
+
+This is the natural companion to D-034 (retrieve before building) and it closes the loop the retrieval work
+opened: finding something in an older tree is not a reason to put it back. The rule is that a restore is a
+**change with a cause**, and the cause must be established first:
+
+1. **Find what superseded it.** Search the current tree for the same semantics, not the same text — the OS-122
+   pass found five apparent losses from `origin/main` and **all five were superseded**: the dial's
+   unknown-fundingStatus rule lives at `services/dial.py:176`, the "free to spend" rule moved to
+   `services/spend_pocket.py:7,44`, `_evidence_viewer_html` survives at `api.py:1557` and is used,
+   `_learned_paycheck` became `_learned_paycheck_range` at `services/today.py:244`, and one readback merely
+   gained a keyword argument.
+2. **If a supersession exists, the restore is a regression unless it is argued.** Report it; do not apply it.
+3. **If nothing superseded it, ask the owner before restoring**, because a removal may have been a decision
+   recorded somewhere this lane cannot see.
+4. **Never restore a guard, migration, checksum, freeze or authority boundary as a side effect of a retrieval.**
+   The retrieval tasks (`OS-122`, `OS-124`) are read-only by construction, and this is why.
+
+**Enforced, narrowly.** `tests/test_supersession_before_restore.py` requires that any task proposing to restore,
+revert, recover or reinstate an old guard, rule or behaviour declares **`supersession_checked`** — a sentence
+naming what superseded it, or stating plainly that nothing did. Existing tasks are grandfathered in that file.

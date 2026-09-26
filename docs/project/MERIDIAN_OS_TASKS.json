@@ -3016,7 +3016,8 @@
         "4. Record findings and the method corrections; leave repairs to a bounded slice."
       ],
       "recommended_model": "deepseek-flash (this lane's harness), high effort",
-      "model_why": "Retrieval across two repositories plus semantic comparison of refactored code: it is reading and reconciling, not designing, so the requirement is a long context and disciplined tool use rather than frontier reasoning. The judgement needed is epistemic (is this lost or moved?), which is why the method rules in D-035 matter more here than the model choice."
+      "model_why": "Retrieval across two repositories plus semantic comparison of refactored code: it is reading and reconciling, not designing, so the requirement is a long context and disciplined tool use rather than frontier reasoning. The judgement needed is epistemic (is this lost or moved?), which is why the method rules in D-035 matter more here than the model choice.",
+      "limits": "READ-ONLY, and per D-037 a retrieved item may never be restored as a side effect: five apparent losses from origin/main were all superseded (a moved rule, a renamed helper, a re-signatured function, a rewritten docstring), so a restorer trusting the diff would revert four working behaviours. Findings only; any repair is a separate bounded slice that names what superseded the old form."
     },
     {
       "id": "OS-125",
