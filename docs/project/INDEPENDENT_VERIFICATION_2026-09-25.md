@@ -52,11 +52,76 @@ to this instrument.
 
 ---
 
-## Claims 1–4 — in flight
+## Claim 1 — "17 of 17 bound to a governed action with an executor (16 with a readback verifier)"
+
+**As written** (`docs/project/INTEGRATION_AUDIT_2026-09-25.md:68`, echoed at `STATE_OF_THE_SYSTEM.md:13-17`).
+The original established it by **reading** the registries.
+
+**Instrument (different): EXECUTION.** The real pipeline was driven against a scratch DB in `/tmp` — the real
+`ActionStore`, the real `ExecutorSpec`, the real `execute_approved_action` — with four guard layers installed
+before import: socket denied outright; `subprocess.run`/`Popen` replaced (both provider boundaries are
+subprocesses — `crew-write` and `crew-readonly`, both Keychain-backed and both executable on this machine);
+`sqlite3.connect` refused outside `/tmp`; both binaries redirected to nonexistent paths plus an argv tripwire. A
+guard self-test proves the tripwire fires on the real binary path. Result: **33 subprocess calls intercepted, 0
+network events, 0 real-binary touches**, and the code under test unchanged during the window.
+
+**VERDICT: both halves CONFIRMED, each with one measured refinement. No falsification.**
+
+- **"17 of 17" — CONFIRMED as a bijection, verified by the operations actually dispatched rather than by name.**
+  17 action types → 17 distinct CLI operations, exactly one each; the dispatched set equals the runtime
+  allow-list exactly (0 never sent, 0 sent-but-undeclared).
+- **"16 with a readback verifier" — CONFIRMED as present AND reached on the execution path, and CONTINGENT on
+  provider content rather than canned.** 16 verifier objects, 16 actually invoked, each after the write and each
+  performing exactly one provider readback; the timeline is execute → write → verifier → readback for all 16.
+  With a complete-but-empty synthetic readback, `archive_crew_bill` and `delete_crew_pocket` returned
+  `ok=True`/VERIFIED while others returned `ok=None` with action-specific reasons; with the readback refused,
+  all 16 returned `ok=None` "readback unavailable"; a crashing verifier was recorded as check
+  `verifier-exception`, state `executed` — **never VERIFIED**.
+- **The single action without a verifier is `top_up_crew_reserve`, and it is deliberate.** The connector payload
+  carries no `billReserveId`, so a top-up cannot be attributed to the reserve it targeted
+  (`docs/project/write-coverage.json` records "none" with that reason), and the pipeline has an explicit runtime
+  branch producing check `no-verifier-registered`, `ok=null`. Measured safe for the properties in scope:
+  executing before approval raises `IllegalTransitionError` and dispatches 0 writes (state stays `proposed`);
+  one execution → `executed`, `ok=null`, and no unverified write ever reaches `verified`; re-execution with the
+  SAME key and with a NEW key both raise `IllegalTransitionError` and dispatch 0 writes — **no replay, no
+  auto-retry.**
+
+### Refinement 1 — a registration count is not an every-attempt execution count
+
+Production wiring passes `precondition=...` (`app.py:1277`), and **`update_crew_bill` is the only action type
+carrying one.** With the precondition installed and **no recorded base_state**, `update_crew_bill` is refused
+*before* dispatch: executor not called, verifier not reached, 0 provider calls
+(`sent_to_provider: false`, error `precondition_unverifiable`), state `failed`. So on the execution path the
+counts are **16/17 dispatched and 15/16 verifiers reached** in that configuration, and **17/17 and 16/16** once a
+reviewed base_state is present (seeded through the real `capture_base_state`).
+
+`STATE_OF_THE_SYSTEM.md`'s "16" is a **registration** count and reads correctly as one. It is **not** an
+every-attempt execution count, and any restatement of it as "16 verifiers run on every execution attempt" is
+**falsified** — 15 do, on unreviewed approvals. The refusal itself is the safe direction and is by design.
+
+### Refinement 2 — a third name map that reproduces the D-039 phantom gap
+
+The 17/17 above lives in the CLI-operation ↔ governed-action space, linked **by execution** (the executor
+literally sends `argv[1]`). A third map exists: `crew_commands._SPECS` has 12 specs keyed on **local** names that
+do not match the CLI operations — only 6 of 12 keys have any name-level match in the allow-list, and only 1 of
+the 12 specs is reached during a full 17-action sweep. **A name-keyed comparison of these two maps reproduces
+exactly the phantom-gap mechanism D-039 warns about.** Recorded because the next person to compare catalogues
+will be tempted to do it by name.
+
+**COULD-NOT-CHECK: the provider-mutation-name level.** The connector payload contains only `{"input": {...}}`
+(verified for `create_autopilot_rule`, `create_bill`, `archive_bill`); no mutation name is transmitted, and the
+name→mutation mapping lives inside the connector binary, which must not be run. Mutation names are visible only
+through `crew_commands.operation_name` (e.g. `DeleteBill`, `CreateSubaccount`) and could not be tied to the
+connector's own names by this instrument. **`STATE_OF_THE_SYSTEM.md:43-45` already discloses this** — it states
+that carrier status is recorded in `OS119_MIGRATION_BY_EVIDENCE.md` and that it "cannot be re-derived from this
+tree alone". This verdict therefore confirms the document's own honesty rather than contradicting it.
+
+---
+
+## Claims 2–4 — in flight
 
 | # | claim | instrument prescribed | status |
 |---|---|---|---|
-| 1 | capability 17/17 with carriers, 16/17 with verifiers | execute the pipeline against a scratch DB | in flight |
 | 2 | the ungoverned write surface is exactly the 26 declared routes | hit the routes through HTTP with the provider stubbed | in flight |
 | 3 | Today and Plan publish one money rule | the HTTP surface, not the unit fixture | in flight |
 | 4 | the allocation ordering rule | the raw provider read, not the document | in flight |
