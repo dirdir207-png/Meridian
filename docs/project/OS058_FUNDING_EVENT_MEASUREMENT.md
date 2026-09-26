@@ -24,7 +24,7 @@ Taken while the event was still future, as the task requires, from a **consisten
 | schema / last complete sync | 030 / 2026-09-25T18:38:09Z |
 | `crew_bill_reserves.total_reserved_amount` | **0.0** |
 | `crew_bill_reserves.next_funding_date` | **2026-10-02** |
-| `crew_bill_reserves.estimated_next_funding_amount` | 1435.97 (account-total, lagged — NOT a reserve figure) |
+| `crew_bill_reserves.estimated_next_funding_amount` | 1435.97 — **CORRECTED 2026-09-26:** the original annotation here read *"account-total, lagged — NOT a reserve figure"* and it was wrong in both directions. The provider's own Plan-reserve screen (owner-UI capture, `docs/project/captures/2026-09-26-reserve-projection/owner-ui/`) shows eight consecutive `+$1,435.97` PAYCHECK events, so the field carries **the next funding EVENT's amount** — a reserve figure, and an event amount rather than an account total. Note also that the per-BILL field of the same name means something else entirely (each bill's prorated need; they sum to exactly 883.96, the figure §4 of this file predicted). It is still not the plan's stored amount (1,649.10 biweekly), and that discrepancy stays open rather than explained away. |
 | Σ non-fallback account balances | 16.69 |
 
 Per-bill `funded_amount`, with the date each is reserved for:
@@ -418,3 +418,15 @@ concluding (D-042). Nothing below is derived; each row points at where the figur
 pre-registers what the two surviving candidate rules predict for the 10-02 event — soonest-`reservedBy` versus largest-bill —
 with the arithmetic, so the observation can SCORE them. It is a labelled simulation, must never be quoted as a result, and its
 existence is why the 10-02 read is a test rather than a story.
+
+---
+
+## Units, stated once so no reader has to infer them (added 2026-09-26)
+
+This file quotes **provider raw values in cents** (`109710` = $1,097.10; `48077` = $480.77; `71098` = $710.98) because
+that is what the API returns, while the Meridian store holds **dollars** because
+`meridian/providers/crewwork.py:285` converts on ingest (`_cents_to_dollars_or_none`, `currency="USD"`). The one
+figure that binds the two conventions was checked on 2026-09-26: the owner's Plan-reserve screen shows the row before
+today's events at a balance of **−$7.00** (Sep 26 shows −183.77 with a −176.77 delta), and our
+`total_reserved_amount` reads **−7.0**. Two instruments, one number — see the owner-UI capture README for the full
+arithmetic (23 of 23 balance transitions and both group sums reconcile).
