@@ -5704,3 +5704,22 @@ person reading code carefully; the ratchet was a different instrument with diffe
 2.5x as much. `tests/test_governed_write_routes.py` is now a ratchet: it cannot fail today, and it fails on
 growth in either direction, so the declared debt cannot rot into a lie. Recorded as `OS-121` (C4), with the
 finding carried in `OS-119` for the owner's shape decision.
+
+## 2026-09-25 (later) — four archaeology claims withdrawn, and the shape gaps they were hiding
+
+The owner's correction: *"you trusted measurement when the tool was flawed... we wanted to almost completely
+disregard it without thorough research."* Correct, and the failure is the one this session had already written
+down twice: a mention-grep or a filename match used to produce a CONCLUSION rather than a hypothesis.
+
+Withdrawn in D-035: "the sibling tree is older, not richer" (I measured the absence of our newer modules in an
+older tree, which is trivially true and says nothing about its knowledge); "all 15 operations appear in our code"
+(a stem grep, which matches comments); "origin/main is a richer retired tree" (exact file sets invert it — every
+`origin/main` `.py` path also exists in `HEAD`); and "the connector's `operations/` is the operation catalogue"
+(those files hold variables only; the documents are `operations/*.graphql` and
+`src/crew_work_assistant/write_operations/*.graphql`).
+
+What thorough research bought: of Crew's **17 distinct write operations, 16 are covered** by our registry (four
+under our own CLI names). The one real gap is **`DeleteBill`** — and `/api/delete-bill` is one of the 25
+ungoverned routes, so that route is ungoverned partly because the registry lacks the operation it needs. And
+**`updateRule` exists in neither catalogue** while `app.py` uses it: one ungoverned route depends on a shape that
+nothing anywhere records. Both are now named, which is what makes them fixable.

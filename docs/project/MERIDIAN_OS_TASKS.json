@@ -2973,10 +2973,10 @@
     {
       "id": "OS-122",
       "title": "Mine origin/main and the connector's parity record for capability already built and not retrieved",
-      "status": "open",
+      "status": "in_progress",
       "priority": "medium",
       "phase": "track-A-discovery",
-      "detail": "Owner's archaeology rule (D-034): 'most of it is, its just a matter of retrieving it'. First pass found `origin/main` carries 38 source files mentioning autopilot/calendar/family/evaluation where every other local ref carries 1, so a richer retired tree exists unfetched into this working tree's thinking. Also unread: `CrewWorkAssistantOTP/SIMPLECREW_PARITY.md` in full — its table lists capability, connector responsibility, Base44 responsibility and an explicit safety boundary per row — and the connector's `operations/` GraphQL documents beyond their names.",
+      "detail": "Owner's rule (D-034, corrected by D-035): retrieve before building, with instruments fit for a conclusion. The first pass of this task used mention-greps and reached two wrong conclusions, both withdrawn. What exact instruments establish: the connector's catalogues are `operations/*.graphql` (15 reads) and `src/crew_work_assistant/write_operations/*.graphql` (18 write contracts, 17 distinct operations, implemented in crewwrite.py); of those, 16 are covered by our registry and the one gap is `DeleteBill`; `updateRule` is in neither catalogue although app.py uses it; and detail-level reads (profile, card_detail, transaction_detail, autopilot_rule_detail) are contracted but have no readback of ours and are stored nowhere. Still to do: CONTENT-level retrieval from `origin/main` (51 shared files differ, +8030/-255, including 36 deleted lines in dial.py and repository.py) and proper reading of the sibling tree and the connector's own documentation (SIMPLECREW_PARITY.md, WRITE_LAYER.md, WORK_PROJECT.md, BASE44_INTEGRATION_CONTRACT.md) — with the caveat that the sibling tree's absence of our modules proves nothing about its knowledge, and the owner states payday material exists there.",
       "limits": "Retrieval is READ-ONLY, and nothing outside this repository may be modified, copied in wholesale, or treated as an authority: the connector records the provider's surface and a prior parity plan, not this project's governance. Any capability retrieved this way is re-verified in our own code before it is recorded as covered — the first pass used a filename-stem grep, which is indicative and not proof."
     }
   ]

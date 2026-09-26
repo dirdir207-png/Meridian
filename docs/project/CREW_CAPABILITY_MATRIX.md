@@ -107,26 +107,30 @@ It is a record of what exists, taken by reading code. It is **not** a decision: 
 onto the pipeline, fenced, or documented is the owner's call, and it is recorded as such in D-031. Nothing here
 was changed by the audit, and no route was disabled.
 
-## 6. Archaeology — what was already recorded (owner's rule, D-034)
+## 6. Archaeology — what was already recorded (owner's rule, D-034; CORRECTED per D-035)
 
-Executed 2026-09-25 with the instrument stated, because a figure without its instrument is an anecdote.
+**The first pass of this section reached two conclusions from instruments too crude to support them. Both are
+withdrawn in D-035, and this section is the re-measurement.**
 
-- **Crew's own operation catalogue** (`CrewWorkAssistantOTP/operations/`, 15 files): `accounts`, `autopilot`,
-  `autopilot_rule_detail`, `card_detail`, `expenses`, `family`, `family_subaccounts`, `physical_cards`,
-  `pocket_transactions`, `pockets`, `profile`, `subaccounts`, `transaction_detail`, `transactions`,
-  `virtual_cards`. **All 15 appear in our code**, by filename-stem grep across `meridian/` and `app.py` — a
-  positive signal and not a proof; a stem can match a comment.
-- **A prior parity plan exists** (`SIMPLECREW_PARITY.md`) with a safety boundary per capability, and it records
-  the same two rules this project rediscovered independently: money transfers as a *separately gated* executor
-  with exact approval, fresh preflight, one submission and no third-party transfer; and Safe-to-Spend that
-  *"never infer[s] silently when unavailable"* — C01 in another document's words.
-- **A richer retired tree exists**: `origin/main` carries **38** source files mentioning
-  autopilot/calendar/family/evaluation, against **1** file on each of `main`,
-  `origin/docs/enhanced-simplecrew-project-control`, `origin/fix/review-blockers` and `origin/scratch-a`. It has
-  not been mined (`OS-122`).
-- **The sibling tree is older, not richer**: its `meridian/` lacks `reserves.py`, `safe_to_spend.py`,
-  `spend_pocket.py` and `dial.py`.
+**The catalogues, exactly.** The connector records the provider's surface as GraphQL documents, not as variable
+files: `operations/*.graphql` holds **15 reads** (`accounts`, `autopilot`, `autopilot_rule_detail`, `card_detail`,
+`expenses`, `family`, `family_subaccounts`, `physical_cards`, `pocket_transactions`, `pockets`, `profile`,
+`subaccounts`, `transaction_detail`, `transactions`, `virtual_cards`), and
+`src/crew_work_assistant/write_operations/*.graphql` holds **18 write contracts covering 17 distinct
+operations**, implemented by `src/crew_work_assistant/crewwrite.py`.
 
-**Conclusion: the gap is not Crew shapes.** Every shape the connector can perform is reachable, and the gating
-design was recorded before this branch existed. What is missing is the machinery that **persists and uses** them —
-and, above all, the evaluation harness that would prove any of it useful.
+**Coverage, measured as name sets rather than mentions.** Of Crew's 17 write operations, **16 have a counterpart
+in our registry**, four of them under a different name (ours are CLI operation names, theirs are GraphQL mutation
+names). **The one real gap is `DeleteBill`** — we register `create_bill`, `update_bill` and `archive_bill`, and no
+delete — which is exactly why `/api/delete-bill` sits among the ungoverned routes of D-031. And
+**`updateRule` appears in neither catalogue** while `app.py` uses it, so one ungoverned route depends on a shape
+nothing records.
+
+**The retired branches.** Exact file sets invert the earlier reading: every `.py` path at `origin/main` also
+exists in `HEAD` (301 vs 409 files; shared lineage `e652f5c`), so it is an **older snapshot of this lineage, not a
+richer tree**. Content still differs on **51 shared files (+8030/−255)**, so content-level retrieval — including
+the 36 lines deleted from `dial.py` and `repository.py` — is a real and unstarted item (`OS-122`).
+
+**What is NOT concluded here, because the instrument has not been built yet:** whether the sibling tree holds
+knowledge the current tree lacks. Its absence of our newer modules proves nothing, and the owner has said plainly
+that payday material exists there. That belongs to `OS-122`, done with content-level instruments.

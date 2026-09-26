@@ -948,3 +948,45 @@ to do about it.
 **Boundary, unchanged and repeated because this rule invites retrieval from outside the lane:** reading
 `CrewWorkAssistantOTP` and the sibling trees is inspection only. Nothing outside this repository is modified,
 copied in wholesale, or used for authority; the connector holds the provider's surface, not our governance.
+
+## D-035 — A crude instrument may not produce a conclusion; four archaeology claims withdrawn (owner, 2026-09-25)
+
+**Owner, verbatim:** *"this shows again, you trusted measurement when the tool was flawed. There was plenty of
+rich, good data to be had from older simplecrew/meridian work not in the current tree, but we wanted to almost
+completely disregard it without thorough research."*
+
+**The rule.** A mention-grep, a filename match or a count of files carrying a word is a *hypothesis generator*.
+It may not produce a conclusion, and it may never produce a negative one. What exists is established with exact
+instruments — file sets from `ls-tree`, content from diffs, capability sets from operation names — and a search
+for what is ABSENT must first be a search for where the thing actually lives. This applies to a new lane exactly
+as it applied to the audit it was criticising; the failure is the same shape as *absence of evidence read as
+evidence of absence*, which this session had already corrected once, in writing, hours earlier.
+
+**Four retractions, recorded because the retractions are the asset.**
+
+| withdrawn claim (2026-09-25, earlier) | why it was wrong | what the exact instrument shows |
+|---|---|---|
+| *"the sibling tree is older, not richer"* | I measured the absence of OUR newer modules in an older tree, which is trivially true and says nothing about what it holds: semantics, behaviour, test expectations, database contents | withdrawn entirely. It is not a source of newer *capability*; it remains unexamined as a source of older *knowledge*, including payday behaviour and the data noted by the owner |
+| *"all 15 operations appear in our code"* (by filename-stem grep) | a stem matches comments, docstrings and unrelated identifiers; it was called "indicative" and then still used as a finding | replaced by an exact name-set comparison, below |
+| *"`origin/main` is a richer retired tree that has not been mined"* | 38-vs-1 was a count of files *mentioning* four words, not of capability. Exact file sets invert it: every `.py` path at `origin/main` also exists in `HEAD` (301 vs 409 files, shared lineage `e652f5c`) | it is an OLDER SNAPSHOT of this lineage, not a richer tree. Its content still differs on 51 shared files (+8030/-255), so *content-level* retrieval remains a real, unstarted item (`OS-122`), including 36 lines deleted from `dial.py`/`repository.py` |
+| *"the connector's `operations/` is the Crew operation catalogue"* | those JSON files hold **variables only** — no query or mutation document is in them | the documents are `operations/*.graphql` (**15 reads**) and `src/crew_work_assistant/write_operations/*.graphql` (**18 write contracts, 17 distinct operations**), with the registry implemented in `src/crew_work_assistant/crewwrite.py` |
+
+**The payoff, which is what thorough research buys.** Comparing Crew's 17 distinct write operations against our
+registry's 17, case- and separator-insensitive:
+
+* **16 of 17 are covered.** Four names differ only because our CLI operation names are not the provider's
+  mutation names (`create_virtual_card` vs `CreateVirtualDebitCard`, `initiate_transfer` vs
+  `InitiateTransferScottie`, `set_spend_pocket` vs `SetActiveSpendPocketScottie`, `archive_bill` vs our own
+  naming) — a mapping, not a gap.
+* **The one genuine gap is `DeleteBill`.** Crew has it; our registry has `create_bill`, `update_bill` and
+  `archive_bill` and **no delete**. And `/api/delete-bill` is one of the ungoverned routes in D-031 — so that
+  route is ungoverned *partly because the governed registry lacks the operation it needs*. Its fix is now a
+  known quantity: a registered action against a contract that already exists.
+* **`updateRule` exists in neither place.** The connector records `CreateAutopilotRule` and `DeleteRule` and no
+  update, and our registry likewise has create and delete only — yet `app.py` has a rule-update route that
+  works. So one ungoverned route depends on a shape that **no contract anywhere records**. That is the inverse
+  of the owner's instruction and the more valuable half of it: a capability in use which is not written down.
+* **Detail-level reads are contracted and unpersisted.** The connector's read documents include `profile`,
+  `card_detail`, `transaction_detail` and `autopilot_rule_detail`; our adapter exposes facet-level readbacks but
+  no readback for those, and app.py fetches them through its own GraphQL. Consistent with the capability
+  matrix's "read on demand, stored nowhere".
