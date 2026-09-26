@@ -812,11 +812,21 @@ the retraction is recorded where the claim was made, not only here.
    is wrongly passing today, but the marker set is hand-kept prose in a test and should be re-derived from the
    live call graph before it drifts into decoration.
 
+7. **A concurrent session is not evidence about that session.** This audit's method note said the earlier retrieval
+   thread "died with its session and left nothing on disk", and used it to justify requiring helpers to write to
+   disk before returning. The owner corrected it on 2026-09-25: **that session never died**, its output is preserved
+   there, and it is still asking him owner-gated questions. The inference was made about a session this lane cannot
+   see — the same failure D-035 names, in a new place. The practice it justified is still right for the right reason:
+   a report that lands only in another session is not one this lane may cite, so the retrieval was re-run rather than
+   assumed lost. Recorded here because the corrections are the asset.
+
 ## 6. Repair backlog (proposals only — promotion is the owner's decision)
 
 The ids below are **proposals**. `OS-126` and `OS-127` were created this session by a concurrent lane for
-different work (cardholder exposure; the retrieved payday/funding reconciliation), so new ids must start at
-`OS-128`. Appearing in this table promotes nothing (`AGENTS.md` §Handoffs, rule 4); the owner promotes.
+different work (cardholder exposure; the retrieved payday/funding reconciliation), and **`OS-128` was then taken
+by the owner's own directive** (the Today↔Plan spend alignment review, `TODAY_PLAN_SPEND_ALIGNMENT_2026-09-25.md`),
+so the ids written into this table are indicative and start one higher in the ledger. Appearing here promotes
+nothing (`AGENTS.md` §Handoffs, rule 4); the owner promotes.
 
 **Ordered by "defect with a concrete failure" first, judgement calls last.**
 

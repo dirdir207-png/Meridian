@@ -719,7 +719,7 @@
     {
       "agent": "constitutional-builder",
       "claim_id": "os123-integration-audit-20260925",
-      "generation": 10,
+      "generation": 11,
       "files": [
         "docs/project/INTEGRATION_AUDIT_2026-09-25.md",
         "docs/project/MERIDIAN_DECISIONS.md",
@@ -730,10 +730,11 @@
         "docs/project/session-emergent.json",
         "docs/project/AGENT_COORDINATION.md",
         "docs/project/agent-claims.json",
-        "docs/project/HANDOFF.md"
+        "docs/project/HANDOFF.md",
+        "docs/project/TODAY_PLAN_SPEND_ALIGNMENT_2026-09-25.md"
       ],
       "since": "2026-09-25T20:20:00-04:00",
-      "note": "OS-123: the deep integration audit the owner asked for, plus the retraction it earned. READ-ONLY on the application \u2014 no app.py, meridian/**, templates/**, static/**, migration, route or existing test is edited under this claim; the deliverable is docs/project/INTEGRATION_AUDIT_2026-09-25.md and the record corrections that follow from it (D-039; OS-125 closed as withdrawn rather than built; OS-122's detail corrected; CREW_CAPABILITY_MATRIX.md's withdrawn paragraph marked; CONCEPT_COVERAGE.md rows 1/8/12/21; the handover paragraph in CURRENT_STATUS.md). Also under this claim: session-emergent.json deduplicated (it held 19 byte-identical copies of one item, which the handoff generator printed 19 times) and this declaration. Financial authority unchanged: no provider write, no migration, no route, no deployment, no action-pipeline change. Supersedes the released generation-9 claim os113-spend-pocket-from-crew-selection-20260925 (OS-113's spend-pocket work), which is complete and whose files are no longer held.",
+      "note": "OS-123: the deep integration audit the owner asked for, plus the retraction it earned. READ-ONLY on the application \u2014 no app.py, meridian/**, templates/**, static/**, migration, route or existing test is edited under this claim; the deliverable is docs/project/INTEGRATION_AUDIT_2026-09-25.md and the record corrections that follow from it (D-039; OS-125 closed as withdrawn rather than built; OS-122's detail corrected; CREW_CAPABILITY_MATRIX.md's withdrawn paragraph marked; CONCEPT_COVERAGE.md rows 1/8/12/21; the handover paragraph in CURRENT_STATUS.md). Also under this claim: session-emergent.json deduplicated (it held 19 byte-identical copies of one item, which the handoff generator printed 19 times) and this declaration. Financial authority unchanged: no provider write, no migration, no route, no deployment, no action-pipeline change. Supersedes the released generation-9 claim os113-spend-pocket-from-crew-selection-20260925 (OS-113's spend-pocket work), which is complete and whose files are no longer held. Extended 2026-09-25 (evening): adds the Today/Plan spend alignment review called for by the owner, the OS-128 slice that records it, and the correction of this lane's own false claim that the earlier retrieval thread's session died (it did not \u2014 see the report's \u00a75 item 7). Still no application file under this claim.",
       "base_sha": "5c33b693fb82252652e783659b4a21206b9d9239",
       "description": "OS-113 -- which pocket the owner spends from comes from Crew's OWN SELECTION (userSpendConfig.selectedSpendSubaccount), matched by Crew's id, with the two-name allow-list kept as a NAMED fallback. Adds migration 030 and the observed-selection store, and threads the resolution through Today, Plan and the dial."
     }

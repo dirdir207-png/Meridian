@@ -124,6 +124,39 @@ would have reverted three commits had it been applied. This file is the channel.
 
 ## Log (append only — newest first)
 
+### 2026-09-25 (sixteenth pass) — the owner corrected a claim, the memory was tiered, and Today↔Plan spend was reviewed
+
+**Owner's three corrections in one message**, each now recorded rather than absorbed. (1) **A claim of this lane's was
+false**: the audit's method note said the earlier retrieval thread *"died with its session and left nothing on disk".
+The session never died, its output is preserved there, and it is still asking him owner-gated questions — so the
+inference was withdrawn everywhere it appeared (the report gained §5 item 7, and the ledger/CURRENT_STATUS/log were
+corrected in place). The practice it justified survives for the right reason: a report that lands only in another
+session is not one this lane may cite, so the retrieval was re-run rather than assumed lost. (2) **Session search now
+works**, so preserved session work is retrievable — that is recorded in hot memory as the rule for finding history
+instead of re-deriving it. (3) **Concurrent sessions are normal and are not evidence about each other** — the other
+lane's live session is the standing example.
+
+**Hot-memory tiering pass (owner-authorized).** 8,209 → 7,459 bytes (80% → 73%), by TIERING rather than reducing:
+the DSH host-lifecycle reasoning, the full macos-cu CLI-trap table and the complete NextDNS/`nextdns-adpass` record
+were archived into Memory Space `default` (the DSH record already existed as the canonical insight `0fa47027`, so the
+duplicate write was soft-deleted rather than doubled), and each hot entry now carries its rules plus an explicit
+pointer to that record. **All Harness-lane work is preserved** — the launchctl/keepalive/tsdown rules, the TCC
+proxy rule, the CUA trap list, the Jev monotonicity pin and the plan/verify/onboard entries all remain, and nothing
+was deleted from any Memory Space. Two new facts were added at the owner's prompting: the concurrency rule and the
+session-search rule. No write was allowed to trip the cap (that is why the pass happened first).
+
+**`OS-128` created — the Today↔Plan spend alignment slice the owner asked for**, with its onset ceremony (D-036) and
+a review document: `docs/project/TODAY_PLAN_SPEND_ALIGNMENT_2026-09-25.md`. The review's verdict is worth stating
+plainly because it narrows the work: **Today and Plan already publish ONE number from ONE rule**, guarded by a test
+that builds both payloads from one repository (OS-111) — that pair is not the problem. The divergence is elsewhere:
+Accounts publishes a third rule in the browser under the SAME WORDS (and never checks `is_active`); Today reuses the
+label "Available cash" for a different quantity; the advisor's verdict reads the rule OS-111 retired for these
+surfaces; and the scenario panel compares two runway definitions. On that last one the review RE-MEASURED rather
+than quoting: base runway 40, scenario 50, delta **+10 days with no changes requested**, cash/low-point deltas 0.0,
+empty assumptions. Three options and a recommendation are recorded; the scope choice and every label are the
+owner's, so the slice is `blocked` on that choice and nothing was implemented.
+
+
 ### 2026-09-25 (fifteenth pass) — OS-123: the deep audit the owner asked for, and the slice it withdrew instead of building
 
 **Released at `a8ab106`**, docs only, with the follow-up release commit that removes this claim's row.
@@ -134,9 +167,8 @@ already recorded the method, because the method is what failed in the attempts b
 instruments, fresh contexts, exact sets, the rendered screen, and an instrument named on every figure. Five
 fresh-context helpers ran with **different** instruments (route reachability; templates and browser modules;
 persistence and background work; unfinished and dead code; the OS-122 prose retrieval), and each was required
-to write raw evidence into `tmp/` **before** returning. That instruction is not ceremony: the previous
-session's retrieval agent died with its session and left nothing on disk, which is why the handover carried an
-unrecorded loose end. Every headline finding was then **re-verified here** from the cited line — two helper
+to write raw evidence into `tmp/` **before** returning. That instruction is not ceremony — it is the fix for a real failure mode of this lane: an agent whose report
+lands only in the session that started it is a report nobody else can cite. **Owner-verified 2026-09-25, and it corrects this lane's own record:** the earlier retrieval thread's session never died — it is still live, its output is preserved in that session, and it is still awaiting owner answers. This lane's earlier statement that it "died with its session and left nothing on disk" was an inference about a session it could not see, and it is withdrawn (a concurrent-session claim is never evidence about the other session). The rule that survives is the useful half: a report that lands in another session is not one this lane may cite, so this lane RE-RAN the retrieval rather than assuming it was lost. Every headline finding was then **re-verified here** from the cited line — two helper
 claims were corrected on the way in, and both helpers' own withdrawn false positives are recorded in the
 report as the asset they are. Rendered evidence came from 40 governed capture records, and the isolated
 preview's **served markup** was checked against HEAD (`data-sts-horizon`) rather than trusting its process

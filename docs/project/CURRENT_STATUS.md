@@ -5776,7 +5776,9 @@ isn't."* Findings only; **no application file was modified**, per the task's own
 **Method, because the method is what failed before.** Five fresh-context helpers with different instruments (route
 reachability; templates + browser modules; persistence + background work; unfinished/dead code; OS-122's prose
 retrieval), each required to write raw evidence to `tmp/` **before** returning — the previous session's retrieval
-agent died with its session and left nothing on disk. Every headline finding was then **re-verified here** from the
+agent died with its session and left nothing on disk. **That last claim was wrong and is withdrawn (owner,
+2026-09-25): the earlier thread's session never died, its output is preserved there, and it is still awaiting his
+answers — see §5 item 7 of the report.** Every headline finding was then **re-verified here** from the
 cited line, and two helper claims were corrected on the way in. The rendered screen was captured under the governed
 contract: 40 records in `artifacts/os123-integration-audit-2026-09-25/captures/manifest.json` (commit, fixture,
 frozen clock, DPR, theme, `fullPage`), from the isolated synthetic preview — whose **served markup was checked
