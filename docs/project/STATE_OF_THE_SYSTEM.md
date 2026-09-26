@@ -1,0 +1,95 @@
+# State of the system — GENERATED, do not edit
+
+Regenerate with `python scripts/state_of_the_system.py`. Input hash `ac7fcbaf181e2590`.
+
+Everything under *Derived from code* comes from parsing or importing the code the app runs, so it cannot
+drift: `tests/test_state_of_the_system.py` regenerates this file and fails when the committed copy is
+stale. Everything under *Snapshot at generation time* is read from documents and is **excluded** from the
+staleness check on purpose, so ordinary documentation edits do not invalidate this file.
+
+## Derived from code — the money path
+
+| | count |
+|---|---:|
+| operations the executor is allowed to send | 17 |
+| governed actions registered | 17 |
+| governed actions with a readback verifier | 16 |
+| allowed operations with NO governed action | 0 |
+
+**Actions with no verifier** (a write whose result is never read back):
+
+* `top_up_crew_reserve`
+
+## Derived from code — write routes
+
+| | count |
+|---|---:|
+| route rules registered (app + meridian blueprint) | 140 |
+| rules accepting POST | 74 |
+| POST routes declared to reach a raw Crew mutation | 26 |
+
+The declared set is asserted exactly by `tests/test_governed_write_routes.py`, which fails both when the
+set grows and when a declared route is fixed without updating the declaration. It is therefore the
+denominator for OS-119: the shape decision concerns exactly these routes. Per the declaration's own
+comments it is composed of 9 routes the 2026-09-25 audit reached and 17 found by the ratchet on its first
+run — and one of them (`/api/cards/<card_id>/sensitive`) mints a card-details view token rather than
+moving money, which is why the FINANCIAL count and the DECLARED count differ by one. Quote whichever the
+question is about, and say which.
+
+## Derived from code — modules nothing else names
+
+1 of 112 modules under `meridian/` are never named by any other module, the app, a script or a test (dotted-path search). A module here is *buried, not lost*: it exists, it may be complete, and nothing calls it.
+
+* `meridian/ai/investigation_service.py`
+
+## Snapshot at generation time (excluded from the staleness check)
+
+| | |
+|---|---|
+| tasks in the ledger | 136 |
+| — blocked | 10 |
+| — complete | 79 |
+| — done | 18 |
+| — in_progress | 6 |
+| — open | 13 |
+| — ready | 10 |
+| tasks carrying an owner question | 16 |
+
+## What is checked, and by what
+
+| guard | the claim it protects |
+|---|---|
+| `tests/test_governed_write_routes.py` (yes) | no provider-mutating route escapes the governed pipeline |
+| `tests/test_slice_onset_ceremony.py` (yes) | every in-progress slice declares plan + model + why |
+| `tests/test_supersession_before_restore.py` (yes) | nothing old is restored without a supersession check |
+| `tests/test_task_blockers_are_explained.py` (yes) | a blocked task names its blocker and its owner question |
+| `tests/test_concept_coverage.py` (yes) | the 22 concepts keep a carrier and an audited state |
+| `tests/test_session_close.py` (yes) | session close reports clean / pushed / current |
+| `tests/test_roadmap_handoff_check.py` (yes) | the roadmap and the ledger reconcile |
+| `tests/meridian/test_safe_to_spend_agreement.py` (yes) | Today and Plan publish one figure from one rule |
+| `tests/meridian/test_static_assets_tracked.py` (yes) | shipped trees and the git index agree |
+| `tests/meridian/test_ai_evaluation.py` (yes) | the evaluation harness refuses to report health over nothing |
+| `tests/test_state_of_the_system.py` (yes) | this document is current, and still says what it cannot check |
+
+## What this document does NOT check
+
+This section is the honest half, and a test refuses to let it be deleted.
+
+* **Semantics.** Registration and reachability are not behaviour. An action can be wired, verified and
+  still wrong, and nothing here evaluates whether a feature does what the vision says.
+* **Provider-side state we do not read.** The reserve's cash balance, the sweep threshold, the
+  pocket-transfer allocation settings, the reserve's internal attribution when no read has run — all
+  invisible to every instrument in this repository (OS-059).
+* **Whether a guard asserts the right thing.** A vacuous or miscalibrated test passes. Nothing here
+  checks a check's premise — the failure class that produced 'a gate needs a floor, not a minimum'.
+* **Anything before continuous recording existed.** Per-bill allocation history begins 2026-09-25
+  22:30:58Z; earlier states survive only as captures, and a capture is not a series.
+* **Other trees, other lanes, and managed Documents** unless someone enumerates them. This is D-042's
+  channel problem: a fact can be documented, current, and simply never read.
+* **Live data quality.** Sync gaps, staleness and torn reads are not visible here; only schema and
+  timestamps are, and a populated schema is not populated data.
+* **The set of things no instrument mentions at all.** Invisible by construction. The orphan scan is the
+  closest thing to a denominator, and it covers Python imports only — not templates, JS, routes or docs —
+  and it cannot follow a module loaded by file path (`spec_from_file_location`), which is how a module can
+  be used and still read as unused here.
+* **Intent.** Coverage measures carriers, never whether the carrier is the right product decision.

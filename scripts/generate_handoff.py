@@ -233,6 +233,7 @@ def main() -> int:
     L.append("## 7. READ DEEPER — where the facts actually live")
     L.append("")
     for name, why in (
+        ("docs/project/STATE_OF_THE_SYSTEM.md", "GENERATED from code: capabilities, orphans, route denominators, and what nothing checks"),
         ("docs/project/MERIDIAN_CONCEPTS.md", "the 22 concepts — which every slice must name"),
         ("docs/project/MERIDIAN_INITIAL_BUILDER_PROMPT.md", "the concepts' authoritative source: evaluate, do not auto-implement"),
         ("docs/project/MERIDIAN_ROADMAP.md", "the trajectory and its stated next move"),
